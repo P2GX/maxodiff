@@ -1,15 +1,20 @@
 package org.monarchinitiative.maxodiff.cmd;
 
 import org.monarchinitiative.biodownload.FileDownloadException;
+import org.monarchinitiative.maxodiff.analysis.MaxoDiffVisualizer;
 import org.monarchinitiative.maxodiff.analysis.MaxodiffAnalyzer;
 import org.monarchinitiative.maxodiff.io.InputFileParser;
 import org.monarchinitiative.maxodiff.io.MaxodiffBuilder;
+import org.monarchinitiative.maxodiff.service.MaxoDiffService;
 import org.monarchinitiative.maxodiff.service.PhenotypeService;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import picocli.CommandLine;
 
+import java.io.BufferedWriter;
+import java.io.FileWriter;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.concurrent.Callable;
@@ -47,6 +52,34 @@ public class MaxodiffCommand implements Callable<Integer> {
         List<TermId> diseaseTermIds = parser.getDiseaseTermIds();
         LOGGER.info("Got {} disease term IDs", diseaseTermIds.size());
         MaxodiffAnalyzer analyzer = new MaxodiffAnalyzer(service, diseaseTermIds);
+        MaxoDiffService diffService = analyzer.maxoDiffService();
+        MaxoDiffVisualizer visualizer = new MaxoDiffVisualizer(diffService);
+        List<List<String>> matrix = visualizer.diseaseToMaxoMatrix();
+        try (BufferedWriter bw = new BufferedWriter(new FileWriter("maxo_matrix.tsv"))) {
+            for (var row: matrix) {
+                String line = String.join("\t", row);
+                bw.write(line + "\n");
+            }
+        } catch (IOException e ){
+            e.printStackTrace();
+        }
+        matrix = visualizer.diseaseToHpoMatrix();
+        try (BufferedWriter bw = new BufferedWriter(new FileWriter("hpo_matrix.tsv"))) {
+            for (var row: matrix) {
+                String line = String.join("\t", row);
+                bw.write(line + "\n");
+            }
+        } catch (IOException e ){
+            e.printStackTrace();
+        }
+        List<String> disease2HpMaxo = visualizer.diseaseToHpoMaxo();
+        try (BufferedWriter bw = new BufferedWriter(new FileWriter("disease_hpo_maxo.tsv"))) {
+            for (var line: disease2HpMaxo) {
+                bw.write(line + "\n");
+            }
+        } catch (IOException e ){
+            e.printStackTrace();
+        }
 
         return 0;
     }

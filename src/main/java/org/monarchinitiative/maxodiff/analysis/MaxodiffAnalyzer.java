@@ -2,6 +2,8 @@ package org.monarchinitiative.maxodiff.analysis;
 
 import org.checkerframework.checker.units.qual.A;
 import org.monarchinitiative.maxodiff.model.SimpleTerm;
+import org.monarchinitiative.maxodiff.service.MaxoDiffService;
+import org.monarchinitiative.maxodiff.service.MaxoDiffServiceImpl;
 import org.monarchinitiative.maxodiff.service.PhenotypeService;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDisease;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
@@ -100,6 +102,11 @@ public class MaxodiffAnalyzer {
         }
         System.out.printf("Number of unique HPO terms used: %d\n", allHpoAnnots.size());
         System.out.printf("Number of unique MAxO terms used: %d\n", allMaxoAnnots.size());
+    }
+
+    public MaxoDiffService maxoDiffService() {
+        return new MaxoDiffServiceImpl(diseaseMap, diseaseToMaxoMap, diseaseToHpoMap, allMaxoAnnots,
+                allHpoAnnots, this.maxoDxAnnots);
     }
 
 
