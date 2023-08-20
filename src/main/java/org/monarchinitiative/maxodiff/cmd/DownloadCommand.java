@@ -8,6 +8,8 @@ import org.slf4j.LoggerFactory;
 import picocli.CommandLine;
 
 import java.io.File;
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.List;
@@ -32,15 +34,17 @@ public class DownloadCommand implements Callable<Integer>{
     public boolean overwrite;
 
     @Override
-    public Integer call() throws FileDownloadException {
+    public Integer call() throws FileDownloadException, MalformedURLException {
         logger.info(String.format("Download analysis to %s", datadir));
         Path destination = Paths.get(datadir);
         BioDownloaderBuilder builder = BioDownloader.builder(destination);
         builder.hpoJson();
-        builder.geneInfoHuman();
-        builder.maxoJson();
+       // builder.hgnc();
+       // builder.maxoJson();
         builder.medgene2MIM();
         builder.hpDiseaseAnnotations();
+        //https://github.com/monarch-initiative/maxo-annotations/blob/master/annotations/maxo_diagnostic_annotations.tsv
+        builder.custom("maxo_diagnostic_annotations.tsv", new URL("https://github.com/monarch-initiative/maxo-annotations/blob/master/annotations/maxo_diagnostic_annotations.tsv"));
        // builder.custom()
         BioDownloader downloader = builder.build();
         List<File> files = downloader.download();

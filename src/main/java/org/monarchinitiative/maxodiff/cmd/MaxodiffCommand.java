@@ -1,10 +1,16 @@
 package org.monarchinitiative.maxodiff.cmd;
 
 import org.monarchinitiative.biodownload.FileDownloadException;
+import org.monarchinitiative.maxodiff.io.InputFileParser;
+import org.monarchinitiative.maxodiff.io.MaxodiffBuilder;
+import org.monarchinitiative.maxodiff.service.PhenotypeService;
+import org.monarchinitiative.phenol.ontology.data.TermId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import picocli.CommandLine;
 
+import java.nio.file.Path;
+import java.util.List;
 import java.util.concurrent.Callable;
 
 
@@ -19,11 +25,11 @@ import java.util.concurrent.Callable;
  * @author <a href="mailto:peter.robinson@jax.org">Peter Robinson</a>
  */
 
-@CommandLine.Command(name = "maxodiff", aliases = {"M"},
+@CommandLine.Command(name = "org/monarchinitiative/maxodiff", aliases = {"M"},
         mixinStandardHelpOptions = true,
         description = "maxodiff analysis")
 public class MaxodiffCommand implements Callable<Integer> {
-    private static final Logger logger = LoggerFactory.getLogger(DownloadCommand.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(DownloadCommand.class);
     @CommandLine.Option(names={"-d","--data"}, description ="directory to download data (default: ${DEFAULT-VALUE})" )
     public String datadir="data";
 
@@ -34,7 +40,11 @@ public class MaxodiffCommand implements Callable<Integer> {
 
     @Override
     public Integer call() throws FileDownloadException {
-
+        MaxodiffBuilder builder = new MaxodiffBuilder(Path.of(datadir));
+        PhenotypeService service = builder.phenotypeService();
+        InputFileParser parser = new InputFileParser(Path.of(inputFile));
+        List<TermId> diseaseTermIds = parser.getDiseaseTermIds();
+        LOGGER.info("Got {} disease term IDs", diseaseTermIds.size());
 
         return 0;
     }

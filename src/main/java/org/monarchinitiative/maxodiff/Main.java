@@ -5,7 +5,7 @@ import org.monarchinitiative.maxodiff.cmd.MaxodiffCommand;
 import picocli.CommandLine;
 import java.util.concurrent.Callable;
 
-@CommandLine.Command(name = "maxodiff", mixinStandardHelpOptions = true, version = "0.0.1",
+@CommandLine.Command(name = "org/monarchinitiative/maxodiff", mixinStandardHelpOptions = true, version = "0.0.1",
         description = "maxo terms for differential diagnosis")
 public class Main implements Callable<Integer> {
 
@@ -15,7 +15,7 @@ public class Main implements Callable<Integer> {
             args = new String[]{"-h"};
         }
         CommandLine cline = new CommandLine(new Main())
-                .addSubcommand("maxodiff", new MaxodiffCommand())
+                .addSubcommand("org/monarchinitiative/maxodiff", new MaxodiffCommand())
                 .addSubcommand("download", new DownloadCommand())
                 ;
         cline.setToggleBooleanFlags(false);
