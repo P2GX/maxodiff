@@ -1,6 +1,7 @@
 package org.monarchinitiative.maxodiff.cmd;
 
 import org.monarchinitiative.biodownload.FileDownloadException;
+import org.monarchinitiative.maxodiff.analysis.MaxodiffAnalyzer;
 import org.monarchinitiative.maxodiff.io.InputFileParser;
 import org.monarchinitiative.maxodiff.io.MaxodiffBuilder;
 import org.monarchinitiative.maxodiff.service.PhenotypeService;
@@ -45,6 +46,7 @@ public class MaxodiffCommand implements Callable<Integer> {
         InputFileParser parser = new InputFileParser(Path.of(inputFile));
         List<TermId> diseaseTermIds = parser.getDiseaseTermIds();
         LOGGER.info("Got {} disease term IDs", diseaseTermIds.size());
+        MaxodiffAnalyzer analyzer = new MaxodiffAnalyzer(service, diseaseTermIds);
 
         return 0;
     }

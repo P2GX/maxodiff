@@ -19,8 +19,9 @@ public class InputFileParser {
         try (BufferedReader br = new BufferedReader(new FileReader(inputFilePath.toFile()))) {
             String line;
             while ((line = br.readLine()) != null) {
+                if (line.startsWith("#")) continue;
                 try {
-                    String [] fields = line.split("\s");
+                    String [] fields = line.split("\t");
                     TermId diseaseId = TermId.of(fields[0]);
                     diseaseTermIds.add(diseaseId);
                 } catch (Exception e) {
