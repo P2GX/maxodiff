@@ -2,14 +2,10 @@ package org.monarchinitiative.maxodiff.analysis;
 
 import org.monarchinitiative.maxodiff.model.SimpleTerm;
 import org.monarchinitiative.maxodiff.service.MaxoDiffService;
-import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDisease;
-import org.monarchinitiative.phenol.ontology.data.Ontology;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class MaxoDiffVisualizer {
 
@@ -19,7 +15,8 @@ public class MaxoDiffVisualizer {
     private final List<SimpleTerm> allMaxoAnnots;
     private final List<SimpleTerm> allHpoAnnots;
 
-    Map<SimpleTerm, Set<SimpleTerm>> maxoDxAnnots;
+    private final Map<SimpleTerm, Set<SimpleTerm>> maxoDxAnnots;
+    private final Map<SimpleTerm, Set<SimpleTerm>> maxoToHpoMap;
 
     public MaxoDiffVisualizer(MaxoDiffService diffService) {
         this.diseaseToMaxoMap = diffService.diseaseToMaxoMap();
@@ -27,6 +24,7 @@ public class MaxoDiffVisualizer {
         this.allHpoAnnots = diffService.allHpoAnnots();
         this.allMaxoAnnots = diffService.allMaxoAnnots();
         this.maxoDxAnnots = diffService.maxoDxAnnots();
+        this.maxoToHpoMap = diffService.maxoToHpoMap();
     }
 
     /** Columns -- disease, rows -- MAXO */
@@ -40,6 +38,7 @@ public class MaxoDiffVisualizer {
             header.add(diseaseId.getValue());
         }
         header.add("total");
+        header.add("hpo.terms");
         rows.add(header);
         for (SimpleTerm maxoST : allMaxoAnnots) {
             List<String> row = new ArrayList<>();
@@ -56,6 +55,14 @@ public class MaxoDiffVisualizer {
                 }
             }
             row.add(String.valueOf(total));
+            Set<SimpleTerm> hpoterms = this.maxoToHpoMap.get(maxoST);
+            String hpotermstring;
+            if (hpoterms.isEmpty()) {
+                hpotermstring = "";
+            } else {
+                hpotermstring = hpoterms.stream().map(SimpleTerm::display).collect(Collectors.joining(": "));
+            }
+            row.add(hpotermstring);
             rows.add(row);
         }
         return rows;

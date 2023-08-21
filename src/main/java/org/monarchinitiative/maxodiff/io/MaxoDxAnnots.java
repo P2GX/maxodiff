@@ -35,15 +35,20 @@ public class MaxoDxAnnots {
                 TermId hpoid = TermId.of(fields[0]);
                 String hpoLabel = fields[1];
                 SimpleTerm hterm = new SimpleTerm(hpoid, hpoLabel);
-                // omit predicate, not relevant here
+                String predicate = fields[2];
+                if (predicate.equals("is_observable_through")) {
+                    ; // good
+                } else if (predicate.equals("is_prenatally_observable_through")) {
+                    continue; // skip prenatal for this analysis
+                } else {
+                    throw new RuntimeException(String.format("Did not recognize predicate %s", predicate));
+                }
                 TermId maxoId = TermId.of(fields[3]);
                 String maxoLabel = fields[4];
                 SimpleTerm mterm = new SimpleTerm(maxoId, maxoLabel);
                 simpleTermSetMap.putIfAbsent(hterm, new HashSet<>());
                 simpleTermSetMap.get(hterm).add(mterm);
             }
-        } catch (FileNotFoundException e) {
-            e.printStackTrace();
         } catch (IOException e) {
             e.printStackTrace();
         }

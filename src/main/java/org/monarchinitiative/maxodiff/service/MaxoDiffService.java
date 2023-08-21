@@ -31,7 +31,8 @@ public interface MaxoDiffService {
                               Map<TermId, Set<SimpleTerm>> diseaseToHpoMap,
                               List<SimpleTerm> allMaxoAnnots,
                               List<SimpleTerm> allHpoAnnots,
-                              Map<SimpleTerm, Set<SimpleTerm>> maxoDxAnnots
+                              Map<SimpleTerm, Set<SimpleTerm>> maxoDxAnnots,
+                              Map<SimpleTerm, Set<SimpleTerm>> maxoToHpoMap
                               ) {
         return null;//new PhenotypeServiceImpl(hpo, dxmap, diseases);
     }
@@ -42,4 +43,5 @@ public interface MaxoDiffService {
     List<SimpleTerm> allMaxoAnnots();
     List<SimpleTerm> allHpoAnnots();
     Map<SimpleTerm, Set<SimpleTerm>> maxoDxAnnots();
+    Map<SimpleTerm, Set<SimpleTerm>> maxoToHpoMap();
 }

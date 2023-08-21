@@ -24,6 +24,12 @@ public class MaxodiffAnalyzer {
 
     private final Map<TermId, Set<SimpleTerm>> diseaseToMaxoMap;
     private final Map<TermId, Set<SimpleTerm>> diseaseToHpoMap;
+    /**
+     * For the set of diseases being investigated, a given Maxo term may correspond to multiple
+     * HPO terms. e.g. Brain CT could correspond to multiple CNS anomalies. Here, the key is the
+     * MAXO term and the value is the set of HPO terms that correspond to it in the current dataset.
+     */
+    private final Map<SimpleTerm, Set<SimpleTerm>> maxoToHpoMap;
 
     private final List<SimpleTerm> allMaxoAnnots;
     private final List<SimpleTerm> allHpoAnnots;
@@ -43,10 +49,14 @@ public class MaxodiffAnalyzer {
         maxoDxAnnots = phenotypeService.maxoDxAnnots();
         diseaseToMaxoMap = new HashMap<>();
         diseaseToHpoMap = new HashMap<>();
+        maxoToHpoMap = new HashMap<>();
         this.allHpoAnnots = new ArrayList<>();
         this.allMaxoAnnots = new ArrayList<>();
         init();
     }
+
+
+
 
 
     private void init() {
@@ -70,18 +80,23 @@ public class MaxodiffAnalyzer {
             }
         }
         // Now map these terms to MAXO ids
+        // also record which HPOs correspond to the MAXO terms used in our dataset
         for (var entry : this.diseaseToHpoMap.entrySet()) {
             TermId diseaseId = entry.getKey();
             Set<SimpleTerm> hpoSet = entry.getValue();
             this.diseaseToMaxoMap.putIfAbsent(diseaseId, new HashSet<>());
-            for (var st: hpoSet) {
-                Set<SimpleTerm> maxoSet = this.maxoDxAnnots.getOrDefault(st, Set.of());
+            for (var hpost: hpoSet) {
+                Set<SimpleTerm> maxoSet = this.maxoDxAnnots.getOrDefault(hpost, Set.of());
                 for (var stmaxo : maxoSet) {
                     this.diseaseToMaxoMap.get(diseaseId).add(stmaxo);
                     allMxoAnnotSet.add(stmaxo);
+                    maxoToHpoMap.putIfAbsent(stmaxo, new HashSet<>());
+                    maxoToHpoMap.get(stmaxo).add(hpost);
                 }
             }
         }
+
+
         this.allHpoAnnots.addAll(allHpoAnnotSet);
         this.allMaxoAnnots.addAll(allMxoAnnotSet);
 
@@ -106,7 +121,7 @@ public class MaxodiffAnalyzer {
 
     public MaxoDiffService maxoDiffService() {
         return new MaxoDiffServiceImpl(diseaseMap, diseaseToMaxoMap, diseaseToHpoMap, allMaxoAnnots,
-                allHpoAnnots, this.maxoDxAnnots);
+                allHpoAnnots, this.maxoDxAnnots, this.maxoToHpoMap);
     }
 
 

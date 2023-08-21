@@ -13,5 +13,6 @@ public record MaxoDiffServiceImpl(Map<TermId, HpoDisease> diseaseMap,
                                   Map<TermId, Set<SimpleTerm>> diseaseToHpoMap,
                                   List<SimpleTerm> allMaxoAnnots,
                                   List<SimpleTerm> allHpoAnnots,
-                                  Map<SimpleTerm, Set<SimpleTerm>> maxoDxAnnots) implements  MaxoDiffService{
+                                  Map<SimpleTerm, Set<SimpleTerm>> maxoDxAnnots,
+                                  Map<SimpleTerm, Set<SimpleTerm>> maxoToHpoMap) implements  MaxoDiffService {
 }
