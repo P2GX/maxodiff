@@ -1,9 +1,7 @@
 package org.monarchinitiative.maxodiff.service;
 
-import org.monarchinitiative.maxodiff.model.SimpleTerm;
+import org.monarchinitiative.maxodiff.SimpleTerm;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDisease;
-import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
-import org.monarchinitiative.phenol.ontology.data.Ontology;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 
 import java.util.List;

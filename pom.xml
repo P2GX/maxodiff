@@ -16,7 +16,13 @@
         <maven.compiler.source>17</maven.compiler.source>
         <maven.compiler.target>17</maven.compiler.target>
         <java.version>17</java.version>
-        <phenol.version>2.0.2</phenol.version>
+        <phenol.version>2.0.5</phenol.version>
+        <lirical.version>2.0.0</lirical.version>
+        <biodownload.version>1.1.0</biodownload.version>
+        <picocli.version>4.7.4</picocli.version>
+        <junit.version>5.7.0</junit.version>
+        <slf4j.version>2.0.7</slf4j.version>
+        <logback.version>1.4.7</logback.version>
     </properties>
 
     <prerequisites>
@@ -24,6 +30,12 @@
     </prerequisites>
 
     <dependencies>
+        <dependency>
+<!--            <groupId>com.github.TheJacksonLaboratory.LIRICAL</groupId>-->
+            <groupId>org.monarchinitiative.lirical</groupId>
+            <artifactId>lirical-core</artifactId>
+            <version>${lirical.version}</version>
+        </dependency>
         <dependency>
             <groupId>org.monarchinitiative.phenol</groupId>
             <artifactId>phenol-core</artifactId>
@@ -43,28 +55,33 @@
         <dependency>
             <groupId>org.monarchinitiative.biodownload</groupId>
             <artifactId>biodownload</artifactId>
-            <version>1.1.0</version>
+            <version>${biodownload.version}</version>
         </dependency>
         <dependency>
             <groupId>info.picocli</groupId>
             <artifactId>picocli</artifactId>
-            <version>4.7.4</version>
+            <version>${picocli.version}</version>
         </dependency>
-
-
 
         <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>
-            <version>5.7.0</version>
+            <version>${junit.version}</version>
             <scope>test</scope>
         </dependency>
 
         <dependency>
             <groupId>org.slf4j</groupId>
             <artifactId>slf4j-log4j12</artifactId>
-            <version>2.0.7</version>
+            <version>${slf4j.version}</version>
         </dependency>
+
+        <dependency>
+            <groupId>ch.qos.logback</groupId>
+            <artifactId>logback-core</artifactId>
+            <version>${logback.version}</version>
+        </dependency>
+
     </dependencies>
 
     <build>

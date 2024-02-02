@@ -1,6 +1,6 @@
 package org.monarchinitiative.maxodiff.io;
 
-import org.monarchinitiative.maxodiff.model.SimpleTerm;
+import org.monarchinitiative.maxodiff.SimpleTerm;
 import org.monarchinitiative.maxodiff.service.PhenotypeService;
 import org.monarchinitiative.maxodiff.service.PhenotypeServiceImpl;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
