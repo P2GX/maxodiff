@@ -1,7 +1,7 @@
 package org.monarchinitiative.maxodiff.analysis;
 
-import org.checkerframework.checker.units.qual.A;
-import org.monarchinitiative.maxodiff.model.SimpleTerm;
+//import org.checkerframework.checker.units.qual.A;
+import org.monarchinitiative.maxodiff.SimpleTerm;
 import org.monarchinitiative.maxodiff.service.MaxoDiffService;
 import org.monarchinitiative.maxodiff.service.MaxoDiffServiceImpl;
 import org.monarchinitiative.maxodiff.service.PhenotypeService;

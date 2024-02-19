@@ -1,5 +1,6 @@
 package org.monarchinitiative.maxodiff;
 
+import org.monarchinitiative.maxodiff.cmd.DifferentialDiagnosisCommand;
 import org.monarchinitiative.maxodiff.cmd.DownloadCommand;
 import org.monarchinitiative.maxodiff.cmd.MaxodiffCommand;
 import picocli.CommandLine;
@@ -17,6 +18,7 @@ public class Main implements Callable<Integer> {
         CommandLine cline = new CommandLine(new Main())
                 .addSubcommand("maxodiff", new MaxodiffCommand())
                 .addSubcommand("download", new DownloadCommand())
+                .addSubcommand("diagnosis", new DifferentialDiagnosisCommand())
                 ;
         cline.setToggleBooleanFlags(false);
         int exitCode = cline.execute(args);

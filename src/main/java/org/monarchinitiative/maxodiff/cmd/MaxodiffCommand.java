@@ -35,7 +35,7 @@ import java.util.concurrent.Callable;
         mixinStandardHelpOptions = true,
         description = "maxodiff analysis")
 public class MaxodiffCommand implements Callable<Integer> {
-    private static final Logger LOGGER = LoggerFactory.getLogger(DownloadCommand.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(MaxodiffCommand.class);
     @CommandLine.Option(names={"-d","--data"}, description ="directory to download data (default: ${DEFAULT-VALUE})" )
     public String datadir="data";
 
