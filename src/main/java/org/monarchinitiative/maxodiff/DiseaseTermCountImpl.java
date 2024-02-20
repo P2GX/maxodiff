@@ -27,8 +27,7 @@ public class DiseaseTermCountImpl implements DiseaseTermCount {
         this.hpoTermCounts = new HashMap<>();
         for (HpoDisease disease : diseaseList) {
             List<TermId> termIds = disease.annotationTermIdList();
-            LOGGER.info(disease.diseaseName() + ": " + termIds);
-            System.out.println(disease.diseaseName() + ": " + termIds);
+            LOGGER.debug(disease.diseaseName() + ": " + termIds);
             for (TermId id : termIds) {
                 List<Object> countFreqList;
                 float termFreq = disease.getFrequencyOfTermInDisease(id).orElse(null).frequency();
@@ -40,8 +39,8 @@ public class DiseaseTermCountImpl implements DiseaseTermCount {
                     //Replace list of term count and frequency in map
                     List<Object> list = this.hpoTermCounts.get(id);
                     int oldCount = (int) list.get(0);
-                    list.add(0, oldCount + 1);
-                    list.add(1, termFreq);
+                    list.set(0, oldCount + 1);
+                    list.set(1, termFreq);
                     this.hpoTermCounts.replace(id, list);
                 }
             }

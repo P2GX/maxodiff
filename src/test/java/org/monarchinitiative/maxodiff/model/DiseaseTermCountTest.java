@@ -11,6 +11,7 @@ import org.monarchinitiative.phenol.ontology.data.TermId;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertNotNull;
@@ -38,7 +39,23 @@ public class DiseaseTermCountTest {
     public void diseaseListTest() { assertEquals(diseases, diseaseTermCountImpl.hpoDiseases()); }
 
     @Test
-    public void hpoTermCountTest() { System.out.println(diseaseTermCountImpl.hpoTermCounts()); }
+    public void nHpoTermsTest() { assertEquals(35, diseaseTermCountImpl.nHpoTerms()); }
+
+    @Test
+    public void hpoTermCountTest() {
+        Map<TermId, List<Object>> termCounts = diseaseTermCountImpl.hpoTermCounts();
+        for (Map.Entry<TermId, List<Object>> e : termCounts.entrySet()) {
+            TermId id = e.getKey();
+            int count = (int) e.getValue().get(0);
+            if (id.getId().equals("0000456")) {
+                assertEquals(2, count);
+            } else if (id.getId().equals("0003828")) {
+                assertEquals(3, count);
+            } else {
+                assertEquals(1, count);
+            }
+        }
+    }
 
 
 }
