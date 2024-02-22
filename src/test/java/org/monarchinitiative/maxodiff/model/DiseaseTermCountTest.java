@@ -3,7 +3,7 @@ package org.monarchinitiative.maxodiff.model;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.monarchinitiative.maxodiff.DiseaseTermCountImpl;
+import org.monarchinitiative.maxodiff.DiseaseTermCount;
 import org.monarchinitiative.maxodiff.TestResources;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDisease;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
@@ -20,30 +20,30 @@ public class DiseaseTermCountTest {
 
     private static final HpoDiseases hpoDiseases = TestResources.hpoDiseases();
     private static final List<HpoDisease> diseases = new ArrayList<>();
-    private static DiseaseTermCountImpl diseaseTermCountImpl = null;
+    private static DiseaseTermCount diseaseTermCount = null;
 
     @BeforeAll
     public static void setUp() {
         List<TermId> diseaseIds = List.of(TermId.of("OMIM:164745"), TermId.of("OMIM:216300"), TermId.of("OMIM:616684"));
         diseaseIds.forEach(id -> hpoDiseases.diseaseById(id).ifPresent(diseases::add));
-        diseaseTermCountImpl = new DiseaseTermCountImpl(diseases);
+        diseaseTermCount = DiseaseTermCount.of(diseases);
     }
 
     @Test
-    public void diseaseTermCountExistsTest() { assertNotNull(diseaseTermCountImpl); }
+    public void diseaseTermCountExistsTest() { assertNotNull(diseaseTermCount); }
 
     @Test
-    public void nDiseasesTest() { assertEquals(3, diseaseTermCountImpl.nDiseases()); }
+    public void nDiseasesTest() { assertEquals(3, diseaseTermCount.nDiseases()); }
 
     @Test
-    public void diseaseListTest() { assertEquals(diseases, diseaseTermCountImpl.hpoDiseases()); }
+    public void diseaseListTest() { assertEquals(diseases, diseaseTermCount.hpoDiseases()); }
 
     @Test
-    public void nHpoTermsTest() { assertEquals(35, diseaseTermCountImpl.nHpoTerms()); }
+    public void nHpoTermsTest() { assertEquals(35, diseaseTermCount.nHpoTerms()); }
 
     @Test
     public void hpoTermCountTest() {
-        Map<TermId, List<Object>> termCounts = diseaseTermCountImpl.hpoTermCounts();
+        Map<TermId, List<Object>> termCounts = diseaseTermCount.hpoTermCounts();
         for (Map.Entry<TermId, List<Object>> e : termCounts.entrySet()) {
             TermId id = e.getKey();
             int count = (int) e.getValue().get(0);
