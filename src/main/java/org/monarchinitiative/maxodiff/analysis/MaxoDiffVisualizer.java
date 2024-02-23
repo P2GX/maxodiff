@@ -32,8 +32,7 @@ public class MaxoDiffVisualizer {
         List<List<String>> rows = new ArrayList<>();
         List<TermId> diseaseList = new ArrayList<>(diseaseToMaxoMap.keySet());
         List<String> header = new ArrayList<>();
-        header.add("MAXO.label");
-        header.add("MAXO.id");
+        header.add("MAXO");
         for (var diseaseId : diseaseList) {
             header.add(diseaseId.getValue());
         }
@@ -43,24 +42,33 @@ public class MaxoDiffVisualizer {
         for (SimpleTerm maxoST : allMaxoAnnots) {
             List<String> row = new ArrayList<>();
             int total = 0;
-            row.add(maxoST.label());
-            row.add(maxoST.tid().getValue());
+            row.add(maxoST.display());
             for (var diseaseId : diseaseList) {
                 var diseaseMaxoAnnots = this.diseaseToMaxoMap.get(diseaseId);
                 if (diseaseMaxoAnnots.contains(maxoST)) {
-                    row.add("yes");
+                    row.add("yyy");
                     total++;
                 } else {
-                    row.add("");
+                    row.add("nnn");
                 }
             }
             row.add(String.valueOf(total));
             Set<SimpleTerm> hpoterms = this.maxoToHpoMap.get(maxoST);
+            int N = hpoterms.size();
+            StringBuilder sb = new StringBuilder();
             String hpotermstring;
-            if (hpoterms.isEmpty()) {
+            if (N==0) {
                 hpotermstring = "";
+            } else if (N > 5) {
+                String hpos = hpoterms.stream()
+                        .limit(5)
+                        .map(SimpleTerm::display)
+                        .collect(Collectors.joining("; "));
+                hpotermstring = String.format("Total of %d HPO terms. %s ...", N, hpos);
             } else {
-                hpotermstring = hpoterms.stream().map(SimpleTerm::display).collect(Collectors.joining(": "));
+                hpotermstring = hpoterms.stream()
+                        .map(SimpleTerm::display)
+                        .collect(Collectors.joining("; "));
             }
             row.add(hpotermstring);
             rows.add(row);
@@ -88,10 +96,10 @@ public class MaxoDiffVisualizer {
             for (var diseaseId : diseaseList) {
                 var diseaseMaxoAnnots = this.diseaseToMaxoMap.get(diseaseId);
                 if (diseaseMaxoAnnots.contains(hpoST)) {
-                    row.add("yes");
+                    row.add("+");
                     total++;
                 } else {
-                    row.add("");
+                    row.add("-");
                 }
             }
             row.add(String.valueOf(total));
@@ -112,6 +120,8 @@ public class MaxoDiffVisualizer {
             for (var hpost : hpoSet) {
                 if (maxoDxAnnots.containsKey(hpost)) {
                     Set<SimpleTerm> maxoSet = maxoDxAnnots.get(hpost);
+                    int N = maxoSet.size();
+
                     for (var maxost: maxoSet) {
                         sb.append(String.format("%s - %s; ", hpost.display(), maxost.display()));
                     }
