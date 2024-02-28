@@ -17,12 +17,22 @@ import org.monarchinitiative.lirical.io.analysis.PhenopacketData;
 import org.monarchinitiative.lirical.io.analysis.PhenopacketImporter;
 import org.monarchinitiative.lirical.io.analysis.PhenopacketImporters;
 import org.monarchinitiative.maxodiff.DifferentialDiagnosis;
+import org.monarchinitiative.maxodiff.DiseaseTermCount;
+import org.monarchinitiative.maxodiff.SimpleTerm;
 import org.monarchinitiative.maxodiff.analysis.MaxoDiffVisualizer;
 import org.monarchinitiative.maxodiff.analysis.MaxodiffAnalyzer;
 import org.monarchinitiative.maxodiff.io.InputFileParser;
+import org.monarchinitiative.maxodiff.io.MaxoDxAnnots;
 import org.monarchinitiative.maxodiff.io.MaxodiffBuilder;
+import org.monarchinitiative.maxodiff.io.MaxodiffDataResolver;
 import org.monarchinitiative.maxodiff.service.MaxoDiffService;
 import org.monarchinitiative.maxodiff.service.PhenotypeService;
+import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDisease;
+import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
+import org.monarchinitiative.phenol.annotations.io.hpo.HpoDiseaseLoader;
+import org.monarchinitiative.phenol.annotations.io.hpo.HpoDiseaseLoaderOptions;
+import org.monarchinitiative.phenol.annotations.io.hpo.HpoDiseaseLoaders;
+import org.monarchinitiative.phenol.ontology.data.Ontology;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -32,11 +42,9 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.Callable;
+import java.util.stream.Collectors;
 import java.util.zip.GZIPOutputStream;
 
 
@@ -85,7 +93,7 @@ public class DifferentialDiagnosisCommand extends BaseLiricalCommand {
     public double weight = 0.5;
 
     @CommandLine.Option(names = {"-l", "--diseaseList"},
-            required = true,
+//            required = true,
             split=",",
             arity = "1..*",
             description = "Comma-separated list of diseases to include in differential diagnosis.")
@@ -96,6 +104,10 @@ public class DifferentialDiagnosisCommand extends BaseLiricalCommand {
     public Integer call() throws Exception {
 
         Lirical lirical = prepareLirical();
+
+        MaxodiffDataResolver dataResolver = new MaxodiffDataResolver(dataSection.liricalDataDirectory);
+        MaxoDxAnnots maxoDxAnnots = new MaxoDxAnnots(dataResolver.maxoDxAnnots());
+        Map<SimpleTerm, Set<SimpleTerm>> fullHpoToMaxoTermMap = maxoDxAnnots.getSimpleTermSetMap();
 
         for (int i = 0; i < phenopacketPaths.size(); i++) {
             // Read phenopacket data.
@@ -133,15 +145,50 @@ public class DifferentialDiagnosisCommand extends BaseLiricalCommand {
             AnalysisResultsMetadata metadata = prepareAnalysisResultsMetadata(gene2Genotypes, lirical, sampleId);
             writeResultsToFile(lirical, OutputFormat.parse(outputFormatArg), analysisData, results, metadata, outFilename);
 
-            // Calculate Differential Diagnosis Score
-            DifferentialDiagnosis diffDiag = new DifferentialDiagnosis();
-            List<TermId> diseaseIds = new ArrayList<>();
-            diseaseIdsArg.stream().forEach(id -> diseaseIds.add(TermId.of(id)));
-            LOGGER.info(String.valueOf(diseaseIds));
-            LOGGER.info("posttest probability sum = " + diffDiag.posttestProbabilitySum(results, diseaseIds));
-            double finalScore = diffDiag.finalScore(results, diseaseIds, weight);
-            LOGGER.info("final Score = " + finalScore);
+            //TODO? get list of diseases from LIRICAL results, and add diseases from CLI arg to total list for analysis
 
+            // Collect HPO terms and frequencies for the target m diseases
+            List<TermId> diseaseIds = new ArrayList<>();
+//            diseaseIdsArg.stream().forEach(id -> diseaseIds.add(TermId.of(id)));
+            List<TestResult> testResults = results.resultsWithDescendingPostTestProbability().collect(Collectors.toList()).subList(0, 5);
+            testResults.forEach(r -> diseaseIds.add(r.diseaseId()));
+            LOGGER.info(String.valueOf(diseaseIds));
+
+            DifferentialDiagnosis diffDiag = new DifferentialDiagnosis();
+            List<HpoDisease> diseases = diffDiag.makeDiseaseList(dataResolver, diseaseIds);
+            DiseaseTermCount diseaseTermCount = DiseaseTermCount.of(diseases);
+            Map<TermId, List<Object>> hpoTermCounts = diseaseTermCount.hpoTermCounts();
+
+            // Remove HPO terms present in the phenopacket
+            phenopacketData.presentHpoTermIds().forEach(id -> hpoTermCounts.remove(id));
+            phenopacketData.excludedHpoTermIds().forEach(id -> hpoTermCounts.remove(id));
+
+            // Get all the MaXo terms that can be used to diagnose the HPO terms
+            Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxoTermMap = diffDiag.makeHpoToMaxoTermMap(fullHpoToMaxoTermMap, hpoTermCounts.keySet());
+            Map<TermId, Set<TermId>> maxoToHpoTermIdMap = diffDiag.makeMaxoToHpoTermIdMap(hpoToMaxoTermMap);
+
+            LOGGER.info(String.valueOf(maxoToHpoTermIdMap));
+
+            // Make map of MaXo scores
+            Map<TermId, Double> maxoScoreMap = diffDiag.makeMaxoScoreMap(maxoToHpoTermIdMap, diseases, results, weight);
+            LOGGER.info(String.valueOf(maxoScoreMap));
+            // Take the MaXo term that has the highest score
+            Map.Entry<TermId, Double> maxScore = maxoScoreMap.entrySet().stream().max(Map.Entry.comparingByValue()).get();
+            TermId maxScoreMaxoTermId = maxScore.getKey();
+            double maxScoreValue = maxScore.getValue();
+            String maxScoreTermLabel = new String();
+            for (Map.Entry<SimpleTerm, Set<SimpleTerm>> hpoToMaxoEntry : hpoToMaxoTermMap.entrySet()) {
+                Set<SimpleTerm> maxoTerms = hpoToMaxoEntry.getValue();
+                for (SimpleTerm maxoTerm : maxoTerms) {
+                    if (maxoTerm.tid().equals(maxScoreMaxoTermId)) {
+                        maxScoreTermLabel = maxoTerm.label();
+                        break;
+                    }
+                }
+            }
+            LOGGER.info("Max Score: " + maxScoreMaxoTermId + " (" + maxScoreTermLabel + ")" + " = " + maxScoreValue);
+            double finalScore = diffDiag.finalScore(results, diseaseIds, weight);
+            LOGGER.info("Input Disease List Score: " + finalScore);
         }
 
         return 0;

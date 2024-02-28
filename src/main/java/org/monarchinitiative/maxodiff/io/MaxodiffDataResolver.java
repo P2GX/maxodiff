@@ -19,7 +19,7 @@ public class MaxodiffDataResolver {
         return new MaxodiffDataResolver(dataDirectory);
     }
 
-    private MaxodiffDataResolver(Path dataDirectory) throws MaxodiffDataException {
+    public MaxodiffDataResolver(Path dataDirectory) throws MaxodiffDataException {
         this.dataDirectory = Objects.requireNonNull(dataDirectory, "Data directory must not be null!");
         checkV1Resources();
     }
