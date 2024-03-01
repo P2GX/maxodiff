@@ -137,10 +137,10 @@ public class DifferentialDiagnosisCommand extends BaseLiricalCommand {
             DifferentialDiagnosis diffDiag = new DifferentialDiagnosis();
             List<TermId> diseaseIds = new ArrayList<>();
             diseaseIdsArg.stream().forEach(id -> diseaseIds.add(TermId.of(id)));
-            System.out.println(diseaseIds);
-            System.out.println("posttest probability sum = " + diffDiag.posttestProbabilitySum(results, diseaseIds));
+            LOGGER.info(String.valueOf(diseaseIds));
+            LOGGER.info("posttest probability sum = " + diffDiag.posttestProbabilitySum(results, diseaseIds));
             double finalScore = diffDiag.finalScore(results, diseaseIds, weight);
-            System.out.println("final Score = " + finalScore);
+            LOGGER.info("final Score = " + finalScore);
 
         }
 

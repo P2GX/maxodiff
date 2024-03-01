@@ -1,35 +1,18 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<?xml version="1.0" encoding="UTF-8"?>
 <configuration>
-    <!-- We're not interested in seeing all events produced by the following libraries: -->
-    <logger name="org.monarchinitiative.phenol" level="DEBUG" />
+    <property name="pattern" value="%d{HH:mm:ss.SSS} [%thread] %-5level %logger{36} - %msg%n"/>
+    <logger name="de.charite.compbio.jannovar" level="WARN"/>
+    <logger name="org.phenopackets.phenopackettools" level="WARN"/>
+    <logger name="org.monarchinitiative.phenol" level="INFO"/>
 
-    <property name="pattern" value="%d{HH:mm:ss.SSS} [%-5thread] %-5level %logger{36} - %msg%n"/>
-
-    <!-- We write INFO and above events to console. -->
-    <appender name="CONSOLE" class="ch.qos.logback.core.ConsoleAppender">
-        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
-            <level>INFO</level>
-        </filter>
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        <target>System.out</target>
         <encoder>
             <pattern>${pattern}</pattern>
         </encoder>
     </appender>
 
-    <!-- We write DEBUG and above events into the maxodiff.log file. -->
-    <appender name="FILE" class="ch.qos.logback.core.FileAppender">
-        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
-            <level>DEBUG</level>
-        </filter>
-        <file>maxodiff.log</file>
-        <append>false</append>
-        <encoder>
-            <pattern>${pattern}</pattern>
-        </encoder>
-    </appender>
-
-    <root>
-        <appender-ref ref="CONSOLE" />
-        <appender-ref ref="FILE" />
+    <root level="info">
+        <appender-ref ref="STDOUT" />
     </root>
 </configuration>
