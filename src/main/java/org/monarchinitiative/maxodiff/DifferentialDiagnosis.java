@@ -157,4 +157,18 @@ public class DifferentialDiagnosis {
         return maxoScoreMap;
     }
 
+    public String getMaxoTermLabel(Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxoTermMap, TermId maxScoreMaxoTermId) {
+        String maxScoreTermLabel = new String();
+        for (Map.Entry<SimpleTerm, Set<SimpleTerm>> hpoToMaxoEntry : hpoToMaxoTermMap.entrySet()) {
+            Set<SimpleTerm> maxoTerms = hpoToMaxoEntry.getValue();
+            for (SimpleTerm maxoTerm : maxoTerms) {
+                if (maxoTerm.tid().equals(maxScoreMaxoTermId)) {
+                    maxScoreTermLabel = maxoTerm.label();
+                    break;
+                }
+            }
+        }
+        return maxScoreTermLabel;
+    }
+
 }
