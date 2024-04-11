@@ -26,6 +26,7 @@ import org.monarchinitiative.maxodiff.core.io.MaxodiffDataResolver;
 import org.monarchinitiative.maxodiff.core.service.MaxoDiffService;
 import org.monarchinitiative.maxodiff.core.service.PhenotypeService;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDisease;
+import org.monarchinitiative.phenol.ontology.data.Ontology;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -38,6 +39,8 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.zip.GZIPOutputStream;
+
+import static org.monarchinitiative.maxodiff.core.io.MaxodiffBuilder.loadOntology;
 
 
 /**
@@ -118,6 +121,7 @@ public class DifferentialDiagnosisCommand extends BaseLiricalCommand {
         resultsMap.put("maxScoreValue", new ArrayList<>());
 
         MaxodiffDataResolver dataResolver = new MaxodiffDataResolver(dataSection.liricalDataDirectory);
+        Ontology hpo = loadOntology(dataResolver.hpoJson());
         MaxoDxAnnots maxoDxAnnots = new MaxoDxAnnots(dataResolver.maxoDxAnnots());
         Map<SimpleTerm, Set<SimpleTerm>> fullHpoToMaxoTermMap = maxoDxAnnots.getSimpleTermSetMap();
 
@@ -159,7 +163,7 @@ public class DifferentialDiagnosisCommand extends BaseLiricalCommand {
                     phenopacketName.replace(".json", ""),
                     "lirical",
                     "results");
-            AnalysisResultsMetadata metadata = prepareAnalysisResultsMetadata(gene2Genotypes, lirical, sampleId);
+            //AnalysisResultsMetadata metadata = prepareAnalysisResultsMetadata(gene2Genotypes, lirical, sampleId);
             //writeResultsToFile(lirical, OutputFormat.parse(outputFormatArg), analysisData, results, metadata, outFilename);
 
             //TODO? get list of diseases from LIRICAL results, and add diseases from CLI arg to total list for analysis
@@ -186,7 +190,7 @@ public class DifferentialDiagnosisCommand extends BaseLiricalCommand {
 
                 // Get all the MaXo terms that can be used to diagnose the HPO terms
                 Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxoTermMap = diffDiag.makeHpoToMaxoTermMap(fullHpoToMaxoTermMap, hpoTermCounts.keySet());
-                Map<TermId, Set<TermId>> maxoToHpoTermIdMap = diffDiag.makeMaxoToHpoTermIdMap(hpoToMaxoTermMap);
+                Map<TermId, Set<TermId>> maxoToHpoTermIdMap = diffDiag.makeMaxoToHpoTermIdMap(hpo, hpoToMaxoTermMap);
 
                 LOGGER.info(String.valueOf(maxoToHpoTermIdMap));
 

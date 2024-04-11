@@ -9,6 +9,7 @@ import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDisease;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
 import org.monarchinitiative.phenol.annotations.io.hpo.HpoDiseaseLoaderOptions;
 import org.monarchinitiative.phenol.ontology.data.Ontology;
+import org.monarchinitiative.phenol.ontology.data.Term;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 
 import java.nio.file.Path;
@@ -83,7 +84,7 @@ public class DifferentialDiagnosis {
         return hpoToMaxoTermMap;
     }
 
-    public Map<TermId, Set<TermId>> makeMaxoToHpoTermIdMap(Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxoTermMap) {
+    public Map<TermId, Set<TermId>> makeMaxoToHpoTermIdMap(Ontology ontology, Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxoTermMap) {
         Map<TermId, Set<TermId>> maxoToHpoTermIdMap = new HashMap<>();
         for (Map.Entry<SimpleTerm, Set<SimpleTerm>> entry : hpoToMaxoTermMap.entrySet()) {
             TermId hpoId = entry.getKey().tid();
@@ -98,6 +99,17 @@ public class DifferentialDiagnosis {
                     maxoToHpoTermIdMap.replace(maxoId, hpoIds);
                 }
             }
+        }
+        for (TermId mId : maxoToHpoTermIdMap.keySet()) {
+            // Remove HPO ancestor term Ids from list
+            Set<TermId> hpoIdSet = maxoToHpoTermIdMap.get(mId);
+            Set<TermId> allAncestors = new HashSet<>();
+            for (TermId hpoId : hpoIdSet) {
+                Set<Term> ancestors = Relation.getTermRelations(ontology, hpoId, Relation.ANCESTOR);
+                ancestors.forEach(t -> allAncestors.add(t.id()));
+            }
+            hpoIdSet.removeAll(allAncestors);
+            maxoToHpoTermIdMap.replace(mId, hpoIdSet);
         }
         return maxoToHpoTermIdMap;
     }
@@ -137,9 +149,9 @@ public class DifferentialDiagnosis {
                 // Get list of disease OMIM Ids associated with HPO term combo
                 Set<TermId> omimIds = new HashSet<>();
                 for (HpoDisease disease : diseases) {
-                    List<TermId> annototationHpoIds = disease.annotationTermIdList();
+                    List<TermId> annotationHpoIds = disease.annotationTermIdList();
                     for (TermId hpoId : hpoCombo) {
-                        if (annototationHpoIds.contains(hpoId)) {
+                        if (annotationHpoIds.contains(hpoId)) {
                             omimIds.add(disease.id());
                         }
                     }
