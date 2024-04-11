@@ -45,7 +45,7 @@ public class MaxodiffBuilder {
     }
 
 
-    static Ontology loadOntology(Path ontologyPath) throws MaxodiffDataException {
+    public static Ontology loadOntology(Path ontologyPath) throws MaxodiffDataException {
         try {
             LOGGER.debug("Loading HPO from {}", ontologyPath.toAbsolutePath());
             return OntologyLoader.loadOntology(ontologyPath.toFile());
@@ -54,7 +54,7 @@ public class MaxodiffBuilder {
         }
     }
 
-    static HpoDiseases loadHpoDiseases(Path annotationPath,
+    public static HpoDiseases loadHpoDiseases(Path annotationPath,
                                        Ontology hpo,
                                        HpoDiseaseLoaderOptions options) throws MaxodiffDataException {
         try {
