@@ -4,32 +4,15 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
 
-    <groupId>org.monarchinitiative.maxodiff</groupId>
-    <artifactId>maxodiff</artifactId>
-    <version>0.0.1</version>
-    <packaging>pom</packaging>
+    <parent>
+        <groupId>org.monarchinitiative.maxodiff</groupId>
+        <artifactId>maxodiff</artifactId>
+        <version>0.0.1</version>
+    </parent>
 
-    <name>maxodiff</name>
-    <url>https://github.com/pnrobinson/maxodiff</url>
+    <artifactId>maxodiff-core</artifactId>
+    <name>maxodiff-core</name>
 
-    <modules>
-        <module>maxodiff-core</module>
-        <module>maxodiff-cli</module>
-        <module>maxodiff-html</module>
-    </modules>
-
-    <properties>
-        <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
-        <maven.compiler.source>17</maven.compiler.source>
-        <maven.compiler.target>17</maven.compiler.target>
-        <java.version>17</java.version>
-        <phenol.version>2.0.5</phenol.version>
-        <lirical.version>2.0.0</lirical.version>
-        <biodownload.version>1.1.0</biodownload.version>
-        <picocli.version>4.7.4</picocli.version>
-        <junit.version>5.7.0</junit.version>
-        <slf4j.version>[2.0.0,3.0.0)</slf4j.version>
-    </properties>
 
     <prerequisites>
         <maven>3.8.0</maven>
@@ -71,17 +54,6 @@
         </dependency>
 
         <dependency>
-            <groupId>org.monarchinitiative.biodownload</groupId>
-            <artifactId>biodownload</artifactId>
-            <version>${biodownload.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>info.picocli</groupId>
-            <artifactId>picocli</artifactId>
-            <version>${picocli.version}</version>
-        </dependency>
-
-        <dependency>
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>
             <version>${junit.version}</version>
@@ -99,7 +71,6 @@
             <artifactId>commons-csv</artifactId>
             <version>1.9.0</version>
         </dependency>
-
 
     </dependencies>
 
