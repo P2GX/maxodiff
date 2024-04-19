@@ -12,6 +12,12 @@
     <name>maxodiff</name>
     <url>https://github.com/pnrobinson/maxodiff</url>
 
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>3.2.0</version>
+    </parent>
+
     <modules>
         <module>maxodiff-core</module>
         <module>maxodiff-cli</module>

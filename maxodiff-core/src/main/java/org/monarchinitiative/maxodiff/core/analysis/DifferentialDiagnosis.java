@@ -1,7 +1,9 @@
-package org.monarchinitiative.maxodiff.core;
+package org.monarchinitiative.maxodiff.core.analysis;
 
 import org.monarchinitiative.lirical.core.analysis.AnalysisResults;
 import org.monarchinitiative.lirical.core.analysis.TestResult;
+import org.monarchinitiative.maxodiff.core.Relation;
+import org.monarchinitiative.maxodiff.core.SimpleTerm;
 import org.monarchinitiative.maxodiff.core.io.MaxodiffBuilder;
 import org.monarchinitiative.maxodiff.core.io.MaxodiffDataException;
 import org.monarchinitiative.maxodiff.core.io.MaxodiffDataResolver;
