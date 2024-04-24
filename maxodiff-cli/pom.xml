@@ -19,24 +19,6 @@
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
-            <!--            <groupId>com.github.TheJacksonLaboratory.LIRICAL</groupId>-->
-            <groupId>org.monarchinitiative.lirical</groupId>
-            <artifactId>lirical-configuration</artifactId>
-            <version>${lirical.version}</version>
-        </dependency>
-        <dependency>
-<!--            <groupId>com.github.TheJacksonLaboratory.LIRICAL</groupId>-->
-            <groupId>org.monarchinitiative.lirical</groupId>
-            <artifactId>lirical-core</artifactId>
-            <version>${lirical.version}</version>
-        </dependency>
-        <dependency>
-            <!--            <groupId>com.github.TheJacksonLaboratory.LIRICAL</groupId>-->
-            <groupId>org.monarchinitiative.lirical</groupId>
-            <artifactId>lirical-io</artifactId>
-            <version>${lirical.version}</version>
-        </dependency>
-        <dependency>
             <groupId>org.monarchinitiative.phenol</groupId>
             <artifactId>phenol-core</artifactId>
             <version>${phenol.version}</version>
