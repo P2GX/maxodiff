@@ -22,21 +22,58 @@
   color: red;
 }
 
+.diffDiagInputTable {
+  border: 1px solid black;
+  background-color: lemonchiffon;
+  table-layout: fixed;
+  width: 400px;
+}
+
+.diffDiagInputTable tr td:first-child {
+  font-weight: bold;
+  width: 30px;
+}
+
+.diffDiagInputTable tr td:last-child {
+  width: 10px;
+}
+
+.liricalSummaryTable {
+    font-size: 12px;
+    border: 1px solid black;
+}
+
+.liricalSummaryTable th {
+    background-color: lightgray;
+    font-size: 14px;
+}
+
+.scoreTable {
+    border: 1px solid black;
+    background-color: peachpuff;
+}
+
+.liricalSummaryTable tr td:first-child, .liricalSummaryTable tr td:nth-child(3), .scoreTable tr td:first-child {
+    font-weight: bold;
+}
+
 .resultsTable {
     border-collapse: collapse;
 }
+
 .resultsTable th {
     background-color: cornflowerblue;
     color: white;
 }
+
 .resultsTable td, .resultsTable th {
     border: 1px solid black;
     padding: 0px 10px 0px 10px
 }
 
 .resultsTable td:first-child {
-  background-color: lightblue;
-  font-weight: bold
+    background-color: lightblue;
+    font-weight: bold
 }
 
 

@@ -35,16 +35,20 @@ public class LiricalAnalysis {
 
     String genomeBuild;
     TranscriptDatabase transcriptDb;
-    float pathogenicityThreshold;
-    double defaultVariantBackgroundFrequency;
+    Float pathogenicityThreshold;
+    Double defaultVariantBackgroundFrequency;
     boolean strict;
     boolean globalAnalysisMode;
     Path liricalDataDirectory;
     Path exomiserDatabase;
     Path vcfPath;
 
-    public LiricalAnalysis(String genomeBuild, TranscriptDatabase transcriptDatabase, float pathogenicityThreshold,
-                           double defaultVariantBackgroundFrequency, boolean strict, boolean globalAnalysisMode,
+    public record LiricalRecord(String genomeBuild, TranscriptDatabase transcriptDatabase, Float pathogenicityThreshold,
+                                Double defaultVariantBackgroundFrequency, boolean strict, boolean globalAnalysisMode,
+                                Path liricalDataDir, Path exomiserPath, Path vcfPath) {}
+
+    public LiricalAnalysis(String genomeBuild, TranscriptDatabase transcriptDatabase, Float pathogenicityThreshold,
+                           Double defaultVariantBackgroundFrequency, boolean strict, boolean globalAnalysisMode,
                            Path liricalDataDirectory, Path exomiserDatabase, Path vcfPath) {
         this.genomeBuild = genomeBuild;
         this.transcriptDb = transcriptDatabase;
@@ -55,6 +59,18 @@ public class LiricalAnalysis {
         this.liricalDataDirectory = liricalDataDirectory;
         this.exomiserDatabase = exomiserDatabase;
         this.vcfPath = vcfPath;
+    }
+
+    public LiricalAnalysis(LiricalRecord liricalRecord) {
+        this.genomeBuild = liricalRecord.genomeBuild();
+        this.transcriptDb = liricalRecord.transcriptDatabase();
+        this.pathogenicityThreshold = liricalRecord.pathogenicityThreshold();
+        this.defaultVariantBackgroundFrequency = liricalRecord.defaultVariantBackgroundFrequency();
+        this.strict = liricalRecord.strict();
+        this.globalAnalysisMode = liricalRecord.globalAnalysisMode();
+        this.liricalDataDirectory = liricalRecord.liricalDataDir();
+        this.exomiserDatabase = liricalRecord.exomiserPath();
+        this.vcfPath = liricalRecord.vcfPath();
     }
 
     public Path getLiricalDataDirectory() {

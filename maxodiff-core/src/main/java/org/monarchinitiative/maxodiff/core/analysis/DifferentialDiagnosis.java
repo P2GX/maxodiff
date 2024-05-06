@@ -2,7 +2,6 @@ package org.monarchinitiative.maxodiff.core.analysis;
 
 import org.monarchinitiative.lirical.core.analysis.AnalysisResults;
 import org.monarchinitiative.lirical.core.analysis.TestResult;
-import org.monarchinitiative.maxodiff.core.Relation;
 import org.monarchinitiative.maxodiff.core.SimpleTerm;
 import org.monarchinitiative.maxodiff.core.io.MaxodiffBuilder;
 import org.monarchinitiative.maxodiff.core.io.MaxodiffDataException;
@@ -10,16 +9,17 @@ import org.monarchinitiative.maxodiff.core.io.MaxodiffDataResolver;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDisease;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
 import org.monarchinitiative.phenol.annotations.io.hpo.HpoDiseaseLoaderOptions;
+import org.monarchinitiative.phenol.ontology.algo.OntologyAlgorithm;
 import org.monarchinitiative.phenol.ontology.data.Ontology;
-import org.monarchinitiative.phenol.ontology.data.Term;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 
 import java.nio.file.Path;
 import java.util.*;
+import java.util.stream.Collectors;
 
 public class DifferentialDiagnosis {
 
-    public double posttestProbabilitySum(AnalysisResults results, List<TermId> diseaseIds) {
+    public static double posttestProbabilitySum(AnalysisResults results, List<TermId> diseaseIds) {
         double sum = 0.0;
         for (TermId id : diseaseIds) {
             var result = results.resultByDiseaseId(id);
@@ -29,7 +29,7 @@ public class DifferentialDiagnosis {
         return sum / 100;
     }
 
-    public double relativeDiseaseDiff(AnalysisResults results, List<TermId> diseaseIds, TermId targetDisease) {
+    public static double relativeDiseaseDiff(AnalysisResults results, List<TermId> diseaseIds, TermId targetDisease) {
         double sum = 0.0;
         List<TestResult> orderedResults = results.resultsWithDescendingPostTestProbability().toList();
         var targetResultOptional = orderedResults.stream().filter(result -> result.diseaseId().equals(targetDisease)).findFirst();
@@ -47,7 +47,7 @@ public class DifferentialDiagnosis {
         return sum;
     }
 
-    public double scoreSum(AnalysisResults results, List<TermId> diseaseIds) {
+    public static double scoreSum(AnalysisResults results, List<TermId> diseaseIds) {
         double sum = 0.0;
         List<TermId> subIds = diseaseIds.subList(0, diseaseIds.size());
         for (TermId diseaseId : subIds)
@@ -55,13 +55,13 @@ public class DifferentialDiagnosis {
         return sum;
     }
 
-    public double finalScore(AnalysisResults results, List<TermId> diseaseIds, double weight) {
+    public static double finalScore(AnalysisResults results, List<TermId> diseaseIds, double weight) {
         double p = posttestProbabilitySum(results, diseaseIds);
         double q = scoreSum(results, diseaseIds);
         return weight*p + (1-weight)*q;
     }
 
-    public List<HpoDisease> makeDiseaseList(MaxodiffDataResolver dataResolver, List<TermId> diseaseIds) throws MaxodiffDataException {
+    public static List<HpoDisease> makeDiseaseList(MaxodiffDataResolver dataResolver, List<TermId> diseaseIds) throws MaxodiffDataException {
         List<HpoDisease> diseases = new ArrayList<>();
         Path annotPath = dataResolver.phenotypeAnnotations();
         Ontology hpo = MaxodiffBuilder.loadOntology(dataResolver.hpoJson());
@@ -71,7 +71,7 @@ public class DifferentialDiagnosis {
         return diseases;
     }
 
-    public Map<SimpleTerm, Set<SimpleTerm>> makeHpoToMaxoTermMap(Map<SimpleTerm, Set<SimpleTerm>> fullHpoToMaxoTermMap,
+    public static Map<SimpleTerm, Set<SimpleTerm>> makeHpoToMaxoTermMap(Map<SimpleTerm, Set<SimpleTerm>> fullHpoToMaxoTermMap,
                                                                  Set<TermId> hpoTermIds) {
         Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxoTermMap = new HashMap<>();
         for (TermId hpoId : hpoTermIds) {
@@ -86,37 +86,36 @@ public class DifferentialDiagnosis {
         return hpoToMaxoTermMap;
     }
 
-    public Map<TermId, Set<TermId>> makeMaxoToHpoTermIdMap(Ontology ontology, Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxoTermMap) {
-        Map<TermId, Set<TermId>> maxoToHpoTermIdMap = new HashMap<>();
+    public static Map<TermId, Set<SimpleTerm>> makeMaxoToHpoTermMap(Ontology ontology, Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxoTermMap) {
+        Map<TermId, Set<SimpleTerm>> maxoToHpoTermMap = new HashMap<>();
         for (Map.Entry<SimpleTerm, Set<SimpleTerm>> entry : hpoToMaxoTermMap.entrySet()) {
-            TermId hpoId = entry.getKey().tid();
+            SimpleTerm hpoTerm = entry.getKey();
             Set<SimpleTerm> maxoTerms = entry.getValue();
             for (SimpleTerm maxoTerm : maxoTerms) {
                 TermId maxoId = maxoTerm.tid();
-                if (!maxoToHpoTermIdMap.containsKey(maxoId)) {
-                    maxoToHpoTermIdMap.put(maxoId, new HashSet<>(Collections.singleton(hpoId)));
+                if (!maxoToHpoTermMap.containsKey(maxoId)) {
+                    maxoToHpoTermMap.put(maxoId, new HashSet<>(Collections.singleton(hpoTerm)));
                 } else {
-                    Set<TermId> hpoIds = maxoToHpoTermIdMap.get(maxoId);
-                    hpoIds.add(hpoId);
-                    maxoToHpoTermIdMap.replace(maxoId, hpoIds);
+                    Set<SimpleTerm> hpoTerms = maxoToHpoTermMap.get(maxoId);
+                    hpoTerms.add(hpoTerm);
+                    maxoToHpoTermMap.replace(maxoId, hpoTerms);
                 }
             }
         }
-        for (TermId mId : maxoToHpoTermIdMap.keySet()) {
+        for (TermId mId : maxoToHpoTermMap.keySet()) {
             // Remove HPO ancestor term Ids from list
-            Set<TermId> hpoIdSet = maxoToHpoTermIdMap.get(mId);
-            Set<TermId> allAncestors = new HashSet<>();
-            for (TermId hpoId : hpoIdSet) {
-                Set<Term> ancestors = Relation.getTermRelations(ontology, hpoId, Relation.ANCESTOR);
-                ancestors.forEach(t -> allAncestors.add(t.id()));
-            }
-            hpoIdSet.removeAll(allAncestors);
-            maxoToHpoTermIdMap.replace(mId, hpoIdSet);
+            Set<SimpleTerm> allHpoTerms = maxoToHpoTermMap.get(mId);
+            Set<TermId> hpoIdSet = new HashSet<>();
+            allHpoTerms.forEach(t -> hpoIdSet.add(t.tid()));
+            Set<TermId> ancestors = OntologyAlgorithm.getAncestorTerms(ontology, hpoIdSet, false);
+            hpoIdSet.removeAll(ancestors);
+            Set<SimpleTerm> hpoTermSet = allHpoTerms.stream().filter(hpoTerm -> hpoIdSet.contains(hpoTerm.tid())).collect(Collectors.toSet());
+            maxoToHpoTermMap.replace(mId, hpoTermSet);
         }
-        return maxoToHpoTermIdMap;
+        return maxoToHpoTermMap;
     }
 
-    public List<List<TermId>> getHpoTermCombos(List<TermId> hpoTermIds) {
+    public static List<List<TermId>> getHpoTermCombos(List<TermId> hpoTermIds) {
 
         List<List<TermId>> hpoComboList = new ArrayList<>();
         // Start i at 1, so that we don't include the empty set in the results
@@ -137,13 +136,15 @@ public class DifferentialDiagnosis {
         return hpoComboList;
     }
 
-    public Map<TermId, Double> makeMaxoScoreMap(Map<TermId, Set<TermId>> maxoToHpoTermIdMap, List<HpoDisease> diseases,
+    public static Map<TermId, Double> makeMaxoScoreMap(Map<TermId, Set<SimpleTerm>> maxoToHpoTermMap, List<HpoDisease> diseases,
                                                 AnalysisResults results, double weight) {
         Map<TermId, Double> maxoScoreMap = new HashMap<>();
-        for (TermId maxoTermId : maxoToHpoTermIdMap.keySet()) {
+        for (TermId maxoTermId : maxoToHpoTermMap.keySet()) {
             maxoScoreMap.put(maxoTermId, 0.0);
             // Collect HPO terms that can be ascertained by MAxO term
-            List<TermId> hpoTermIds = maxoToHpoTermIdMap.get(maxoTermId).stream().toList();
+            List<SimpleTerm> hpoTerms = maxoToHpoTermMap.get(maxoTermId).stream().toList();
+            List<TermId> hpoTermIds = new ArrayList<>();
+            hpoTerms.forEach(t -> hpoTermIds.add(t.tid()));
             // Calculate differential diagnosis score, S, for HPO term combos
             List<List<TermId>> hpoCombos = getHpoTermCombos(hpoTermIds);
             List<Double> finalScores = new ArrayList<>();
@@ -171,8 +172,8 @@ public class DifferentialDiagnosis {
         return maxoScoreMap;
     }
 
-    public String getMaxoTermLabel(Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxoTermMap, TermId maxScoreMaxoTermId) {
-        String maxScoreTermLabel = new String();
+    public static String getMaxoTermLabel(Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxoTermMap, TermId maxScoreMaxoTermId) {
+        String maxScoreTermLabel = "";
         for (Map.Entry<SimpleTerm, Set<SimpleTerm>> hpoToMaxoEntry : hpoToMaxoTermMap.entrySet()) {
             Set<SimpleTerm> maxoTerms = hpoToMaxoEntry.getValue();
             for (SimpleTerm maxoTerm : maxoTerms) {
