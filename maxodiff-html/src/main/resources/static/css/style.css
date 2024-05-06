@@ -38,14 +38,23 @@
   width: 10px;
 }
 
-.liricalSummaryTable {
+.liricalResultsTable th {
+    background-color: lavender;
+    font-size: 14px;
+}
+
+.liricalResultsTable, .liricalSummaryTable {
     font-size: 12px;
     border: 1px solid black;
 }
 
 .liricalSummaryTable th {
     background-color: lightgray;
+    border: 1px solid black;
     font-size: 14px;
+}
+.liricalSummaryTable td {
+    padding: 0px 10px 0px 10px
 }
 
 .scoreTable {
@@ -57,7 +66,7 @@
     font-weight: bold;
 }
 
-.resultsTable {
+.liricalResultsTable, .liricalSummaryTable, .resultsTable {
     border-collapse: collapse;
 }
 
@@ -66,7 +75,7 @@
     color: white;
 }
 
-.resultsTable td, .resultsTable th {
+.liricalResultsTable td, .liricalResultsTable th, .resultsTable td, .resultsTable th {
     border: 1px solid black;
     padding: 0px 10px 0px 10px
 }

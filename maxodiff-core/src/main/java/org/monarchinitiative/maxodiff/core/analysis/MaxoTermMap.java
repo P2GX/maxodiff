@@ -26,7 +26,7 @@ public class MaxoTermMap {
 
     public record MaxoTerm(String maxoTerm, String maxoLabel, Integer nOmimTerms, Set<TermId> omimTermIds, Set<SimpleTerm> hpoTerms, Double score) {}
 
-    public record Frequencies(TermId hpoId, String hpoLabel, List<String> frequencies) {}
+    public record Frequencies(TermId hpoId, String hpoLabel, List<Float> frequencies) {}
 
     MaxodiffDataResolver dataResolver;
     Ontology hpo;
@@ -75,14 +75,14 @@ public class MaxoTermMap {
         for (SimpleTerm hpoTerm : maxoTermRecord.hpoTerms) {
             TermId hpoId = hpoTerm.tid();
             String hpoLabel = hpoTerm.label();
-            Map<TermId, String> maxoFrequencies = new LinkedHashMap<>();
-            omimIds.forEach(e -> maxoFrequencies.put(e, "-"));
+            Map<TermId, Float> maxoFrequencies = new LinkedHashMap<>();
+            omimIds.forEach(e -> maxoFrequencies.put(e, null));
             List<HpoFrequency> frequencies = hpoTermCounts.get(hpoId);
             for (HpoFrequency hpoFrequency : frequencies) {
                 for (TermId omimId : omimIds) {
                     if (hpoFrequency.omimId().equals(omimId.toString())) {
                         Float frequency = hpoFrequency.frequency();
-                        maxoFrequencies.replace(omimId, String.format("%.4g%n", frequency));
+                        maxoFrequencies.replace(omimId, frequency);
                     }
                 }
             }

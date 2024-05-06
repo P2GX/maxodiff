@@ -1,6 +1,7 @@
 package org.monarchinitiative.maxodiff.html.controller;
 
 import org.monarchinitiative.lirical.core.analysis.AnalysisResults;
+import org.monarchinitiative.lirical.core.analysis.TestResult;
 import org.monarchinitiative.maxodiff.core.analysis.MaxoTermMap;
 import org.monarchinitiative.maxodiff.html.analysis.InputRecord;
 import org.monarchinitiative.maxodiff.html.service.MaxoTermService;
@@ -28,14 +29,18 @@ public class MaxoTermController {
                              Model model) throws Exception {
 
         Path phenopacketPath = input.phenopacketPath();
-        AnalysisResults results = input.liricalResults();
+        AnalysisResults liricalResults = input.liricalResults();
+        List<TestResult> liricalResultsList = liricalResults.resultsWithDescendingPostTestProbability().toList();
+        int nLiricalResults = 10;
+        model.addAttribute("nLiricalResults", nLiricalResults);
+        model.addAttribute("liricalResultsList", liricalResultsList.subList(0, nLiricalResults));
         model.addAttribute("posttestFilter", posttestFilter);
         model.addAttribute("weight", weight);
         model.addAttribute("nMaxoResults", nMaxoResults);
         if (phenopacketPath != null & posttestFilter != null & weight != null & nMaxoResults != null) {
             InputRecord inputRecord = (InputRecord) model.getAttribute("inputRecord");
             MaxoTermMap maxoTermMap = inputRecord.maxoTermMap();
-            List<MaxoTermMap.MaxoTerm> maxoTermRecords = maxoTermService.getMaxoTermRecords(maxoTermMap, results, phenopacketPath, posttestFilter, weight);
+            List<MaxoTermMap.MaxoTerm> maxoTermRecords = maxoTermService.getMaxoTermRecords(maxoTermMap, liricalResults, phenopacketPath, posttestFilter, weight);
             TermId diseaseId = maxoTermService.getDiseaseId(maxoTermMap);
             String phenopacketName = phenopacketPath.toFile().getName();
             model.addAttribute("phenopacket", phenopacketName);
@@ -54,7 +59,7 @@ public class MaxoTermController {
             }
             model.addAttribute("maxoTables", maxoTables);
         }
-        return "results";
+        return "liricalResults";
     }
 
 

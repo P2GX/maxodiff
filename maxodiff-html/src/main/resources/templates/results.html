@@ -7,6 +7,15 @@
 </head>
 <body>
 <form th:action="@{/results}">
+    <table>
+        <tbody>
+        <tr>
+            <td style='font-weight:bold;'>Phenopacket Path:</td><td th:text="${inputRecord.phenopacketPath}"></td>
+        </tr>
+        </tbody>
+    </table>
+    <p></p>
+
     <table class="liricalSummaryTable" th:object="${liricalRecord}">
         <thead>
         <tr>
@@ -32,13 +41,26 @@
         </tr>
         </tbody>
     </table>
-
     <p></p>
-    <table>
-        <tbody>
+
+    <table class="liricalResultsTable">
+        <thead>
         <tr>
-            <td style='font-weight:bold;'>Phenopacket Path:</td><td th:text="${inputRecord.phenopacketPath}"></td>
+            <th colspan="4" th:text="'Top ' + ${nLiricalResults} + ' LIRICAL Results'"></th>
         </tr>
+        <tr>
+            <th>Rank</th><th>Disease ID</th><th>Posttest Probability</th>
+        </tr>
+        </thead>
+        <tbody>
+        <th:block th:each= "liricalResult, iter : ${liricalResultsList}">
+            <tr>
+                <td th:text="${iter.index+1}"></td>
+                <td th:text="${liricalResult.diseaseId}"></td>
+                <td th:text="${liricalResult.posttestProbability} % 1 == 0 ?
+                ${liricalResult.posttestProbability} : ${#numbers.formatDecimal(liricalResult.posttestProbability, 1, 4)}"></td>
+            </tr>
+        </th:block>
         </tbody>
     </table>
 
@@ -47,11 +69,11 @@
         <tbody>
         <tr>
             <td>Posttest Probability Threshold:</td>
-            <td><input style="width:90%" type="number" step="0.05" min="0" max="1" name="posttestFilter" /></td>
+            <td><input style="width:90%" type="number" step="0.01" min="0" max="1" name="posttestFilter" /></td>
         </tr>
         <tr>
             <td>Weight: </td>
-            <td><input style="width:90%" type="number" step="0.05" min="0" max="1" name="weight"/></td>
+            <td><input style="width:90%" type="number" step="0.01" min="0" max="1" name="weight"/></td>
         </tr>
         <tr>
             <td>Maximum # MaXo Results to Display:</td>
@@ -109,7 +131,8 @@
             <tr>
                 <td th:text="${freqRecord.hpoId} + ' (' + ${freqRecord.hpoLabel} + ')'"></td>
                 <th:block th:each="frequency : ${freqRecord.frequencies}">
-                    <td th:text="${frequency}"></td>
+                    <td th:text="${frequency} == null ? ${frequency} :
+                    (${frequency} % 1 == 0 ? ${frequency} : ${#numbers.formatDecimal(frequency, 1, 4)})"></td>
                 </th:block>
             </tr>
         </th:block>
