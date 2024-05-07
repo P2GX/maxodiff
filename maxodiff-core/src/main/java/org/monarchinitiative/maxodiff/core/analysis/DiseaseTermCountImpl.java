@@ -1,4 +1,4 @@
-package org.monarchinitiative.maxodiff.core;
+package org.monarchinitiative.maxodiff.core.analysis;
 
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDisease;
 import org.monarchinitiative.phenol.ontology.data.TermId;
@@ -18,31 +18,24 @@ public class DiseaseTermCountImpl implements DiseaseTermCount {
         return EMPTY;
     }
 
+    public record HpoFrequency(String omimId, String hpoId, Integer count, Float frequency) {}
+
     private final List<HpoDisease> diseaseList;
 
-    private final Map<TermId, List<Object>> hpoTermCounts;
+    private final Map<TermId, List<HpoFrequency>> hpoTermCounts;
 
     public DiseaseTermCountImpl(List<HpoDisease> diseaseList) {
         this.diseaseList = Objects.requireNonNull(diseaseList);
         this.hpoTermCounts = new HashMap<>();
         for (HpoDisease disease : diseaseList) {
+            TermId omimId = disease.id();
             List<TermId> termIds = disease.annotationTermIdList();
             LOGGER.debug(disease.diseaseName() + ": " + termIds);
-            for (TermId id : termIds) {
-                List<Object> countFreqList;
-                float termFreq = disease.getFrequencyOfTermInDisease(id).orElse(null).frequency();
-                if (!this.hpoTermCounts.containsKey(id)) {
-                    //Add list of term count and frequency to map
-                    countFreqList = Arrays.asList(1, termFreq);
-                    this.hpoTermCounts.put(id, countFreqList);
-                } else {
-                    //Replace list of term count and frequency in map
-                    List<Object> list = this.hpoTermCounts.get(id);
-                    int oldCount = (int) list.get(0);
-                    list.set(0, oldCount + 1);
-                    list.set(1, termFreq);
-                    this.hpoTermCounts.replace(id, list);
-                }
+            for (TermId hpoId : termIds) {
+                List<HpoFrequency> freqRecords = !this.hpoTermCounts.containsKey(hpoId) ? new ArrayList<>() : this.hpoTermCounts.get(hpoId);
+                float hpoTermFreq = disease.getFrequencyOfTermInDisease(hpoId).orElse(null).frequency();
+                freqRecords.add(new HpoFrequency(omimId.toString(), hpoId.toString(), 1, hpoTermFreq));
+                this.hpoTermCounts.put(hpoId, freqRecords);
             }
         }
     }
@@ -53,6 +46,6 @@ public class DiseaseTermCountImpl implements DiseaseTermCount {
 
     public int nHpoTerms() { return hpoTermCounts.size(); }
 
-    public Map<TermId, List<Object>> hpoTermCounts() { return hpoTermCounts; }
+    public Map<TermId, List<HpoFrequency>> hpoTermCounts() { return hpoTermCounts; }
 
 }

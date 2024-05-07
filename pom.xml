@@ -12,6 +12,12 @@
     <name>maxodiff</name>
     <url>https://github.com/pnrobinson/maxodiff</url>
 
+    <parent>
+        <groupId>org.springframework.boot</groupId>
+        <artifactId>spring-boot-starter-parent</artifactId>
+        <version>3.2.0</version>
+    </parent>
+
     <modules>
         <module>maxodiff-core</module>
         <module>maxodiff-cli</module>
@@ -35,22 +41,29 @@
         <maven>3.8.0</maven>
     </prerequisites>
 
+    <repositories>
+        <repository>
+            <id>jitpack.io</id>
+            <url>https://jitpack.io</url>
+        </repository>
+    </repositories>
+
     <dependencies>
         <dependency>
-            <!--            <groupId>com.github.TheJacksonLaboratory.LIRICAL</groupId>-->
-            <groupId>org.monarchinitiative.lirical</groupId>
+            <groupId>com.github.TheJacksonLaboratory.LIRICAL</groupId>
+<!--            <groupId>org.monarchinitiative.lirical</groupId>-->
             <artifactId>lirical-configuration</artifactId>
             <version>${lirical.version}</version>
         </dependency>
         <dependency>
-<!--            <groupId>com.github.TheJacksonLaboratory.LIRICAL</groupId>-->
-            <groupId>org.monarchinitiative.lirical</groupId>
+            <groupId>com.github.TheJacksonLaboratory.LIRICAL</groupId>
+<!--            <groupId>org.monarchinitiative.lirical</groupId>-->
             <artifactId>lirical-core</artifactId>
             <version>${lirical.version}</version>
         </dependency>
         <dependency>
-            <!--            <groupId>com.github.TheJacksonLaboratory.LIRICAL</groupId>-->
-            <groupId>org.monarchinitiative.lirical</groupId>
+            <groupId>com.github.TheJacksonLaboratory.LIRICAL</groupId>
+<!--            <groupId>org.monarchinitiative.lirical</groupId>-->
             <artifactId>lirical-io</artifactId>
             <version>${lirical.version}</version>
         </dependency>

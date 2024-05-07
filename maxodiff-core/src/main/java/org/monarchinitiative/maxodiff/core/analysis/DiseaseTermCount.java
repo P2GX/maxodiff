@@ -1,7 +1,8 @@
-package org.monarchinitiative.maxodiff.core;
+package org.monarchinitiative.maxodiff.core.analysis;
 
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDisease;
 import org.monarchinitiative.phenol.ontology.data.TermId;
+import org.monarchinitiative.maxodiff.core.analysis.DiseaseTermCountImpl.HpoFrequency;
 
 import java.util.List;
 import java.util.Map;
@@ -21,6 +22,6 @@ public interface DiseaseTermCount {
     int nDiseases();
     List<HpoDisease> hpoDiseases();
     int nHpoTerms();
-    Map<TermId, List<Object>> hpoTermCounts();
+    Map<TermId, List<HpoFrequency>> hpoTermCounts();
 
 }

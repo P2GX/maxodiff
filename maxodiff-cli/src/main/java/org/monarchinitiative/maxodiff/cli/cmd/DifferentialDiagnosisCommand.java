@@ -1,12 +1,11 @@
 package org.monarchinitiative.maxodiff.cli.cmd;
 
-import org.apache.commons.csv.CSVFormat;
-import org.apache.commons.csv.CSVPrinter;
 import org.monarchinitiative.lirical.core.Lirical;
 import org.monarchinitiative.lirical.core.analysis.*;
 import org.monarchinitiative.lirical.core.exception.LiricalException;
 import org.monarchinitiative.lirical.core.model.GenesAndGenotypes;
 import org.monarchinitiative.lirical.core.model.Sex;
+import org.monarchinitiative.lirical.core.model.TranscriptDatabase;
 import org.monarchinitiative.lirical.core.output.AnalysisResultsMetadata;
 import org.monarchinitiative.lirical.core.output.AnalysisResultsWriter;
 import org.monarchinitiative.lirical.core.output.OutputFormat;
@@ -14,17 +13,13 @@ import org.monarchinitiative.lirical.core.output.OutputOptions;
 import org.monarchinitiative.lirical.io.analysis.PhenopacketData;
 import org.monarchinitiative.lirical.io.analysis.PhenopacketImporter;
 import org.monarchinitiative.lirical.io.analysis.PhenopacketImporters;
-import org.monarchinitiative.maxodiff.core.DifferentialDiagnosis;
-import org.monarchinitiative.maxodiff.core.DiseaseTermCount;
+import org.monarchinitiative.maxodiff.core.analysis.DifferentialDiagnosis;
+import org.monarchinitiative.maxodiff.core.analysis.DiseaseTermCount;
 import org.monarchinitiative.maxodiff.core.SimpleTerm;
-import org.monarchinitiative.maxodiff.core.analysis.MaxoDiffVisualizer;
-import org.monarchinitiative.maxodiff.core.analysis.MaxodiffAnalyzer;
-import org.monarchinitiative.maxodiff.core.io.InputFileParser;
+import org.monarchinitiative.maxodiff.core.analysis.LiricalAnalysis;
+import org.monarchinitiative.maxodiff.core.analysis.MaxoTermMap;
 import org.monarchinitiative.maxodiff.core.io.MaxoDxAnnots;
-import org.monarchinitiative.maxodiff.core.io.MaxodiffBuilder;
 import org.monarchinitiative.maxodiff.core.io.MaxodiffDataResolver;
-import org.monarchinitiative.maxodiff.core.service.MaxoDiffService;
-import org.monarchinitiative.maxodiff.core.service.PhenotypeService;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDisease;
 import org.monarchinitiative.phenol.ontology.data.Ontology;
 import org.monarchinitiative.phenol.ontology.data.TermId;
@@ -35,7 +30,6 @@ import picocli.CommandLine;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.attribute.BasicFileAttributes;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.zip.GZIPOutputStream;
@@ -52,6 +46,11 @@ import static org.monarchinitiative.maxodiff.core.io.MaxodiffBuilder.loadOntolog
         description = "maxodiff analysis")
 public class DifferentialDiagnosisCommand extends BaseLiricalCommand {
     private static final Logger LOGGER = LoggerFactory.getLogger(DifferentialDiagnosisCommand.class);
+
+    @CommandLine.Option(names = {"-m", "--maxoData"},
+            required = true,
+            description = "Path to MaXo data directory.")
+    protected Path maxoDataPath;
 
     @CommandLine.Option(names = {"-p", "--phenopacket"},
 //            required = true,
@@ -120,10 +119,7 @@ public class DifferentialDiagnosisCommand extends BaseLiricalCommand {
         resultsMap.put("weight", new ArrayList<>());
         resultsMap.put("maxScoreValue", new ArrayList<>());
 
-        MaxodiffDataResolver dataResolver = new MaxodiffDataResolver(dataSection.liricalDataDirectory);
-        Ontology hpo = loadOntology(dataResolver.hpoJson());
-        MaxoDxAnnots maxoDxAnnots = new MaxoDxAnnots(dataResolver.maxoDxAnnots());
-        Map<SimpleTerm, Set<SimpleTerm>> fullHpoToMaxoTermMap = maxoDxAnnots.getSimpleTermSetMap();
+        MaxoTermMap maxoTermMap = new MaxoTermMap(maxoDataPath);
 
         List<Double> weights = new ArrayList<>();
         weightsArg.stream().forEach(w -> weights.add(w));
@@ -131,38 +127,20 @@ public class DifferentialDiagnosisCommand extends BaseLiricalCommand {
         thresholdsArg.stream().forEach(t -> filterPosttestProbs.add(t));
 
         try {
-            // Read phenopacket data.
-            PhenopacketData phenopacketData = readPhenopacketData(phenopacketPath);
+            // Run LIRICAL analysis
+            LiricalAnalysis liricalAnalysis = new LiricalAnalysis(genomeBuild, TranscriptDatabase.REFSEQ,
+                    runConfiguration.pathogenicityThreshold, runConfiguration.defaultVariantBackgroundFrequency, runConfiguration.strict,
+                    runConfiguration.globalAnalysisMode, dataSection.liricalDataDirectory, dataSection.exomiserDatabase, vcfPath);
 
-            // Prepare LIRICAL analysis options
-            Lirical lirical = prepareLirical();
-            AnalysisOptions analysisOptions = prepareAnalysisOptions(lirical);
-
-            // Read variants if present.
-            GenesAndGenotypes gene2Genotypes = readVariants(vcfPath, lirical, analysisOptions.genomeBuild());
-
-            // Prepare LIRICAL analysis data.
-            AnalysisData analysisData = AnalysisData.of(phenopacketData.sampleId(),
-                    phenopacketData.parseAge().orElse(null),
-                    phenopacketData.parseSex().orElse(Sex.UNKNOWN),
-                    phenopacketData.presentHpoTermIds().toList(),
-                    phenopacketData.excludedHpoTermIds().toList(),
-                    gene2Genotypes);
-
-            // Run the LIRICAL analysis.
-            LOGGER.info("Starting the analysis: {}", analysisOptions);
-            AnalysisResults results;
-            try (LiricalAnalysisRunner analysisRunner = lirical.analysisRunner()) {
-                results = analysisRunner.run(analysisData, analysisOptions);
-            }
+            AnalysisResults results = liricalAnalysis.runLiricalAnalysis(phenopacketPath);
 
             // Summarize the LIRICAL results.
-            String sampleId = analysisData.sampleId();
+            //String sampleId = analysisData.sampleId();
             String phenopacketName = phenopacketPath.toFile().getName();
-            String outFilename = String.join("_",
-                    phenopacketName.replace(".json", ""),
-                    "lirical",
-                    "results");
+            //String outFilename = String.join("_",
+            //        phenopacketName.replace(".json", ""),
+            //        "lirical",
+            //        "results");
             //AnalysisResultsMetadata metadata = prepareAnalysisResultsMetadata(gene2Genotypes, lirical, sampleId);
             //writeResultsToFile(lirical, OutputFormat.parse(outputFormatArg), analysisData, results, metadata, outFilename);
 
@@ -170,46 +148,31 @@ public class DifferentialDiagnosisCommand extends BaseLiricalCommand {
 
             for (double posttestFilter : filterPosttestProbs) {
                 LOGGER.info("Min Posttest Probabiltiy Threshold = " + posttestFilter);
-                // Collect HPO terms and frequencies for the target m diseases
-                List<TermId> diseaseIds = new ArrayList<>();
-                List<TestResult> testResults = results.resultsWithDescendingPostTestProbability()
-                        .filter(r -> r.posttestProbability() >= posttestFilter)
-                        .collect(Collectors.toList());
-                testResults.forEach(r -> diseaseIds.add(r.diseaseId()));
-                LOGGER.info(phenopacketPath + " diseaseIds: " + String.valueOf(diseaseIds));
-                int topNDiseases = diseaseIds.size();
-
                 DifferentialDiagnosis diffDiag = new DifferentialDiagnosis();
-                List<HpoDisease> diseases = diffDiag.makeDiseaseList(dataResolver, diseaseIds);
-                DiseaseTermCount diseaseTermCount = DiseaseTermCount.of(diseases);
-                Map<TermId, List<Object>> hpoTermCounts = diseaseTermCount.hpoTermCounts();
-
-                // Remove HPO terms present in the phenopacket
-                phenopacketData.presentHpoTermIds().forEach(id -> hpoTermCounts.remove(id));
-                phenopacketData.excludedHpoTermIds().forEach(id -> hpoTermCounts.remove(id));
-
-                // Get all the MaXo terms that can be used to diagnose the HPO terms
-                Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxoTermMap = diffDiag.makeHpoToMaxoTermMap(fullHpoToMaxoTermMap, hpoTermCounts.keySet());
-                Map<TermId, Set<TermId>> maxoToHpoTermIdMap = diffDiag.makeMaxoToHpoTermIdMap(hpo, hpoToMaxoTermMap);
+                // Make MaXo:HPO TermId Map
+                Map<TermId, Set<TermId>> maxoToHpoTermIdMap = maxoTermMap.makeMaxoToHpoTermIdMap(results, diffDiag, phenopacketPath, posttestFilter);
 
                 LOGGER.info(String.valueOf(maxoToHpoTermIdMap));
 
                 for (double weight : weights) {
                     LOGGER.info("Weight = " + weight);
                     // Make map of MaXo scores
-                    Map<TermId, Double> maxoScoreMap = diffDiag.makeMaxoScoreMap(maxoToHpoTermIdMap, diseases, results, weight);
+                    Map<TermId, Double> maxoScoreMap = maxoTermMap.makeMaxoScoreMap(diffDiag, maxoToHpoTermIdMap, weight);
                     LOGGER.info(String.valueOf(maxoScoreMap));
                     // Take the MaXo term that has the highest score
                     Map.Entry<TermId, Double> maxScore = maxoScoreMap.entrySet().stream().max(Map.Entry.comparingByValue()).get();
                     TermId maxScoreMaxoTermId = maxScore.getKey();
                     double maxScoreValue = maxScore.getValue();
-                    String maxScoreTermLabel = diffDiag.getMaxoTermLabel(hpoToMaxoTermMap, maxScoreMaxoTermId);
+                    String maxScoreTermLabel = diffDiag.getMaxoTermLabel(maxoTermMap.getHpoToMaxoTermMap(), maxScoreMaxoTermId);
 
                     LOGGER.info("Max Score: " + maxScoreMaxoTermId + " (" + maxScoreTermLabel + ")" + " = " + maxScoreValue);
 //                    double finalScore = diffDiag.finalScore(results, diseaseIds, weight);
 //                    LOGGER.info("Input Disease List Score: " + finalScore);
                     String backgroundVcf = vcfPath == null ? "" : vcfPath.toFile().getName();
-                    TermId diseaseId = phenopacketData.diseaseIds().get(0);
+                    TermId diseaseId = maxoTermMap.getDiseaseId();
+                    Set<TermId> diseaseIds = new HashSet<>();
+                    maxoTermMap.getDiseases().forEach(disease -> diseaseIds.add(disease.id()));
+                    int topNDiseases = diseaseIds.size();
 
                     List<Object> phenopacketNames = resultsMap.get("phenopacketName");
                     phenopacketNames.add(phenopacketName);

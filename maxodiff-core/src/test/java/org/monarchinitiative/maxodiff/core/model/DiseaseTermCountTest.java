@@ -3,11 +3,12 @@ package org.monarchinitiative.maxodiff.core.model;
 
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.monarchinitiative.maxodiff.core.DiseaseTermCount;
+import org.monarchinitiative.maxodiff.core.analysis.DiseaseTermCount;
 import org.monarchinitiative.maxodiff.core.TestResources;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDisease;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
 import org.monarchinitiative.phenol.ontology.data.TermId;
+import org.monarchinitiative.maxodiff.core.analysis.DiseaseTermCountImpl.HpoFrequency;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -43,10 +44,11 @@ public class DiseaseTermCountTest {
 
     @Test
     public void hpoTermCountTest() {
-        Map<TermId, List<Object>> termCounts = diseaseTermCount.hpoTermCounts();
-        for (Map.Entry<TermId, List<Object>> e : termCounts.entrySet()) {
+        Map<TermId, List<HpoFrequency>> termCounts = diseaseTermCount.hpoTermCounts();
+        for (Map.Entry<TermId, List<HpoFrequency>> e : termCounts.entrySet()) {
             TermId id = e.getKey();
-            int count = (int) e.getValue().get(0);
+            List<HpoFrequency> frequencyList = e.getValue();
+            int count = frequencyList.size();
             if (id.getId().equals("0000456")) {
                 assertEquals(2, count);
             } else if (id.getId().equals("0003828")) {
