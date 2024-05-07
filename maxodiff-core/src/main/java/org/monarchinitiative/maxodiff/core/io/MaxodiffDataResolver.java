@@ -34,7 +34,7 @@ public class MaxodiffDataResolver {
             }
         }
         if (error) {
-            throw new MaxodiffDataException("Missing one or more resource files in Lirical data directory!");
+            throw new MaxodiffDataException("Missing one or more resource files in maxodiff data directory!");
         }
     }
 

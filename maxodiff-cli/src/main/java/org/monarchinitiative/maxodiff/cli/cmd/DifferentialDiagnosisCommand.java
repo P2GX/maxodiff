@@ -3,8 +3,6 @@ package org.monarchinitiative.maxodiff.cli.cmd;
 import org.monarchinitiative.lirical.core.Lirical;
 import org.monarchinitiative.lirical.core.analysis.*;
 import org.monarchinitiative.lirical.core.exception.LiricalException;
-import org.monarchinitiative.lirical.core.model.GenesAndGenotypes;
-import org.monarchinitiative.lirical.core.model.Sex;
 import org.monarchinitiative.lirical.core.model.TranscriptDatabase;
 import org.monarchinitiative.lirical.core.output.AnalysisResultsMetadata;
 import org.monarchinitiative.lirical.core.output.AnalysisResultsWriter;
@@ -13,15 +11,10 @@ import org.monarchinitiative.lirical.core.output.OutputOptions;
 import org.monarchinitiative.lirical.io.analysis.PhenopacketData;
 import org.monarchinitiative.lirical.io.analysis.PhenopacketImporter;
 import org.monarchinitiative.lirical.io.analysis.PhenopacketImporters;
-import org.monarchinitiative.maxodiff.core.analysis.DifferentialDiagnosis;
-import org.monarchinitiative.maxodiff.core.analysis.DiseaseTermCount;
 import org.monarchinitiative.maxodiff.core.SimpleTerm;
+import org.monarchinitiative.maxodiff.core.analysis.DifferentialDiagnosis;
 import org.monarchinitiative.maxodiff.core.analysis.LiricalAnalysis;
 import org.monarchinitiative.maxodiff.core.analysis.MaxoTermMap;
-import org.monarchinitiative.maxodiff.core.io.MaxoDxAnnots;
-import org.monarchinitiative.maxodiff.core.io.MaxodiffDataResolver;
-import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDisease;
-import org.monarchinitiative.phenol.ontology.data.Ontology;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -31,10 +24,7 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
-import java.util.stream.Collectors;
 import java.util.zip.GZIPOutputStream;
-
-import static org.monarchinitiative.maxodiff.core.io.MaxodiffBuilder.loadOntology;
 
 
 /**
@@ -132,7 +122,7 @@ public class DifferentialDiagnosisCommand extends BaseLiricalCommand {
                     runConfiguration.pathogenicityThreshold, runConfiguration.defaultVariantBackgroundFrequency, runConfiguration.strict,
                     runConfiguration.globalAnalysisMode, dataSection.liricalDataDirectory, dataSection.exomiserDatabase, vcfPath);
 
-            AnalysisResults results = liricalAnalysis.runLiricalAnalysis(phenopacketPath);
+            AnalysisResults results = maxoTermMap.runLiricalCalculation(liricalAnalysis, phenopacketPath);
 
             // Summarize the LIRICAL results.
             //String sampleId = analysisData.sampleId();
@@ -148,22 +138,21 @@ public class DifferentialDiagnosisCommand extends BaseLiricalCommand {
 
             for (double posttestFilter : filterPosttestProbs) {
                 LOGGER.info("Min Posttest Probabiltiy Threshold = " + posttestFilter);
-                DifferentialDiagnosis diffDiag = new DifferentialDiagnosis();
-                // Make MaXo:HPO TermId Map
-                Map<TermId, Set<TermId>> maxoToHpoTermIdMap = maxoTermMap.makeMaxoToHpoTermIdMap(results, diffDiag, phenopacketPath, posttestFilter);
+                // Make MaXo:HPO Term Map
+                Map<TermId, Set<SimpleTerm>> maxoToHpoTermMap = maxoTermMap.makeMaxoToHpoTermMap(results, phenopacketPath, posttestFilter);
 
-                LOGGER.info(String.valueOf(maxoToHpoTermIdMap));
+                LOGGER.info(String.valueOf(maxoToHpoTermMap));
 
                 for (double weight : weights) {
                     LOGGER.info("Weight = " + weight);
                     // Make map of MaXo scores
-                    Map<TermId, Double> maxoScoreMap = maxoTermMap.makeMaxoScoreMap(diffDiag, maxoToHpoTermIdMap, weight);
+                    Map<TermId, Double> maxoScoreMap = maxoTermMap.makeMaxoScoreMap(maxoToHpoTermMap, results, weight);
                     LOGGER.info(String.valueOf(maxoScoreMap));
                     // Take the MaXo term that has the highest score
                     Map.Entry<TermId, Double> maxScore = maxoScoreMap.entrySet().stream().max(Map.Entry.comparingByValue()).get();
                     TermId maxScoreMaxoTermId = maxScore.getKey();
                     double maxScoreValue = maxScore.getValue();
-                    String maxScoreTermLabel = diffDiag.getMaxoTermLabel(maxoTermMap.getHpoToMaxoTermMap(), maxScoreMaxoTermId);
+                    String maxScoreTermLabel = DifferentialDiagnosis.getMaxoTermLabel(maxoTermMap.getHpoToMaxoTermMap(), maxScoreMaxoTermId);
 
                     LOGGER.info("Max Score: " + maxScoreMaxoTermId + " (" + maxScoreTermLabel + ")" + " = " + maxScoreValue);
 //                    double finalScore = diffDiag.finalScore(results, diseaseIds, weight);

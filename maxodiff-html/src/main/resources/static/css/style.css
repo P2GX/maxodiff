@@ -22,21 +22,67 @@
   color: red;
 }
 
-.resultsTable {
+.diffDiagInputTable {
+  border: 1px solid black;
+  background-color: lemonchiffon;
+  table-layout: fixed;
+  width: 400px;
+}
+
+.diffDiagInputTable tr td:first-child {
+  font-weight: bold;
+  width: 30px;
+}
+
+.diffDiagInputTable tr td:last-child {
+  width: 10px;
+}
+
+.liricalResultsTable th {
+    background-color: lavender;
+    font-size: 14px;
+}
+
+.liricalResultsTable, .liricalSummaryTable {
+    font-size: 12px;
+    border: 1px solid black;
+}
+
+.liricalSummaryTable th {
+    background-color: lightgray;
+    border: 1px solid black;
+    font-size: 14px;
+}
+.liricalSummaryTable td {
+    padding: 0px 10px 0px 10px
+}
+
+.scoreTable {
+    border: 1px solid black;
+    background-color: peachpuff;
+}
+
+.liricalSummaryTable tr td:first-child, .liricalSummaryTable tr td:nth-child(3), .scoreTable tr td:first-child {
+    font-weight: bold;
+}
+
+.liricalResultsTable, .liricalSummaryTable, .resultsTable {
     border-collapse: collapse;
 }
+
 .resultsTable th {
     background-color: cornflowerblue;
     color: white;
 }
-.resultsTable td, .resultsTable th {
+
+.liricalResultsTable td, .liricalResultsTable th, .resultsTable td, .resultsTable th {
     border: 1px solid black;
     padding: 0px 10px 0px 10px
 }
 
 .resultsTable td:first-child {
-  background-color: lightblue;
-  font-weight: bold
+    background-color: lightblue;
+    font-weight: bold
 }
 
 
