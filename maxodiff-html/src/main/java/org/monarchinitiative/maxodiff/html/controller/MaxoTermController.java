@@ -59,7 +59,7 @@ public class MaxoTermController {
             }
             model.addAttribute("maxoTables", maxoTables);
         }
-        return "liricalResults";
+        return "results";
     }
 
 
