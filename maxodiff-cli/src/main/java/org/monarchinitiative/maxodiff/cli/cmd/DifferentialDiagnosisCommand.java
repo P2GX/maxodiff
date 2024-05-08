@@ -139,14 +139,15 @@ public class DifferentialDiagnosisCommand extends BaseLiricalCommand {
             for (double posttestFilter : filterPosttestProbs) {
                 LOGGER.info("Min Posttest Probabiltiy Threshold = " + posttestFilter);
                 // Make MaXo:HPO Term Map
-                Map<TermId, Set<SimpleTerm>> maxoToHpoTermMap = maxoTermMap.makeMaxoToHpoTermMap(results, phenopacketPath, posttestFilter);
+                Map<TermId, Set<SimpleTerm>> maxoToHpoTermMap = maxoTermMap.makeMaxoToHpoTermMap(results, null,
+                        phenopacketPath, posttestFilter);
 
                 LOGGER.info(String.valueOf(maxoToHpoTermMap));
 
                 for (double weight : weights) {
                     LOGGER.info("Weight = " + weight);
                     // Make map of MaXo scores
-                    Map<TermId, Double> maxoScoreMap = maxoTermMap.makeMaxoScoreMap(maxoToHpoTermMap, results, weight);
+                    Map<TermId, Double> maxoScoreMap = maxoTermMap.makeMaxoScoreMap(maxoToHpoTermMap, results, null, weight);
                     LOGGER.info(String.valueOf(maxoScoreMap));
                     // Take the MaXo term that has the highest score
                     Map.Entry<TermId, Double> maxScore = maxoScoreMap.entrySet().stream().max(Map.Entry.comparingByValue()).get();

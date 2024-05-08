@@ -19,6 +19,7 @@ import java.util.stream.Collectors;
 
 public class DifferentialDiagnosis {
 
+    //Functions using results from a LIRICAL calculation in the same session
     public static double posttestProbabilitySum(AnalysisResults results, List<TermId> diseaseIds) {
         double sum = 0.0;
         for (TermId id : diseaseIds) {
@@ -47,17 +48,63 @@ public class DifferentialDiagnosis {
         return sum;
     }
 
-    public static double scoreSum(AnalysisResults results, List<TermId> diseaseIds) {
+    //Functions using results from a separate LIRICAL output file
+    public static double posttestProbabilitySum(List<LiricalResultsFileRecord> liricalOutputRecords,
+                                                List<TermId> diseaseIds) {
         double sum = 0.0;
-        List<TermId> subIds = diseaseIds.subList(0, diseaseIds.size());
-        for (TermId diseaseId : subIds)
-            sum += relativeDiseaseDiff(results, diseaseIds, diseaseId);
+        for (TermId id : diseaseIds) {
+            var liricalRecord = liricalOutputRecords.stream().filter(r -> r.omimId().equals(id)).findFirst();
+            if (liricalRecord.isPresent())
+                sum += liricalRecord.get().posttestProbability();
+        }
+        return sum / 100;
+    }
+
+    public static double relativeDiseaseDiff(List<LiricalResultsFileRecord> liricalOutputRecords,
+                                             List<TermId> diseaseIds, TermId targetDisease) {
+        double sum = 0.0;
+        List<LiricalResultsFileRecord> orderedResults = liricalOutputRecords.stream()
+                .sorted(Comparator.comparingDouble(LiricalResultsFileRecord::posttestProbability).reversed()).toList();
+        var targetResultOptional = orderedResults.stream().filter(result -> result.omimId().equals(targetDisease)).findFirst();
+        if (targetResultOptional.isPresent()) {
+            LiricalResultsFileRecord targetResult = targetResultOptional.get();
+            int targetResultIdx = orderedResults.indexOf(targetResult);
+            List<LiricalResultsFileRecord> resultsSublist = orderedResults.subList(0, targetResultIdx);
+            List<LiricalResultsFileRecord> diffResultsList = resultsSublist.stream().filter(res -> diseaseIds.contains(res.omimId()))
+                    .sorted(Comparator.comparingDouble(LiricalResultsFileRecord::posttestProbability).reversed()).toList();
+            List<Double> diffLRList = diffResultsList.stream().map(res -> res.likelihoodRatio()).toList();
+            double targetLR = targetResult.likelihoodRatio();
+            for (double lr : diffLRList)
+                sum += targetLR / lr;
+        }
         return sum;
     }
 
-    public static double finalScore(AnalysisResults results, List<TermId> diseaseIds, double weight) {
-        double p = posttestProbabilitySum(results, diseaseIds);
-        double q = scoreSum(results, diseaseIds);
+    public static double scoreSum(AnalysisResults results, List<LiricalResultsFileRecord> liricalOutputRecords,
+                                  List<TermId> diseaseIds) {
+        double sum = 0.0;
+        List<TermId> subIds = diseaseIds.subList(0, diseaseIds.size());
+        for (TermId diseaseId : subIds)
+            if (results != null) {
+                sum += relativeDiseaseDiff(results, diseaseIds, diseaseId);
+            } else if (liricalOutputRecords != null) {
+                sum += relativeDiseaseDiff(liricalOutputRecords, diseaseIds, diseaseId);
+            }
+        return sum;
+    }
+
+    public static double finalScore(AnalysisResults results, List<LiricalResultsFileRecord> liricalOutputRecords,
+                                    List<TermId> diseaseIds, double weight) {
+        double p = 0;
+        double q = 0;
+        if (results != null) {
+            p = posttestProbabilitySum(results, diseaseIds);
+            q = scoreSum(results, null, diseaseIds);
+        } else if (liricalOutputRecords != null) {
+            p = posttestProbabilitySum(liricalOutputRecords, diseaseIds);
+            q = scoreSum(null, liricalOutputRecords, diseaseIds);
+        }
+
         return weight*p + (1-weight)*q;
     }
 
@@ -137,7 +184,7 @@ public class DifferentialDiagnosis {
     }
 
     public static Map<TermId, Double> makeMaxoScoreMap(Map<TermId, Set<SimpleTerm>> maxoToHpoTermMap, List<HpoDisease> diseases,
-                                                AnalysisResults results, double weight) {
+                                                       AnalysisResults results, List<LiricalResultsFileRecord> liricalOutputRecords, double weight) {
         Map<TermId, Double> maxoScoreMap = new HashMap<>();
         for (TermId maxoTermId : maxoToHpoTermMap.keySet()) {
             maxoScoreMap.put(maxoTermId, 0.0);
@@ -160,7 +207,7 @@ public class DifferentialDiagnosis {
                     }
                 }
                 // Calculate S using associated disease OMIM Ids
-                double comboFinalScore = finalScore(results, omimIds.stream().toList(), weight);
+                double comboFinalScore = finalScore(results, liricalOutputRecords, omimIds.stream().toList(), weight);
                 finalScores.add(comboFinalScore);
             }
             // Add max mean final score to map

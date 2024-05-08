@@ -14,14 +14,14 @@ import org.springframework.web.bind.annotation.*;
 import java.nio.file.Path;
 import java.util.*;
 
-@Controller("/results")
+@Controller("/sessionResults")
 @SessionAttributes({"liricalRecord", "inputRecord"})
 public class MaxoTermController {
 
     @Autowired
     MaxoTermService maxoTermService;
 
-    @RequestMapping("/results")
+    @RequestMapping("/sessionResults")
     public String showResults(@SessionAttribute("inputRecord") InputRecord input,
                              @RequestParam(value = "posttestFilter", required = false) Double posttestFilter,
                              @RequestParam(value = "weight", required = false) Double weight,
@@ -59,7 +59,7 @@ public class MaxoTermController {
             }
             model.addAttribute("maxoTables", maxoTables);
         }
-        return "results";
+        return "sessionResults";
     }
 
 

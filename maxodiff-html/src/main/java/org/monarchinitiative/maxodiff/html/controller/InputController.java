@@ -1,7 +1,6 @@
 package org.monarchinitiative.maxodiff.html.controller;
 
 import org.monarchinitiative.lirical.core.analysis.AnalysisResults;
-import org.monarchinitiative.lirical.core.model.GenomeBuild;
 import org.monarchinitiative.lirical.core.model.TranscriptDatabase;
 import org.monarchinitiative.maxodiff.core.analysis.LiricalAnalysis;
 import org.monarchinitiative.maxodiff.core.analysis.LiricalAnalysis.LiricalRecord;
@@ -15,13 +14,10 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.List;
-import java.util.Optional;
+
 
 @Controller
-@RequestMapping("/")
+@RequestMapping("/input")
 @SessionAttributes({"liricalRecord", "inputRecord"})
 public class InputController {
 

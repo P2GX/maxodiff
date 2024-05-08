@@ -6,7 +6,7 @@
     <title>Thymeleaf maxodiff analysis</title>
 </head>
 <body>
-<form th:action="@{/results}">
+<form th:action="@{/sessionResults}">
     <table>
         <tbody>
         <tr>
@@ -107,10 +107,13 @@
     <table class="scoreTable">
         <tbody>
         <tr>
-            <td>Score:</td><td th:text="${#numbers.formatDecimal(maxoTable.key.score, 0, 0)}"></td>
+            <td>Score:</td><td th:text="${#numbers.formatDecimal(maxoTable.key.score, 0, 2)}"></td>
         </tr>
         <tr>
             <td>N Diseases:</td><td th:text="${maxoTable.key.nOmimTerms}"></td>
+        </tr>
+        <tr>
+            <td>N HPO Terms:</td><td th:text="${maxoTable.key.nHpoTerms}"></td>
         </tr>
         </tbody>
     </table>
@@ -120,6 +123,7 @@
         <thead>
         <tr>
             <th></th>
+<!--            <th></th>-->
             <th:block th:each="omimId : ${omimIds}">
                 <th th:text="${omimId}"></th>
             </th:block>
@@ -130,9 +134,18 @@
         <th:block th:each= "freqRecord : ${maxoTable.value}">
             <tr>
                 <td th:text="${freqRecord.hpoId} + ' (' + ${freqRecord.hpoLabel} + ')'"></td>
+<!--                <td><canvas id="chartTest"></canvas> &lt;!&ndash;th:attr="frequencies=${freqRecord.frequencies}" id="chartTest"></canvas>&ndash;&gt;-->
+<!--                    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>-->
+<!--                    <script type="text/javascript" th:inline="javascript"-->
+<!--                            th:src="@{/js/drawChart.js}">-->
+<!--                        /*<![CDATA[*/-->
+<!--                        var xDataLabels = /*[[ ${omimIds} ]]*/[];-->
+<!--                        /*]]>*/-->
+<!--                    </script></td>-->
                 <th:block th:each="frequency : ${freqRecord.frequencies}">
                     <td th:text="${frequency} == null ? ${frequency} :
-                    (${frequency} % 1 == 0 ? ${frequency} : ${#numbers.formatDecimal(frequency, 1, 4)})"></td>
+                    (${frequency} % 1 == 0 ? ${frequency} : ${#numbers.formatDecimal(frequency, 1, 4)})"
+                        th:style="|background: rgba(255, 215, 0, ${frequency})|"></td>
                 </th:block>
             </tr>
         </th:block>
