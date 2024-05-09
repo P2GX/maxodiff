@@ -1,12 +1,9 @@
 package org.monarchinitiative.maxodiff.html.config;
 
-import org.monarchinitiative.lirical.core.model.TranscriptDatabase;
 import org.monarchinitiative.maxodiff.html.analysis.DownloadData;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.boot.context.properties.EnableConfigurationProperties;
-import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.context.annotation.PropertySource;
 
@@ -29,72 +26,9 @@ public class MaxodiffProperties {
     @Value("${maxodiff-data-directory:${user.home}/.maxodiff/data}")
     Path maxodiffDataDir;
 
-    @Value("${lirical-data-directory:${user.home}/.maxodiff/data/lirical}")
-    Path liricalDataDir;
-
-    @Value("${lirical-genome-build:hg38}")
-    String liricalGenomeBuild;
-
-    @Value("${lirical-transcript-database:REFSEQ}")
-    TranscriptDatabase liricalTranscriptDatabase;
-
-    @Value("${lirical-pathogenicity-threshold:0.8}")
-    Float liricalPathogenicityThreshold;
-
-    @Value("${lirical-default-variant-background-frequency:0.1}")
-    Double liricalDefaultVariantBackgroundFrequency;
-
-    @Value("${lirical-strict:true}")
-    boolean liricalStrict;
-
-    @Value("${lirical-global-mode:false}")
-    boolean liricalGlobalMode;
-
-//    @Value("${lirical-exomiser-hg19-path}")
-//    String liricalExomiserHg19Path;
-//
-//    @Value("${lirical-exomiser-hg38-path}")
-//    String liricalExomiserHg38Path;
-
     public Path maxodiffDataDir() {
         return maxodiffDataDir;
     }
-
-    public Path liricalDataDir() {
-        return liricalDataDir;
-    }
-
-    public String liricalGenomeBuild() {
-        return liricalGenomeBuild;
-    }
-
-    public TranscriptDatabase liricalTranscriptDatabase() {
-        return liricalTranscriptDatabase;
-    }
-
-    public Float liricalPathogenicityThreshold() {
-        return liricalPathogenicityThreshold;
-    }
-
-    public Double liricalDefaultVariantBackgroundFrequency() {
-        return liricalDefaultVariantBackgroundFrequency;
-    }
-
-    public boolean liricalStrict() {
-        return liricalStrict;
-    }
-
-    public boolean liricalGlobalMode() {
-        return liricalGlobalMode;
-    }
-
-//    public String liricalExomiserHg19Path() {
-//        return liricalExomiserHg19Path;
-//    }
-//
-//    public String liricalExomiserHg38Path() {
-//        return liricalExomiserHg38Path;
-//    }
 
 
     public void addToPropertiesFile(String key, String value) throws IOException {
@@ -116,18 +50,11 @@ public class MaxodiffProperties {
         prop.store(outStream, "");
     }
 
-    public Path createDataDirectory(String type) throws Exception {
+    public Path createDataDirectory() throws Exception {
         Path downloadDir = maxodiffDataDir();
-        if (type.equals("lirical")) {
-            downloadDir = liricalDataDir();
-        }
         if (!Files.exists(downloadDir)) {
             DownloadData downloadData = new DownloadData();
-            if (type.equals("maxodiff")) {
-                downloadData.downloadMaxodiffData(config, downloadDir);
-            } else if (type.equals("lirical")) {
-                downloadData.downloadLiricalData(config, downloadDir);
-            }
+            downloadData.downloadMaxodiffData(config, downloadDir);
         }
         return downloadDir;
     }

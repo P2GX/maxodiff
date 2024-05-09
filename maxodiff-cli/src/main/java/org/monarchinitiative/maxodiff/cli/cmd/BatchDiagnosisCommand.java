@@ -26,9 +26,13 @@ import java.util.zip.GZIPOutputStream;
 public class BatchDiagnosisCommand extends DifferentialDiagnosisCommand {
     private static final Logger LOGGER = LoggerFactory.getLogger(DifferentialDiagnosisCommand.class);
 
-    @CommandLine.Option(names = {"-B", "--batchDir"},
+    @CommandLine.Option(names = {"-P", "--phenopacketBatchDir"},
             description = "Path to directory containing phenopackets.")
-    protected String batchDir;
+    protected String phenopacketBatchDir;
+
+    @CommandLine.Option(names = {"-R", "--liricalBatchDir"},
+            description = "Path to directory containing LIRICAL TSV results files.")
+    protected String liricalBatchDir;
 
     @CommandLine.Option(names = {"-W", "--weights"},
             split=",",
@@ -49,37 +53,44 @@ public class BatchDiagnosisCommand extends DifferentialDiagnosisCommand {
     @Override
     public Integer call() throws Exception {
 
-        List<Path> phenopacketPaths = new ArrayList<>();
-        if (batchDir != null) {
-            File folder = new File(batchDir);
-            File[] files = folder.listFiles();
-            assert files != null;
-            for (File file : files) {
-                BasicFileAttributes basicFileAttributes = Files.readAttributes(file.toPath(), BasicFileAttributes.class);
-                if (basicFileAttributes.isRegularFile() && !basicFileAttributes.isDirectory() && !file.getName().startsWith(".")) {
-                    phenopacketPaths.add(file.toPath());
+        Map<Path, Path> phenopacketLiricalPathMap = new HashMap<>();
+        if (phenopacketBatchDir != null) {
+            File phenopacketFolder = new File(phenopacketBatchDir);
+            List<File> phenopacketFiles = Arrays.asList(Objects.requireNonNull(phenopacketFolder.listFiles()));
+            Collections.sort(phenopacketFiles);
+            File liricalFolder = new File(liricalBatchDir);
+            List<File> liricalFiles = Arrays.asList(Objects.requireNonNull(liricalFolder.listFiles()));
+            for (File phenopacketFile : phenopacketFiles) {
+                BasicFileAttributes basicFileAttributes = Files.readAttributes(phenopacketFile.toPath(), BasicFileAttributes.class);
+                if (basicFileAttributes.isRegularFile() && !basicFileAttributes.isDirectory() && !phenopacketFile.getName().startsWith(".")) {
+                    for (File liricalFile : liricalFiles) {
+                        String liricalFileName = liricalFile.getName();
+                        String phenopacketFileName = phenopacketFile.getName();
+                        if (liricalFileName.contains(phenopacketFileName.substring(0, phenopacketFileName.length()-5))) {
+                            phenopacketLiricalPathMap.put(phenopacketFile.toPath(), liricalFile.toPath());
+                        }
+                    }
                 }
             }
         }
-        Collections.sort(phenopacketPaths);
+
+//        System.out.println(phenopacketLiricalPathMap);
 
         Path maxodiffResultsFilePath = Path.of(String.join(File.separator, outputDir.toString(), "maxodiff_results.csv"));
 
         try (BufferedWriter writer = openWriter(maxodiffResultsFilePath); CSVPrinter printer = CSVFormat.DEFAULT.print(writer)) {
-            printer.printRecord("phenopacket", "background_vcf", "disease_id", "maxo_id", "maxo_label",
+            printer.printRecord("phenopacket", "lirical_results_file", "disease_id", "maxo_id", "maxo_label",
                     "filter_posttest_prob", "n_diseases", "disease_ids", "weight", "score"); // header
 
-            for (int i = 0; i < phenopacketPaths.size(); i++) {
+            for (Map.Entry<Path, Path> entry : phenopacketLiricalPathMap.entrySet()) {
                 String thresholds = thresholdsArg.stream().map(Object::toString).collect(Collectors.joining(","));
                 String weights = weightsArg.stream().map(Object::toString).collect(Collectors.joining(","));
                 try {
                     DifferentialDiagnosisCommand differentialDiagnosisCommand = new DifferentialDiagnosisCommand();
                     CommandLine.call(differentialDiagnosisCommand,
-                            "-d", dataSection.liricalDataDirectory.toString(),
-                            "-p", phenopacketPaths.get(i).toString(),
-                            "-e", dataSection.exomiserDatabase.toString(),
-                            "--vcf", vcfPath.toString(),
-                            "--assembly", genomeBuild.toString(),
+                            "-m", maxoDataPath.toString(),
+                            "-p", entry.getKey().toString(),
+                            "-r", entry.getValue().toString(),
                             "-t", thresholds,
                             "-w", weights,
                             "-O", outputDir.toString());
@@ -90,7 +101,7 @@ public class BatchDiagnosisCommand extends DifferentialDiagnosisCommand {
 //                    System.out.println("BatchCmd resultsMap = " + resultsMap);
 
                     List<Object> phenopacketNames = resultsMap.get("phenopacketName");
-                    List<Object> backgroundVcfs = resultsMap.get("backgroundVcf");
+                    List<Object> liricalOutputNames = resultsMap.get("liricalOutputName");
                     List<Object> diseaseIdList = resultsMap.get("diseaseId");
                     List<Object> maxScoreMaxoTermIds = resultsMap.get("maxScoreMaxoTermId");
                     List<Object> maxScoreTermLabels = resultsMap.get("maxScoreTermLabel");
@@ -101,7 +112,7 @@ public class BatchDiagnosisCommand extends DifferentialDiagnosisCommand {
                     List<Object> maxScoreValues = resultsMap.get("maxScoreValue");
                     for (int j = 0; j < phenopacketNames.size(); j++) {
                         String phenopacketName = phenopacketNames.get(j).toString();
-                        String backgroundVcf = backgroundVcfs.get(j).toString();
+                        String liricalOutputName = liricalOutputNames.get(j).toString();
                         TermId diseaseId = TermId.of(diseaseIdList.get(j).toString());
                         TermId maxScoreMaxoTermId = TermId.of(maxScoreMaxoTermIds.get(j).toString());
                         String maxScoreTermLabel = maxScoreTermLabels.get(j).toString();
@@ -111,11 +122,11 @@ public class BatchDiagnosisCommand extends DifferentialDiagnosisCommand {
                         double weight = Double.parseDouble(weightList.get(j).toString());
                         double maxScoreValue = Double.parseDouble(maxScoreValues.get(j).toString());
 
-                        writeResults(phenopacketName, backgroundVcf, diseaseId, maxScoreMaxoTermId, maxScoreTermLabel,
+                        writeResults(phenopacketName, liricalOutputName, diseaseId, maxScoreMaxoTermId, maxScoreTermLabel,
                                 posttestFilter, topNDiseases, diseaseIds, weight, maxScoreValue, printer);
                     }
                 } catch (Exception ex) {
-                    LOGGER.error(ex.getMessage());
+                    System.out.println(ex.getMessage());
                     continue;
                 }
             }
@@ -146,7 +157,7 @@ public class BatchDiagnosisCommand extends DifferentialDiagnosisCommand {
      * Write results of a single benchmark into the provided {@code printer}.
      */
     private static void writeResults(String phenopacketName,
-                                     String backgroundVcfName,
+                                     String liricalOutputName,
                                      TermId diseaseId,
                                      TermId maxoId,
                                      String maxoLabel,
@@ -159,7 +170,7 @@ public class BatchDiagnosisCommand extends DifferentialDiagnosisCommand {
 
         try {
             printer.print(phenopacketName);
-            printer.print(backgroundVcfName);
+            printer.print(liricalOutputName);
             printer.print(diseaseId);
             printer.print(maxoId);
             printer.print(maxoLabel);

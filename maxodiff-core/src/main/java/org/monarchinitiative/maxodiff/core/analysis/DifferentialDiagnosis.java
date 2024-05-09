@@ -19,35 +19,6 @@ import java.util.stream.Collectors;
 
 public class DifferentialDiagnosis {
 
-    //Functions using results from a LIRICAL calculation in the same session
-    public static double posttestProbabilitySum(AnalysisResults results, List<TermId> diseaseIds) {
-        double sum = 0.0;
-        for (TermId id : diseaseIds) {
-            var result = results.resultByDiseaseId(id);
-            if (result.isPresent())
-                sum += result.get().posttestProbability();
-        }
-        return sum / 100;
-    }
-
-    public static double relativeDiseaseDiff(AnalysisResults results, List<TermId> diseaseIds, TermId targetDisease) {
-        double sum = 0.0;
-        List<TestResult> orderedResults = results.resultsWithDescendingPostTestProbability().toList();
-        var targetResultOptional = orderedResults.stream().filter(result -> result.diseaseId().equals(targetDisease)).findFirst();
-        if (targetResultOptional.isPresent()) {
-            TestResult targetResult = targetResultOptional.get();
-            int targetResultIdx = orderedResults.indexOf(targetResult);
-            List<TestResult> resultsSublist = orderedResults.subList(0, targetResultIdx);
-            List<TestResult> diffResultsList = resultsSublist.stream().filter(res -> diseaseIds.contains(res.diseaseId()))
-                    .sorted(Comparator.comparingDouble(TestResult::posttestProbability).reversed()).toList();
-            List<Double> diffLRList = diffResultsList.stream().map(res -> res.observedResults().get(0).lr()).toList();
-            double targetLR = targetResult.observedResults().get(0).lr();
-            for (double lr : diffLRList)
-                sum += targetLR / lr;
-        }
-        return sum;
-    }
-
     //Functions using results from a separate LIRICAL output file
     public static double posttestProbabilitySum(List<LiricalResultsFileRecord> liricalOutputRecords,
                                                 List<TermId> diseaseIds) {
@@ -72,7 +43,7 @@ public class DifferentialDiagnosis {
             List<LiricalResultsFileRecord> resultsSublist = orderedResults.subList(0, targetResultIdx);
             List<LiricalResultsFileRecord> diffResultsList = resultsSublist.stream().filter(res -> diseaseIds.contains(res.omimId()))
                     .sorted(Comparator.comparingDouble(LiricalResultsFileRecord::posttestProbability).reversed()).toList();
-            List<Double> diffLRList = diffResultsList.stream().map(res -> res.likelihoodRatio()).toList();
+            List<Double> diffLRList = diffResultsList.stream().map(LiricalResultsFileRecord::likelihoodRatio).toList();
             double targetLR = targetResult.likelihoodRatio();
             for (double lr : diffLRList)
                 sum += targetLR / lr;
@@ -80,31 +51,19 @@ public class DifferentialDiagnosis {
         return sum;
     }
 
-    public static double scoreSum(AnalysisResults results, List<LiricalResultsFileRecord> liricalOutputRecords,
+    public static double scoreSum(List<LiricalResultsFileRecord> liricalOutputRecords,
                                   List<TermId> diseaseIds) {
         double sum = 0.0;
         List<TermId> subIds = diseaseIds.subList(0, diseaseIds.size());
         for (TermId diseaseId : subIds)
-            if (results != null) {
-                sum += relativeDiseaseDiff(results, diseaseIds, diseaseId);
-            } else if (liricalOutputRecords != null) {
-                sum += relativeDiseaseDiff(liricalOutputRecords, diseaseIds, diseaseId);
-            }
+            sum += relativeDiseaseDiff(liricalOutputRecords, diseaseIds, diseaseId);
         return sum;
     }
 
-    public static double finalScore(AnalysisResults results, List<LiricalResultsFileRecord> liricalOutputRecords,
+    public static double finalScore(List<LiricalResultsFileRecord> liricalOutputRecords,
                                     List<TermId> diseaseIds, double weight) {
-        double p = 0;
-        double q = 0;
-        if (results != null) {
-            p = posttestProbabilitySum(results, diseaseIds);
-            q = scoreSum(results, null, diseaseIds);
-        } else if (liricalOutputRecords != null) {
-            p = posttestProbabilitySum(liricalOutputRecords, diseaseIds);
-            q = scoreSum(null, liricalOutputRecords, diseaseIds);
-        }
-
+        double p = posttestProbabilitySum(liricalOutputRecords, diseaseIds);
+        double q = scoreSum(liricalOutputRecords, diseaseIds);
         return weight*p + (1-weight)*q;
     }
 
@@ -133,31 +92,30 @@ public class DifferentialDiagnosis {
         return hpoToMaxoTermMap;
     }
 
-    public static Map<TermId, Set<SimpleTerm>> makeMaxoToHpoTermMap(Ontology ontology, Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxoTermMap) {
-        Map<TermId, Set<SimpleTerm>> maxoToHpoTermMap = new HashMap<>();
+    public static Map<SimpleTerm, Set<SimpleTerm>> makeMaxoToHpoTermMap(Ontology ontology, Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxoTermMap) {
+        Map<SimpleTerm, Set<SimpleTerm>> maxoToHpoTermMap = new HashMap<>();
         for (Map.Entry<SimpleTerm, Set<SimpleTerm>> entry : hpoToMaxoTermMap.entrySet()) {
             SimpleTerm hpoTerm = entry.getKey();
             Set<SimpleTerm> maxoTerms = entry.getValue();
             for (SimpleTerm maxoTerm : maxoTerms) {
-                TermId maxoId = maxoTerm.tid();
-                if (!maxoToHpoTermMap.containsKey(maxoId)) {
-                    maxoToHpoTermMap.put(maxoId, new HashSet<>(Collections.singleton(hpoTerm)));
+                if (!maxoToHpoTermMap.containsKey(maxoTerm)) {
+                    maxoToHpoTermMap.put(maxoTerm, new HashSet<>(Collections.singleton(hpoTerm)));
                 } else {
-                    Set<SimpleTerm> hpoTerms = maxoToHpoTermMap.get(maxoId);
+                    Set<SimpleTerm> hpoTerms = maxoToHpoTermMap.get(maxoTerm);
                     hpoTerms.add(hpoTerm);
-                    maxoToHpoTermMap.replace(maxoId, hpoTerms);
+                    maxoToHpoTermMap.replace(maxoTerm, hpoTerms);
                 }
             }
         }
-        for (TermId mId : maxoToHpoTermMap.keySet()) {
+        for (SimpleTerm mTerm : maxoToHpoTermMap.keySet()) {
             // Remove HPO ancestor term Ids from list
-            Set<SimpleTerm> allHpoTerms = maxoToHpoTermMap.get(mId);
+            Set<SimpleTerm> allHpoTerms = maxoToHpoTermMap.get(mTerm);
             Set<TermId> hpoIdSet = new HashSet<>();
             allHpoTerms.forEach(t -> hpoIdSet.add(t.tid()));
             Set<TermId> ancestors = OntologyAlgorithm.getAncestorTerms(ontology, hpoIdSet, false);
             hpoIdSet.removeAll(ancestors);
             Set<SimpleTerm> hpoTermSet = allHpoTerms.stream().filter(hpoTerm -> hpoIdSet.contains(hpoTerm.tid())).collect(Collectors.toSet());
-            maxoToHpoTermMap.replace(mId, hpoTermSet);
+            maxoToHpoTermMap.replace(mTerm, hpoTermSet);
         }
         return maxoToHpoTermMap;
     }
@@ -183,13 +141,13 @@ public class DifferentialDiagnosis {
         return hpoComboList;
     }
 
-    public static Map<TermId, Double> makeMaxoScoreMap(Map<TermId, Set<SimpleTerm>> maxoToHpoTermMap, List<HpoDisease> diseases,
-                                                       AnalysisResults results, List<LiricalResultsFileRecord> liricalOutputRecords, double weight) {
-        Map<TermId, Double> maxoScoreMap = new HashMap<>();
-        for (TermId maxoTermId : maxoToHpoTermMap.keySet()) {
-            maxoScoreMap.put(maxoTermId, 0.0);
+    public static Map<SimpleTerm, Double> makeMaxoScoreMap(Map<SimpleTerm, Set<SimpleTerm>> maxoToHpoTermMap, List<HpoDisease> diseases,
+                                                       List<LiricalResultsFileRecord> liricalOutputRecords, double weight) {
+        Map<SimpleTerm, Double> maxoScoreMap = new HashMap<>();
+        for (SimpleTerm maxoTerm : maxoToHpoTermMap.keySet()) {
+            maxoScoreMap.put(maxoTerm, 0.0);
             // Collect HPO terms that can be ascertained by MAxO term
-            List<SimpleTerm> hpoTerms = maxoToHpoTermMap.get(maxoTermId).stream().toList();
+            List<SimpleTerm> hpoTerms = maxoToHpoTermMap.get(maxoTerm).stream().toList();
             List<TermId> hpoTermIds = new ArrayList<>();
             hpoTerms.forEach(t -> hpoTermIds.add(t.tid()));
             // Calculate differential diagnosis score, S, for HPO term combos
@@ -207,30 +165,19 @@ public class DifferentialDiagnosis {
                     }
                 }
                 // Calculate S using associated disease OMIM Ids
-                double comboFinalScore = finalScore(results, liricalOutputRecords, omimIds.stream().toList(), weight);
+                double comboFinalScore = finalScore(liricalOutputRecords, omimIds.stream().toList(), weight);
                 finalScores.add(comboFinalScore);
             }
             // Add max mean final score to map
-            double maxoFinalScore = finalScores.stream().mapToDouble(s -> s).average().getAsDouble();
-            if (maxoFinalScore > maxoScoreMap.get(maxoTermId)) {
-                maxoScoreMap.replace(maxoTermId, maxoFinalScore);
-            }
-        }
-        return maxoScoreMap;
-    }
-
-    public static String getMaxoTermLabel(Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxoTermMap, TermId maxScoreMaxoTermId) {
-        String maxScoreTermLabel = "";
-        for (Map.Entry<SimpleTerm, Set<SimpleTerm>> hpoToMaxoEntry : hpoToMaxoTermMap.entrySet()) {
-            Set<SimpleTerm> maxoTerms = hpoToMaxoEntry.getValue();
-            for (SimpleTerm maxoTerm : maxoTerms) {
-                if (maxoTerm.tid().equals(maxScoreMaxoTermId)) {
-                    maxScoreTermLabel = maxoTerm.label();
-                    break;
+            OptionalDouble maxoFinalScoreOptional = finalScores.stream().mapToDouble(s -> s).average();
+            if (maxoFinalScoreOptional.isPresent()) {
+                double maxoFinalScore = maxoFinalScoreOptional.getAsDouble();
+                if (maxoFinalScore > maxoScoreMap.get(maxoTerm)) {
+                    maxoScoreMap.replace(maxoTerm, maxoFinalScore);
                 }
             }
         }
-        return maxScoreTermLabel;
+        return maxoScoreMap;
     }
 
 }
