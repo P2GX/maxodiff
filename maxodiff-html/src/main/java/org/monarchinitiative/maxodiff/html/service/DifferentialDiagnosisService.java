@@ -15,13 +15,13 @@ public class DifferentialDiagnosisService {
     public DifferentialDiagnosisService() {}
 
 
-    public List<MaxoTermMap.MaxoTerm> getMaxoTermRecords(MaxoTermMap maxoTermMap, List<LiricalResultsFileRecord> liricalOutputRecords,
-                                                         Path phenopacketPath, double posttestFilter, double weight) throws Exception {
+    public List<MaxoTermMap.MaxoTermScore> getMaxoTermRecords(MaxoTermMap maxoTermMap, List<LiricalResultsFileRecord> liricalOutputRecords,
+                                                              Path phenopacketPath, double posttestFilter, double weight) throws Exception {
         return maxoTermMap.getMaxoTermRecords(phenopacketPath, null, liricalOutputRecords, posttestFilter, weight);
     }
 
-    public List<MaxoTermMap.Frequencies> getFrequencyRecords(MaxoTermMap maxoTermMap, MaxoTermMap.MaxoTerm maxoTerm) throws Exception {
-        return maxoTermMap.getFrequencyRecords(maxoTerm);
+    public List<MaxoTermMap.Frequencies> getFrequencyRecords(MaxoTermMap maxoTermMap, MaxoTermMap.MaxoTermScore maxoTermScore) throws Exception {
+        return maxoTermMap.getFrequencyRecords(maxoTermScore);
     }
 
 

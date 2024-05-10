@@ -133,31 +133,30 @@ public class DifferentialDiagnosis {
         return hpoToMaxoTermMap;
     }
 
-    public static Map<TermId, Set<SimpleTerm>> makeMaxoToHpoTermMap(Ontology ontology, Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxoTermMap) {
-        Map<TermId, Set<SimpleTerm>> maxoToHpoTermMap = new HashMap<>();
+    public static Map<SimpleTerm, Set<SimpleTerm>> makeMaxoToHpoTermMap(Ontology ontology, Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxoTermMap) {
+        Map<SimpleTerm, Set<SimpleTerm>> maxoToHpoTermMap = new HashMap<>();
         for (Map.Entry<SimpleTerm, Set<SimpleTerm>> entry : hpoToMaxoTermMap.entrySet()) {
             SimpleTerm hpoTerm = entry.getKey();
             Set<SimpleTerm> maxoTerms = entry.getValue();
             for (SimpleTerm maxoTerm : maxoTerms) {
-                TermId maxoId = maxoTerm.tid();
-                if (!maxoToHpoTermMap.containsKey(maxoId)) {
-                    maxoToHpoTermMap.put(maxoId, new HashSet<>(Collections.singleton(hpoTerm)));
+                if (!maxoToHpoTermMap.containsKey(maxoTerm)) {
+                    maxoToHpoTermMap.put(maxoTerm, new HashSet<>(Collections.singleton(hpoTerm)));
                 } else {
-                    Set<SimpleTerm> hpoTerms = maxoToHpoTermMap.get(maxoId);
+                    Set<SimpleTerm> hpoTerms = maxoToHpoTermMap.get(maxoTerm);
                     hpoTerms.add(hpoTerm);
-                    maxoToHpoTermMap.replace(maxoId, hpoTerms);
+                    maxoToHpoTermMap.replace(maxoTerm, hpoTerms);
                 }
             }
         }
-        for (TermId mId : maxoToHpoTermMap.keySet()) {
+        for (SimpleTerm mTerm : maxoToHpoTermMap.keySet()) {
             // Remove HPO ancestor term Ids from list
-            Set<SimpleTerm> allHpoTerms = maxoToHpoTermMap.get(mId);
+            Set<SimpleTerm> allHpoTerms = maxoToHpoTermMap.get(mTerm);
             Set<TermId> hpoIdSet = new HashSet<>();
             allHpoTerms.forEach(t -> hpoIdSet.add(t.tid()));
             Set<TermId> ancestors = OntologyAlgorithm.getAncestorTerms(ontology, hpoIdSet, false);
             hpoIdSet.removeAll(ancestors);
             Set<SimpleTerm> hpoTermSet = allHpoTerms.stream().filter(hpoTerm -> hpoIdSet.contains(hpoTerm.tid())).collect(Collectors.toSet());
-            maxoToHpoTermMap.replace(mId, hpoTermSet);
+            maxoToHpoTermMap.replace(mTerm, hpoTermSet);
         }
         return maxoToHpoTermMap;
     }
@@ -183,13 +182,13 @@ public class DifferentialDiagnosis {
         return hpoComboList;
     }
 
-    public static Map<TermId, Double> makeMaxoScoreMap(Map<TermId, Set<SimpleTerm>> maxoToHpoTermMap, List<HpoDisease> diseases,
+    public static Map<SimpleTerm, Double> makeMaxoScoreMap(Map<SimpleTerm, Set<SimpleTerm>> maxoToHpoTermMap, List<HpoDisease> diseases,
                                                        AnalysisResults results, List<LiricalResultsFileRecord> liricalOutputRecords, double weight) {
-        Map<TermId, Double> maxoScoreMap = new HashMap<>();
-        for (TermId maxoTermId : maxoToHpoTermMap.keySet()) {
-            maxoScoreMap.put(maxoTermId, 0.0);
+        Map<SimpleTerm, Double> maxoScoreMap = new HashMap<>();
+        for (SimpleTerm maxoTerm : maxoToHpoTermMap.keySet()) {
+            maxoScoreMap.put(maxoTerm, 0.0);
             // Collect HPO terms that can be ascertained by MAxO term
-            List<SimpleTerm> hpoTerms = maxoToHpoTermMap.get(maxoTermId).stream().toList();
+            List<SimpleTerm> hpoTerms = maxoToHpoTermMap.get(maxoTerm).stream().toList();
             List<TermId> hpoTermIds = new ArrayList<>();
             hpoTerms.forEach(t -> hpoTermIds.add(t.tid()));
             // Calculate differential diagnosis score, S, for HPO term combos
@@ -211,26 +210,15 @@ public class DifferentialDiagnosis {
                 finalScores.add(comboFinalScore);
             }
             // Add max mean final score to map
-            double maxoFinalScore = finalScores.stream().mapToDouble(s -> s).average().getAsDouble();
-            if (maxoFinalScore > maxoScoreMap.get(maxoTermId)) {
-                maxoScoreMap.replace(maxoTermId, maxoFinalScore);
-            }
-        }
-        return maxoScoreMap;
-    }
-
-    public static String getMaxoTermLabel(Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxoTermMap, TermId maxScoreMaxoTermId) {
-        String maxScoreTermLabel = "";
-        for (Map.Entry<SimpleTerm, Set<SimpleTerm>> hpoToMaxoEntry : hpoToMaxoTermMap.entrySet()) {
-            Set<SimpleTerm> maxoTerms = hpoToMaxoEntry.getValue();
-            for (SimpleTerm maxoTerm : maxoTerms) {
-                if (maxoTerm.tid().equals(maxScoreMaxoTermId)) {
-                    maxScoreTermLabel = maxoTerm.label();
-                    break;
+            OptionalDouble maxoFinalScoreOptional = finalScores.stream().mapToDouble(s -> s).average();
+            if (maxoFinalScoreOptional.isPresent()) {
+                double maxoFinalScore = maxoFinalScoreOptional.getAsDouble();
+                if (maxoFinalScore > maxoScoreMap.get(maxoTerm)) {
+                    maxoScoreMap.replace(maxoTerm, maxoFinalScore);
                 }
             }
         }
-        return maxScoreTermLabel;
+        return maxoScoreMap;
     }
 
 }

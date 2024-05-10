@@ -40,22 +40,22 @@ public class MaxoTermController {
         if (phenopacketPath != null & posttestFilter != null & weight != null & nMaxoResults != null) {
             InputRecord inputRecord = (InputRecord) model.getAttribute("inputRecord");
             MaxoTermMap maxoTermMap = inputRecord.maxoTermMap();
-            List<MaxoTermMap.MaxoTerm> maxoTermRecords = maxoTermService.getMaxoTermRecords(maxoTermMap, liricalResults, phenopacketPath, posttestFilter, weight);
+            List<MaxoTermMap.MaxoTermScore> maxoTermScoreRecords = maxoTermService.getMaxoTermRecords(maxoTermMap, liricalResults, phenopacketPath, posttestFilter, weight);
             TermId diseaseId = maxoTermService.getDiseaseId(maxoTermMap);
             String phenopacketName = phenopacketPath.toFile().getName();
             model.addAttribute("phenopacket", phenopacketName);
             model.addAttribute("diseaseId", diseaseId);
-            model.addAttribute("maxoRecords", maxoTermRecords);
+            model.addAttribute("maxoRecords", maxoTermScoreRecords);
 
-            Set<TermId> omimIds = maxoTermRecords.get(0).omimTermIds();
+            Set<TermId> omimIds = maxoTermScoreRecords.get(0).omimTermIds();
             model.addAttribute("omimIds", omimIds);
 
-            Map<MaxoTermMap.MaxoTerm, List<MaxoTermMap.Frequencies>> maxoTables = new LinkedHashMap<>();
-            int nDisplayed = maxoTermRecords.size() < nMaxoResults ? maxoTermRecords.size() : nMaxoResults;
+            Map<MaxoTermMap.MaxoTermScore, List<MaxoTermMap.Frequencies>> maxoTables = new LinkedHashMap<>();
+            int nDisplayed = maxoTermScoreRecords.size() < nMaxoResults ? maxoTermScoreRecords.size() : nMaxoResults;
             model.addAttribute("nDisplayed", nDisplayed);
-            for (MaxoTermMap.MaxoTerm maxoTermRecord : maxoTermRecords.subList(0, nDisplayed)) {
-                List<MaxoTermMap.Frequencies> frequencyRecords = maxoTermService.getFrequencyRecords(maxoTermMap, maxoTermRecord);
-                maxoTables.put(maxoTermRecord, frequencyRecords);
+            for (MaxoTermMap.MaxoTermScore maxoTermScoreRecord : maxoTermScoreRecords.subList(0, nDisplayed)) {
+                List<MaxoTermMap.Frequencies> frequencyRecords = maxoTermService.getFrequencyRecords(maxoTermMap, maxoTermScoreRecord);
+                maxoTables.put(maxoTermScoreRecord, frequencyRecords);
             }
             model.addAttribute("maxoTables", maxoTables);
         }

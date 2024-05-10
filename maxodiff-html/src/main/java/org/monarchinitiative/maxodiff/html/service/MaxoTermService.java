@@ -19,13 +19,13 @@ public class MaxoTermService {
         return maxoTermMap.runLiricalCalculation(liricalAnalysis, phenopacketPath);
     }
 
-    public List<MaxoTermMap.MaxoTerm> getMaxoTermRecords(MaxoTermMap maxoTermMap, AnalysisResults results,
-                                                         Path phenopacketPath, double posttestFilter, double weight) throws Exception {
+    public List<MaxoTermMap.MaxoTermScore> getMaxoTermRecords(MaxoTermMap maxoTermMap, AnalysisResults results,
+                                                              Path phenopacketPath, double posttestFilter, double weight) throws Exception {
         return maxoTermMap.getMaxoTermRecords(phenopacketPath, results, null, posttestFilter, weight);
     }
 
-    public List<MaxoTermMap.Frequencies> getFrequencyRecords(MaxoTermMap maxoTermMap, MaxoTermMap.MaxoTerm maxoTerm) throws Exception {
-        return maxoTermMap.getFrequencyRecords(maxoTerm);
+    public List<MaxoTermMap.Frequencies> getFrequencyRecords(MaxoTermMap maxoTermMap, MaxoTermMap.MaxoTermScore maxoTermScore) throws Exception {
+        return maxoTermMap.getFrequencyRecords(maxoTermScore);
     }
 
 

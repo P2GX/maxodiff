@@ -103,7 +103,7 @@
 <h1 th:text="'Top ' + ${nDisplayed} + ' Recommended MaXo Terms'"></h1>
 
 <th:block th:each= "maxoTable, iter : ${maxoTables}">
-    <h2 th:text="${iter.index+1} + ') ' + ${maxoTable.key.maxoTerm} + ': ' + ${maxoTable.key.maxoLabel}"></h2>
+    <h2 th:text="${iter.index+1} + ') ' + ${maxoTable.key.maxoId} + ': ' + ${maxoTable.key.maxoLabel}"></h2>
     <table class="scoreTable">
         <tbody>
         <tr>
@@ -168,7 +168,7 @@
 <!--    <tbody>-->
 <!--    <th:block th:each= "maxoRecord : ${maxoRecords}">-->
 <!--        <tr>-->
-<!--            <td th:text="${maxoRecord.maxoTerm}"></td>-->
+<!--            <td th:text="${maxoRecord.maxoId}"></td>-->
 <!--            <td th:text="${maxoRecord.maxoLabel}"></td>-->
 <!--            <td th:text="${maxoRecord.score}"></td>-->
 <!--            <td th:text="${maxoRecord.nOmimTerms}"></td>-->

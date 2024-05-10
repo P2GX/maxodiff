@@ -139,7 +139,7 @@ public class DifferentialDiagnosisCommand extends BaseLiricalCommand {
             for (double posttestFilter : filterPosttestProbs) {
                 LOGGER.info("Min Posttest Probabiltiy Threshold = " + posttestFilter);
                 // Make MaXo:HPO Term Map
-                Map<TermId, Set<SimpleTerm>> maxoToHpoTermMap = maxoTermMap.makeMaxoToHpoTermMap(results, null,
+                Map<SimpleTerm, Set<SimpleTerm>> maxoToHpoTermMap = maxoTermMap.makeMaxoToHpoTermMap(results, null,
                         phenopacketPath, posttestFilter);
 
                 LOGGER.info(String.valueOf(maxoToHpoTermMap));
@@ -147,13 +147,13 @@ public class DifferentialDiagnosisCommand extends BaseLiricalCommand {
                 for (double weight : weights) {
                     LOGGER.info("Weight = " + weight);
                     // Make map of MaXo scores
-                    Map<TermId, Double> maxoScoreMap = maxoTermMap.makeMaxoScoreMap(maxoToHpoTermMap, results, null, weight);
+                    Map<SimpleTerm, Double> maxoScoreMap = maxoTermMap.makeMaxoScoreMap(maxoToHpoTermMap, results, null, weight);
                     LOGGER.info(String.valueOf(maxoScoreMap));
                     // Take the MaXo term that has the highest score
-                    Map.Entry<TermId, Double> maxScore = maxoScoreMap.entrySet().stream().max(Map.Entry.comparingByValue()).get();
-                    TermId maxScoreMaxoTermId = maxScore.getKey();
+                    Map.Entry<SimpleTerm, Double> maxScore = maxoScoreMap.entrySet().stream().max(Map.Entry.comparingByValue()).get();
+                    TermId maxScoreMaxoTermId = maxScore.getKey().tid();
+                    String maxScoreTermLabel = maxScore.getKey().label();
                     double maxScoreValue = maxScore.getValue();
-                    String maxScoreTermLabel = DifferentialDiagnosis.getMaxoTermLabel(maxoTermMap.getHpoToMaxoTermMap(), maxScoreMaxoTermId);
 
                     LOGGER.info("Max Score: " + maxScoreMaxoTermId + " (" + maxScoreTermLabel + ")" + " = " + maxScoreValue);
 //                    double finalScore = diffDiag.finalScore(results, diseaseIds, weight);

@@ -93,7 +93,7 @@
 <h1 th:text="'Top ' + ${nDisplayed} + ' Recommended MaXo Terms'"></h1>
 
 <th:block th:each= "maxoTable, iter : ${maxoTables}">
-    <h2 th:text="${iter.index+1} + ') ' + ${maxoTable.key.maxoTerm} + ': ' + ${maxoTable.key.maxoLabel}"></h2>
+    <h2 th:text="${iter.index+1} + ') ' + ${maxoTable.key.maxoId} + ': ' + ${maxoTable.key.maxoLabel}"></h2>
     <table class="scoreTable">
         <tbody>
         <tr>

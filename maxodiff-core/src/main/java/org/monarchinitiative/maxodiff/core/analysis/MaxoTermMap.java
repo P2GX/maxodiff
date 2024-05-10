@@ -23,8 +23,8 @@ public class MaxoTermMap {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MaxoTermMap.class);
 
-    public record MaxoTerm(String maxoTerm, String maxoLabel, Integer nOmimTerms, Set<TermId> omimTermIds,
-                           Integer nHpoTerms, Set<SimpleTerm> hpoTerms, Double score) {}
+    public record MaxoTermScore(String maxoId, String maxoLabel, Integer nOmimTerms, Set<TermId> omimTermIds,
+                                Integer nHpoTerms, Set<SimpleTerm> hpoTerms, Double score) {}
 
     public record Frequencies(TermId hpoId, String hpoLabel, List<Float> frequencies) {}
 
@@ -50,32 +50,32 @@ public class MaxoTermMap {
         return liricalAnalysis.runLiricalAnalysis(phenopacketPath);
     }
 
-    public List<MaxoTerm> getMaxoTermRecords(Path phenopacketPath, AnalysisResults results, List<LiricalResultsFileRecord> liricalOutputRecords,
-                                             double posttestFilter, double weight) throws Exception {
-        List<MaxoTerm> maxoTermRecords = new ArrayList<>();
-        Map<TermId, Set<SimpleTerm>> maxoToHpoTermMap = makeMaxoToHpoTermMap(results, liricalOutputRecords, phenopacketPath, posttestFilter);
-        Map<TermId, Double> maxoScoreMap = makeMaxoScoreMap(maxoToHpoTermMap, results, liricalOutputRecords, weight);
+    public List<MaxoTermScore> getMaxoTermRecords(Path phenopacketPath, AnalysisResults results, List<LiricalResultsFileRecord> liricalOutputRecords,
+                                                  double posttestFilter, double weight) throws Exception {
+        List<MaxoTermScore> maxoTermScoreRecords = new ArrayList<>();
+        Map<SimpleTerm, Set<SimpleTerm>> maxoToHpoTermMap = makeMaxoToHpoTermMap(results, liricalOutputRecords, phenopacketPath, posttestFilter);
+        Map<SimpleTerm, Double> maxoScoreMap = makeMaxoScoreMap(maxoToHpoTermMap, results, liricalOutputRecords, weight);
         LOGGER.info(maxoScoreMap.toString());
         maxoToHpoTermMap.forEach((key, value) -> {
-            String maxoId = key.toString();
-            String maxoTermLabel = DifferentialDiagnosis.getMaxoTermLabel(hpoToMaxoTermMap, key);
+            String maxoId = key.tid().toString();
+            String maxoTermLabel = key.label();
             int nOmimTerms = diseases.size();
             Set<TermId> omimIds = new HashSet<>();
             diseases.forEach(disease -> omimIds.add(disease.id()));
             Set<SimpleTerm> hpoTerms = value;
             Integer nHpoTerms = value.size();
             double score = maxoScoreMap.get(key);
-            maxoTermRecords.add(new MaxoTerm(maxoId, maxoTermLabel, nOmimTerms, omimIds, nHpoTerms, hpoTerms, score));
-            Comparator<MaxoTerm> comp = Comparator.comparing(MaxoTerm::score, Comparator.reverseOrder());
-            maxoTermRecords.sort(comp);
+            maxoTermScoreRecords.add(new MaxoTermScore(maxoId, maxoTermLabel, nOmimTerms, omimIds, nHpoTerms, hpoTerms, score));
+            Comparator<MaxoTermScore> comp = Comparator.comparing(MaxoTermScore::score, Comparator.reverseOrder());
+            maxoTermScoreRecords.sort(comp);
         });
-        return maxoTermRecords;
+        return maxoTermScoreRecords;
     }
 
-    public List<Frequencies> getFrequencyRecords(MaxoTerm maxoTermRecord) {
+    public List<Frequencies> getFrequencyRecords(MaxoTermScore maxoTermScoreRecord) {
         List<Frequencies> frequencyRecords = new ArrayList<>();
-        Set<TermId> omimIds = maxoTermRecord.omimTermIds();
-        for (SimpleTerm hpoTerm : maxoTermRecord.hpoTerms) {
+        Set<TermId> omimIds = maxoTermScoreRecord.omimTermIds();
+        for (SimpleTerm hpoTerm : maxoTermScoreRecord.hpoTerms()) {
             TermId hpoId = hpoTerm.tid();
             String hpoLabel = hpoTerm.label();
             Map<TermId, Float> maxoFrequencies = new LinkedHashMap<>();
@@ -94,7 +94,7 @@ public class MaxoTermMap {
         return frequencyRecords;
     }
 
-    public Map<TermId, Set<SimpleTerm>> makeMaxoToHpoTermMap(AnalysisResults results, List<LiricalResultsFileRecord> liricalOutputRecords,
+    public Map<SimpleTerm, Set<SimpleTerm>> makeMaxoToHpoTermMap(AnalysisResults results, List<LiricalResultsFileRecord> liricalOutputRecords,
                                                              Path phenopacketPath, double posttestFilter) throws Exception {
 
         PhenopacketData phenopacketData = LiricalAnalysis.readPhenopacketData(phenopacketPath);
@@ -128,14 +128,14 @@ public class MaxoTermMap {
 
         // Get all the MaXo terms that can be used to diagnose the HPO terms
         hpoToMaxoTermMap = DifferentialDiagnosis.makeHpoToMaxoTermMap(fullHpoToMaxoTermMap, hpoTermCounts.keySet());
-        Map<TermId, Set<SimpleTerm>> maxoToHpoTermMap = DifferentialDiagnosis.makeMaxoToHpoTermMap(hpo, hpoToMaxoTermMap);
+        Map<SimpleTerm, Set<SimpleTerm>> maxoToHpoTermMap = DifferentialDiagnosis.makeMaxoToHpoTermMap(hpo, hpoToMaxoTermMap);
 
         LOGGER.info(maxoToHpoTermMap.toString());
 
         return maxoToHpoTermMap;
     }
 
-    public Map<TermId, Double> makeMaxoScoreMap(Map<TermId, Set<SimpleTerm>> maxoToHpoTermMap, AnalysisResults results,
+    public Map<SimpleTerm, Double> makeMaxoScoreMap(Map<SimpleTerm, Set<SimpleTerm>> maxoToHpoTermMap, AnalysisResults results,
                                                 List<LiricalResultsFileRecord> liricalOutputRecords, Double weight) {
         return DifferentialDiagnosis.makeMaxoScoreMap(maxoToHpoTermMap, diseases, results, liricalOutputRecords, weight);
     }
