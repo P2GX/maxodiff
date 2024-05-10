@@ -65,7 +65,6 @@ public class DifferentialDiagnosisController {
             model.addAttribute("diseaseId", diseaseId);
             model.addAttribute("maxoRecords", maxoTermScoreRecords);
 
-            String diseaseLabel = "";
             Set<TermId> omimIds = maxoTermScoreRecords.get(0).omimTermIds();
             Map<TermId, String> omimTermMap = new LinkedHashMap<>();
             liricalResultsFileRecords.forEach(outputFileRecord -> {

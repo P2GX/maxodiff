@@ -50,6 +50,16 @@ public class MaxoTermMap {
         return liricalAnalysis.runLiricalAnalysis(phenopacketPath);
     }
 
+    /**
+     *
+     * @param phenopacketPath
+     * @param results {@link AnalysisResults}. LIRICAL analysis results.
+     * @param liricalOutputRecords List<LiricalResultsFileRecord>. List of {@link LiricalResultsFileRecord} results from LIRICAL output file.
+     * @param posttestFilter double. Posttest probability threshold to get list of disease Ids to use for differential diagnosis calculation.
+     * @param weight double. Weight value to use in the differential diagnosis calculation.
+     * @return List<MaxoTermScore>. List of {@link MaxoTermScore} records, in order of decreasing score.
+     * @throws Exception
+     */
     public List<MaxoTermScore> getMaxoTermRecords(Path phenopacketPath, AnalysisResults results, List<LiricalResultsFileRecord> liricalOutputRecords,
                                                   double posttestFilter, double weight) throws Exception {
         List<MaxoTermScore> maxoTermScoreRecords = new ArrayList<>();
@@ -72,6 +82,11 @@ public class MaxoTermMap {
         return maxoTermScoreRecords;
     }
 
+    /**
+     *
+     * @param maxoTermScoreRecord {@link MaxoTermScore} record.
+     * @return List<Frequencies>. List of {@link Frequencies} records.
+     */
     public List<Frequencies> getFrequencyRecords(MaxoTermScore maxoTermScoreRecord) {
         List<Frequencies> frequencyRecords = new ArrayList<>();
         Set<TermId> omimIds = maxoTermScoreRecord.omimTermIds();
@@ -94,6 +109,15 @@ public class MaxoTermMap {
         return frequencyRecords;
     }
 
+    /**
+     *
+     * @param results {@link AnalysisResults}. LIRICAL analysis results.
+     * @param liricalOutputRecords List<LiricalResultsFileRecord>. List of {@link LiricalResultsFileRecord} results from LIRICAL output file.
+     * @param phenopacketPath Path. Path to phenopacket file.
+     * @param posttestFilter double. Posttest probability threshold to get list of disease Ids to use for differential diagnosis calculation.
+     * @return Map<SimpleTerm, Set<SimpleTerm>>. Map of MaXo terms to Set of associated HPO terms, not including ancestors.
+     * @throws Exception
+     */
     public Map<SimpleTerm, Set<SimpleTerm>> makeMaxoToHpoTermMap(AnalysisResults results, List<LiricalResultsFileRecord> liricalOutputRecords,
                                                              Path phenopacketPath, double posttestFilter) throws Exception {
 
@@ -135,6 +159,14 @@ public class MaxoTermMap {
         return maxoToHpoTermMap;
     }
 
+    /**
+     *
+     * @param maxoToHpoTermMap Map<SimpleTerm, Set<SimpleTerm>>. Map of MaXo terms to Set of associated HPO terms, not including ancestors.
+     * @param results {@link AnalysisResults}. LIRICAL analysis results.
+     * @param liricalOutputRecords List<LiricalResultsFileRecord>. List of {@link LiricalResultsFileRecord} results from LIRICAL output file.
+     * @param weight double. Weight value to use in the differential diagnosis calculation.
+     * @return Map<SimpleTerm, Double>. Map of MaXo terms to final differential diagnosis scores.
+     */
     public Map<SimpleTerm, Double> makeMaxoScoreMap(Map<SimpleTerm, Set<SimpleTerm>> maxoToHpoTermMap, AnalysisResults results,
                                                 List<LiricalResultsFileRecord> liricalOutputRecords, Double weight) {
         return DifferentialDiagnosis.makeMaxoScoreMap(maxoToHpoTermMap, diseases, results, liricalOutputRecords, weight);

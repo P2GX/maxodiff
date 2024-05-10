@@ -20,6 +20,12 @@ import java.util.stream.Collectors;
 public class DifferentialDiagnosis {
 
     //Functions using results from a LIRICAL calculation in the same session
+    /**
+     *
+     * @param results {@link AnalysisResults}. LIRICAL analysis results.
+     * @param diseaseIds List<TermId>. List of disease Ids to use for differential diagnosis calculation.
+     * @return double. Sum of the posttest probabilities for the target m diseases.
+     */
     public static double posttestProbabilitySum(AnalysisResults results, List<TermId> diseaseIds) {
         double sum = 0.0;
         for (TermId id : diseaseIds) {
@@ -30,6 +36,13 @@ public class DifferentialDiagnosis {
         return sum / 100;
     }
 
+    /**
+     *
+     * @param results {@link AnalysisResults}. LIRICAL analysis results.
+     * @param diseaseIds List<TermId>. List of disease Ids to use for differential diagnosis calculation.
+     * @param targetDisease TermId. Target disease from the phenopacket.
+     * @return double. Sum of the target disease LR / disease list disease LR.
+     */
     public static double relativeDiseaseDiff(AnalysisResults results, List<TermId> diseaseIds, TermId targetDisease) {
         double sum = 0.0;
         List<TestResult> orderedResults = results.resultsWithDescendingPostTestProbability().toList();
@@ -49,6 +62,12 @@ public class DifferentialDiagnosis {
     }
 
     //Functions using results from a separate LIRICAL output file
+    /**
+     *
+     * @param liricalOutputRecords List<LiricalResultsFileRecord>. List of {@link LiricalResultsFileRecord} results from LIRICAL output file.
+     * @param diseaseIds List<TermId>. List of disease Ids to use for differential diagnosis calculation.
+     * @return double. Sum of the posttest probabilities for the target m diseases.
+     */
     public static double posttestProbabilitySum(List<LiricalResultsFileRecord> liricalOutputRecords,
                                                 List<TermId> diseaseIds) {
         double sum = 0.0;
@@ -60,6 +79,13 @@ public class DifferentialDiagnosis {
         return sum / 100;
     }
 
+    /**
+     *
+     * @param liricalOutputRecords List<LiricalResultsFileRecord>. List of {@link LiricalResultsFileRecord} results from LIRICAL output file.
+     * @param diseaseIds List<TermId>. List of disease Ids to use for differential diagnosis calculation.
+     * @param targetDisease TermId. Target disease from the phenopacket.
+     * @return double. Sum of the target disease LR / disease list disease LR.
+     */
     public static double relativeDiseaseDiff(List<LiricalResultsFileRecord> liricalOutputRecords,
                                              List<TermId> diseaseIds, TermId targetDisease) {
         double sum = 0.0;
@@ -72,7 +98,7 @@ public class DifferentialDiagnosis {
             List<LiricalResultsFileRecord> resultsSublist = orderedResults.subList(0, targetResultIdx);
             List<LiricalResultsFileRecord> diffResultsList = resultsSublist.stream().filter(res -> diseaseIds.contains(res.omimId()))
                     .sorted(Comparator.comparingDouble(LiricalResultsFileRecord::posttestProbability).reversed()).toList();
-            List<Double> diffLRList = diffResultsList.stream().map(res -> res.likelihoodRatio()).toList();
+            List<Double> diffLRList = diffResultsList.stream().map(LiricalResultsFileRecord::likelihoodRatio).toList();
             double targetLR = targetResult.likelihoodRatio();
             for (double lr : diffLRList)
                 sum += targetLR / lr;
@@ -80,6 +106,13 @@ public class DifferentialDiagnosis {
         return sum;
     }
 
+    /**
+     *
+     * @param results {@link AnalysisResults}. LIRICAL analysis results.
+     * @param liricalOutputRecords List<LiricalResultsFileRecord>. List of {@link LiricalResultsFileRecord} results from LIRICAL output file.
+     * @param diseaseIds List<TermId>. List of disease Ids to use for differential diagnosis calculation.
+     * @return double. Sum of relativeDiseaseDiff scores.
+     */
     public static double scoreSum(AnalysisResults results, List<LiricalResultsFileRecord> liricalOutputRecords,
                                   List<TermId> diseaseIds) {
         double sum = 0.0;
@@ -93,6 +126,14 @@ public class DifferentialDiagnosis {
         return sum;
     }
 
+    /**
+     *
+     * @param results {@link AnalysisResults}. LIRICAL analysis results.
+     * @param liricalOutputRecords List<LiricalResultsFileRecord>. List of {@link LiricalResultsFileRecord} results from LIRICAL output file.
+     * @param diseaseIds List<TermId>. List of disease Ids to use for differential diagnosis calculation.
+     * @param weight double. Weight value to use in the differential diagnosis calculation.
+     * @return double. Final differential diagnosis calculation score.
+     */
     public static double finalScore(AnalysisResults results, List<LiricalResultsFileRecord> liricalOutputRecords,
                                     List<TermId> diseaseIds, double weight) {
         double p = 0;
@@ -108,6 +149,13 @@ public class DifferentialDiagnosis {
         return weight*p + (1-weight)*q;
     }
 
+    /**
+     *
+     * @param dataResolver {@link MaxodiffDataResolver}. Class for loading maxodiff data files.
+     * @param diseaseIds List<TermId>. List of disease Ids to use for the differential diagnosis calculation.
+     * @return List<HpoDisease>. List of {@link HpoDisease} diseases to use for the differential diagnosis calculation.
+     * @throws MaxodiffDataException
+     */
     public static List<HpoDisease> makeDiseaseList(MaxodiffDataResolver dataResolver, List<TermId> diseaseIds) throws MaxodiffDataException {
         List<HpoDisease> diseases = new ArrayList<>();
         Path annotPath = dataResolver.phenotypeAnnotations();
@@ -118,6 +166,12 @@ public class DifferentialDiagnosis {
         return diseases;
     }
 
+    /**
+     *
+     * @param fullHpoToMaxoTermMap Map<SimpleTerm, Set<SimpleTerm>>. Map of all HPO terms to Set of MaXo terms that can be used to diagnose HPO terms.
+     * @param hpoTermIds Set<TermId>. Set of HPO term Ids associated with the diseases used in the differential diagnosis calculation.
+     * @return Map<SimpleTerm, Set<SimpleTerm>>. Map of HPO terms to Set of associated MaXo terms.
+     */
     public static Map<SimpleTerm, Set<SimpleTerm>> makeHpoToMaxoTermMap(Map<SimpleTerm, Set<SimpleTerm>> fullHpoToMaxoTermMap,
                                                                  Set<TermId> hpoTermIds) {
         Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxoTermMap = new HashMap<>();
@@ -133,6 +187,12 @@ public class DifferentialDiagnosis {
         return hpoToMaxoTermMap;
     }
 
+    /**
+     *
+     * @param ontology Ontology. Hpo ontology.
+     * @param hpoToMaxoTermMap Map<SimpleTerm, Set<SimpleTerm>>. Map of HPO terms to Set of associated MaXo terms.
+     * @return Map<SimpleTerm, Set<SimpleTerm>>. Map of MaXo terms to Set of associated HPO terms, not including ancestors.
+     */
     public static Map<SimpleTerm, Set<SimpleTerm>> makeMaxoToHpoTermMap(Ontology ontology, Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxoTermMap) {
         Map<SimpleTerm, Set<SimpleTerm>> maxoToHpoTermMap = new HashMap<>();
         for (Map.Entry<SimpleTerm, Set<SimpleTerm>> entry : hpoToMaxoTermMap.entrySet()) {
@@ -161,6 +221,12 @@ public class DifferentialDiagnosis {
         return maxoToHpoTermMap;
     }
 
+    /**
+     *
+     * @param hpoTermIds List<TermId>. List of HPO term Ids.
+     * @return List<List<TermId>>. List of combinations of HPO term Ids
+     * (e.g. given input [A, B, C] yields [[A], [B], [A, B], [C], [A, C], [B, C], [A, B, C]])
+     */
     public static List<List<TermId>> getHpoTermCombos(List<TermId> hpoTermIds) {
 
         List<List<TermId>> hpoComboList = new ArrayList<>();
@@ -182,6 +248,15 @@ public class DifferentialDiagnosis {
         return hpoComboList;
     }
 
+    /**
+     *
+     * @param maxoToHpoTermMap Map<SimpleTerm, Set<SimpleTerm>>. Map of MaXo terms to Set of associated HPO terms, not including ancestors.
+     * @param diseases List<HpoDisease>. List of {@link HpoDisease} diseases to use for the differential diagnosis calculation.
+     * @param results {@link AnalysisResults}. LIRICAL analysis results.
+     * @param liricalOutputRecords List<LiricalResultsFileRecord>. List of {@link LiricalResultsFileRecord} results from LIRICAL output file.
+     * @param weight double. Weight value to use in the differential diagnosis calculation.
+     * @return Map<SimpleTerm, Double>. Map of MaXo terms to final differential diagnosis scores.
+     */
     public static Map<SimpleTerm, Double> makeMaxoScoreMap(Map<SimpleTerm, Set<SimpleTerm>> maxoToHpoTermMap, List<HpoDisease> diseases,
                                                        AnalysisResults results, List<LiricalResultsFileRecord> liricalOutputRecords, double weight) {
         Map<SimpleTerm, Double> maxoScoreMap = new HashMap<>();
