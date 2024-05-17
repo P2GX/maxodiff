@@ -1,5 +1,6 @@
 package org.monarchinitiative.maxodiff.core.analysis;
 
+import org.apache.commons.math3.random.EmpiricalDistribution;
 import org.monarchinitiative.lirical.core.analysis.AnalysisResults;
 import org.monarchinitiative.lirical.core.analysis.TestResult;
 import org.monarchinitiative.maxodiff.core.SimpleTerm;
@@ -294,6 +295,23 @@ public class DifferentialDiagnosis {
             }
         }
         return maxoScoreMap;
+    }
+
+    /**
+     *
+     * @param maxoScores double[]. Array of differential diagnosis scores.
+     * @return List<Double>. List of Empirical Cumulative Distribution probability values.
+     */
+    public static List<Double> getScoreCumulativeDistribution(double[] maxoScores) {
+        List<Double> scoreCumulativeDistributionList = new ArrayList<>();
+        int nScores = maxoScores.length;
+        int binCount = nScores/10;
+        EmpiricalDistribution empiricalDistribution = new EmpiricalDistribution(binCount);
+        empiricalDistribution.load(maxoScores);
+        for (double maxoScore : maxoScores) {
+            scoreCumulativeDistributionList.add(empiricalDistribution.cumulativeProbability(maxoScore));
+        }
+        return scoreCumulativeDistributionList;
     }
 
 }

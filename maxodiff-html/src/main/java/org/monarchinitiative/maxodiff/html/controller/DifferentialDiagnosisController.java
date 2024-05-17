@@ -3,6 +3,7 @@ package org.monarchinitiative.maxodiff.html.controller;
 import org.monarchinitiative.maxodiff.core.analysis.LiricalResultsFileRecord;
 import org.monarchinitiative.maxodiff.core.analysis.MaxoTermMap;
 import org.monarchinitiative.maxodiff.core.io.LiricalResultsFileParser;
+import org.monarchinitiative.maxodiff.html.analysis.CumulativeDistributionChartData;
 import org.monarchinitiative.maxodiff.html.config.MaxodiffProperties;
 import org.monarchinitiative.maxodiff.html.service.DifferentialDiagnosisService;
 import org.monarchinitiative.phenol.ontology.data.TermId;
@@ -13,10 +14,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 
 import java.nio.file.Path;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 @Controller("/")
 public class DifferentialDiagnosisController {
@@ -64,6 +62,46 @@ public class DifferentialDiagnosisController {
             model.addAttribute("phenopacket", phenopacketName);
             model.addAttribute("diseaseId", diseaseId);
             model.addAttribute("maxoRecords", maxoTermScoreRecords);
+
+            double posttestFilterLB = posttestFilter/2;
+            double posttestFilterUB = posttestFilter*2 < 1 ? posttestFilter*2 : 1;
+            List<MaxoTermMap.MaxoTermScore> maxoTermScoreRecordsPosttestFilterLB =
+                    differentialDiagnosisService.getMaxoTermRecords(maxoTermMap, liricalResultsFileRecords,
+                    phenopacketPath, posttestFilterLB, weight);
+            List<MaxoTermMap.MaxoTermScore> maxoTermScoreRecordsPosttestFilterUB =
+                    differentialDiagnosisService.getMaxoTermRecords(maxoTermMap, liricalResultsFileRecords,
+                    phenopacketPath, posttestFilterUB, weight);
+            List<List<MaxoTermMap.MaxoTermScore>> allPosttestFilterScoreRecords =
+                    Arrays.asList(maxoTermScoreRecordsPosttestFilterLB, maxoTermScoreRecords, maxoTermScoreRecordsPosttestFilterUB);
+
+            double weightLB = weight/2;
+            double weightUB = weight*2 < 1 ? weight*2 : 1;
+            List<MaxoTermMap.MaxoTermScore> maxoTermScoreRecordsWeightLB =
+                    differentialDiagnosisService.getMaxoTermRecords(maxoTermMap, liricalResultsFileRecords,
+                    phenopacketPath, posttestFilter, weightLB);
+            List<MaxoTermMap.MaxoTermScore> maxoTermScoreRecordsWeightUB =
+                    differentialDiagnosisService.getMaxoTermRecords(maxoTermMap, liricalResultsFileRecords,
+                    phenopacketPath, posttestFilter, weightUB);
+            List<List<MaxoTermMap.MaxoTermScore>> allWeightScoreRecords =
+                    Arrays.asList(maxoTermScoreRecordsWeightLB, maxoTermScoreRecords, maxoTermScoreRecordsWeightUB);
+
+            String posttestKey = "posttestFilter";
+            String weightKey = "weight";
+            model.addAttribute("posttestFilterKey", posttestKey);
+            model.addAttribute("weightKey", weightKey);
+            Map<String, List<List<CumulativeDistributionChartData.CumulativeDistributionRecord>>> cumulativeDistributionRecordMap = new HashMap<>();
+            cumulativeDistributionRecordMap.put(posttestKey, CumulativeDistributionChartData.makeDistRecordList(allPosttestFilterScoreRecords));
+            cumulativeDistributionRecordMap.put(weightKey, CumulativeDistributionChartData.makeDistRecordList(allWeightScoreRecords));
+
+            Map<String, List<String>> distributionDatasetLabels = new HashMap<>();
+            distributionDatasetLabels.put(posttestKey,
+                    Arrays.asList("Posttest Probability Threshold = " + posttestFilterLB,
+                            "Posttest Probability Threshold = " + posttestFilter,
+                            "Posttest Probability Threshold = " + posttestFilterUB));
+            distributionDatasetLabels.put(weightKey, Arrays.asList("Weight = " + weightLB, "Weight = " + weight, "Weight = " + weightUB));
+
+            model.addAttribute("cumulativeDistributionRecords", cumulativeDistributionRecordMap);
+            model.addAttribute("distributionDatasetLabels", distributionDatasetLabels);
 
             Set<TermId> omimIds = maxoTermScoreRecords.get(0).omimTermIds();
             Map<TermId, String> omimTermMap = new LinkedHashMap<>();

@@ -65,7 +65,7 @@ public class MaxoTermMap {
         List<MaxoTermScore> maxoTermScoreRecords = new ArrayList<>();
         Map<SimpleTerm, Set<SimpleTerm>> maxoToHpoTermMap = makeMaxoToHpoTermMap(results, liricalOutputRecords, phenopacketPath, posttestFilter);
         Map<SimpleTerm, Double> maxoScoreMap = makeMaxoScoreMap(maxoToHpoTermMap, results, liricalOutputRecords, weight);
-        LOGGER.info(maxoScoreMap.toString());
+        LOGGER.debug(maxoScoreMap.toString());
         maxoToHpoTermMap.forEach((key, value) -> {
             String maxoId = key.tid().toString();
             String maxoTermLabel = key.label();
@@ -123,7 +123,7 @@ public class MaxoTermMap {
 
         PhenopacketData phenopacketData = LiricalAnalysis.readPhenopacketData(phenopacketPath);
         diseaseId = phenopacketData.diseaseIds().get(0);
-        LOGGER.info("Min Posttest Probabiltiy Threshold = " + posttestFilter);
+        LOGGER.debug("Min Posttest Probabiltiy Threshold = {}", posttestFilter);
         // Collect HPO terms and frequencies for the target m diseases
         List<TermId> diseaseIds = new ArrayList<>();
         if (results != null) {
@@ -139,7 +139,7 @@ public class MaxoTermMap {
                     .toList();
             records.forEach(r -> diseaseIds.add(r.omimId()));
         }
-        LOGGER.info(phenopacketPath + " diseaseIds: " + String.valueOf(diseaseIds));
+        LOGGER.debug("{} diseaseIds: {}", phenopacketPath, diseaseIds);
         int topNDiseases = diseaseIds.size();
 
         diseases = DifferentialDiagnosis.makeDiseaseList(dataResolver, diseaseIds);
@@ -154,7 +154,7 @@ public class MaxoTermMap {
         hpoToMaxoTermMap = DifferentialDiagnosis.makeHpoToMaxoTermMap(fullHpoToMaxoTermMap, hpoTermCounts.keySet());
         Map<SimpleTerm, Set<SimpleTerm>> maxoToHpoTermMap = DifferentialDiagnosis.makeMaxoToHpoTermMap(hpo, hpoToMaxoTermMap);
 
-        LOGGER.info(maxoToHpoTermMap.toString());
+        LOGGER.debug(maxoToHpoTermMap.toString());
 
         return maxoToHpoTermMap;
     }

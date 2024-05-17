@@ -10,10 +10,10 @@ import java.nio.file.Path;
 import java.util.List;
 
 @Service
-public class MaxoTermService {
+public class SessionResultsService {
 
 
-    public MaxoTermService() {}
+    public SessionResultsService() {}
 
     public AnalysisResults runLiricalCalculation(MaxoTermMap maxoTermMap, LiricalAnalysis liricalAnalysis, Path phenopacketPath) throws Exception {
         return maxoTermMap.runLiricalCalculation(liricalAnalysis, phenopacketPath);

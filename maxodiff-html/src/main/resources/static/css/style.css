@@ -51,7 +51,12 @@
 }
 
 .inputForm {
-  background-color: seashell;
+  background-color: aliceblue;
+}
+
+.inputSummaryTable {
+    border: 1px solid black;
+    background-color: pink;
 }
 
 .line {

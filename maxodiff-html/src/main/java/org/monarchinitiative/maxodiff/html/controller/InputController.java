@@ -7,7 +7,7 @@ import org.monarchinitiative.maxodiff.core.analysis.LiricalAnalysis.LiricalRecor
 import org.monarchinitiative.maxodiff.core.analysis.MaxoTermMap;
 import org.monarchinitiative.maxodiff.html.analysis.InputRecord;
 import org.monarchinitiative.maxodiff.html.config.MaxodiffProperties;
-import org.monarchinitiative.maxodiff.html.service.MaxoTermService;
+import org.monarchinitiative.maxodiff.html.service.SessionResultsService;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -25,7 +25,7 @@ public class InputController {
     private MaxodiffProperties properties;
 
     @Autowired
-    MaxoTermService maxoTermService = new MaxoTermService();
+    SessionResultsService sessionResultsService = new SessionResultsService();
 
     AnalysisResults liricalResults;
 
@@ -81,7 +81,7 @@ public class InputController {
         model.addAttribute("liricalRecord", liricalRecord);
         if (phenopacketPath != null) {
             LiricalAnalysis liricalAnalysis = new LiricalAnalysis(liricalRecord);
-            liricalResults = maxoTermService.runLiricalCalculation(maxoTermMap, liricalAnalysis, phenopacketPath);
+            liricalResults = sessionResultsService.runLiricalCalculation(maxoTermMap, liricalAnalysis, phenopacketPath);
         }
         InputRecord inputRecord = new InputRecord(maxodiffDir, maxoTermMap, liricalResults, phenopacketPath);
         model.addAttribute("inputRecord", inputRecord);

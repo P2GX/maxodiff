@@ -73,7 +73,28 @@
 <hr class="line">
 
 <h1 th:text="'maxodiff Analysis Results for ' + ${phenopacket}"></h1>
+
 <table>
+    <tbody>
+    <tr>
+        <td><div id="posttestCumulativeDistributionChartContainer" style="height:400px; width:700px; border: 1px solid black">
+            </canvas><canvas id="posttestCumulativeDistributionChart"></canvas></div></td>
+        <td><div id="weightCumulativeDistributionChartContainer" style="height:400px; width:700px; border: 1px solid black">
+            </canvas><canvas id="weightCumulativeDistributionChart"></canvas></div></td>
+    </tr>
+    </tbody>
+</table>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script th:inline="javascript">
+    var cumulativeDistributionRecords = [[${cumulativeDistributionRecords}]];
+    var distributionDatasetLabels = [[${distributionDatasetLabels}]];
+    var posttestFilterKey = [[${posttestFilterKey}]];
+    var weightKey = [[${weightKey}]];
+</script>
+<script type="text/javascript" th:src="@{/js/scoreCumulativeDistChart.js}"></script>
+
+<p></p>
+<table class="inputSummaryTable">
     <tbody>
         <tr>
             <td style='font-weight:bold;'>Disease ID:</td><td th:text="${diseaseId}"></td>
@@ -124,14 +145,6 @@
         <th:block th:each= "freqRecord : ${maxoTable.value}">
             <tr>
                 <td th:text="${freqRecord.hpoId} + ' (' + ${freqRecord.hpoLabel} + ')'"></td>
-<!--                <td><canvas id="chartTest"></canvas> &lt;!&ndash;th:attr="frequencies=${freqRecord.frequencies}" id="chartTest"></canvas>&ndash;&gt;-->
-<!--                    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>-->
-<!--                    <script type="text/javascript" th:inline="javascript"-->
-<!--                            th:src="@{/js/drawChart.js}">-->
-<!--                        /*<![CDATA[*/-->
-<!--                        var xDataLabels = /*[[ ${omimIds} ]]*/[];-->
-<!--                        /*]]>*/-->
-<!--                    </script></td>-->
                 <th:block th:each="frequency : ${freqRecord.frequencies}">
                     <td th:text="${frequency} == null ? ${frequency} :
                     (${frequency} % 1 == 0 ? ${frequency} : ${#numbers.formatDecimal(frequency, 1, 3)})"

@@ -4,7 +4,7 @@ import org.monarchinitiative.lirical.core.analysis.AnalysisResults;
 import org.monarchinitiative.lirical.core.analysis.TestResult;
 import org.monarchinitiative.maxodiff.core.analysis.MaxoTermMap;
 import org.monarchinitiative.maxodiff.html.analysis.InputRecord;
-import org.monarchinitiative.maxodiff.html.service.MaxoTermService;
+import org.monarchinitiative.maxodiff.html.service.SessionResultsService;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
@@ -16,10 +16,10 @@ import java.util.*;
 
 @Controller("/sessionResults")
 @SessionAttributes({"liricalRecord", "inputRecord"})
-public class MaxoTermController {
+public class SessionResultsController {
 
     @Autowired
-    MaxoTermService maxoTermService;
+    SessionResultsService sessionResultsService;
 
     @RequestMapping("/sessionResults")
     public String showResults(@SessionAttribute("inputRecord") InputRecord input,
@@ -40,8 +40,8 @@ public class MaxoTermController {
         if (phenopacketPath != null & posttestFilter != null & weight != null & nMaxoResults != null) {
             InputRecord inputRecord = (InputRecord) model.getAttribute("inputRecord");
             MaxoTermMap maxoTermMap = inputRecord.maxoTermMap();
-            List<MaxoTermMap.MaxoTermScore> maxoTermScoreRecords = maxoTermService.getMaxoTermRecords(maxoTermMap, liricalResults, phenopacketPath, posttestFilter, weight);
-            TermId diseaseId = maxoTermService.getDiseaseId(maxoTermMap);
+            List<MaxoTermMap.MaxoTermScore> maxoTermScoreRecords = sessionResultsService.getMaxoTermRecords(maxoTermMap, liricalResults, phenopacketPath, posttestFilter, weight);
+            TermId diseaseId = sessionResultsService.getDiseaseId(maxoTermMap);
             String phenopacketName = phenopacketPath.toFile().getName();
             model.addAttribute("phenopacket", phenopacketName);
             model.addAttribute("diseaseId", diseaseId);
@@ -54,7 +54,7 @@ public class MaxoTermController {
             int nDisplayed = maxoTermScoreRecords.size() < nMaxoResults ? maxoTermScoreRecords.size() : nMaxoResults;
             model.addAttribute("nDisplayed", nDisplayed);
             for (MaxoTermMap.MaxoTermScore maxoTermScoreRecord : maxoTermScoreRecords.subList(0, nDisplayed)) {
-                List<MaxoTermMap.Frequencies> frequencyRecords = maxoTermService.getFrequencyRecords(maxoTermMap, maxoTermScoreRecord);
+                List<MaxoTermMap.Frequencies> frequencyRecords = sessionResultsService.getFrequencyRecords(maxoTermMap, maxoTermScoreRecord);
                 maxoTables.put(maxoTermScoreRecord, frequencyRecords);
             }
             model.addAttribute("maxoTables", maxoTables);
