@@ -53,15 +53,15 @@
     <table class="diffDiagInputTable">
         <tbody>
         <tr>
-            <td>Posttest Probability Threshold:</td>
-            <td><input style="width:90%" type="number" step="0.01" min="0" max="1" th:value="${posttestFilter}" name="posttestFilter" /></td>
+            <td>N Diseases:</td>
+            <td><input style="width:90%" type="number" min="1" th:max="${totalNDiseases}" th:value="${nDiseases}" name="nDiseases" /></td>
         </tr>
         <tr>
             <td>Weight: </td>
             <td><input style="width:90%" type="number" step="0.01" min="0" max="1" th:value="${weight}" name="weight"/></td>
         </tr>
         <tr>
-            <td>Maximum # MaXo Results to Display:</td>
+            <td>Maximum # MAXO Results to Display:</td>
             <td><input style="width:90%" type="number" min="1" th:value="${nMaxoResults}" name="nMaxoResults"/></td>
         </tr>
         </tbody>
@@ -74,24 +74,24 @@
 
 <h1 th:text="'maxodiff Analysis Results for ' + ${phenopacket}"></h1>
 
-<table>
-    <tbody>
-    <tr>
-        <td><div id="posttestCumulativeDistributionChartContainer" style="height:400px; width:700px; border: 1px solid black">
-            </canvas><canvas id="posttestCumulativeDistributionChart"></canvas></div></td>
-        <td><div id="weightCumulativeDistributionChartContainer" style="height:400px; width:700px; border: 1px solid black">
-            </canvas><canvas id="weightCumulativeDistributionChart"></canvas></div></td>
-    </tr>
-    </tbody>
-</table>
-<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-<script th:inline="javascript">
-    var cumulativeDistributionRecords = [[${cumulativeDistributionRecords}]];
-    var distributionDatasetLabels = [[${distributionDatasetLabels}]];
-    var posttestFilterKey = [[${posttestFilterKey}]];
-    var weightKey = [[${weightKey}]];
-</script>
-<script type="text/javascript" th:src="@{/js/scoreCumulativeDistChart.js}"></script>
+<!--<table>-->
+<!--    <tbody>-->
+<!--    <tr>-->
+<!--        <td><div id="posttestCumulativeDistributionChartContainer" style="height:400px; width:700px; border: 1px solid black">-->
+<!--            </canvas><canvas id="posttestCumulativeDistributionChart"></canvas></div></td>-->
+<!--        <td><div id="weightCumulativeDistributionChartContainer" style="height:400px; width:700px; border: 1px solid black">-->
+<!--            </canvas><canvas id="weightCumulativeDistributionChart"></canvas></div></td>-->
+<!--    </tr>-->
+<!--    </tbody>-->
+<!--</table>-->
+<!--<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>-->
+<!--<script th:inline="javascript">-->
+<!--    var cumulativeDistributionRecords = [[${cumulativeDistributionRecords}]];-->
+<!--    var distributionDatasetLabels = [[${distributionDatasetLabels}]];-->
+<!--    var posttestFilterKey = [[${posttestFilterKey}]];-->
+<!--    var weightKey = [[${weightKey}]];-->
+<!--</script>-->
+<!--<script type="text/javascript" th:src="@{/js/scoreCumulativeDistChart.js}"></script>-->
 
 <p></p>
 <table class="inputSummaryTable">
@@ -103,7 +103,7 @@
             <td style='font-weight:bold;'>Disease Name:</td><td th:text="${diseaseLabel}"></td>
         </tr>
         <tr>
-            <td style='font-weight:bold;'>Posttest probability threshold:</td><td th:text="${posttestFilter}"></td>
+            <td style='font-weight:bold;'>N Diseases:</td><td th:text="${nDiseases}"></td>
         </tr>
         <tr>
             <td style='font-weight:bold;'>Weight:</td><td th:text="${weight}"></td>
@@ -111,14 +111,14 @@
     </tbody>
 </table>
 
-<h1 th:text="'Top ' + ${nDisplayed} + ' Recommended MaXo Terms'"></h1>
+<h1 th:text="'Top ' + ${nDisplayed} + ' Recommended MAXO Terms'"></h1>
 
 <th:block th:each= "maxoTable, iter : ${maxoTables}">
     <h2 th:text="${iter.index+1} + ') ' + ${maxoTable.key.maxoId} + ': ' + ${maxoTable.key.maxoLabel}"></h2>
     <table class="scoreTable">
         <tbody>
         <tr>
-            <td>Score:</td><td th:text="${#numbers.formatDecimal(maxoTable.key.score, 0, 3)}"></td>
+            <td>&Delta;Score:</td><td th:text="${#numbers.formatDecimal(maxoTable.key.scoreDiff, 0, 3)}"></td>
         </tr>
         <tr>
             <td>N Diseases:</td><td th:text="${maxoTable.key.nOmimTerms}"></td>
@@ -128,6 +128,18 @@
         </tr>
         </tbody>
     </table>
+    <p></p>
+
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+    <div th:id="'container' + ${iter.index+1}" style="height:400px; width:700px; border: 1px solid black">
+        </canvas><canvas th:id="'chart' + ${iter.index+1}" class="maxoChart"></canvas></div>
+
+    <script th:inline="javascript">
+        var maxoIdx = [[${iter.index+1}]]
+        var maxoRecs = [[${maxoRecords}]]
+    </script>
+    <script type="text/javascript" th:src="@{/js/maxoChart.js}"></script>
 
     <h3>Table of HPO Term Frequencies</h3>
     <table class='resultsTable'>

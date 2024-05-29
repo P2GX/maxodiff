@@ -12,7 +12,6 @@ import org.monarchinitiative.lirical.io.analysis.PhenopacketData;
 import org.monarchinitiative.lirical.io.analysis.PhenopacketImporter;
 import org.monarchinitiative.lirical.io.analysis.PhenopacketImporters;
 import org.monarchinitiative.maxodiff.core.SimpleTerm;
-import org.monarchinitiative.maxodiff.core.analysis.DifferentialDiagnosis;
 import org.monarchinitiative.maxodiff.core.analysis.LiricalAnalysis;
 import org.monarchinitiative.maxodiff.core.analysis.MaxoTermMap;
 import org.monarchinitiative.phenol.ontology.data.TermId;
@@ -85,12 +84,12 @@ public class DifferentialDiagnosisCommand extends BaseLiricalCommand {
             description = "Comma-separated list of diseases to include in differential diagnosis.")
     protected List<String> diseaseIdsArg;
 
-    @CommandLine.Option(names = {"-t", "--threshold"},
+    @CommandLine.Option(names = {"-n", "--nDiseases"},
 //            required = true,
             split=",",
             arity = "1..*",
-            description = "Comma-separated list of posttest probability thresholds for filtering diseases to include in differential diagnosis.")
-    protected List<Double> thresholdsArg;
+            description = "Comma-separated list of n diseases for filtering diseases to include in differential diagnosis.")
+    protected List<Integer> nDiseasesArg;
 
 
     @Override
@@ -103,7 +102,6 @@ public class DifferentialDiagnosisCommand extends BaseLiricalCommand {
         resultsMap.put("diseaseId", new ArrayList<>());
         resultsMap.put("maxScoreMaxoTermId", new ArrayList<>());
         resultsMap.put("maxScoreTermLabel", new ArrayList<>());
-        resultsMap.put("threshold", new ArrayList<>());
         resultsMap.put("topNDiseases", new ArrayList<>());
         resultsMap.put("diseaseIds", new ArrayList<>());
         resultsMap.put("weight", new ArrayList<>());
@@ -113,8 +111,11 @@ public class DifferentialDiagnosisCommand extends BaseLiricalCommand {
 
         List<Double> weights = new ArrayList<>();
         weightsArg.stream().forEach(w -> weights.add(w));
-        List<Double> filterPosttestProbs = new ArrayList<>();
-        thresholdsArg.stream().forEach(t -> filterPosttestProbs.add(t));
+        List<Integer> nDiseasesList = new ArrayList<>();
+        nDiseasesArg.stream().forEach(n -> nDiseasesList.add(n));
+
+        System.out.println(weights);
+        System.out.println(nDiseasesList);
 
         try {
             // Run LIRICAL analysis
@@ -136,16 +137,18 @@ public class DifferentialDiagnosisCommand extends BaseLiricalCommand {
 
             //TODO? get list of diseases from LIRICAL results, and add diseases from CLI arg to total list for analysis
 
-            for (double posttestFilter : filterPosttestProbs) {
-                LOGGER.info("Min Posttest Probabiltiy Threshold = " + posttestFilter);
+            System.out.println(weights);
+            System.out.println(nDiseasesList);
+            for (int nDiseases : nDiseasesList) {
+                System.out.println("n Diseases = " + nDiseases);
                 // Make MaXo:HPO Term Map
                 Map<SimpleTerm, Set<SimpleTerm>> maxoToHpoTermMap = maxoTermMap.makeMaxoToHpoTermMap(results, null,
-                        phenopacketPath, posttestFilter);
+                        phenopacketPath, nDiseases);
 
                 LOGGER.info(String.valueOf(maxoToHpoTermMap));
 
                 for (double weight : weights) {
-                    LOGGER.info("Weight = " + weight);
+                    System.out.println("Weight = " + weight);
                     // Make map of MaXo scores
                     Map<SimpleTerm, Double> maxoScoreMap = maxoTermMap.makeMaxoScoreMap(maxoToHpoTermMap, results, null, weight);
                     LOGGER.info(String.valueOf(maxoScoreMap));
@@ -155,7 +158,7 @@ public class DifferentialDiagnosisCommand extends BaseLiricalCommand {
                     String maxScoreTermLabel = maxScore.getKey().label();
                     double maxScoreValue = maxScore.getValue();
 
-                    LOGGER.info("Max Score: " + maxScoreMaxoTermId + " (" + maxScoreTermLabel + ")" + " = " + maxScoreValue);
+                    System.out.println("Max Score: " + maxScoreMaxoTermId + " (" + maxScoreTermLabel + ")" + " = " + maxScoreValue);
 //                    double finalScore = diffDiag.finalScore(results, diseaseIds, weight);
 //                    LOGGER.info("Input Disease List Score: " + finalScore);
                     String backgroundVcf = vcfPath == null ? "" : vcfPath.toFile().getName();
@@ -174,8 +177,6 @@ public class DifferentialDiagnosisCommand extends BaseLiricalCommand {
                     maxScoreMaxoTermIds.add(maxScoreMaxoTermId);
                     List<Object> maxScoreTermLabels = resultsMap.get("maxScoreTermLabel");
                     maxScoreTermLabels.add(maxScoreTermLabel);
-                    List<Object> posttestFilters = resultsMap.get("threshold");
-                    posttestFilters.add(posttestFilter);
                     List<Object> topNDiseasesList = resultsMap.get("topNDiseases");
                     topNDiseasesList.add(topNDiseases);
                     List<Object> diseaseIdsList = resultsMap.get("diseaseIds");
@@ -189,7 +190,6 @@ public class DifferentialDiagnosisCommand extends BaseLiricalCommand {
                     resultsMap.replace("diseaseId", diseaseIdList);
                     resultsMap.replace("maxScoreMaxoTermId", maxScoreMaxoTermIds);
                     resultsMap.replace("maxScoreTermLabel", maxScoreTermLabels);
-                    resultsMap.replace("threshold", posttestFilters);
                     resultsMap.replace("topNDiseases", topNDiseasesList);
                     resultsMap.replace("diseaseIds", diseaseIdsList);
                     resultsMap.replace("weight", weightList);
@@ -198,7 +198,7 @@ public class DifferentialDiagnosisCommand extends BaseLiricalCommand {
             }
             BatchDiagnosisCommand.setResultsMap(resultsMap);
         } catch (Exception ex) {
-            LOGGER.error(ex.getMessage());
+            System.out.println(ex.getMessage());
             resultsMap = new HashMap<>();
             BatchDiagnosisCommand.setResultsMap(resultsMap);
         }

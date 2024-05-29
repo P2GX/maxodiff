@@ -16,8 +16,8 @@ public class DifferentialDiagnosisService {
 
 
     public List<MaxoTermMap.MaxoTermScore> getMaxoTermRecords(MaxoTermMap maxoTermMap, List<LiricalResultsFileRecord> liricalOutputRecords,
-                                                              Path phenopacketPath, double posttestFilter, double weight) throws Exception {
-        return maxoTermMap.getMaxoTermRecords(phenopacketPath, null, liricalOutputRecords, posttestFilter, weight);
+                                                              Path phenopacketPath, int nDiseases, double weight) throws Exception {
+        return maxoTermMap.getMaxoTermRecords(phenopacketPath, null, liricalOutputRecords, nDiseases, weight);
     }
 
     public List<MaxoTermMap.Frequencies> getFrequencyRecords(MaxoTermMap maxoTermMap, MaxoTermMap.MaxoTermScore maxoTermScore) throws Exception {

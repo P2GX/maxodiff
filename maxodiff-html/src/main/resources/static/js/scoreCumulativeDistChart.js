@@ -21,9 +21,9 @@ const weightData = {
 const posttestFilterCumulativeDistributionRecords = cumulativeDistributionRecords.posttestFilter
 const weightCumulativeDistributionRecords = cumulativeDistributionRecords.weight
 
-const legendSpaceValue = 10;
+var legendSpaceValue = 10;
 
-const legendBorder = {
+var legendBorder = {
     id: "legendBorder",
     beforeDatasetsDraw(chart) {
         const { ctx, legend } = chart;
@@ -43,7 +43,7 @@ const legendBorder = {
     }
 }
 
-const legendMargin = {
+var legendMargin = {
     id: "legendMargin",
     beforeInit(chart) {
         const fitValue = chart.legend.fit;

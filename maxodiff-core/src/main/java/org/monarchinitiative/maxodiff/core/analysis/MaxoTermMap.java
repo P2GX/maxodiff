@@ -24,7 +24,8 @@ public class MaxoTermMap {
     private static final Logger LOGGER = LoggerFactory.getLogger(MaxoTermMap.class);
 
     public record MaxoTermScore(String maxoId, String maxoLabel, Integer nOmimTerms, Set<TermId> omimTermIds,
-                                Integer nHpoTerms, Set<SimpleTerm> hpoTerms, Double score) {}
+                                Integer nHpoTerms, Set<SimpleTerm> hpoTerms, Map<TermId, Double> probabilityMap,
+                                Double initialScore, Double score, Double scoreDiff) {}
 
     public record Frequencies(TermId hpoId, String hpoLabel, List<Float> frequencies) {}
 
@@ -33,6 +34,7 @@ public class MaxoTermMap {
     MaxoDxAnnots maxoDxAnnots;
     Map<SimpleTerm, Set<SimpleTerm>> fullHpoToMaxoTermMap;
 
+    Map<TermId, Double> posttestProbabilityMap;
     List<HpoDisease> diseases;
     Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxoTermMap;
 
@@ -55,16 +57,18 @@ public class MaxoTermMap {
      * @param phenopacketPath
      * @param results {@link AnalysisResults}. LIRICAL analysis results.
      * @param liricalOutputRecords List<LiricalResultsFileRecord>. List of {@link LiricalResultsFileRecord} results from LIRICAL output file.
-     * @param posttestFilter double. Posttest probability threshold to get list of disease Ids to use for differential diagnosis calculation.
+     * @param nDiseases int. Number of diseases to use for differential diagnosis calculation.
      * @param weight double. Weight value to use in the differential diagnosis calculation.
      * @return List<MaxoTermScore>. List of {@link MaxoTermScore} records, in order of decreasing score.
      * @throws Exception
      */
     public List<MaxoTermScore> getMaxoTermRecords(Path phenopacketPath, AnalysisResults results, List<LiricalResultsFileRecord> liricalOutputRecords,
-                                                  double posttestFilter, double weight) throws Exception {
+                                                  int nDiseases, double weight) throws Exception {
         List<MaxoTermScore> maxoTermScoreRecords = new ArrayList<>();
-        Map<SimpleTerm, Set<SimpleTerm>> maxoToHpoTermMap = makeMaxoToHpoTermMap(results, liricalOutputRecords, phenopacketPath, posttestFilter);
+        Map<SimpleTerm, Set<SimpleTerm>> maxoToHpoTermMap = makeMaxoToHpoTermMap(results, liricalOutputRecords, phenopacketPath, nDiseases);
         Map<SimpleTerm, Double> maxoScoreMap = makeMaxoScoreMap(maxoToHpoTermMap, results, liricalOutputRecords, weight);
+        Map<SimpleTerm, Double> initialMaxoScoreMap = makeMaxoScoreMap(maxoToHpoTermMap, results, liricalOutputRecords, 1.0);
+        Map<TermId, Double> probabilityMap = getPosttestProbabilityMap();
         LOGGER.debug(maxoScoreMap.toString());
         maxoToHpoTermMap.forEach((key, value) -> {
             String maxoId = key.tid().toString();
@@ -75,8 +79,11 @@ public class MaxoTermMap {
             Set<SimpleTerm> hpoTerms = value;
             Integer nHpoTerms = value.size();
             double score = maxoScoreMap.get(key);
-            maxoTermScoreRecords.add(new MaxoTermScore(maxoId, maxoTermLabel, nOmimTerms, omimIds, nHpoTerms, hpoTerms, score));
-            Comparator<MaxoTermScore> comp = Comparator.comparing(MaxoTermScore::score, Comparator.reverseOrder());
+            double initialScore = initialMaxoScoreMap.get(key);
+            double scoreDiff = score - initialScore;
+            maxoTermScoreRecords.add(new MaxoTermScore(maxoId, maxoTermLabel, nOmimTerms, omimIds, nHpoTerms, hpoTerms, probabilityMap,
+                    initialScore, score, scoreDiff));
+            Comparator<MaxoTermScore> comp = Comparator.comparing(MaxoTermScore::scoreDiff, Comparator.reverseOrder());
             maxoTermScoreRecords.sort(comp);
         });
         return maxoTermScoreRecords;
@@ -114,30 +121,28 @@ public class MaxoTermMap {
      * @param results {@link AnalysisResults}. LIRICAL analysis results.
      * @param liricalOutputRecords List<LiricalResultsFileRecord>. List of {@link LiricalResultsFileRecord} results from LIRICAL output file.
      * @param phenopacketPath Path. Path to phenopacket file.
-     * @param posttestFilter double. Posttest probability threshold to get list of disease Ids to use for differential diagnosis calculation.
+     * @param nDiseases int. Number of diseases to use for differential diagnosis calculation.
      * @return Map<SimpleTerm, Set<SimpleTerm>>. Map of MaXo terms to Set of associated HPO terms, not including ancestors.
      * @throws Exception
      */
     public Map<SimpleTerm, Set<SimpleTerm>> makeMaxoToHpoTermMap(AnalysisResults results, List<LiricalResultsFileRecord> liricalOutputRecords,
-                                                             Path phenopacketPath, double posttestFilter) throws Exception {
+                                                             Path phenopacketPath, int nDiseases) throws Exception {
 
         PhenopacketData phenopacketData = LiricalAnalysis.readPhenopacketData(phenopacketPath);
         diseaseId = phenopacketData.diseaseIds().get(0);
-        LOGGER.debug("Min Posttest Probabiltiy Threshold = {}", posttestFilter);
+        LOGGER.debug("N Diseases: {}", nDiseases);
         // Collect HPO terms and frequencies for the target m diseases
         List<TermId> diseaseIds = new ArrayList<>();
         if (results != null) {
-            List<TestResult> testResults = results.resultsWithDescendingPostTestProbability()
-                    .filter(r -> r.posttestProbability() >= posttestFilter)
-                    .toList();
+            List<TestResult> testResults = results.resultsWithDescendingPostTestProbability().toList().subList(0, nDiseases);
             testResults.forEach(r -> diseaseIds.add(r.diseaseId()));
+            posttestProbabilityMap = DifferentialDiagnosis.posttestProbabilityMap(results, diseaseIds);
         } else if (liricalOutputRecords != null) {
             List<LiricalResultsFileRecord> orderedResults = liricalOutputRecords.stream()
                     .sorted(Comparator.comparingDouble(LiricalResultsFileRecord::posttestProbability).reversed()).toList();
-            List<LiricalResultsFileRecord> records = orderedResults.stream()
-                    .filter(r -> r.posttestProbability() >= posttestFilter)
-                    .toList();
+            List<LiricalResultsFileRecord> records = orderedResults.subList(0, nDiseases);
             records.forEach(r -> diseaseIds.add(r.omimId()));
+            posttestProbabilityMap = DifferentialDiagnosis.posttestProbabilityMap(records, diseaseIds);
         }
         LOGGER.debug("{} diseaseIds: {}", phenopacketPath, diseaseIds);
         int topNDiseases = diseaseIds.size();
@@ -178,6 +183,10 @@ public class MaxoTermMap {
 
     public List<HpoDisease> getDiseases() {
         return diseases;
+    }
+
+    public Map<TermId, Double> getPosttestProbabilityMap() {
+        return posttestProbabilityMap;
     }
 
     public Map<SimpleTerm, Set<SimpleTerm>> getHpoToMaxoTermMap() {

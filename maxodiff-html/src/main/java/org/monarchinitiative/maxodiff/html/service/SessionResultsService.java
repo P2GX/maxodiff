@@ -20,8 +20,8 @@ public class SessionResultsService {
     }
 
     public List<MaxoTermMap.MaxoTermScore> getMaxoTermRecords(MaxoTermMap maxoTermMap, AnalysisResults results,
-                                                              Path phenopacketPath, double posttestFilter, double weight) throws Exception {
-        return maxoTermMap.getMaxoTermRecords(phenopacketPath, results, null, posttestFilter, weight);
+                                                              Path phenopacketPath, int nDiseases, double weight) throws Exception {
+        return maxoTermMap.getMaxoTermRecords(phenopacketPath, results, null, nDiseases, weight);
     }
 
     public List<MaxoTermMap.Frequencies> getFrequencyRecords(MaxoTermMap maxoTermMap, MaxoTermMap.MaxoTermScore maxoTermScore) throws Exception {

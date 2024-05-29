@@ -36,12 +36,12 @@ public class BatchDiagnosisCommand extends DifferentialDiagnosisCommand {
             description = "Comma-separated list of weight values to use in final score calculation.")
     public List<Double> weightsArg;
 
-    @CommandLine.Option(names = {"-T", "--thresholds"},
+    @CommandLine.Option(names = {"-N", "--nDiseasesList"},
 //            required = true,
             split=",",
             arity = "1..*",
             description = "Comma-separated list of posttest probability thresholds for filtering diseases to include in differential diagnosis.")
-    protected List<Double> thresholdsArg;
+    protected List<Integer> nDiseasesArg;
 
     public static Map<String, List<Object>> resultsMap;
 
@@ -67,34 +67,34 @@ public class BatchDiagnosisCommand extends DifferentialDiagnosisCommand {
 
         try (BufferedWriter writer = openWriter(maxodiffResultsFilePath); CSVPrinter printer = CSVFormat.DEFAULT.print(writer)) {
             printer.printRecord("phenopacket", "background_vcf", "disease_id", "maxo_id", "maxo_label",
-                    "filter_posttest_prob", "n_diseases", "disease_ids", "weight", "score"); // header
+                    "n_diseases", "disease_ids", "weight", "score"); // header
 
             for (int i = 0; i < phenopacketPaths.size(); i++) {
-                String thresholds = thresholdsArg.stream().map(Object::toString).collect(Collectors.joining(","));
+                String nDiseases = nDiseasesArg.stream().map(Object::toString).collect(Collectors.joining(","));
                 String weights = weightsArg.stream().map(Object::toString).collect(Collectors.joining(","));
                 try {
                     DifferentialDiagnosisCommand differentialDiagnosisCommand = new DifferentialDiagnosisCommand();
                     CommandLine.call(differentialDiagnosisCommand,
+                            "-m", maxoDataPath.toString(),
                             "-d", dataSection.liricalDataDirectory.toString(),
                             "-p", phenopacketPaths.get(i).toString(),
-                            "-e", dataSection.exomiserDatabase.toString(),
-                            "--vcf", vcfPath.toString(),
+//                            "-e", dataSection.exomiserDatabase.toString(),
+//                            "--vcf", vcfPath.toString(),
                             "--assembly", genomeBuild.toString(),
-                            "-t", thresholds,
+                            "-n", nDiseases,
                             "-w", weights,
                             "-O", outputDir.toString());
 
 
                     Map<String, List<Object>> resultsMap = getResultsMap();
 
-//                    System.out.println("BatchCmd resultsMap = " + resultsMap);
+                    System.out.println("BatchCmd resultsMap = " + resultsMap);
 
                     List<Object> phenopacketNames = resultsMap.get("phenopacketName");
                     List<Object> backgroundVcfs = resultsMap.get("backgroundVcf");
                     List<Object> diseaseIdList = resultsMap.get("diseaseId");
                     List<Object> maxScoreMaxoTermIds = resultsMap.get("maxScoreMaxoTermId");
                     List<Object> maxScoreTermLabels = resultsMap.get("maxScoreTermLabel");
-                    List<Object> posttestFilters = resultsMap.get("threshold");
                     List<Object> topNDiseasesList = resultsMap.get("topNDiseases");
                     List<Object> diseaseIdsList = resultsMap.get("diseaseIds");
                     List<Object> weightList = resultsMap.get("weight");
@@ -105,17 +105,16 @@ public class BatchDiagnosisCommand extends DifferentialDiagnosisCommand {
                         TermId diseaseId = TermId.of(diseaseIdList.get(j).toString());
                         TermId maxScoreMaxoTermId = TermId.of(maxScoreMaxoTermIds.get(j).toString());
                         String maxScoreTermLabel = maxScoreTermLabels.get(j).toString();
-                        double posttestFilter = Double.parseDouble(posttestFilters.get(j).toString());
                         int topNDiseases = Integer.parseInt(topNDiseasesList.get(j).toString());
                         String diseaseIds = diseaseIdsList.get(j).toString();
                         double weight = Double.parseDouble(weightList.get(j).toString());
                         double maxScoreValue = Double.parseDouble(maxScoreValues.get(j).toString());
 
                         writeResults(phenopacketName, backgroundVcf, diseaseId, maxScoreMaxoTermId, maxScoreTermLabel,
-                                posttestFilter, topNDiseases, diseaseIds, weight, maxScoreValue, printer);
+                                topNDiseases, diseaseIds, weight, maxScoreValue, printer);
                     }
                 } catch (Exception ex) {
-                    LOGGER.error(ex.getMessage());
+                    System.out.println(ex.getMessage());
                     continue;
                 }
             }
@@ -150,7 +149,6 @@ public class BatchDiagnosisCommand extends DifferentialDiagnosisCommand {
                                      TermId diseaseId,
                                      TermId maxoId,
                                      String maxoLabel,
-                                     double topPosttestProb,
                                      int topNdiseases,
                                      String diseaseIds,
                                      double weight,
@@ -163,7 +161,6 @@ public class BatchDiagnosisCommand extends DifferentialDiagnosisCommand {
             printer.print(diseaseId);
             printer.print(maxoId);
             printer.print(maxoLabel);
-            printer.print(topPosttestProb);
             printer.print(topNdiseases);
             printer.print(diseaseIds);
             printer.print(weight);

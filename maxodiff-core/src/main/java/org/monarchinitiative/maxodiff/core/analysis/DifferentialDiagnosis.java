@@ -25,16 +25,15 @@ public class DifferentialDiagnosis {
      *
      * @param results {@link AnalysisResults}. LIRICAL analysis results.
      * @param diseaseIds List<TermId>. List of disease Ids to use for differential diagnosis calculation.
-     * @return double. Sum of the posttest probabilities for the target m diseases.
+     * @return Map<TermId, Double>. Map of the posttest probabilities for the target m diseases.
      */
-    public static double posttestProbabilitySum(AnalysisResults results, List<TermId> diseaseIds) {
-        double sum = 0.0;
+    public static Map<TermId, Double> posttestProbabilityMap(AnalysisResults results, List<TermId> diseaseIds) {
+        Map<TermId, Double> probabilityMap = new LinkedHashMap<>();
         for (TermId id : diseaseIds) {
             var result = results.resultByDiseaseId(id);
-            if (result.isPresent())
-                sum += result.get().posttestProbability();
+            result.ifPresent(testResult -> probabilityMap.put(id, testResult.posttestProbability()));
         }
-        return sum / 100;
+        return probabilityMap;
     }
 
     /**
@@ -67,17 +66,16 @@ public class DifferentialDiagnosis {
      *
      * @param liricalOutputRecords List<LiricalResultsFileRecord>. List of {@link LiricalResultsFileRecord} results from LIRICAL output file.
      * @param diseaseIds List<TermId>. List of disease Ids to use for differential diagnosis calculation.
-     * @return double. Sum of the posttest probabilities for the target m diseases.
+     * @return Map<TermId, Double>. Map of the posttest probabilities for the target m diseases.
      */
-    public static double posttestProbabilitySum(List<LiricalResultsFileRecord> liricalOutputRecords,
-                                                List<TermId> diseaseIds) {
-        double sum = 0.0;
+    public static Map<TermId, Double> posttestProbabilityMap(List<LiricalResultsFileRecord> liricalOutputRecords,
+                                                      List<TermId> diseaseIds) {
+        Map<TermId, Double> probabilityMap = new LinkedHashMap<>();
         for (TermId id : diseaseIds) {
             var liricalRecord = liricalOutputRecords.stream().filter(r -> r.omimId().equals(id)).findFirst();
-            if (liricalRecord.isPresent())
-                sum += liricalRecord.get().posttestProbability();
+            liricalRecord.ifPresent(liricalResultsFileRecord -> probabilityMap.put(id, liricalResultsFileRecord.posttestProbability()));
         }
-        return sum / 100;
+        return probabilityMap;
     }
 
     /**
@@ -99,6 +97,7 @@ public class DifferentialDiagnosis {
             List<LiricalResultsFileRecord> resultsSublist = orderedResults.subList(0, targetResultIdx);
             List<LiricalResultsFileRecord> diffResultsList = resultsSublist.stream().filter(res -> diseaseIds.contains(res.omimId()))
                     .sorted(Comparator.comparingDouble(LiricalResultsFileRecord::posttestProbability).reversed()).toList();
+            //TODO: Double check if Likelihood Ratio from LIRICAL is actually Log(LR)
             List<Double> diffLRList = diffResultsList.stream().map(LiricalResultsFileRecord::likelihoodRatio).toList();
             double targetLR = targetResult.likelihoodRatio();
             for (double lr : diffLRList)
@@ -137,13 +136,16 @@ public class DifferentialDiagnosis {
      */
     public static double finalScore(AnalysisResults results, List<LiricalResultsFileRecord> liricalOutputRecords,
                                     List<TermId> diseaseIds, double weight) {
+        List<Double> probabilities;
         double p = 0;
         double q = 0;
         if (results != null) {
-            p = posttestProbabilitySum(results, diseaseIds);
+            probabilities = posttestProbabilityMap(results, diseaseIds).values().stream().toList();
+            p = probabilities.stream().mapToDouble(Double::doubleValue).sum();
             q = scoreSum(results, null, diseaseIds);
         } else if (liricalOutputRecords != null) {
-            p = posttestProbabilitySum(liricalOutputRecords, diseaseIds);
+            probabilities = posttestProbabilityMap(liricalOutputRecords, diseaseIds).values().stream().toList();
+            p = probabilities.stream().mapToDouble(Double::doubleValue).sum();
             q = scoreSum(null, liricalOutputRecords, diseaseIds);
         }
 

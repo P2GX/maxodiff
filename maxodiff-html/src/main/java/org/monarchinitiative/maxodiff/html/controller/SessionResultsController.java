@@ -23,7 +23,7 @@ public class SessionResultsController {
 
     @RequestMapping("/sessionResults")
     public String showResults(@SessionAttribute("inputRecord") InputRecord input,
-                             @RequestParam(value = "posttestFilter", required = false) Double posttestFilter,
+                             @RequestParam(value = "nDiseases", required = false) Integer nDiseases,
                              @RequestParam(value = "weight", required = false) Double weight,
                              @RequestParam(value = "nMaxoResults", required = false) Integer nMaxoResults,
                              Model model) throws Exception {
@@ -34,13 +34,14 @@ public class SessionResultsController {
         int nLiricalResults = 10;
         model.addAttribute("nLiricalResults", nLiricalResults);
         model.addAttribute("liricalResultsList", liricalResultsList.subList(0, nLiricalResults));
-        model.addAttribute("posttestFilter", posttestFilter);
+        model.addAttribute("totalNDiseases", liricalResultsList.size());
+        model.addAttribute("nDiseases", nDiseases);
         model.addAttribute("weight", weight);
         model.addAttribute("nMaxoResults", nMaxoResults);
-        if (phenopacketPath != null & posttestFilter != null & weight != null & nMaxoResults != null) {
+        if (phenopacketPath != null & nDiseases != null & weight != null & nMaxoResults != null) {
             InputRecord inputRecord = (InputRecord) model.getAttribute("inputRecord");
             MaxoTermMap maxoTermMap = inputRecord.maxoTermMap();
-            List<MaxoTermMap.MaxoTermScore> maxoTermScoreRecords = sessionResultsService.getMaxoTermRecords(maxoTermMap, liricalResults, phenopacketPath, posttestFilter, weight);
+            List<MaxoTermMap.MaxoTermScore> maxoTermScoreRecords = sessionResultsService.getMaxoTermRecords(maxoTermMap, liricalResults, phenopacketPath, nDiseases, weight);
             TermId diseaseId = sessionResultsService.getDiseaseId(maxoTermMap);
             String phenopacketName = phenopacketPath.toFile().getName();
             model.addAttribute("phenopacket", phenopacketName);
