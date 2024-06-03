@@ -13,6 +13,9 @@ import org.monarchinitiative.phenol.ontology.data.TermId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 
@@ -24,7 +27,6 @@ public class MaxoTermMap {
 
     MaxodiffDataResolver dataResolver;
     Ontology hpo;
-    MaxoDxAnnots maxoDxAnnots;
     Map<SimpleTerm, Set<SimpleTerm>> fullHpoToMaxoTermMap;
 
     Map<TermId, Double> posttestProbabilityMap;
@@ -37,8 +39,11 @@ public class MaxoTermMap {
     public MaxoTermMap(Path maxoDataPath) throws MaxodiffDataException {
         this.dataResolver = new MaxodiffDataResolver(maxoDataPath);
         this.hpo = loadOntology(dataResolver.hpoJson());
-        this.maxoDxAnnots = new MaxoDxAnnots(dataResolver.maxoDxAnnots());
-        this.fullHpoToMaxoTermMap = maxoDxAnnots.getSimpleTermSetMap();
+        try (BufferedReader reader = Files.newBufferedReader(dataResolver.maxoDxAnnots())) {
+            this.fullHpoToMaxoTermMap = MaxoDxAnnots.parseHpoToMaxo(reader);
+        } catch (IOException e) {
+            throw new MaxodiffDataException(e);
+        }
     }
 
     /**
