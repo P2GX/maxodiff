@@ -12,8 +12,20 @@ import java.util.*;
  */
 public interface Sample {
 
+    static Sample of(
+            String id,
+            Collection<TermId> presentHpoTermIds,
+            Collection<TermId> excludedHpoTermIds,
+            Collection<DifferentialDiagnosisModel> differentialDiagnoses
+    ) {
+        return new SimpleSample(id, presentHpoTermIds, excludedHpoTermIds, differentialDiagnoses);
+    }
+
     String id();
+
     Collection<TermId> presentHpoTermIds();
+
     Collection<TermId> excludedHpoTermIds();
+
     Collection<DifferentialDiagnosisModel> differentialDiagnoses();
 }
