@@ -1,6 +1,8 @@
 package org.monarchinitiative.maxodiff.core;
 
 import org.monarchinitiative.maxodiff.core.io.MaxoDxAnnots;
+import org.monarchinitiative.maxodiff.core.model.DifferentialDiagnosisModel;
+import org.monarchinitiative.maxodiff.core.model.Sample;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
 import org.monarchinitiative.phenol.annotations.io.hpo.DiseaseDatabase;
 import org.monarchinitiative.phenol.annotations.io.hpo.HpoDiseaseLoader;
@@ -8,6 +10,7 @@ import org.monarchinitiative.phenol.annotations.io.hpo.HpoDiseaseLoaderOptions;
 import org.monarchinitiative.phenol.annotations.io.hpo.HpoDiseaseLoaders;
 import org.monarchinitiative.phenol.io.OntologyLoader;
 import org.monarchinitiative.phenol.ontology.data.Ontology;
+import org.monarchinitiative.phenol.ontology.data.TermId;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -15,6 +18,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.zip.GZIPInputStream;
@@ -81,6 +85,21 @@ public class TestResources {
             }
         }
         return HPO_2_MAXO;
+    }
+
+    public static Sample getExampleSample() {
+        // TODO: add a few HPO terms
+        return Sample.of(
+                "A",
+                List.of(
+                        TermId.of(""),
+                        TermId.of("")
+                ),
+                List.of(),
+                List.of(
+                        DifferentialDiagnosisModel.of(TermId.of(""), 1.23, 22.)
+                ) // TODO: make real data
+        );
     }
 
     private TestResources() {
