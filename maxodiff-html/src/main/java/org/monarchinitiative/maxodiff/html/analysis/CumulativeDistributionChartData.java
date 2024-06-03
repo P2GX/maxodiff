@@ -1,7 +1,7 @@
 package org.monarchinitiative.maxodiff.html.analysis;
 
 import org.monarchinitiative.maxodiff.core.analysis.DifferentialDiagnosis;
-import org.monarchinitiative.maxodiff.core.analysis.MaxoTermMap;
+import org.monarchinitiative.maxodiff.core.analysis.MaxoTermScore;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -10,7 +10,7 @@ public class CumulativeDistributionChartData {
 
     public record CumulativeDistributionRecord(String maxoId, String maxoLabel, Double score, Double probability) {}
 
-    public static List<List<CumulativeDistributionRecord>> makeDistRecordList(List<List<MaxoTermMap.MaxoTermScore>> allScoreRecords) {
+    public static List<List<CumulativeDistributionRecord>> makeDistRecordList(List<List<MaxoTermScore>> allScoreRecords) {
         List<List<CumulativeDistributionRecord>> cumulativeDistributionRecordsList = new ArrayList<>();
         List<List<Double>> cumulativeDistributionList = new ArrayList<>();
         for (int i=0; i<allScoreRecords.size(); i++) {

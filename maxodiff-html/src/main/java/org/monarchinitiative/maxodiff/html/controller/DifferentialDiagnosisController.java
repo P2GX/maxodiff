@@ -1,9 +1,10 @@
 package org.monarchinitiative.maxodiff.html.controller;
 
+import org.monarchinitiative.maxodiff.core.analysis.Frequencies;
 import org.monarchinitiative.maxodiff.core.analysis.LiricalResultsFileRecord;
 import org.monarchinitiative.maxodiff.core.analysis.MaxoTermMap;
+import org.monarchinitiative.maxodiff.core.analysis.MaxoTermScore;
 import org.monarchinitiative.maxodiff.core.io.LiricalResultsFileParser;
-import org.monarchinitiative.maxodiff.html.analysis.CumulativeDistributionChartData;
 import org.monarchinitiative.maxodiff.html.config.MaxodiffProperties;
 import org.monarchinitiative.maxodiff.html.service.DifferentialDiagnosisService;
 import org.monarchinitiative.phenol.ontology.data.TermId;
@@ -56,7 +57,7 @@ public class DifferentialDiagnosisController {
         model.addAttribute("nMaxoResults", nMaxoResults);
         if (phenopacketPath != null & liricalResultsFileRecords != null &
                 nDiseases != null & weight != null & nMaxoResults != null) {
-            List<MaxoTermMap.MaxoTermScore> maxoTermScoreRecords = differentialDiagnosisService.getMaxoTermRecords(maxoTermMap, liricalResultsFileRecords,
+            List<MaxoTermScore> maxoTermScoreRecords = differentialDiagnosisService.getMaxoTermRecords(maxoTermMap, liricalResultsFileRecords,
                     phenopacketPath, nDiseases, weight);
             TermId diseaseId = differentialDiagnosisService.getDiseaseId(maxoTermMap);
             String phenopacketName = phenopacketPath.toFile().getName();
@@ -118,11 +119,11 @@ public class DifferentialDiagnosisController {
             });
             model.addAttribute("omimTerms", omimTermMap);
 
-            Map<MaxoTermMap.MaxoTermScore, List<MaxoTermMap.Frequencies>> maxoTables = new LinkedHashMap<>();
+            Map<MaxoTermScore, List<Frequencies>> maxoTables = new LinkedHashMap<>();
             int nDisplayed = maxoTermScoreRecords.size() < nMaxoResults ? maxoTermScoreRecords.size() : nMaxoResults;
             model.addAttribute("nDisplayed", nDisplayed);
-            for (MaxoTermMap.MaxoTermScore maxoTermScoreRecord : maxoTermScoreRecords.subList(0, nDisplayed)) {
-                List<MaxoTermMap.Frequencies> frequencyRecords = differentialDiagnosisService.getFrequencyRecords(maxoTermMap, maxoTermScoreRecord);
+            for (MaxoTermScore maxoTermScoreRecord : maxoTermScoreRecords.subList(0, nDisplayed)) {
+                List<Frequencies> frequencyRecords = differentialDiagnosisService.getFrequencyRecords(maxoTermMap, maxoTermScoreRecord);
                 maxoTables.put(maxoTermScoreRecord, frequencyRecords);
             }
             model.addAttribute("maxoTables", maxoTables);

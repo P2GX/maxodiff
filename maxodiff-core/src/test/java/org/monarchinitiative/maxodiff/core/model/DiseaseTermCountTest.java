@@ -8,7 +8,7 @@ import org.monarchinitiative.maxodiff.core.TestResources;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDisease;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
 import org.monarchinitiative.phenol.ontology.data.TermId;
-import org.monarchinitiative.maxodiff.core.analysis.DiseaseTermCountImpl.HpoFrequency;
+import org.monarchinitiative.maxodiff.core.analysis.HpoFrequency;
 
 import java.util.ArrayList;
 import java.util.List;

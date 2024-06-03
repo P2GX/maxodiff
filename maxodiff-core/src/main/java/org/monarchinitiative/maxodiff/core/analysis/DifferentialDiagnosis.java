@@ -8,6 +8,7 @@ import org.monarchinitiative.maxodiff.core.io.MaxodiffBuilder;
 import org.monarchinitiative.maxodiff.core.io.MaxodiffDataException;
 import org.monarchinitiative.maxodiff.core.io.MaxodiffDataResolver;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDisease;
+import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseaseAnnotation;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
 import org.monarchinitiative.phenol.annotations.io.hpo.HpoDiseaseLoaderOptions;
 import org.monarchinitiative.phenol.ontology.algo.OntologyAlgorithm;
@@ -82,7 +83,6 @@ public class DifferentialDiagnosis {
      *
      * @param liricalOutputRecords List<LiricalResultsFileRecord>. List of {@link LiricalResultsFileRecord} results from LIRICAL output file.
      * @param diseaseIds List<TermId>. List of disease Ids to use for differential diagnosis calculation.
-     * @param targetDisease TermId. Target disease from the phenopacket.
      * @return double. Sum of the target disease LR / disease list disease LR.
      */
     public static double relativeDiseaseDiff(List<LiricalResultsFileRecord> liricalOutputRecords,
@@ -244,6 +244,7 @@ public class DifferentialDiagnosis {
             }
             hpoComboList.add(hpoIdList);
             // Cap the number of combos at 32
+            //TODO: sample up to 32 random combos
             if (hpoComboList.size() == 32) {
                 break;
             }
@@ -287,7 +288,7 @@ public class DifferentialDiagnosis {
                 double comboFinalScore = finalScore(results, liricalOutputRecords, omimIds.stream().toList(), weight);
                 finalScores.add(comboFinalScore);
             }
-            // Add max mean final score to map
+            // Add mean final score to map
             OptionalDouble maxoFinalScoreOptional = finalScores.stream().mapToDouble(s -> s).average();
             if (maxoFinalScoreOptional.isPresent()) {
                 double maxoFinalScore = maxoFinalScoreOptional.getAsDouble();

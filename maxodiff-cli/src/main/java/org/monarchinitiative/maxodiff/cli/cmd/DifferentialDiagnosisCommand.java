@@ -123,7 +123,7 @@ public class DifferentialDiagnosisCommand extends BaseLiricalCommand {
                     runConfiguration.pathogenicityThreshold, runConfiguration.defaultVariantBackgroundFrequency, runConfiguration.strict,
                     runConfiguration.globalAnalysisMode, dataSection.liricalDataDirectory, dataSection.exomiserDatabase, vcfPath);
 
-            AnalysisResults results = maxoTermMap.runLiricalCalculation(liricalAnalysis, phenopacketPath);
+            AnalysisResults results = liricalAnalysis.runLiricalAnalysis(phenopacketPath);
 
             // Summarize the LIRICAL results.
             //String sampleId = analysisData.sampleId();

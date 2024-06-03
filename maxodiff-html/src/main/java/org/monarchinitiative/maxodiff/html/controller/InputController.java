@@ -81,7 +81,7 @@ public class InputController {
         model.addAttribute("liricalRecord", liricalRecord);
         if (phenopacketPath != null) {
             LiricalAnalysis liricalAnalysis = new LiricalAnalysis(liricalRecord);
-            liricalResults = sessionResultsService.runLiricalCalculation(maxoTermMap, liricalAnalysis, phenopacketPath);
+            liricalResults = liricalAnalysis.runLiricalAnalysis(phenopacketPath);
         }
         InputRecord inputRecord = new InputRecord(maxodiffDir, maxoTermMap, liricalResults, phenopacketPath);
         model.addAttribute("inputRecord", inputRecord);

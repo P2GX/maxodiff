@@ -10,7 +10,6 @@ import org.monarchinitiative.maxodiff.core.io.MaxodiffDataResolver;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDisease;
 import org.monarchinitiative.phenol.ontology.data.Ontology;
 import org.monarchinitiative.phenol.ontology.data.TermId;
-import org.monarchinitiative.maxodiff.core.analysis.DiseaseTermCountImpl.HpoFrequency;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -22,12 +21,6 @@ import static org.monarchinitiative.maxodiff.core.io.MaxodiffBuilder.loadOntolog
 public class MaxoTermMap {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MaxoTermMap.class);
-
-    public record MaxoTermScore(String maxoId, String maxoLabel, Integer nOmimTerms, Set<TermId> omimTermIds,
-                                Integer nHpoTerms, Set<SimpleTerm> hpoTerms, Map<TermId, Double> probabilityMap,
-                                Double initialScore, Double score, Double scoreDiff) {}
-
-    public record Frequencies(TermId hpoId, String hpoLabel, List<Float> frequencies) {}
 
     MaxodiffDataResolver dataResolver;
     Ontology hpo;
@@ -46,10 +39,6 @@ public class MaxoTermMap {
         this.hpo = loadOntology(dataResolver.hpoJson());
         this.maxoDxAnnots = new MaxoDxAnnots(dataResolver.maxoDxAnnots());
         this.fullHpoToMaxoTermMap = maxoDxAnnots.getSimpleTermSetMap();
-    }
-
-    public AnalysisResults runLiricalCalculation(LiricalAnalysis liricalAnalysis, Path phenopacketPath) throws Exception {
-        return liricalAnalysis.runLiricalAnalysis(phenopacketPath);
     }
 
     /**
@@ -76,12 +65,13 @@ public class MaxoTermMap {
             int nOmimTerms = diseases.size();
             Set<TermId> omimIds = new HashSet<>();
             diseases.forEach(disease -> omimIds.add(disease.id()));
-            Set<SimpleTerm> hpoTerms = value;
+            Set<TermId> hpoTermIds = new HashSet<>();
+            value.forEach(v -> hpoTermIds.add(v.tid()));
             Integer nHpoTerms = value.size();
             double score = maxoScoreMap.get(key);
             double initialScore = initialMaxoScoreMap.get(key);
             double scoreDiff = score - initialScore;
-            maxoTermScoreRecords.add(new MaxoTermScore(maxoId, maxoTermLabel, nOmimTerms, omimIds, nHpoTerms, hpoTerms, probabilityMap,
+            maxoTermScoreRecords.add(new MaxoTermScore(maxoId, maxoTermLabel, nOmimTerms, omimIds, nHpoTerms, hpoTermIds, probabilityMap,
                     initialScore, score, scoreDiff));
             Comparator<MaxoTermScore> comp = Comparator.comparing(MaxoTermScore::scoreDiff, Comparator.reverseOrder());
             maxoTermScoreRecords.sort(comp);
@@ -97,9 +87,9 @@ public class MaxoTermMap {
     public List<Frequencies> getFrequencyRecords(MaxoTermScore maxoTermScoreRecord) {
         List<Frequencies> frequencyRecords = new ArrayList<>();
         Set<TermId> omimIds = maxoTermScoreRecord.omimTermIds();
-        for (SimpleTerm hpoTerm : maxoTermScoreRecord.hpoTerms()) {
-            TermId hpoId = hpoTerm.tid();
-            String hpoLabel = hpoTerm.label();
+        for (TermId hpoId : maxoTermScoreRecord.hpoTermIds()) {
+//            TermId hpoId = hpoTerm.tid();
+            String hpoLabel = null;
             Map<TermId, Float> maxoFrequencies = new LinkedHashMap<>();
             omimIds.forEach(e -> maxoFrequencies.put(e, null));
             List<HpoFrequency> frequencies = hpoTermCounts.get(hpoId);

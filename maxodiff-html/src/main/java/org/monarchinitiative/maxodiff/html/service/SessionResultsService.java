@@ -1,8 +1,10 @@
 package org.monarchinitiative.maxodiff.html.service;
 
 import org.monarchinitiative.lirical.core.analysis.AnalysisResults;
+import org.monarchinitiative.maxodiff.core.analysis.Frequencies;
 import org.monarchinitiative.maxodiff.core.analysis.LiricalAnalysis;
 import org.monarchinitiative.maxodiff.core.analysis.MaxoTermMap;
+import org.monarchinitiative.maxodiff.core.analysis.MaxoTermScore;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 import org.springframework.stereotype.Service;
 
@@ -15,16 +17,12 @@ public class SessionResultsService {
 
     public SessionResultsService() {}
 
-    public AnalysisResults runLiricalCalculation(MaxoTermMap maxoTermMap, LiricalAnalysis liricalAnalysis, Path phenopacketPath) throws Exception {
-        return maxoTermMap.runLiricalCalculation(liricalAnalysis, phenopacketPath);
-    }
-
-    public List<MaxoTermMap.MaxoTermScore> getMaxoTermRecords(MaxoTermMap maxoTermMap, AnalysisResults results,
-                                                              Path phenopacketPath, int nDiseases, double weight) throws Exception {
+    public List<MaxoTermScore> getMaxoTermRecords(MaxoTermMap maxoTermMap, AnalysisResults results,
+                                                  Path phenopacketPath, int nDiseases, double weight) throws Exception {
         return maxoTermMap.getMaxoTermRecords(phenopacketPath, results, null, nDiseases, weight);
     }
 
-    public List<MaxoTermMap.Frequencies> getFrequencyRecords(MaxoTermMap maxoTermMap, MaxoTermMap.MaxoTermScore maxoTermScore) throws Exception {
+    public List<Frequencies> getFrequencyRecords(MaxoTermMap maxoTermMap, MaxoTermScore maxoTermScore) throws Exception {
         return maxoTermMap.getFrequencyRecords(maxoTermScore);
     }
 
