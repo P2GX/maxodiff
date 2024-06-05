@@ -1,6 +1,5 @@
 package org.monarchinitiative.maxodiff.core.analysis;
 
-import org.monarchinitiative.maxodiff.core.SimpleTerm;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 
 import java.util.Map;
