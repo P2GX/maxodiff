@@ -11,56 +11,51 @@
     </parent>
 
     <artifactId>maxodiff-core</artifactId>
-    <name>maxodiff-core</name>
-
-
-    <prerequisites>
-        <maven>3.8.0</maven>
-    </prerequisites>
 
     <dependencies>
         <dependency>
             <groupId>org.monarchinitiative.phenol</groupId>
             <artifactId>phenol-core</artifactId>
-            <version>${phenol.version}</version>
         </dependency>
         <dependency>
             <groupId>org.monarchinitiative.phenol</groupId>
             <artifactId>phenol-io</artifactId>
-            <version>${phenol.version}</version>
         </dependency>
         <dependency>
             <groupId>org.monarchinitiative.phenol</groupId>
             <artifactId>phenol-annotations</artifactId>
-            <version>${phenol.version}</version>
         </dependency>
 
+        <!-- TODO: ideally we should only use LIRICAL core here, or nothing at all,
+              and all LIRICAL should be in a separate module,
+              and provide the implementation of the interface for performing differential diagnosis.
+          -->
         <dependency>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter</artifactId>
-            <version>${junit.version}</version>
-            <scope>test</scope>
+            <groupId>com.github.TheJacksonLaboratory.LIRICAL</groupId>
+<!--            <groupId>org.monarchinitiative.lirical</groupId>-->
+            <artifactId>lirical-core</artifactId>
         </dependency>
-
         <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-log4j12</artifactId>
-            <version>${slf4j.version}</version>
+            <groupId>com.github.TheJacksonLaboratory.LIRICAL</groupId>
+<!--            <groupId>org.monarchinitiative.lirical</groupId>-->
+            <artifactId>lirical-configuration</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>com.github.TheJacksonLaboratory.LIRICAL</groupId>
+<!--            <groupId>org.monarchinitiative.lirical</groupId>-->
+            <artifactId>lirical-io</artifactId>
         </dependency>
 
+        <!-- TODO: use in benchmark module       -->
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-csv</artifactId>
-            <version>1.9.0</version>
         </dependency>
 
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-math3</artifactId>
-            <version>3.6.1</version>
         </dependency>
-
     </dependencies>
-
 
 </project>
