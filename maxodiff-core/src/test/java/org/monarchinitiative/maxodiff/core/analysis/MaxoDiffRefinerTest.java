@@ -1,14 +1,18 @@
 package org.monarchinitiative.maxodiff.core.analysis;
 
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.monarchinitiative.maxodiff.core.SimpleTerm;
 import org.monarchinitiative.maxodiff.core.TestResources;
+import org.monarchinitiative.maxodiff.core.io.RefinementResultsFileWriter;
 import org.monarchinitiative.maxodiff.core.model.Sample;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
@@ -36,13 +40,25 @@ public class MaxoDiffRefinerTest {
 
     @Test
     public void run() {
-        RefinementOptions options = RefinementOptions.of(10, .3);
+        RefinementOptions options = RefinementOptions.of(12, 0.5);
         Sample sample = TestResources.getExampleSample();
 
         RefinementResults results = refiner.run(sample, options);
 
-        // TODO: add assertions
-        System.err.println(results);
+        List<MaxodiffResult> resultsList = results.maxodiffResults().stream().toList();
+        String maxoId1 = resultsList.get(0).maxoTermScore().maxoId();
+        String maxoId2 = resultsList.get(1).maxoTermScore().maxoId();
+
+        assertEquals("MAXO:0010203", maxoId1);
+        assertEquals("MAXO:0035050", maxoId2);
+
+        TermId hpoId1 = resultsList.get(0).frequencies().get(0).hpoId();
+        List<Float> hpoFreqs1 = resultsList.get(0).frequencies().get(0).frequencies();
+
+        assertEquals("HP:0001650", hpoId1.getValue());
+        assertEquals(1.0, hpoFreqs1.get(9).doubleValue());
+        assertEquals(0.33, hpoFreqs1.get(11).doubleValue(), 1e-2);
+
     }
 
 }

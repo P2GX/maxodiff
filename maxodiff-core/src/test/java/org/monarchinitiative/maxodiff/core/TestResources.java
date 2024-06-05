@@ -18,6 +18,7 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -30,7 +31,7 @@ public class TestResources {
 
     public static final Path TEST_BASE = Path.of("src/test/resources");
     private static final Path HPO_PATH = TestResources.TEST_BASE.resolve("hp.v2024-04-26.json.gz");
-    private static final Path ANNOTATION_PATH = TestResources.TEST_BASE.resolve("small.hpoa");
+    private static final Path ANNOTATION_PATH = TestResources.TEST_BASE.resolve("phenotype.v2024-01-16.hpoa.gz");
     private static final Path MAXO_DIAGNOSTIC_ANNOTATIONS_PATH = TestResources.TEST_BASE.resolve("maxo_diagnostic_annotations.v2023-06-11.tsv.gz");
     // The HPO is in the default  curie map and only contains known relationships / HP terms
     private static volatile Ontology ONTOLOGY;
@@ -88,18 +89,48 @@ public class TestResources {
     }
 
     public static Sample getExampleSample() {
-        // TODO: add a few HPO terms
-        return Sample.of(
-                "A",
-                List.of(
-                        TermId.of(""),
-                        TermId.of("")
-                ),
-                List.of(),
-                List.of(
-                        DifferentialDiagnosisModel.of(TermId.of(""), 1.23, 22.)
-                ) // TODO: make real data
+        //Example terms from phenopacket v2 PMID_11175294-Tiecke-2001-FBN1-B15.json
+        Collection<TermId> presentTerms = List.of(
+                TermId.of("HP:0000963"),
+                TermId.of("HP:0001653"),
+                TermId.of("HP:0000545"),
+                TermId.of("HP:0000098"),
+                TermId.of("HP:0004325"),
+                TermId.of("HP:0002751"),
+                TermId.of("HP:0002650"),
+                TermId.of("HP:0002616"),
+                TermId.of("HP:0000767"),
+                TermId.of("HP:0012019"),
+                TermId.of("HP:0001166")
         );
+        Collection<TermId> excludedTerms = List.of();
+
+        //Example Top 20 Diagnoses from LIRICAL analysis of phenopacket v2 PMID_11175294-Tiecke-2001-FBN1-B15.json
+        //score = posttest probability
+        Collection<DifferentialDiagnosisModel> differentialDiagnoses = List.of(
+                DifferentialDiagnosisModel.of(TermId.of("OMIM:154700"), 1.0, 12.966),
+                DifferentialDiagnosisModel.of(TermId.of("OMIM:616914"), 1.000, 10.165),
+                DifferentialDiagnosisModel.of(TermId.of("OMIM:236200"), 1.000, 9.804),
+                DifferentialDiagnosisModel.of(TermId.of("OMIM:609008"), 1.000, 8.548),
+                DifferentialDiagnosisModel.of(TermId.of("OMIM:615582"), 1.000, 8.452),
+                DifferentialDiagnosisModel.of(TermId.of("OMIM:121050"), 0.987, 5.977),
+                DifferentialDiagnosisModel.of(TermId.of("OMIM:614816"), 0.868, 4.914),
+                DifferentialDiagnosisModel.of(TermId.of("OMIM:617506"), 0.796, 4.687),
+                DifferentialDiagnosisModel.of(TermId.of("OMIM:219150"), 0.767, 4.614),
+                DifferentialDiagnosisModel.of(TermId.of("OMIM:608328"), 0.756, 4.587),
+                DifferentialDiagnosisModel.of(TermId.of("OMIM:610443"), 0.580, 4.235),
+                DifferentialDiagnosisModel.of(TermId.of("OMIM:277600"), 0.352, 3.831),
+                DifferentialDiagnosisModel.of(TermId.of("OMIM:271640"), 0.282, 3.689),
+                DifferentialDiagnosisModel.of(TermId.of("OMIM:602535"), 0.216, 3.537),
+                DifferentialDiagnosisModel.of(TermId.of("OMIM:619472"), 0.199, 3.492),
+                DifferentialDiagnosisModel.of(TermId.of("OMIM:225400"), 0.125, 3.250),
+                DifferentialDiagnosisModel.of(TermId.of("OMIM:601776"), 0.070, 2.970),
+                DifferentialDiagnosisModel.of(TermId.of("OMIM:617602"), 0.061, 2.912),
+                DifferentialDiagnosisModel.of(TermId.of("OMIM:163950"), 0.025, 2.505),
+                DifferentialDiagnosisModel.of(TermId.of("OMIM:208050"), 0.009, 2.064)
+        );
+
+        return Sample.of("B15", presentTerms, excludedTerms, differentialDiagnoses);
     }
 
     private TestResources() {

@@ -25,11 +25,6 @@ public class MaxoDiffRefiner implements DiffDiagRefiner {
         this.hpo = hpo;
     }
 
-    //TODO: action plan
-    // 1. Move high level logic for getting MaxoTermScore records into this class to return RefinementResults
-    //   a. Need to make class for this and instantiate it (return it at the end of the run function).
-    //   b. If need more items, only add them to MaxoDiffRefiner init, not sample or options in run().
-    // To schedule meeting for Monday at 9 am, send Daniel a Slack message on MonarchInitiative w/ Zoom link.
 
     @Override
     public RefinementResults run(Sample sample, RefinementOptions options) {
@@ -40,9 +35,6 @@ public class MaxoDiffRefiner implements DiffDiagRefiner {
         List<DifferentialDiagnosisModel> orderedDiagnoses = sample.differentialDiagnoses().stream()
                 .sorted(Comparator.comparingDouble(DifferentialDiagnosisModel::score).reversed()).toList();
         List<DifferentialDiagnosisModel> differentialDiagnoses = orderedDiagnoses.subList(0, options.nDiseases());
-//        double scoreSum = differentialDiagnoses.stream().mapToDouble(DifferentialDiagnosisModel::score).sum();
-//        double relativeDiseaseDiffSum = calculateRelDiseaseDiffSum(differentialDiagnoses);
-//        double finalScore = options.weight() * scoreSum + (1 - options.weight()) * relativeDiseaseDiffSum;
 
         // Get diseaseIds and then diseases from differential diagnoses list
         //TODO: Set of diseaseIds should be a requirement of the Sample, don't need to define it here necessarily.
@@ -53,7 +45,8 @@ public class MaxoDiffRefiner implements DiffDiagRefiner {
         diseaseIds.forEach(id -> hpoDiseases.diseaseById(id).ifPresent(diseases::add));
 
         // Get Map of HPO Term Id and List of HpoFrequency objects for list of m diseases.
-        Map<TermId, List<HpoFrequency>> hpoTermCounts = getHpoTermCounts(diseases);
+        Map<TermId, List<HpoFrequency>> hpoTermCountsImmutable = getHpoTermCounts(diseases);
+        Map<TermId, List<HpoFrequency>> hpoTermCounts = new HashMap<>(hpoTermCountsImmutable);
 
         // Remove HPO terms present in the sample
         sample.presentHpoTermIds().forEach(hpoTermCounts::remove);
@@ -85,6 +78,9 @@ public class MaxoDiffRefiner implements DiffDiagRefiner {
             MaxodiffResult maxodiffResult = new MaxodiffResultImpl(maxoTermScore, frequencies);
             maxodiffResultsList.add(maxodiffResult);
         }
+
+        // Sort MaxodiffResult list in descending order of score difference.
+        maxodiffResultsList.sort((a, b) -> b.maxoTermScore().scoreDiff().compareTo(a.maxoTermScore().scoreDiff()));
 
         // Return RefinementResults object, which contains the list of MaxodiffResult objects.
         return new RefinementResultsImpl(maxodiffResultsList);
@@ -281,7 +277,7 @@ public class MaxoDiffRefiner implements DiffDiagRefiner {
                                                      List<HpoDisease> diseases,
                                                      RefinementOptions options) {
 
-        //TODO: check if logic for getting intialScore is correct.
+        //TODO: check if logic for getting initialScore is correct.
         double maxoTermInitialScore = calculateMaxoTermFinalScore(differentialDiagnoses,
                 diseases,
                 hpoCombos,
@@ -292,8 +288,10 @@ public class MaxoDiffRefiner implements DiffDiagRefiner {
                 options.weight());
         double scoreDiff = maxoTermFinalScore - maxoTermInitialScore;
 
-        Set<TermId> diseaseIds = new HashSet<>();
-        diseases.forEach(d -> diseaseIds.add(d.id()));
+        Set<TermId> diseaseIds = new LinkedHashSet<>();
+        List<DifferentialDiagnosisModel> differentialDiagnosisModels = new ArrayList<>(differentialDiagnoses);
+        differentialDiagnosisModels.sort(Comparator.comparingDouble(DifferentialDiagnosisModel::score).reversed());
+        differentialDiagnosisModels.forEach(d -> diseaseIds.add(d.diseaseId()));
         int nHpoTerms = hpoTermIds.size();
 
         return new MaxoTermScore(maxoId.toString(), null, options.nDiseases(),
