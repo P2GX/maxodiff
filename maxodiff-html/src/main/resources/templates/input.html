@@ -49,7 +49,7 @@
     </div>
 
     <div method="post">
-        <input type="submit" value="Run LIRICAL Calculation" th:onclick="runLirical([[${inputRecord}]], [[${liricalRecord}]]);"/>
+        <input type="submit" value="Run LIRICAL Calculation"/><!-- th:onclick="runLirical([[${inputRecord}]], [[${liricalRecord}]]);"/>-->
         <input type="submit" value="Launch Differential Diagnosis Calculation Page"
                th:data-url="@{/sessionResults}"
                onclick="window.open(this.getAttribute('data-url'))"/>

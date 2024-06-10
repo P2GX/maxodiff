@@ -36,14 +36,14 @@
         </tr>
         </thead>
         <tbody>
-        <th:block th:each= "liricalResult, iter : ${liricalOutputRecords}">
+        <th:block th:each= "diagnosis, iter : ${differentialDiagnoses}">
             <tr>
                 <td th:text="${iter.index+1}"></td>
-                <td th:text="${liricalResult.omimId}"></td>
-                <td th:text="${liricalResult.omimLabel}"></td>
-                <td th:text="${liricalResult.posttestProbability} % 1 == 0 ?
-                ${liricalResult.posttestProbability} : ${#numbers.formatDecimal(liricalResult.posttestProbability, 1, 3)}"></td>
-                <td th:text="${liricalResult.likelihoodRatio}"></td>
+                <td th:text="${diagnosis.diseaseId}"></td>
+                <td th:text="${omimTerms.get(diagnosis.diseaseId)}"></td>
+                <td th:text="${diagnosis.score} % 1 == 0 ?
+                ${diagnosis.score} : ${#numbers.formatDecimal(diagnosis.score, 1, 3)}"></td>
+                <td th:text="${diagnosis.lr}"></td>
             </tr>
         </th:block>
         </tbody>
@@ -114,17 +114,17 @@
 <h1 th:text="'Top ' + ${nDisplayed} + ' Recommended MAXO Terms'"></h1>
 
 <th:block th:each= "maxoTable, iter : ${maxoTables}">
-    <h2 th:text="${iter.index+1} + ') ' + ${maxoTable.key.maxoId} + ': ' + ${maxoTable.key.maxoLabel}"></h2>
+    <h2 th:text="${iter.index+1} + ') ' + ${maxoTable.maxoTermScore.maxoId} + ': ' + ${allMaxoTermsMap.get(maxoTable.maxoTermScore.maxoId)}"></h2>
     <table class="scoreTable">
         <tbody>
         <tr>
-            <td>&Delta;Score:</td><td th:text="${#numbers.formatDecimal(maxoTable.key.scoreDiff, 0, 3)}"></td>
+            <td>&Delta;Score:</td><td th:text="${#numbers.formatDecimal(maxoTable.maxoTermScore.scoreDiff, 0, 3)}"></td>
         </tr>
         <tr>
-            <td>N Diseases:</td><td th:text="${maxoTable.key.nOmimTerms}"></td>
+            <td>N Diseases:</td><td th:text="${maxoTable.maxoTermScore.nOmimTerms}"></td>
         </tr>
         <tr>
-            <td>N HPO Terms:</td><td th:text="${maxoTable.key.nHpoTerms}"></td>
+            <td>N HPO Terms:</td><td th:text="${maxoTable.maxoTermScore.nHpoTerms}"></td>
         </tr>
         </tbody>
     </table>
@@ -137,7 +137,9 @@
 
     <script th:inline="javascript">
         var maxoIdx = [[${iter.index+1}]]
-        var maxoRecs = [[${maxoRecords}]]
+        var maxoRecs = [[${maxodiffResults}]]
+        var initScores = [[${initialScores}]]
+        var allMaxoTermMap = [[${allMaxoTermsMap}]]
     </script>
     <script type="text/javascript" th:src="@{/js/maxoChart.js}"></script>
 
@@ -154,9 +156,9 @@
         </thead>
 
         <tbody>
-        <th:block th:each= "freqRecord : ${maxoTable.value}">
+        <th:block th:each= "freqRecord : ${maxoTable.frequencies}">
             <tr>
-                <td th:text="${freqRecord.hpoId} + ' (' + ${freqRecord.hpoLabel} + ')'"></td>
+                <td th:text="${freqRecord.hpoId} + ' (' + ${allHpoTermsMap.get(freqRecord.hpoId)} + ')'"></td>
                 <th:block th:each="frequency : ${freqRecord.frequencies}">
                     <td th:text="${frequency} == null ? ${frequency} :
                     (${frequency} % 1 == 0 ? ${frequency} : ${#numbers.formatDecimal(frequency, 1, 3)})"

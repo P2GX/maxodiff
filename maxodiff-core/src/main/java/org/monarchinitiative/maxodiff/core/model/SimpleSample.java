@@ -7,7 +7,6 @@ import java.util.Collection;
 record SimpleSample(
         String id,
         Collection<TermId> presentHpoTermIds,
-        Collection<TermId> excludedHpoTermIds,
-        Collection<DifferentialDiagnosisModel> differentialDiagnoses
+        Collection<TermId> excludedHpoTermIds
 ) implements Sample {
 }

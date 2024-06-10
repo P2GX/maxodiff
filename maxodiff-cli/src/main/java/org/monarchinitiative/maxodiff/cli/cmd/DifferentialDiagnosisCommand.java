@@ -12,8 +12,12 @@ import org.monarchinitiative.lirical.io.analysis.PhenopacketData;
 import org.monarchinitiative.lirical.io.analysis.PhenopacketImporter;
 import org.monarchinitiative.lirical.io.analysis.PhenopacketImporters;
 import org.monarchinitiative.maxodiff.core.SimpleTerm;
-import org.monarchinitiative.maxodiff.core.analysis.LiricalAnalysis;
-import org.monarchinitiative.maxodiff.core.analysis.MaxoTermMap;
+import org.monarchinitiative.maxodiff.core.analysis.*;
+import org.monarchinitiative.maxodiff.core.io.PhenopacketFileParser;
+import org.monarchinitiative.maxodiff.core.model.DifferentialDiagnosis;
+import org.monarchinitiative.maxodiff.core.model.Sample;
+import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
+import org.monarchinitiative.phenol.ontology.data.MinimalOntology;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,6 +27,7 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.stream.Collectors;
 import java.util.zip.GZIPOutputStream;
 
 
@@ -135,6 +140,23 @@ public class DifferentialDiagnosisCommand extends BaseLiricalCommand {
             //AnalysisResultsMetadata metadata = prepareAnalysisResultsMetadata(gene2Genotypes, lirical, sampleId);
             //writeResultsToFile(lirical, OutputFormat.parse(outputFormatArg), analysisData, results, metadata, outFilename);
 
+            // Make maxodiffRefiner
+            HpoDiseases diseases = maxoTermMap.getDiseases();
+            Map<TermId, Set<TermId>> fullHpoToMaxoTermIdMap = maxoTermMap.getFullHpoToMaxoTermIdMap(maxoTermMap.getFullHpoToMaxoTermMap());
+            MinimalOntology hpo = maxoTermMap.getOntology();
+            MaxoDiffRefiner maxoDiffRefiner = new MaxoDiffRefiner(diseases, fullHpoToMaxoTermIdMap, hpo);
+
+            List<DifferentialDiagnosis> differentialDiagnoses = new LinkedList<>();
+            for (TestResult result : results.resultsWithDescendingPostTestProbability().toList()) {
+                differentialDiagnoses.add(DifferentialDiagnosis.of(result.diseaseId(),
+                        result.posttestProbability(), result.getCompositeLR()));
+            }
+
+            Set<SimpleTerm> allMaxoTerms = maxoTermMap.getFullHpoToMaxoTermMap().values()
+                    .stream().flatMap(Collection::stream).collect(Collectors.toSet());
+            Map<TermId, String> allMaxoTermsMap = new HashMap<>();
+            allMaxoTerms.forEach(st -> allMaxoTermsMap.put(st.tid(), st.label()));
+
             //TODO? get list of diseases from LIRICAL results, and add diseases from CLI arg to total list for analysis
 
             System.out.println(weights);
@@ -142,29 +164,33 @@ public class DifferentialDiagnosisCommand extends BaseLiricalCommand {
             for (int nDiseases : nDiseasesList) {
                 System.out.println("n Diseases = " + nDiseases);
                 // Make MaXo:HPO Term Map
-                Map<SimpleTerm, Set<SimpleTerm>> maxoToHpoTermMap = maxoTermMap.makeMaxoToHpoTermMap(results, null,
-                        phenopacketPath, nDiseases);
-
-                LOGGER.info(String.valueOf(maxoToHpoTermMap));
+//                Map<SimpleTerm, Set<SimpleTerm>> maxoToHpoTermMap = maxoTermMap.makeMaxoToHpoTermMap(results, null,
+//                        phenopacketPath, nDiseases);
+//
+//                LOGGER.info(String.valueOf(maxoToHpoTermMap));
 
                 for (double weight : weights) {
                     System.out.println("Weight = " + weight);
-                    // Make map of MaXo scores
-                    Map<SimpleTerm, Double> maxoScoreMap = maxoTermMap.makeMaxoScoreMap(maxoToHpoTermMap, results, null, weight);
-                    LOGGER.info(String.valueOf(maxoScoreMap));
+                    // Get List of Refinement results: maxo term scores and frequencies
+                    PhenopacketData phenopacketData = PhenopacketFileParser.readPhenopacketData(phenopacketPath);
+                    Sample sample = Sample.of(phenopacketData.sampleId(),
+                            phenopacketData.presentHpoTermIds().toList(),
+                            phenopacketData.excludedHpoTermIds().toList());
+                    RefinementOptions options = RefinementOptions.of(nDiseases, weight);
+                    RefinementResults refinementResults = maxoDiffRefiner.run(sample, differentialDiagnoses, options);
+
+                    List<MaxodiffResult> resultsList = refinementResults.maxodiffResults().stream().toList();
+                    TermId diseaseId = phenopacketData.diseaseIds().get(0);
                     // Take the MaXo term that has the highest score
-                    Map.Entry<SimpleTerm, Double> maxScore = maxoScoreMap.entrySet().stream().max(Map.Entry.comparingByValue()).get();
-                    TermId maxScoreMaxoTermId = maxScore.getKey().tid();
-                    String maxScoreTermLabel = maxScore.getKey().label();
-                    double maxScoreValue = maxScore.getValue();
+                    MaxodiffResult topResult = resultsList.get(0);
+                    TermId maxScoreMaxoTermId = TermId.of(topResult.maxoTermScore().maxoId());
+                    String maxScoreTermLabel = allMaxoTermsMap.get(maxScoreMaxoTermId);
+                    double maxScoreValue = topResult.maxoTermScore().score();
 
                     System.out.println("Max Score: " + maxScoreMaxoTermId + " (" + maxScoreTermLabel + ")" + " = " + maxScoreValue);
-//                    double finalScore = diffDiag.finalScore(results, diseaseIds, weight);
-//                    LOGGER.info("Input Disease List Score: " + finalScore);
+
                     String backgroundVcf = vcfPath == null ? "" : vcfPath.toFile().getName();
-                    TermId diseaseId = maxoTermMap.getDiseaseId();
-                    Set<TermId> diseaseIds = new HashSet<>();
-                    maxoTermMap.getDiseases().forEach(disease -> diseaseIds.add(disease.id()));
+                    Set<TermId> diseaseIds = topResult.maxoTermScore().omimTermIds();
                     int topNDiseases = diseaseIds.size();
 
                     List<Object> phenopacketNames = resultsMap.get("phenopacketName");

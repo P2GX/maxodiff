@@ -1,34 +1,48 @@
 package org.monarchinitiative.maxodiff.html.service;
 
-import org.monarchinitiative.lirical.core.analysis.AnalysisResults;
-import org.monarchinitiative.maxodiff.core.analysis.Frequencies;
-import org.monarchinitiative.maxodiff.core.analysis.LiricalAnalysis;
-import org.monarchinitiative.maxodiff.core.analysis.MaxoTermMap;
-import org.monarchinitiative.maxodiff.core.analysis.MaxoTermScore;
+import org.monarchinitiative.maxodiff.core.SimpleTerm;
+import org.monarchinitiative.maxodiff.core.analysis.*;
+import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
+import org.monarchinitiative.phenol.ontology.data.MinimalOntology;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 import org.springframework.stereotype.Service;
 
-import java.nio.file.Path;
-import java.util.List;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class SessionResultsService {
 
+    // TODO: use the Spring configuration or delete the service.
 
     public SessionResultsService() {}
 
-    public List<MaxoTermScore> getMaxoTermRecords(MaxoTermMap maxoTermMap, AnalysisResults results,
-                                                  Path phenopacketPath, int nDiseases, double weight) throws Exception {
-        return maxoTermMap.getMaxoTermRecords(phenopacketPath, results, null, nDiseases, weight);
+
+    public MaxoDiffRefiner getMaxoDiffRefiner(HpoDiseases diseases,
+                                              Map<TermId, Set<TermId>> fullHpoToMaxoTermIdMap,
+                                              MinimalOntology hpo) {
+
+        return new MaxoDiffRefiner(diseases, fullHpoToMaxoTermIdMap, hpo);
     }
 
-    public List<Frequencies> getFrequencyRecords(MaxoTermMap maxoTermMap, MaxoTermScore maxoTermScore) throws Exception {
-        return maxoTermMap.getFrequencyRecords(maxoTermScore);
+
+    public Map<String, String> getAllMaxoTermsMap(Map<SimpleTerm, Set<SimpleTerm>> fullHpoToMaxoTermMap) {
+
+        Set<SimpleTerm> allMaxoTerms = fullHpoToMaxoTermMap.values()
+                .stream().flatMap(Collection::stream).collect(Collectors.toSet());
+        Map<String, String> allMaxoTermsMap = new HashMap<>();
+        allMaxoTerms.forEach(st -> allMaxoTermsMap.put(st.tid().toString(), st.label()));
+
+        return allMaxoTermsMap;
     }
 
+    public Map<TermId, String> getAllHpoTermsMap(Map<SimpleTerm, Set<SimpleTerm>> fullHpoToMaxoTermMap) {
 
-    public TermId getDiseaseId(MaxoTermMap maxoTermMap) {
-        return maxoTermMap.getDiseaseId();
+        Set<SimpleTerm> allMaxoTerms = fullHpoToMaxoTermMap.keySet();
+        Map<TermId, String> allHpoTermsMap = new HashMap<>();
+        allMaxoTerms.forEach(st -> allHpoTermsMap.put(st.tid(), st.label()));
+
+        return allHpoTermsMap;
     }
 
 }

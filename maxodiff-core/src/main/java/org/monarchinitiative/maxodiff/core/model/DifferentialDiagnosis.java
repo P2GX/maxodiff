@@ -2,14 +2,14 @@ package org.monarchinitiative.maxodiff.core.model;
 
 import org.monarchinitiative.phenol.ontology.data.TermId;
 
-public interface DifferentialDiagnosisModel {
+public interface DifferentialDiagnosis {
 
-    static DifferentialDiagnosisModel of(
+    static DifferentialDiagnosis of(
             TermId diseaseId,
             double score,
             double lr
     ) {
-        return new DifferentialDiagnosisModelImpl(diseaseId, score, lr);
+        return new DifferentialDiagnosisImpl(diseaseId, score, lr);
     }
 
     /**

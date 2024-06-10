@@ -1,12 +1,10 @@
 package org.monarchinitiative.maxodiff.core.analysis;
 
-import org.monarchinitiative.maxodiff.core.model.DifferentialDiagnosisModel;
+import org.monarchinitiative.maxodiff.core.model.DifferentialDiagnosis;
 import org.monarchinitiative.maxodiff.core.model.Sample;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDisease;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
-import org.monarchinitiative.phenol.ontology.algo.OntologyAlgorithm;
 import org.monarchinitiative.phenol.ontology.data.MinimalOntology;
-import org.monarchinitiative.phenol.ontology.data.Term;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 
 import java.util.*;
@@ -27,19 +25,22 @@ public class MaxoDiffRefiner implements DiffDiagRefiner {
 
 
     @Override
-    public RefinementResults run(Sample sample, RefinementOptions options) {
-        if (sample.differentialDiagnoses().size() < options.nDiseases()) {
+    public RefinementResults run(Sample sample,
+                                 Collection<DifferentialDiagnosis> originalDifferentialDiagnoses,
+                                 RefinementOptions options) {
+        if (originalDifferentialDiagnoses.size() < options.nDiseases()) {
             //TODO: replace with MaxodiffRuntimeException that extends RuntimeException.
             throw new RuntimeException("Input No. Diseases larger than No. diseases in sample.");
         }
-        List<DifferentialDiagnosisModel> orderedDiagnoses = sample.differentialDiagnoses().stream()
-                .sorted(Comparator.comparingDouble(DifferentialDiagnosisModel::score).reversed()).toList();
-        List<DifferentialDiagnosisModel> differentialDiagnoses = orderedDiagnoses.subList(0, options.nDiseases());
+        List<DifferentialDiagnosis> orderedDiagnoses = originalDifferentialDiagnoses.stream()
+                .sorted(Comparator.comparingDouble(DifferentialDiagnosis::score).reversed())
+                .toList();
+        List<DifferentialDiagnosis> differentialDiagnoses = orderedDiagnoses.subList(0, options.nDiseases());
 
         // Get diseaseIds and then diseases from differential diagnoses list
         //TODO: Set of diseaseIds should be a requirement of the Sample, don't need to define it here necessarily.
         Set<TermId> diseaseIds = differentialDiagnoses.stream()
-                .map(DifferentialDiagnosisModel::diseaseId)
+                .map(DifferentialDiagnosis::diseaseId)
                 .collect(Collectors.toSet());
         List<HpoDisease> diseases = new ArrayList<>();
         diseaseIds.forEach(id -> hpoDiseases.diseaseById(id).ifPresent(diseases::add));
@@ -79,9 +80,6 @@ public class MaxoDiffRefiner implements DiffDiagRefiner {
             maxodiffResultsList.add(maxodiffResult);
         }
 
-        // Sort MaxodiffResult list in descending order of score difference.
-        maxodiffResultsList.sort((a, b) -> b.maxoTermScore().scoreDiff().compareTo(a.maxoTermScore().scoreDiff()));
-
         // Return RefinementResults object, which contains the list of MaxodiffResult objects.
         return new RefinementResultsImpl(maxodiffResultsList);
     }
@@ -94,18 +92,18 @@ public class MaxoDiffRefiner implements DiffDiagRefiner {
      * @param i Index of the target disease in the differential diagnosis list.
      * @return
      */
-    private static double getRelativeDiseaseDiffValue(List<DifferentialDiagnosisModel> differentialDiagnoses, int i) {
+    private static double getRelativeDiseaseDiffValue(List<DifferentialDiagnosis> differentialDiagnoses, int i) {
         double sum = 0.0;
         //TODO: Do we use the last item (disease with the lowest posttest prob in list of m diseases) when getting sublist?
         double targetLR = differentialDiagnoses.get(i).lr();
-        for (DifferentialDiagnosisModel dd : differentialDiagnoses.subList(i, differentialDiagnoses.size())) {
+        for (DifferentialDiagnosis dd : differentialDiagnoses.subList(i, differentialDiagnoses.size())) {
             double lr = dd.lr();
             sum += targetLR / lr;
         }
         return sum;
     }
 
-    private static double calculateRelDiseaseDiffSum(List<DifferentialDiagnosisModel> differentialDiagnoses) {
+    private static double calculateRelDiseaseDiffSum(List<DifferentialDiagnosis> differentialDiagnoses) {
         double sum = 0.0;
         for(int i=0; i<differentialDiagnoses.size(); i++) {
             sum += getRelativeDiseaseDiffValue(differentialDiagnoses, i);
@@ -194,7 +192,24 @@ public class MaxoDiffRefiner implements DiffDiagRefiner {
         // Collect HPO terms that can be ascertained by MAXO term
         List<TermId> hpoTermIds = maxoToHpoTermIdMap.get(maxoId).stream().toList();
         // Get HPO term combos for HPO terms ascertained by MAXO term
-        return DifferentialDiagnosis.getHpoTermCombos(hpoTermIds);
+        List<List<TermId>> hpoComboList = new ArrayList<>();
+        // Start i at 1, so that we don't include the empty set in the results
+        for (long i = 1; i < Math.pow(2, hpoTermIds.size()); i++) {
+            List<TermId> hpoIdList = new ArrayList<>();
+            for (int j = 0; j < hpoTermIds.size(); j++) {
+                if ((i & (long) Math.pow(2, j)) > 0) {
+                    // Include j in list
+                    hpoIdList.add(hpoTermIds.get(j));
+                }
+            }
+            hpoComboList.add(hpoIdList);
+            // Cap the number of combos at 32
+            //TODO: sample up to 32 random combos
+            if (hpoComboList.size() == 32) {
+                break;
+            }
+        }
+        return hpoComboList;
     }
 
     /**
@@ -229,7 +244,7 @@ public class MaxoDiffRefiner implements DiffDiagRefiner {
      * @param weight Weight parameter to use in the final score calculation.
      * @return Final score for the MAXO term.
      */
-    private static double calculateMaxoTermFinalScore(List<DifferentialDiagnosisModel> differentialDiagnoses,
+    private static double calculateMaxoTermFinalScore(List<DifferentialDiagnosis> differentialDiagnoses,
                                                       List<HpoDisease> diseases,
                                                       List<List<TermId>> hpoCombos,
                                                       double weight) {
@@ -238,15 +253,15 @@ public class MaxoDiffRefiner implements DiffDiagRefiner {
         for (List<TermId> hpoCombo : hpoCombos) {
             Set<TermId> omimIds = getHpoComboAssociatedDiseaseIds(hpoCombo, diseases);
             // Calculate S using HPO combo associated disease OMIM Ids
-            List<DifferentialDiagnosisModel> comboDiagnoses = new ArrayList<>();
+            List<DifferentialDiagnosis> comboDiagnoses = new ArrayList<>();
             for (TermId omimId : omimIds) {
-                for (DifferentialDiagnosisModel diagnosisModel : differentialDiagnoses) {
+                for (DifferentialDiagnosis diagnosisModel : differentialDiagnoses) {
                     if (omimId.equals(diagnosisModel.diseaseId())) {
                         comboDiagnoses.add(diagnosisModel);
                     }
                 }
             }
-            double scoreSum = comboDiagnoses.stream().mapToDouble(DifferentialDiagnosisModel::score).sum();
+            double scoreSum = comboDiagnoses.stream().mapToDouble(DifferentialDiagnosis::score).sum();
             double relativeDiseaseDiffSum = calculateRelDiseaseDiffSum(comboDiagnoses);
             double comboFinalScore = weight * scoreSum + (1 - weight) * relativeDiseaseDiffSum;
             comboScores.add(comboFinalScore);
@@ -273,7 +288,7 @@ public class MaxoDiffRefiner implements DiffDiagRefiner {
     private static MaxoTermScore getMaxoTermScoreRecord(Set<TermId> hpoTermIds,
                                                      List<List<TermId>> hpoCombos,
                                                      TermId maxoId,
-                                                     List<DifferentialDiagnosisModel> differentialDiagnoses,
+                                                     List<DifferentialDiagnosis> differentialDiagnoses,
                                                      List<HpoDisease> diseases,
                                                      RefinementOptions options) {
 
@@ -289,13 +304,13 @@ public class MaxoDiffRefiner implements DiffDiagRefiner {
         double scoreDiff = maxoTermFinalScore - maxoTermInitialScore;
 
         Set<TermId> diseaseIds = new LinkedHashSet<>();
-        List<DifferentialDiagnosisModel> differentialDiagnosisModels = new ArrayList<>(differentialDiagnoses);
-        differentialDiagnosisModels.sort(Comparator.comparingDouble(DifferentialDiagnosisModel::score).reversed());
+        List<DifferentialDiagnosis> differentialDiagnosisModels = new ArrayList<>(differentialDiagnoses);
+        differentialDiagnosisModels.sort(Comparator.comparingDouble(DifferentialDiagnosis::score).reversed());
         differentialDiagnosisModels.forEach(d -> diseaseIds.add(d.diseaseId()));
         int nHpoTerms = hpoTermIds.size();
 
-        return new MaxoTermScore(maxoId.toString(), null, options.nDiseases(),
-                diseaseIds, nHpoTerms, hpoTermIds, null,
+        return new MaxoTermScore(maxoId.toString(), options.nDiseases(),
+                diseaseIds, nHpoTerms, hpoTermIds,
                 maxoTermInitialScore, maxoTermFinalScore, scoreDiff);
     }
 
@@ -311,7 +326,6 @@ public class MaxoDiffRefiner implements DiffDiagRefiner {
         List<Frequencies> frequencyRecords = new ArrayList<>();
         Set<TermId> omimIds = maxoTermScoreRecord.omimTermIds();
         for (TermId hpoId : maxoTermScoreRecord.hpoTermIds()) {
-            String hpoLabel = null;
             Map<TermId, Float> maxoFrequencies = new LinkedHashMap<>();
             omimIds.forEach(e -> maxoFrequencies.put(e, null));
             List<HpoFrequency> frequencies = hpoTermCounts.get(hpoId);
@@ -323,7 +337,7 @@ public class MaxoDiffRefiner implements DiffDiagRefiner {
                     }
                 }
             }
-            frequencyRecords.add(new Frequencies(hpoId, hpoLabel, maxoFrequencies.values().stream().toList()));
+            frequencyRecords.add(new Frequencies(hpoId, maxoFrequencies.values().stream().toList()));
         }
         return frequencyRecords;
     }

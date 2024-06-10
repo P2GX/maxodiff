@@ -49,16 +49,17 @@
             <th colspan="4" th:text="'Top ' + ${nLiricalResults} + ' LIRICAL Results'"></th>
         </tr>
         <tr>
-            <th>Rank</th><th>Disease ID</th><th>Posttest Probability</th>
+            <th>Rank</th><th>Disease ID</th><th>Posttest Probability</th><th>LR</th>
         </tr>
         </thead>
         <tbody>
-        <th:block th:each= "liricalResult, iter : ${liricalResultsList}">
+        <th:block th:each= "diagnosis, iter : ${differentialDiagnoses}">
             <tr>
                 <td th:text="${iter.index+1}"></td>
-                <td th:text="${liricalResult.diseaseId}"></td>
-                <td th:text="${liricalResult.posttestProbability} % 1 == 0 ?
-                ${liricalResult.posttestProbability} : ${#numbers.formatDecimal(liricalResult.posttestProbability, 1, 4)}"></td>
+                <td th:text="${diagnosis.diseaseId}"></td>
+                <td th:text="${diagnosis.score} % 1 == 0 ?
+                ${diagnosis.score} : ${#numbers.formatDecimal(diagnosis.score, 1, 4)}"></td>
+                <td th:text="${diagnosis.lr}"></td>
             </tr>
         </th:block>
         </tbody>
@@ -103,11 +104,11 @@
 <h1 th:text="'Top ' + ${nDisplayed} + ' Recommended MaXo Terms'"></h1>
 
 <th:block th:each= "maxoTable, iter : ${maxoTables}">
-    <h2 th:text="${iter.index+1} + ') ' + ${maxoTable.key.maxoId} + ': ' + ${maxoTable.key.maxoLabel}"></h2>
+    <h2 th:text="${iter.index+1} + ') ' + ${maxoTable.key.maxoId} + ': ' + ${allMaxoTermsMap.get(maxoTable.key.maxoId)}"></h2>
     <table class="scoreTable">
         <tbody>
         <tr>
-            <td>Score:</td><td th:text="${#numbers.formatDecimal(maxoTable.key.score, 0, 2)}"></td>
+            <td>&Delta;Score:</td><td th:text="${#numbers.formatDecimal(maxoTable.key.scoreDiff, 0, 2)}"></td>
         </tr>
         <tr>
             <td>N Diseases:</td><td th:text="${maxoTable.key.nOmimTerms}"></td>
@@ -133,7 +134,7 @@
         <tbody>
         <th:block th:each= "freqRecord : ${maxoTable.value}">
             <tr>
-                <td th:text="${freqRecord.hpoId} + ' (' + ${freqRecord.hpoLabel} + ')'"></td>
+                <td th:text="${freqRecord.hpoId} + ' (' + ${allHpoTermsMap.get(freqRecord.hpoId)} + ')'"></td>
 <!--                <td><canvas id="chartTest"></canvas> &lt;!&ndash;th:attr="frequencies=${freqRecord.frequencies}" id="chartTest"></canvas>&ndash;&gt;-->
 <!--                    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>-->
 <!--                    <script type="text/javascript" th:inline="javascript"-->

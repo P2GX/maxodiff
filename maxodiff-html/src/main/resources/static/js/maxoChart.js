@@ -1,11 +1,13 @@
 
 var idx = maxoIdx;
-var maxoRecords = maxoRecs;
+var maxoResults = maxoRecs;
+var initialScores = initScores;
+var allMaxoTermsMap = allMaxoTermMap;
 
 var chart = document.getElementById('chart' + idx);
 
 var chartData = {
-  labels: Object.keys(maxoRecords[idx].probabilityMap),
+  labels: Object.keys(initialScores),
   datasets: getDatasets()
 };
 
@@ -92,7 +94,7 @@ function getDatasets() {
     for (i = 0; i < 2; i++) {
         var distData = [];
         var dataLabel = "";
-        probabilityMap = maxoRecords[maxoIdx].probabilityMap;
+        probabilityMap = initialScores;
         diseaseIds = Object.keys(probabilityMap);
         if (i == 0) {
             dataLabel = "Initial Posttest Probability (placeholder)";
@@ -169,10 +171,10 @@ function customLegend(chart) {
                                pointStyle: pointStyle[index]}))
 }
 
-function customTooltip(tooltipItems, data, maxoRecords) {
+function customTooltip(tooltipItems, data, initialScores) {
     var dataset = data.datasets[tooltipItems.datasetIndex];
     var initialProbability = data.datasets[0].data[tooltipItems.datasetIndex];
-    var probabilityMap = maxoRecords[maxoIdx].probabilityMap;
+    var probabilityMap = initialScores;
     var probabilities = Object.values(probabilityMap);
     var probability = tooltipItems.datasetIndex > 0 ? probabilities[tooltipItems.dataIndex] : data.datasets[0].data[tooltipItems.datasetIndex];
     probability = Math.round(probability * 1000) / 1000;
@@ -185,7 +187,7 @@ function customTooltip(tooltipItems, data, maxoRecords) {
 }
 
 
-function chartConfig(dataValue, maxoRecords) {
+function chartConfig(dataValue, initialScores) {
     config = {
 //      type: 'scatter',
       data: dataValue,
@@ -214,12 +216,12 @@ function chartConfig(dataValue, maxoRecords) {
           },
           title: {
               display: true,
-              text: idx + ') ' + maxoRecords[idx-1].maxoId + ": " + maxoRecords[idx-1].maxoLabel
+              text: idx + ') ' + maxoResults[idx-1].maxoTermScore.maxoId + ": " + allMaxoTermsMap[maxoResults[idx-1].maxoTermScore.maxoId]
           },
           tooltip: {
               callbacks: {
 //                  title: () => { return tooltipTitle; },
-                  label: (tooltipItems) => customTooltip(tooltipItems, dataValue, maxoRecords)
+                  label: (tooltipItems) => customTooltip(tooltipItems, dataValue, initialScores)
               }
           }
         },
@@ -257,5 +259,5 @@ function chartConfig(dataValue, maxoRecords) {
 }
 
 
-new Chart(chart, chartConfig(chartData, maxoRecords));
+new Chart(chart, chartConfig(chartData, initialScores));
 

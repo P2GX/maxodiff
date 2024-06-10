@@ -7,13 +7,11 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.monarchinitiative.maxodiff.core.SimpleTerm;
 import org.monarchinitiative.maxodiff.core.TestResources;
+import org.monarchinitiative.maxodiff.core.model.DifferentialDiagnosis;
 import org.monarchinitiative.maxodiff.core.model.Sample;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class MaxoDiffRefinerTest {
@@ -41,10 +39,12 @@ public class MaxoDiffRefinerTest {
     public void run() {
         RefinementOptions options = RefinementOptions.of(12, 0.5);
         Sample sample = TestResources.getExampleSample();
+        Collection<DifferentialDiagnosis> originalDiagnoses = TestResources.getExampleDiagnoses();
 
-        RefinementResults results = refiner.run(sample, options);
+        RefinementResults results = refiner.run(sample, originalDiagnoses, options);
 
-        List<MaxodiffResult> resultsList = results.maxodiffResults().stream().toList();
+        List<MaxodiffResult> resultsList = new ArrayList<>(results.maxodiffResults());
+        resultsList.sort((a, b) -> b.maxoTermScore().scoreDiff().compareTo(a.maxoTermScore().scoreDiff()));
         String maxoId1 = resultsList.get(0).maxoTermScore().maxoId();
         String maxoId2 = resultsList.get(1).maxoTermScore().maxoId();
 

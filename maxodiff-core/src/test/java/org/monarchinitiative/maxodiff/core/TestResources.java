@@ -1,7 +1,7 @@
 package org.monarchinitiative.maxodiff.core;
 
 import org.monarchinitiative.maxodiff.core.io.MaxoDxAnnots;
-import org.monarchinitiative.maxodiff.core.model.DifferentialDiagnosisModel;
+import org.monarchinitiative.maxodiff.core.model.DifferentialDiagnosis;
 import org.monarchinitiative.maxodiff.core.model.Sample;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
 import org.monarchinitiative.phenol.annotations.io.hpo.DiseaseDatabase;
@@ -105,32 +105,34 @@ public class TestResources {
         );
         Collection<TermId> excludedTerms = List.of();
 
+        return Sample.of("B15", presentTerms, excludedTerms);
+    }
+
+    public static Collection<DifferentialDiagnosis> getExampleDiagnoses() {
         //Example Top 20 Diagnoses from LIRICAL analysis of phenopacket v2 PMID_11175294-Tiecke-2001-FBN1-B15.json
         //score = posttest probability
-        Collection<DifferentialDiagnosisModel> differentialDiagnoses = List.of(
-                DifferentialDiagnosisModel.of(TermId.of("OMIM:154700"), 1.0, 12.966),
-                DifferentialDiagnosisModel.of(TermId.of("OMIM:616914"), 1.000, 10.165),
-                DifferentialDiagnosisModel.of(TermId.of("OMIM:236200"), 1.000, 9.804),
-                DifferentialDiagnosisModel.of(TermId.of("OMIM:609008"), 1.000, 8.548),
-                DifferentialDiagnosisModel.of(TermId.of("OMIM:615582"), 1.000, 8.452),
-                DifferentialDiagnosisModel.of(TermId.of("OMIM:121050"), 0.987, 5.977),
-                DifferentialDiagnosisModel.of(TermId.of("OMIM:614816"), 0.868, 4.914),
-                DifferentialDiagnosisModel.of(TermId.of("OMIM:617506"), 0.796, 4.687),
-                DifferentialDiagnosisModel.of(TermId.of("OMIM:219150"), 0.767, 4.614),
-                DifferentialDiagnosisModel.of(TermId.of("OMIM:608328"), 0.756, 4.587),
-                DifferentialDiagnosisModel.of(TermId.of("OMIM:610443"), 0.580, 4.235),
-                DifferentialDiagnosisModel.of(TermId.of("OMIM:277600"), 0.352, 3.831),
-                DifferentialDiagnosisModel.of(TermId.of("OMIM:271640"), 0.282, 3.689),
-                DifferentialDiagnosisModel.of(TermId.of("OMIM:602535"), 0.216, 3.537),
-                DifferentialDiagnosisModel.of(TermId.of("OMIM:619472"), 0.199, 3.492),
-                DifferentialDiagnosisModel.of(TermId.of("OMIM:225400"), 0.125, 3.250),
-                DifferentialDiagnosisModel.of(TermId.of("OMIM:601776"), 0.070, 2.970),
-                DifferentialDiagnosisModel.of(TermId.of("OMIM:617602"), 0.061, 2.912),
-                DifferentialDiagnosisModel.of(TermId.of("OMIM:163950"), 0.025, 2.505),
-                DifferentialDiagnosisModel.of(TermId.of("OMIM:208050"), 0.009, 2.064)
+        return List.of(
+                DifferentialDiagnosis.of(TermId.of("OMIM:154700"), 1.0, 12.966),
+                DifferentialDiagnosis.of(TermId.of("OMIM:616914"), 1.000, 10.165),
+                DifferentialDiagnosis.of(TermId.of("OMIM:236200"), 1.000, 9.804),
+                DifferentialDiagnosis.of(TermId.of("OMIM:609008"), 1.000, 8.548),
+                DifferentialDiagnosis.of(TermId.of("OMIM:615582"), 1.000, 8.452),
+                DifferentialDiagnosis.of(TermId.of("OMIM:121050"), 0.987, 5.977),
+                DifferentialDiagnosis.of(TermId.of("OMIM:614816"), 0.868, 4.914),
+                DifferentialDiagnosis.of(TermId.of("OMIM:617506"), 0.796, 4.687),
+                DifferentialDiagnosis.of(TermId.of("OMIM:219150"), 0.767, 4.614),
+                DifferentialDiagnosis.of(TermId.of("OMIM:608328"), 0.756, 4.587),
+                DifferentialDiagnosis.of(TermId.of("OMIM:610443"), 0.580, 4.235),
+                DifferentialDiagnosis.of(TermId.of("OMIM:277600"), 0.352, 3.831),
+                DifferentialDiagnosis.of(TermId.of("OMIM:271640"), 0.282, 3.689),
+                DifferentialDiagnosis.of(TermId.of("OMIM:602535"), 0.216, 3.537),
+                DifferentialDiagnosis.of(TermId.of("OMIM:619472"), 0.199, 3.492),
+                DifferentialDiagnosis.of(TermId.of("OMIM:225400"), 0.125, 3.250),
+                DifferentialDiagnosis.of(TermId.of("OMIM:601776"), 0.070, 2.970),
+                DifferentialDiagnosis.of(TermId.of("OMIM:617602"), 0.061, 2.912),
+                DifferentialDiagnosis.of(TermId.of("OMIM:163950"), 0.025, 2.505),
+                DifferentialDiagnosis.of(TermId.of("OMIM:208050"), 0.009, 2.064)
         );
-
-        return Sample.of("B15", presentTerms, excludedTerms, differentialDiagnoses);
     }
 
     private TestResources() {

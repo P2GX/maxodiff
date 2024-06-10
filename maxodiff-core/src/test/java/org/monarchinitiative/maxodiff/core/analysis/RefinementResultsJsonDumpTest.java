@@ -41,19 +41,16 @@ public class RefinementResultsJsonDumpTest {
                   "maxodiffResults" : [ {
                     "maxoTermScore" : {
                       "maxoId" : "MAXO:123",
-                      "maxoLabel" : "Some label",
                       "nOmimTerms" : 1,
                       "omimTermIds" : [ "OMIM:256000" ],
                       "nHpoTerms" : 0,
                       "hpoTermIds" : [ ],
-                      "probabilityMap" : { },
                       "initialScore" : 1.0,
                       "score" : 3.0,
                       "scoreDiff" : 2.0
                     },
                     "frequencies" : [ {
                       "hpoId" : "HP:123",
-                      "hpoLabel" : "Bla",
                       "frequencies" : [ 1.0, 4.6, 8.19 ]
                     } ]
                   } ]
@@ -67,16 +64,14 @@ public class RefinementResultsJsonDumpTest {
                         MaxodiffResult.of(
                                 new MaxoTermScore(
                                         "MAXO:123",
-                                        "Some label",
                                         1, Set.of(TermId.of("OMIM:256000")),
                                         0, Set.of(),
-                                        Map.of(),
                                         1.,
                                         3.,
                                         2.
                                 ),
                                 List.of(
-                                        new Frequencies(TermId.of("HP:123"), "Bla", List.of(1.f, 4.6f, 8.19f))
+                                        new Frequencies(TermId.of("HP:123"), List.of(1.f, 4.6f, 8.19f))
                                 )
                         )
                 ));
