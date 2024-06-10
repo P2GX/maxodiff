@@ -1,141 +1,78 @@
 package org.monarchinitiative.maxodiff.core.analysis;
 
-import org.monarchinitiative.lirical.core.analysis.AnalysisResults;
-import org.monarchinitiative.lirical.core.analysis.TestResult;
-import org.monarchinitiative.lirical.io.analysis.PhenopacketData;
 import org.monarchinitiative.maxodiff.core.SimpleTerm;
 import org.monarchinitiative.maxodiff.core.io.MaxoDxAnnots;
+import org.monarchinitiative.maxodiff.core.io.MaxodiffBuilder;
 import org.monarchinitiative.maxodiff.core.io.MaxodiffDataException;
 import org.monarchinitiative.maxodiff.core.io.MaxodiffDataResolver;
-import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDisease;
+import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
+import org.monarchinitiative.phenol.annotations.io.hpo.HpoDiseaseLoaderOptions;
+import org.monarchinitiative.phenol.ontology.data.MinimalOntology;
 import org.monarchinitiative.phenol.ontology.data.Ontology;
-import org.monarchinitiative.phenol.ontology.data.Term;
 import org.monarchinitiative.phenol.ontology.data.TermId;
-import org.monarchinitiative.maxodiff.core.analysis.DiseaseTermCountImpl.HpoFrequency;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.BufferedReader;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 
 import static org.monarchinitiative.maxodiff.core.io.MaxodiffBuilder.loadOntology;
 
+// Responsibility - parse Maxo diagnostic annotations file into higher level structures.
+// TODO: consider removing the class or moving to a configuration module or moving to Spring configuration/CLI superclass.
 public class MaxoTermMap {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MaxoTermMap.class);
 
-    public record MaxoTerm(String maxoTerm, String maxoLabel, Integer nOmimTerms, Set<TermId> omimTermIds, Set<SimpleTerm> hpoTerms, Double score) {}
-
-    public record Frequencies(TermId hpoId, String hpoLabel, List<Float> frequencies) {}
-
     MaxodiffDataResolver dataResolver;
     Ontology hpo;
-    MaxoDxAnnots maxoDxAnnots;
     Map<SimpleTerm, Set<SimpleTerm>> fullHpoToMaxoTermMap;
 
-    List<HpoDisease> diseases;
-    Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxoTermMap;
+    HpoDiseases diseases;
 
     TermId diseaseId;
-    Map<TermId, List<HpoFrequency>> hpoTermCounts;
 
     public MaxoTermMap(Path maxoDataPath) throws MaxodiffDataException {
         this.dataResolver = new MaxodiffDataResolver(maxoDataPath);
         this.hpo = loadOntology(dataResolver.hpoJson());
-        this.maxoDxAnnots = new MaxoDxAnnots(dataResolver.maxoDxAnnots());
-        this.fullHpoToMaxoTermMap = maxoDxAnnots.getSimpleTermSetMap();
-    }
-
-    public AnalysisResults runLiricalCalculation(LiricalAnalysis liricalAnalysis, Path phenopacketPath) throws Exception {
-        return liricalAnalysis.runLiricalAnalysis(phenopacketPath);
-    }
-
-    public List<MaxoTerm> getMaxoTermRecords(Path phenopacketPath, AnalysisResults results, double posttestFilter, double weight) throws Exception {
-        List<MaxoTerm> maxoTermRecords = new ArrayList<>();
-        Map<TermId, Set<SimpleTerm>> maxoToHpoTermMap = makeMaxoToHpoTermMap(results, phenopacketPath, posttestFilter);
-        Map<TermId, Double> maxoScoreMap = makeMaxoScoreMap(maxoToHpoTermMap, results, weight);
-        LOGGER.info(maxoScoreMap.toString());
-        maxoToHpoTermMap.forEach((key, value) -> {
-            String maxoId = key.toString();
-            String maxoTermLabel = DifferentialDiagnosis.getMaxoTermLabel(hpoToMaxoTermMap, key);
-            int nOmimTerms = diseases.size();
-            Set<TermId> omimIds = new HashSet<>();
-            diseases.forEach(disease -> omimIds.add(disease.id()));
-            double score = maxoScoreMap.get(key);
-            maxoTermRecords.add(new MaxoTerm(maxoId, maxoTermLabel, nOmimTerms, omimIds, value, score));
-            Comparator<MaxoTerm> comp = Comparator.comparing(MaxoTerm::score, Comparator.reverseOrder());
-            maxoTermRecords.sort(comp);
-        });
-        return maxoTermRecords;
-    }
-
-    public List<Frequencies> getFrequencyRecords(MaxoTerm maxoTermRecord) {
-        List<Frequencies> frequencyRecords = new ArrayList<>();
-        Set<TermId> omimIds = maxoTermRecord.omimTermIds();
-        for (SimpleTerm hpoTerm : maxoTermRecord.hpoTerms) {
-            TermId hpoId = hpoTerm.tid();
-            String hpoLabel = hpoTerm.label();
-            Map<TermId, Float> maxoFrequencies = new LinkedHashMap<>();
-            omimIds.forEach(e -> maxoFrequencies.put(e, null));
-            List<HpoFrequency> frequencies = hpoTermCounts.get(hpoId);
-            for (HpoFrequency hpoFrequency : frequencies) {
-                for (TermId omimId : omimIds) {
-                    if (hpoFrequency.omimId().equals(omimId.toString())) {
-                        Float frequency = hpoFrequency.frequency();
-                        maxoFrequencies.replace(omimId, frequency);
-                    }
-                }
-            }
-            frequencyRecords.add(new Frequencies(hpoId, hpoLabel, maxoFrequencies.values().stream().toList()));
+        HpoDiseaseLoaderOptions options = HpoDiseaseLoaderOptions.defaultOptions();
+        this.diseases = MaxodiffBuilder.loadHpoDiseases(dataResolver.phenotypeAnnotations(), hpo, options);
+        try (BufferedReader reader = Files.newBufferedReader(dataResolver.maxoDxAnnots())) {
+            this.fullHpoToMaxoTermMap = MaxoDxAnnots.parseHpoToMaxo(reader);
+        } catch (IOException e) {
+            throw new MaxodiffDataException(e);
         }
-        return frequencyRecords;
-    }
-
-    public Map<TermId, Set<SimpleTerm>> makeMaxoToHpoTermMap(AnalysisResults results, Path phenopacketPath, double posttestFilter) throws Exception {
-
-        PhenopacketData phenopacketData = LiricalAnalysis.readPhenopacketData(phenopacketPath);
-        diseaseId = phenopacketData.diseaseIds().get(0);
-        LOGGER.info("Min Posttest Probabiltiy Threshold = " + posttestFilter);
-        // Collect HPO terms and frequencies for the target m diseases
-        List<TermId> diseaseIds = new ArrayList<>();
-        List<TestResult> testResults = results.resultsWithDescendingPostTestProbability()
-                .filter(r -> r.posttestProbability() >= posttestFilter)
-                .toList();
-        testResults.forEach(r -> diseaseIds.add(r.diseaseId()));
-        LOGGER.info(phenopacketPath + " diseaseIds: " + String.valueOf(diseaseIds));
-        int topNDiseases = diseaseIds.size();
-
-        diseases = DifferentialDiagnosis.makeDiseaseList(dataResolver, diseaseIds);
-        DiseaseTermCount diseaseTermCount = DiseaseTermCount.of(diseases);
-        hpoTermCounts = diseaseTermCount.hpoTermCounts();
-
-        // Remove HPO terms present in the phenopacket
-        phenopacketData.presentHpoTermIds().forEach(hpoTermCounts::remove);
-        phenopacketData.excludedHpoTermIds().forEach(hpoTermCounts::remove);
-
-        // Get all the MaXo terms that can be used to diagnose the HPO terms
-        hpoToMaxoTermMap = DifferentialDiagnosis.makeHpoToMaxoTermMap(fullHpoToMaxoTermMap, hpoTermCounts.keySet());
-        Map<TermId, Set<SimpleTerm>> maxoToHpoTermMap = DifferentialDiagnosis.makeMaxoToHpoTermMap(hpo, hpoToMaxoTermMap);
-
-        LOGGER.info(maxoToHpoTermMap.toString());
-
-        return maxoToHpoTermMap;
-    }
-
-    public Map<TermId, Double> makeMaxoScoreMap(Map<TermId, Set<SimpleTerm>> maxoToHpoTermMap, AnalysisResults results, Double weight) {
-        return DifferentialDiagnosis.makeMaxoScoreMap(maxoToHpoTermMap, diseases, results, weight);
     }
 
     public TermId getDiseaseId() {
         return diseaseId;
     }
 
-    public List<HpoDisease> getDiseases() {
+    public HpoDiseases getDiseases() {
         return diseases;
     }
 
-    public Map<SimpleTerm, Set<SimpleTerm>> getHpoToMaxoTermMap() {
-        return hpoToMaxoTermMap;
+    public Map<SimpleTerm, Set<SimpleTerm>> getFullHpoToMaxoTermMap() {
+        return fullHpoToMaxoTermMap;
+    }
+
+    public Map<TermId, Set<TermId>> getFullHpoToMaxoTermIdMap(Map<SimpleTerm, Set<SimpleTerm>> fullHpoToMaxoTermMap) {
+        Map<TermId, Set<TermId>> fullHpoToMaxoTermIdMap = new HashMap<>();
+        for (Map.Entry<SimpleTerm, Set<SimpleTerm>> entry : fullHpoToMaxoTermMap.entrySet()) {
+            SimpleTerm hpoTerm = entry.getKey();
+            Set<SimpleTerm> maxoTerms = entry.getValue();
+            Set<TermId> maxoTermIds = new HashSet<>();
+            maxoTerms.forEach(t -> maxoTermIds.add(t.tid()));
+            fullHpoToMaxoTermIdMap.put(hpoTerm.tid(), maxoTermIds);
+        }
+        return fullHpoToMaxoTermIdMap;
+    }
+
+    public MinimalOntology getOntology() {
+        return hpo;
     }
 
 }

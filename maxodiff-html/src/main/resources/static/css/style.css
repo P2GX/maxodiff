@@ -22,10 +22,13 @@
   color: red;
 }
 
-.diffDiagInputTable {
+.diffDiagInputTable, .fileInputTable {
   border: 1px solid black;
   background-color: lemonchiffon;
   table-layout: fixed;
+}
+
+.diffDiagInputTable {
   width: 400px;
 }
 
@@ -38,8 +41,35 @@
   width: 10px;
 }
 
-.liricalResultsTable th {
+.fileInputTable {
+  width: 800px;
+}
+
+.fileInputTable tr td:first-child {
+  font-weight: bold;
+  width: 250px;
+}
+
+.inputForm {
+  background-color: aliceblue;
+}
+
+.inputSummaryTable {
+    border: 1px solid black;
     background-color: lavender;
+}
+
+.line {
+  background-color: black;
+  height:1px;
+}
+
+.liricalResultsTable td {
+    background-color: white;
+}
+
+.liricalResultsTable th {
+    background-color: thistle;
     font-size: 14px;
 }
 

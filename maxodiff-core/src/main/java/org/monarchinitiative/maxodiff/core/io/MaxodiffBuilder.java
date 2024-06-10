@@ -13,7 +13,9 @@ import org.monarchinitiative.phenol.ontology.data.Ontology;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.io.BufferedReader;
 import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
 import java.util.Set;
@@ -34,12 +36,14 @@ public class MaxodiffBuilder {
     public PhenotypeService phenotypeService()  {
         try {
             Ontology hpo = loadOntology(resolver.hpoJson());
-            MaxoDxAnnots dxAnnots = new MaxoDxAnnots(resolver.maxoDxAnnots());
-            Map<SimpleTerm, Set<SimpleTerm>> dxmap = dxAnnots.getSimpleTermSetMap();
+            Map<SimpleTerm, Set<SimpleTerm>> maxoToHpo;
+            try (BufferedReader reader = Files.newBufferedReader(resolver.maxoDxAnnots())) {
+                maxoToHpo = MaxoDxAnnots.parseHpoToMaxo(reader);
+            }
             HpoDiseaseLoaderOptions options = HpoDiseaseLoaderOptions.defaultOptions();
             HpoDiseases diseases = loadHpoDiseases(resolver.phenotypeAnnotations(), hpo, options);
-            return new PhenotypeServiceImpl(hpo, dxmap, diseases);
-        } catch (MaxodiffDataException e) {
+            return new PhenotypeServiceImpl(hpo, maxoToHpo, diseases);
+        } catch (MaxodiffDataException | IOException e) {
             throw new RuntimeException(e.getMessage());
         }
     }
