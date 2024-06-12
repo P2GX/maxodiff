@@ -1,14 +1,13 @@
-package org.monarchinitiative.maxodiff.core.analysis;
+package org.monarchinitiative.maxodiff.config;
 
 import org.monarchinitiative.maxodiff.core.SimpleTerm;
 import org.monarchinitiative.maxodiff.core.io.MaxoDxAnnots;
-import org.monarchinitiative.maxodiff.core.io.MaxodiffBuilder;
-import org.monarchinitiative.maxodiff.core.io.MaxodiffDataException;
-import org.monarchinitiative.maxodiff.core.io.MaxodiffDataResolver;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
+import org.monarchinitiative.phenol.annotations.io.hpo.HpoDiseaseLoader;
 import org.monarchinitiative.phenol.annotations.io.hpo.HpoDiseaseLoaderOptions;
+import org.monarchinitiative.phenol.annotations.io.hpo.HpoDiseaseLoaders;
+import org.monarchinitiative.phenol.io.MinimalOntologyLoader;
 import org.monarchinitiative.phenol.ontology.data.MinimalOntology;
-import org.monarchinitiative.phenol.ontology.data.Ontology;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,8 +18,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 
-import static org.monarchinitiative.maxodiff.core.io.MaxodiffBuilder.loadOntology;
-
 // Responsibility - parse Maxo diagnostic annotations file into higher level structures.
 // TODO: consider removing the class or moving to a configuration module or moving to Spring configuration/CLI superclass.
 public class MaxoTermMap {
@@ -28,7 +25,7 @@ public class MaxoTermMap {
     private static final Logger LOGGER = LoggerFactory.getLogger(MaxoTermMap.class);
 
     MaxodiffDataResolver dataResolver;
-    Ontology hpo;
+    MinimalOntology hpo;
     Map<SimpleTerm, Set<SimpleTerm>> fullHpoToMaxoTermMap;
 
     HpoDiseases diseases;
@@ -36,10 +33,16 @@ public class MaxoTermMap {
     TermId diseaseId;
 
     public MaxoTermMap(Path maxoDataPath) throws MaxodiffDataException {
-        this.dataResolver = new MaxodiffDataResolver(maxoDataPath);
-        this.hpo = loadOntology(dataResolver.hpoJson());
+        this.dataResolver = MaxodiffDataResolver.of(maxoDataPath);
+        this.hpo = MinimalOntologyLoader.loadOntology(dataResolver.hpoJson().toFile());
         HpoDiseaseLoaderOptions options = HpoDiseaseLoaderOptions.defaultOptions();
-        this.diseases = MaxodiffBuilder.loadHpoDiseases(dataResolver.phenotypeAnnotations(), hpo, options);
+        try {
+            HpoDiseaseLoader loader = HpoDiseaseLoaders.defaultLoader(hpo, options);
+            this.diseases = loader.load(dataResolver.phenotypeAnnotations());
+        } catch (IOException ex) {
+            throw new MaxodiffDataException(ex);
+        }
+
         try (BufferedReader reader = Files.newBufferedReader(dataResolver.maxoDxAnnots())) {
             this.fullHpoToMaxoTermMap = MaxoDxAnnots.parseHpoToMaxo(reader);
         } catch (IOException e) {

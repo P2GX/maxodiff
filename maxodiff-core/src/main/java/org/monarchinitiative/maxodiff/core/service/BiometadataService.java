@@ -1,4 +1,4 @@
-package org.monarchinitiative.maxodiff.html.service;
+package org.monarchinitiative.maxodiff.core.service;
 
 import org.monarchinitiative.phenol.ontology.data.TermId;
 

@@ -1,4 +1,4 @@
-package org.monarchinitiative.maxodiff.core.io;
+package org.monarchinitiative.maxodiff.config;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -19,7 +19,7 @@ public class MaxodiffDataResolver {
         return new MaxodiffDataResolver(dataDirectory);
     }
 
-    public MaxodiffDataResolver(Path dataDirectory) throws MaxodiffDataException {
+    private MaxodiffDataResolver(Path dataDirectory) throws MaxodiffDataException {
         this.dataDirectory = Objects.requireNonNull(dataDirectory, "Data directory must not be null!");
         checkV1Resources();
     }

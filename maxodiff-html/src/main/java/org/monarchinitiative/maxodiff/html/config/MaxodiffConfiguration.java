@@ -1,11 +1,13 @@
 package org.monarchinitiative.maxodiff.html.config;
 
+import org.monarchinitiative.maxodiff.core.io.MaxoDxAnnots;
+import org.monarchinitiative.maxodiff.config.MaxodiffDataException;
 import org.monarchinitiative.maxodiff.core.SimpleTerm;
 import org.monarchinitiative.maxodiff.core.analysis.DiffDiagRefiner;
 import org.monarchinitiative.maxodiff.core.analysis.MaxoDiffRefiner;
-import org.monarchinitiative.maxodiff.core.io.*;
-import org.monarchinitiative.maxodiff.html.service.BiometadataService;
-import org.monarchinitiative.maxodiff.html.service.BiometadataServiceImpl;
+import org.monarchinitiative.maxodiff.config.MaxodiffDataResolver;
+import org.monarchinitiative.maxodiff.core.service.BiometadataService;
+import org.monarchinitiative.maxodiff.core.service.BiometadataServiceImpl;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDisease;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
 import org.monarchinitiative.phenol.annotations.io.hpo.HpoDiseaseLoader;

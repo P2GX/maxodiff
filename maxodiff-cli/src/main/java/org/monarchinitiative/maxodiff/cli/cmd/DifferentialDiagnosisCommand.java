@@ -11,6 +11,7 @@ import org.monarchinitiative.lirical.core.output.OutputOptions;
 import org.monarchinitiative.lirical.io.analysis.PhenopacketData;
 import org.monarchinitiative.lirical.io.analysis.PhenopacketImporter;
 import org.monarchinitiative.lirical.io.analysis.PhenopacketImporters;
+import org.monarchinitiative.maxodiff.config.MaxoTermMap;
 import org.monarchinitiative.maxodiff.core.SimpleTerm;
 import org.monarchinitiative.maxodiff.core.analysis.*;
 import org.monarchinitiative.maxodiff.core.io.PhenopacketFileParser;
@@ -72,7 +73,6 @@ public class DifferentialDiagnosisCommand extends BaseLiricalCommand {
     protected String outputFormatArg = "tsv";
 
     @CommandLine.Option(names = {"--compress"},
-            paramLabel = "{tsv,html,json}",
             description = "Whether to output LIRICAL results file as a compressed file (default: ${DEFAULT-VALUE}).")
     protected boolean compress = false;
 

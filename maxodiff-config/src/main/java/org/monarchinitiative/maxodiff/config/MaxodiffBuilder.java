@@ -1,6 +1,7 @@
-package org.monarchinitiative.maxodiff.core.io;
+package org.monarchinitiative.maxodiff.config;
 
 import org.monarchinitiative.maxodiff.core.SimpleTerm;
+import org.monarchinitiative.maxodiff.core.io.MaxoDxAnnots;
 import org.monarchinitiative.maxodiff.core.service.PhenotypeService;
 import org.monarchinitiative.maxodiff.core.service.PhenotypeServiceImpl;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;

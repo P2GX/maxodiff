@@ -19,10 +19,16 @@
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
+            <groupId>org.monarchinitiative.maxodiff</groupId>
+            <artifactId>maxodiff-config</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
             <groupId>org.monarchinitiative.phenol</groupId>
             <artifactId>phenol-core</artifactId>
             <version>${phenol.version}</version>
         </dependency>
+        <!-- TODO: remove biodownload at some point. The data directory setup should be done elsewhere.-->
         <dependency>
             <groupId>org.monarchinitiative.biodownload</groupId>
             <artifactId>biodownload</artifactId>

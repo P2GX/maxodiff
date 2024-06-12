@@ -1,4 +1,4 @@
-package org.monarchinitiative.maxodiff.core.io;
+package org.monarchinitiative.maxodiff.config;
 
 
 /**

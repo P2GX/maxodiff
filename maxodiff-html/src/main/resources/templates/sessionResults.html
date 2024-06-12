@@ -104,17 +104,17 @@
 <h1 th:text="'Top ' + ${nDisplayed} + ' Recommended MaXo Terms'"></h1>
 
 <th:block th:each= "maxoTable, iter : ${maxoTables}">
-    <h2 th:text="${iter.index+1} + ') ' + ${maxoTable.key.maxoId} + ': ' + ${allMaxoTermsMap.get(maxoTable.key.maxoId)}"></h2>
+    <h2 th:text="${iter.index+1} + ') ' + ${maxoTable.maxoTermScore.maxoId} + ': ' + ${allMaxoTermsMap.get(maxoTable.maxoTermScore.maxoId)}"></h2>
     <table class="scoreTable">
         <tbody>
         <tr>
-            <td>&Delta;Score:</td><td th:text="${#numbers.formatDecimal(maxoTable.key.scoreDiff, 0, 2)}"></td>
+            <td>&Delta;Score:</td><td th:text="${#numbers.formatDecimal(maxoTable.maxoTermScore.scoreDiff, 0, 2)}"></td>
         </tr>
         <tr>
-            <td>N Diseases:</td><td th:text="${maxoTable.key.nOmimTerms}"></td>
+            <td>N Diseases:</td><td th:text="${maxoTable.maxoTermScore.nOmimTerms}"></td>
         </tr>
         <tr>
-            <td>N HPO Terms:</td><td th:text="${maxoTable.key.nHpoTerms}"></td>
+            <td>N HPO Terms:</td><td th:text="${maxoTable.maxoTermScore.nHpoTerms}"></td>
         </tr>
         </tbody>
     </table>
@@ -132,7 +132,7 @@
         </thead>
 
         <tbody>
-        <th:block th:each= "freqRecord : ${maxoTable.value}">
+        <th:block th:each= "freqRecord : ${maxoTable.frequencies}">
             <tr>
                 <td th:text="${freqRecord.hpoId} + ' (' + ${allHpoTermsMap.get(freqRecord.hpoId)} + ')'"></td>
 <!--                <td><canvas id="chartTest"></canvas> &lt;!&ndash;th:attr="frequencies=${freqRecord.frequencies}" id="chartTest"></canvas>&ndash;&gt;-->

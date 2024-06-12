@@ -1,9 +1,6 @@
 package org.monarchinitiative.maxodiff.cli;
 
-import org.monarchinitiative.maxodiff.cli.cmd.BatchDiagnosisCommand;
-import org.monarchinitiative.maxodiff.cli.cmd.DifferentialDiagnosisCommand;
-import org.monarchinitiative.maxodiff.cli.cmd.DownloadCommand;
-import org.monarchinitiative.maxodiff.cli.cmd.MaxodiffCommand;
+import org.monarchinitiative.maxodiff.cli.cmd.*;
 import picocli.CommandLine;
 import java.util.concurrent.Callable;
 
@@ -21,6 +18,7 @@ public class Main implements Callable<Integer> {
                 .addSubcommand("download", new DownloadCommand())
                 .addSubcommand("diagnosis", new DifferentialDiagnosisCommand())
                 .addSubcommand("batchDiagnosis", new BatchDiagnosisCommand())
+                .addSubcommand("benchmark", new BenchmarkCommand())
                 ;
         cline.setToggleBooleanFlags(false);
         int exitCode = cline.execute(args);

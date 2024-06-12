@@ -4,7 +4,6 @@ import org.monarchinitiative.lirical.core.analysis.AnalysisResults;
 import org.monarchinitiative.lirical.core.model.TranscriptDatabase;
 import org.monarchinitiative.maxodiff.core.analysis.LiricalAnalysis;
 import org.monarchinitiative.maxodiff.core.analysis.LiricalAnalysis.LiricalRecord;
-import org.monarchinitiative.maxodiff.core.analysis.MaxoTermMap;
 import org.monarchinitiative.maxodiff.html.analysis.InputRecord;
 import org.monarchinitiative.maxodiff.html.config.ConfigureMaxodiffProperties;
 import org.monarchinitiative.maxodiff.html.config.MaxodiffConfig;
@@ -20,7 +19,7 @@ import java.nio.file.Path;
 
 @Controller
 @RequestMapping("/input")
-@SessionAttributes({"liricalRecord", "inputRecord"})
+@SessionAttributes({"inputRecord"})
 public class InputController {
 
     // TODO: we should not need to use the `config` at this place.
@@ -90,19 +89,18 @@ public class InputController {
         //Run LIRICAL calculation and add records to model
         // TODO: at this place, we need to use the "analysis" service
         //  instead of hard-coded LIRICAL
-        MaxoTermMap maxoTermMap = new MaxoTermMap(maxodiffDir);
         LiricalRecord liricalRecord = new LiricalRecord(genomeBuild, transcriptDatabase, pathogenicityThreshold,
                 defaultVariantBackgroundFrequency, strict, globalAnalysisMode, liricalDataDir, exomiserPath, vcfPath);
         model.addAttribute("liricalRecord", liricalRecord);
-        AnalysisResults liricalResults;
+        AnalysisResults liricalResults = null;
         if (phenopacketPath != null) {
             LiricalAnalysis liricalAnalysis = new LiricalAnalysis(liricalRecord);
             liricalResults = liricalAnalysis.runLiricalAnalysis(phenopacketPath);
-        } else {
-            // TODO: improve error handling
-            throw new RuntimeException("Cannot proceed without LIRICAL results");
-        }
-        InputRecord inputRecord = new InputRecord(maxodiffDir, maxoTermMap, liricalResults, phenopacketPath);
+        } //else {
+//            // TODO: improve error handling
+//            throw new RuntimeException("Cannot proceed without LIRICAL results");
+//        }
+        InputRecord inputRecord = new InputRecord(liricalResults, phenopacketPath);
         model.addAttribute("inputRecord", inputRecord);
         return "input";
     }

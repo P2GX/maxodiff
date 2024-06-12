@@ -6,7 +6,7 @@ import org.monarchinitiative.maxodiff.core.io.LiricalResultsFileParser;
 import org.monarchinitiative.maxodiff.core.io.PhenopacketFileParser;
 import org.monarchinitiative.maxodiff.core.model.DifferentialDiagnosis;
 import org.monarchinitiative.maxodiff.core.model.Sample;
-import org.monarchinitiative.maxodiff.html.service.BiometadataService;
+import org.monarchinitiative.maxodiff.core.service.BiometadataService;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -90,7 +90,9 @@ public class DifferentialDiagnosisController {
 
             Map<String, String> maxoTermsMap = new HashMap<>();
             Map<TermId, String> hpoTermsMap = new HashMap<>();
-            Map<TermId, String> diseaseTermsMap = new HashMap<>();
+            // We MUST use LinkedHashMap to maintain the map order
+            // for the header of the frequency table in the HTML report.
+            Map<TermId, String> diseaseTermsMap = new LinkedHashMap<>();
 
             for (MaxodiffResult maxodiffResult : resultsList.subList(0, nDisplayed)) {
                 MaxoTermScore maxoTermScore = maxodiffResult.maxoTermScore();
