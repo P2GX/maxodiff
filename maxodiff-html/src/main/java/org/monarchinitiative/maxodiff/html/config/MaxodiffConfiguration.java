@@ -8,14 +8,12 @@ import org.monarchinitiative.maxodiff.core.analysis.MaxoDiffRefiner;
 import org.monarchinitiative.maxodiff.config.MaxodiffDataResolver;
 import org.monarchinitiative.maxodiff.core.service.BiometadataService;
 import org.monarchinitiative.maxodiff.core.service.BiometadataServiceImpl;
-import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDisease;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
 import org.monarchinitiative.phenol.annotations.io.hpo.HpoDiseaseLoader;
 import org.monarchinitiative.phenol.annotations.io.hpo.HpoDiseaseLoaderOptions;
 import org.monarchinitiative.phenol.annotations.io.hpo.HpoDiseaseLoaders;
 import org.monarchinitiative.phenol.io.MinimalOntologyLoader;
 import org.monarchinitiative.phenol.ontology.data.MinimalOntology;
-import org.monarchinitiative.phenol.ontology.data.Term;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
@@ -25,7 +23,6 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Configuration
 @EnableConfigurationProperties(MaxodiffProperties.class)
@@ -65,14 +62,7 @@ public class MaxodiffConfiguration {
             MinimalOntology hpo,
             HpoDiseases hpoDiseases,
             Map<SimpleTerm, Set<SimpleTerm>> maxoAnnotsMap) {
-
-        Map<TermId, String> hpoToLabel = hpo.getTerms().stream().collect(Collectors.toMap(Term::id, Term::getName));
-        Map<TermId, String> diseaseToLabel = hpoDiseases.hpoDiseases().collect(Collectors.toMap(HpoDisease::id, HpoDisease::diseaseName));
-        // Note, we assume that there are no MAxO terms with identical ids but different labels.
-        Map<String, String> maxoTermsMap = maxoAnnotsMap.values().stream()
-                .flatMap(Collection::stream).distinct()
-                .collect(Collectors.toMap(t -> t.tid().getValue(), SimpleTerm::label));
-        return new BiometadataServiceImpl(maxoTermsMap, hpoToLabel, diseaseToLabel);
+        return BiometadataServiceImpl.of(hpo, hpoDiseases, maxoAnnotsMap);
     }
 
     @Bean

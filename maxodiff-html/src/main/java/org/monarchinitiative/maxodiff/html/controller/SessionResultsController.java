@@ -3,6 +3,7 @@ package org.monarchinitiative.maxodiff.html.controller;
 import org.monarchinitiative.lirical.core.analysis.AnalysisResults;
 import org.monarchinitiative.lirical.core.analysis.TestResult;
 import org.monarchinitiative.lirical.io.analysis.PhenopacketData;
+import org.monarchinitiative.maxodiff.config.PropertiesLoader;
 import org.monarchinitiative.maxodiff.core.analysis.*;
 import org.monarchinitiative.maxodiff.core.io.PhenopacketFileParser;
 import org.monarchinitiative.maxodiff.core.model.DifferentialDiagnosis;
@@ -21,7 +22,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Controller("/sessionResults")
-@SessionAttributes({"inputRecord"})
+@SessionAttributes({"liricalRecord", "inputRecord"})
 public class SessionResultsController {
 
     @Autowired
@@ -45,25 +46,32 @@ public class SessionResultsController {
                              @RequestParam(value = "nMaxoResults", required = false) Integer nMaxoResults,
                              Model model) throws Exception {
 
-        assert input != null;
-        Path phenopacketPath = input.phenopacketPath();
-        PhenopacketData phenopacketData = PhenopacketFileParser.readPhenopacketData(phenopacketPath);
-        Sample sample = Sample.of(phenopacketData.sampleId(),
-                phenopacketData.presentHpoTermIds().toList(),
-                phenopacketData.excludedHpoTermIds().toList());
-        AnalysisResults liricalResults = input.liricalResults();
-        List<TestResult> liricalResultsList = liricalResults.resultsWithDescendingPostTestProbability().toList();
-        List<DifferentialDiagnosis> differentialDiagnoses = liricalResultsList.stream().map(result -> DifferentialDiagnosis.of(result.diseaseId(),
-                result.posttestProbability(), result.getCompositeLR())).collect(Collectors.toCollection(LinkedList::new));
-        int nLiricalResults = 10;  // TODO: this should not be hard-coded
-        model.addAttribute("nLiricalResults", nLiricalResults);
-        model.addAttribute("differentialDiagnoses", differentialDiagnoses.subList(0, nLiricalResults));
-        model.addAttribute("totalNDiseases", differentialDiagnoses.size());
+        String maxodiffPropFile = PropertiesLoader.getPropertiesFilepath("maxodiff.properties");
+        Properties maxodiffProps = PropertiesLoader.loadProperties(maxodiffPropFile);
+        if (nDiseases == null) {
+            nDiseases = Integer.parseInt(maxodiffProps.getProperty("n-diseases"));
+        }
+        if (weight == null) {
+            weight = Double.parseDouble(maxodiffProps.getProperty("weight"));
+        }
+        if (nMaxoResults == null) {
+            nMaxoResults = Integer.parseInt(maxodiffProps.getProperty("n-maxo-results"));
+        }
         model.addAttribute("nDiseases", nDiseases);
         model.addAttribute("weight", weight);
         model.addAttribute("nMaxoResults", nMaxoResults);
 
-        if (phenopacketPath != null & nDiseases != null & weight != null & nMaxoResults != null) {
+        assert input != null;
+        Path phenopacketPath = input.phenopacketPath();
+        PhenopacketData phenopacketData = PhenopacketFileParser.readPhenopacketData(phenopacketPath);
+        Sample sample = input.sample();
+        List<DifferentialDiagnosis> differentialDiagnoses = input.differentialDiagnoses();
+        int nLiricalResults = 10;  // TODO: this should not be hard-coded
+        model.addAttribute("nLiricalResults", nLiricalResults);
+        model.addAttribute("differentialDiagnoses", differentialDiagnoses.subList(0, nLiricalResults));
+        model.addAttribute("totalNDiseases", differentialDiagnoses.size());
+
+        if (phenopacketPath != null) {
             RefinementOptions options = RefinementOptions.of(nDiseases, weight);
             RefinementResults refinementResults = diffDiagRefiner.run(sample, differentialDiagnoses, options);
             List<MaxodiffResult> resultsList = new ArrayList<>(refinementResults.maxodiffResults());

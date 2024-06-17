@@ -21,6 +21,7 @@
     <modules>
         <module>maxodiff-core</module>
         <module>maxodiff-config</module>
+        <module>maxodiff-lirical</module>
         <module>maxodiff-cli</module>
         <module>maxodiff-html</module>
     </modules>

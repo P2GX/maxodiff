@@ -12,7 +12,7 @@
 <form th:action="@{/input}">
     <h2>LIRICAL parameters:</h2>
     <div th:object="${liricalRecord}">
-        <p>LIRICAL Data Directory: <input style='width:20%' type="text" th:field="*{liricalDataDir}"/></p>
+<!--        <p>LIRICAL Data Directory: <input style='width:20%' type="text" th:field="*{liricalDataDir}"/></p>-->
         <table>
             <tbody>
             <tr>
@@ -42,7 +42,7 @@
 
     <h2>Differential Diagnosis parameters:</h2>
     <div th:object="${inputRecord}">
-        <p>maxodiff Data Directory: <input style='width:20%' type="text" th:field="*{maxodiffDir}"/></p>
+<!--        <p>maxodiff Data Directory: <input style='width:20%' type="text" th:field="*{maxodiffDir}"/></p>-->
         <p>Phenopacket Path: <input style='width:20%' type="text" th:field="*{phenopacketPath}" /></p>
 <!--        <p class="error" th:if="*{phenopacketPath == null}">Phenopacket is required.</p>-->
         <input type="hidden" th:field="${inputRecord}"/>

@@ -89,20 +89,22 @@ class AnalysisUtils {
      * @param i Index of the target disease in the differential diagnosis list.
      * @return
      */
+    // Eq 2,3
     private static double getRelativeDiseaseDiffValue(List<DifferentialDiagnosis> differentialDiagnoses, int i) {
         double sum = 0.0;
         //TODO: Do we use the last item (disease with the lowest posttest prob in list of m diseases) when getting sublist?
         double targetLR = differentialDiagnoses.get(i).lr();
-        for (DifferentialDiagnosis dd : differentialDiagnoses.subList(i, differentialDiagnoses.size())) {
+        for (DifferentialDiagnosis dd : differentialDiagnoses.subList(i /*i+1*/, differentialDiagnoses.size())) {
             double lr = dd.lr();
             sum += targetLR / lr;
         }
         return sum;
     }
 
+    // Eq 4
     private static double calculateRelDiseaseDiffSum(List<DifferentialDiagnosis> differentialDiagnoses) {
         double sum = 0.0;
-        for(int i=0; i<differentialDiagnoses.size(); i++) {
+        for(int i=0; i<differentialDiagnoses.size() /*-1*/; i++) {
             sum += getRelativeDiseaseDiffValue(differentialDiagnoses, i);
         }
         return sum;

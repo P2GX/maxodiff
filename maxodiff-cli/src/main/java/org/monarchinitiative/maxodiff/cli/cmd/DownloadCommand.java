@@ -1,8 +1,7 @@
 package org.monarchinitiative.maxodiff.cli.cmd;
 
 import org.monarchinitiative.biodownload.BioDownloader;
-import org.monarchinitiative.biodownload.BioDownloaderBuilder;
-import org.monarchinitiative.biodownload.FileDownloadException;
+import org.monarchinitiative.maxodiff.config.PropertiesLoader;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import picocli.CommandLine;
@@ -11,8 +10,8 @@ import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.List;
+import java.util.Map;
+import java.util.Properties;
 import java.util.concurrent.Callable;
 
 /**
@@ -34,24 +33,88 @@ public class DownloadCommand implements Callable<Integer>{
     public boolean overwrite;
 
     @Override
-    public Integer call() throws FileDownloadException, MalformedURLException {
+    public Integer call() throws Exception {
+        String propFilename = "application.properties";
+        Properties properties = PropertiesLoader.loadProperties(propFilename);
+        Path maxodiffDataPath = Path.of(datadir);
+        Path liricalDataPath = Path.of(String.join(File.separator, datadir, "lirical"));
         logger.info(String.format("Download analysis to %s", datadir));
-        Path destination = Paths.get(datadir);
-        BioDownloaderBuilder builder = BioDownloader.builder(destination);
-        builder.hpoJson();
-       // builder.hgnc();
-       // builder.maxoJson();
-        builder.medgene2MIM();
-        builder.hpDiseaseAnnotations();
-        //https://github.com/monarch-initiative/maxo-annotations/blob/master/annotations/maxo_diagnostic_annotations.tsv
-        builder.custom("maxo_diagnostic_annotations.tsv", new URL("https://github.com/monarch-initiative/maxo-annotations/blob/master/annotations/maxo_diagnostic_annotations.tsv"));
-       // builder.custom()
-        BioDownloader downloader = builder.build();
-        List<File> files = downloader.download();
-        for (var f:files) {
-            System.out.printf("Downloaded %s.\n", f.getAbsolutePath());
-        }
+        String propFilepath = PropertiesLoader.getPropertiesFilepath(propFilename);
+
+        PropertiesLoader.addToPropertiesFile(propFilepath, "lirical-data-directory", liricalDataPath.toString());
+        PropertiesLoader.addToPropertiesFile(propFilepath, "maxodiff-data-directory", maxodiffDataPath.toString());
+
+        downloadMaxodiffData(properties, maxodiffDataPath);
+        downloadLiricalData(properties, liricalDataPath);
+
+        setDefaultLiricalProperties();
+        setDefaultMaxodiffProperties();
+
         return 0;
+    }
+
+    public void downloadLiricalData(Properties properties, Path destinationFolder) throws Exception {
+        logger.info("Downloading LIRICAL data files to " + destinationFolder.toAbsolutePath());
+        BioDownloader downloader = BioDownloader.builder(destinationFolder)
+                .overwrite(overwrite)
+                .hpoJson()
+                .hpDiseaseAnnotations()
+                .hgnc()
+                .medgene2MIM()
+                // Jannovar v0.35 transcript databases
+                .custom("hg19_ucsc.ser", createUrlOrExplode(properties.getProperty("jannovar-hg19-ucsc-url")))
+                .custom("hg19_refseq.ser", createUrlOrExplode(properties.getProperty("jannovar-hg19-refseq-url")))
+                .custom("hg38_ucsc.ser", createUrlOrExplode(properties.getProperty("jannovar-hg38-ucsc-url")))
+                .custom("hg38_refseq.ser", createUrlOrExplode(properties.getProperty("jannovar-hg38-refseq-url")))
+                .build();
+        downloader.download();
+    }
+
+    public void downloadMaxodiffData(Properties properties, Path destinationFolder) throws Exception {
+        logger.info("Downloading maxodiff data files to " + destinationFolder.toAbsolutePath());
+        BioDownloader downloader = BioDownloader.builder(destinationFolder)
+                .overwrite(overwrite)
+                .hpoJson()
+                .hpDiseaseAnnotations()
+                .hgnc()
+                .medgene2MIM()
+                .maxoJson()
+                .custom("maxo_diagnostic_annotations.tsv", createUrlOrExplode(properties.getProperty("maxo-diagnostic-annotations-url")))
+                .build();
+        downloader.download();
+    }
+
+    private URL createUrlOrExplode(String url) throws Exception {
+        try {
+            return new URL(url);
+        } catch (MalformedURLException e) {
+            throw new Exception(e);
+        }
+    }
+
+    private void setDefaultLiricalProperties() {
+        String liricalPropFilepath = PropertiesLoader.getPropertiesFilepath("maxodiff.lirical.properties");
+        Map<String, String> liricalDefaultProperties = Map.of("genome-build", "hg38",
+                "transcript-database", "REFSEQ",
+                "pathogenicity-threshold", "0.8",
+                "default-variant-background-frequency", "0.1",
+                "strict", "true",
+                "global-analysis-mode", "false");
+
+        for (Map.Entry<String, String> entry : liricalDefaultProperties.entrySet()) {
+            PropertiesLoader.addToPropertiesFile(liricalPropFilepath, entry.getKey(), entry.getValue());
+        }
+    }
+
+    private void setDefaultMaxodiffProperties() {
+        String maxodiffPropFilepath = PropertiesLoader.getPropertiesFilepath("maxodiff.properties");
+        Map<String, String> maxodiffDefaultProperties = Map.of("n-diseases", "20",
+                "weight", "0.5",
+                "n-maxo-results", "10");
+
+        for (Map.Entry<String, String> entry : maxodiffDefaultProperties.entrySet()) {
+            PropertiesLoader.addToPropertiesFile(maxodiffPropFilepath, entry.getKey(), entry.getValue());
+        }
     }
 
 }

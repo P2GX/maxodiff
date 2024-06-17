@@ -4,18 +4,18 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
-import org.monarchinitiative.lirical.core.analysis.AnalysisResults;
-import org.monarchinitiative.lirical.core.analysis.TestResult;
-import org.monarchinitiative.lirical.core.model.TranscriptDatabase;
+import org.monarchinitiative.lirical.core.analysis.AnalysisOptions;
+import org.monarchinitiative.lirical.core.analysis.LiricalAnalysisRunner;
 import org.monarchinitiative.lirical.io.analysis.PhenopacketData;
-import org.monarchinitiative.maxodiff.config.MaxoTermMap;
-import org.monarchinitiative.maxodiff.core.SimpleTerm;
+import org.monarchinitiative.maxodiff.config.MaxodiffDataResolver;
+import org.monarchinitiative.maxodiff.config.MaxodiffPropsConfiguration;
 import org.monarchinitiative.maxodiff.core.analysis.*;
 import org.monarchinitiative.maxodiff.core.io.PhenopacketFileParser;
 import org.monarchinitiative.maxodiff.core.model.DifferentialDiagnosis;
 import org.monarchinitiative.maxodiff.core.model.Sample;
-import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
-import org.monarchinitiative.phenol.ontology.data.MinimalOntology;
+import org.monarchinitiative.maxodiff.core.service.BiometadataService;
+import org.monarchinitiative.maxodiff.lirical.LiricalConfiguration;
+import org.monarchinitiative.maxodiff.lirical.LiricalDifferentialDiagnosisEngine;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -26,7 +26,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.*;
-import java.util.stream.Collectors;
 
 
 /**
@@ -111,17 +110,19 @@ public class BenchmarkCommand extends DifferentialDiagnosisCommand {
                         phenopacketData.presentHpoTermIds().toList(),
                         phenopacketData.excludedHpoTermIds().toList());
 
-                MaxoTermMap maxoTermMap = new MaxoTermMap(maxoDataPath);
 
                 System.out.println(weights);
                 System.out.println(nDiseasesList);
 
-                // Run LIRICAL analysis
-                LiricalAnalysis liricalAnalysis = new LiricalAnalysis(genomeBuild, TranscriptDatabase.REFSEQ,
-                        runConfiguration.pathogenicityThreshold, runConfiguration.defaultVariantBackgroundFrequency, runConfiguration.strict,
-                        runConfiguration.globalAnalysisMode, dataSection.liricalDataDirectory, dataSection.exomiserDatabase, vcfPath);
-
-                AnalysisResults results = liricalAnalysis.runLiricalAnalysis(pPath);
+                // Get initial differential diagnoses from running LIRICAL
+                LiricalConfiguration liricalConfiguration = LiricalConfiguration.of(dataSection.liricalDataDirectory, dataSection.exomiserDatabase,
+                        genomeBuild, runConfiguration.transcriptDb, runConfiguration.pathogenicityThreshold,
+                        runConfiguration.defaultVariantBackgroundFrequency,
+                        runConfiguration.strict, runConfiguration.globalAnalysisMode);
+                LiricalAnalysisRunner liricalAnalysisRunner = liricalConfiguration.lirical().analysisRunner();
+                AnalysisOptions liricalOptions = liricalConfiguration.prepareAnalysisOptions();
+                LiricalDifferentialDiagnosisEngine engine = new LiricalDifferentialDiagnosisEngine(liricalAnalysisRunner, liricalOptions);
+                List<DifferentialDiagnosis> differentialDiagnoses = engine.run(sample);
 
                 // Summarize the LIRICAL results.
                 //String sampleId = analysisData.sampleId();
@@ -134,26 +135,16 @@ public class BenchmarkCommand extends DifferentialDiagnosisCommand {
                 //writeResultsToFile(lirical, OutputFormat.parse(outputFormatArg), analysisData, results, metadata, outFilename);
 
                 // Make maxodiffRefiner
-                HpoDiseases diseases = maxoTermMap.getDiseases();
-                Map<TermId, Set<TermId>> fullHpoToMaxoTermIdMap = maxoTermMap.getFullHpoToMaxoTermIdMap(maxoTermMap.getFullHpoToMaxoTermMap());
-                MinimalOntology hpo = maxoTermMap.getOntology();
+                MaxodiffDataResolver maxodiffDataResolver = MaxodiffDataResolver.of(maxoDataPath);
+                MaxodiffPropsConfiguration maxodiffPropsConfiguration = MaxodiffPropsConfiguration.createConfig(maxodiffDataResolver);
 
                 Map<String, DiffDiagRefiner> refiners = new HashMap<>();
-                refiners.put("MaxoDiff", new MaxoDiffRefiner(diseases, fullHpoToMaxoTermIdMap, hpo));
+                refiners.put("MaxoDiff", maxodiffPropsConfiguration.diffDiagRefiner(false));
                 if (dummy) {
-                    refiners.put("Dummy", new DummyDiffDiagRefiner(diseases, fullHpoToMaxoTermIdMap, hpo));
+                    refiners.put("Dummy", maxodiffPropsConfiguration.diffDiagRefiner(true));
                 }
 
-                List<DifferentialDiagnosis> differentialDiagnoses = new LinkedList<>();
-                for (TestResult result : results.resultsWithDescendingPostTestProbability().toList()) {
-                    differentialDiagnoses.add(DifferentialDiagnosis.of(result.diseaseId(),
-                            result.posttestProbability(), result.getCompositeLR()));
-                }
-
-                Set<SimpleTerm> allMaxoTerms = maxoTermMap.getFullHpoToMaxoTermMap().values()
-                        .stream().flatMap(Collection::stream).collect(Collectors.toSet());
-                Map<TermId, String> allMaxoTermsMap = new HashMap<>();
-                allMaxoTerms.forEach(st -> allMaxoTermsMap.put(st.tid(), st.label()));
+                BiometadataService biometadataService = maxodiffPropsConfiguration.biometadataService();
 
                 //TODO? get list of diseases from LIRICAL results, and add diseases from CLI arg to total list for analysis
                 for (int nDiseases : nDiseasesList) {
@@ -179,8 +170,8 @@ public class BenchmarkCommand extends DifferentialDiagnosisCommand {
                             writeToJsonFile(maxodiffResultsFilePath, refinementResults);
                             // Take the MaXo term that has the highest score
                             MaxodiffResult topResult = resultsList.get(0);
-                            TermId maxScoreMaxoTermId = TermId.of(topResult.maxoTermScore().maxoId());
-                            String maxScoreTermLabel = allMaxoTermsMap.get(maxScoreMaxoTermId);
+                            String maxScoreMaxoTermId = topResult.maxoTermScore().maxoId();
+                            String maxScoreTermLabel = biometadataService.maxoLabel(maxScoreMaxoTermId).orElse("unknown");
                             double maxScoreValue = topResult.maxoTermScore().score();
 
                             System.out.println("Max Score: " + maxScoreMaxoTermId + " (" + maxScoreTermLabel + ")" + " = " + maxScoreValue);

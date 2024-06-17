@@ -9,6 +9,7 @@ import java.nio.file.Path;
 
 @ConfigurationProperties
 // TODO: the location of the properties file should be configurable, and not set to a specific location.
+// TODO: eventually delete? Configure HTML to use properties resources in maxodiff-config module.
 @PropertySource(value="file:${user.home}/.maxodiff/maxodiff.properties", ignoreResourceNotFound=true)
 public class MaxodiffProperties {
 

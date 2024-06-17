@@ -1,6 +1,7 @@
 package org.monarchinitiative.maxodiff.html.controller;
 
 import org.monarchinitiative.lirical.io.analysis.PhenopacketData;
+import org.monarchinitiative.maxodiff.config.PropertiesLoader;
 import org.monarchinitiative.maxodiff.core.analysis.*;
 import org.monarchinitiative.maxodiff.core.io.LiricalResultsFileParser;
 import org.monarchinitiative.maxodiff.core.io.PhenopacketFileParser;
@@ -44,6 +45,22 @@ public class DifferentialDiagnosisController {
             @RequestParam(value = "nMaxoResults", required = false) Integer nMaxoResults,
             Model model) throws Exception {
 
+        //TODO: load elsewhere to be used in all HTML files
+        String maxodiffPropFile = PropertiesLoader.getPropertiesFilepath("maxodiff.properties");
+        Properties maxodiffProps = PropertiesLoader.loadProperties(maxodiffPropFile);
+        if (nDiseases == null) {
+            nDiseases = Integer.parseInt(maxodiffProps.getProperty("n-diseases"));
+        }
+        if (weight == null) {
+            weight = Double.parseDouble(maxodiffProps.getProperty("weight"));
+        }
+        if (nMaxoResults == null) {
+            nMaxoResults = Integer.parseInt(maxodiffProps.getProperty("n-maxo-results"));
+        }
+        model.addAttribute("nDiseases", nDiseases);
+        model.addAttribute("weight", weight);
+        model.addAttribute("nMaxoResults", nMaxoResults);
+
         model.addAttribute("phenopacketPath", phenopacketPath);
         model.addAttribute("liricalResultsPath", liricalResultsPath);
         int nLiricalResults = 10; // At some point make this either a "global" configuration, or a user input
@@ -54,11 +71,8 @@ public class DifferentialDiagnosisController {
             model.addAttribute("totalNDiseases", differentialDiagnoses.size());
             model.addAttribute("differentialDiagnoses", differentialDiagnoses.subList(0, nLiricalResults));
         }
-        model.addAttribute("nDiseases", nDiseases);
-        model.addAttribute("weight", weight);
-        model.addAttribute("nMaxoResults", nMaxoResults);
         Map<TermId, Double> initialScores = new LinkedHashMap<>();
-        if (differentialDiagnoses != null && nDiseases != null)
+        if (differentialDiagnoses != null)
             differentialDiagnoses.subList(0, nDiseases).forEach(d -> initialScores.put(d.diseaseId(), d.score()));
         model.addAttribute("initialScores", initialScores);
 
@@ -66,8 +80,7 @@ public class DifferentialDiagnosisController {
          - We should work on the level of sample, not phenopacket.
          */
 
-        if (phenopacketPath != null & differentialDiagnoses != null &
-                nDiseases != null & weight != null & nMaxoResults != null) {
+        if (phenopacketPath != null & differentialDiagnoses != null) {
             PhenopacketData phenopacketData = PhenopacketFileParser.readPhenopacketData(phenopacketPath);
             Sample sample = Sample.of(phenopacketData.sampleId(),
                     phenopacketData.presentHpoTermIds().toList(),
