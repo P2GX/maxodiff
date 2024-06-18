@@ -1,23 +1,36 @@
 package org.monarchinitiative.maxodiff.lirical;
 
+import org.monarchinitiative.lirical.core.analysis.AnalysisOptions;
+import org.monarchinitiative.lirical.core.analysis.LiricalAnalysisRunner;
+
 /**
  * Configure {@link LiricalDifferentialDiagnosisEngine} for running LIRICAL analysis 
  * with specific parameter/option setup.
  */
 public class LiricalDifferentialDiagnosisEngineConfigurer {
 
-    // You are free to add private final fields here.
-    // As usual, the constructor should only store the fields,
-    // and you are allowed to do stuff in the static constructor.
+    private final LiricalAnalysisRunner liricalAnalysisRunner;
+    private final AnalysisOptions analysisOptions;
 
-    public LiricalDifferentialDiagnosisEngine configure(
-        /* 
-         * The options related to a particular analysis should go here.
-         * In LIRICAL, these are represented by `AnalysisOptions` class.
-         */
-    ) {
-        // TODO: Martha, pls implement.
-        throw new RuntimeException("Not yet implemented!");
+    public LiricalDifferentialDiagnosisEngine configure() {
+        return new LiricalDifferentialDiagnosisEngine(liricalAnalysisRunner(), analysisOptions());
+    }
+
+    public static LiricalDifferentialDiagnosisEngineConfigurer of(LiricalAnalysisRunner analysisRunner, AnalysisOptions analysisOptions) {
+        return new LiricalDifferentialDiagnosisEngineConfigurer(analysisRunner, analysisOptions);
+    }
+
+    private LiricalDifferentialDiagnosisEngineConfigurer(LiricalAnalysisRunner analysisRunner, AnalysisOptions analysisOptions) {
+        this.liricalAnalysisRunner = analysisRunner;
+        this.analysisOptions = analysisOptions;
+    }
+
+    private LiricalAnalysisRunner liricalAnalysisRunner() {
+        return liricalAnalysisRunner;
+    }
+
+    private AnalysisOptions analysisOptions() {
+        return analysisOptions;
     }
 
 }

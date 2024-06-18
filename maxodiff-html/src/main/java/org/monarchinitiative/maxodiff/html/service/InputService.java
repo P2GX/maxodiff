@@ -1,7 +1,12 @@
 package org.monarchinitiative.maxodiff.html.service;
 
 
+import org.monarchinitiative.lirical.core.analysis.AnalysisOptions;
+import org.monarchinitiative.lirical.core.analysis.LiricalAnalysisRunner;
+import org.monarchinitiative.lirical.core.exception.LiricalException;
 import org.monarchinitiative.lirical.core.model.TranscriptDatabase;
+import org.monarchinitiative.maxodiff.lirical.LiricalConfiguration;
+import org.monarchinitiative.maxodiff.lirical.LiricalDifferentialDiagnosisEngineConfigurer;
 import org.monarchinitiative.maxodiff.lirical.LiricalRecord;
 
 
@@ -10,29 +15,18 @@ import java.util.Properties;
 
 public class InputService {
 
-    Properties properties;
-    Properties liricalProperties;
+    public static LiricalDifferentialDiagnosisEngineConfigurer configureLiricalConfigurer(LiricalRecord liricalRecord) throws LiricalException {
 
-    public static InputService of(Properties properties, Properties liricalProperties) {
-        return new InputService(properties, liricalProperties);
-    }
+        LiricalConfiguration liricalConfiguration = LiricalConfiguration.of(
+                liricalRecord.liricalDataDir(), liricalRecord.exomiserPath(),
+                liricalRecord.genomeBuild(),
+                liricalRecord.transcriptDatabase(),
+                liricalRecord.pathogenicityThreshold(),
+                liricalRecord.defaultVariantBackgroundFrequency(),
+                liricalRecord.strict(), liricalRecord.globalAnalysisMode());
+        LiricalAnalysisRunner liricalAnalysisRunner = liricalConfiguration.lirical().analysisRunner();
+        AnalysisOptions liricalOptions = liricalConfiguration.prepareAnalysisOptions();
 
-    private InputService(Properties properties, Properties liricalProperties) {
-        this.properties = properties;
-        this.liricalProperties = liricalProperties;
-    }
-
-    public LiricalRecord getDefaultLiricalRecord() {
-        Path liricalDataDir = Path.of(properties.getProperty("lirical-data-directory"));
-
-        String genomeBuild = liricalProperties.getProperty("genome-build");
-        TranscriptDatabase transcriptDatabase = TranscriptDatabase.parse(liricalProperties.getProperty("transcript-database").toUpperCase()).get();
-        Float pathogenicityThreshold = Float.parseFloat(liricalProperties.getProperty("pathogenicity-threshold"));
-        Double defaultVariantBackgroundFrequency = Double.parseDouble(liricalProperties.getProperty("default-variant-background-frequency"));
-        boolean strict = Boolean.parseBoolean(liricalProperties.getProperty("strict"));
-        boolean globalAnalysisMode = Boolean.parseBoolean(liricalProperties.getProperty("global-analysis-mode"));
-
-        return new LiricalRecord(genomeBuild, transcriptDatabase, pathogenicityThreshold,
-                defaultVariantBackgroundFrequency, strict, globalAnalysisMode, liricalDataDir, null, null);
+        return LiricalDifferentialDiagnosisEngineConfigurer.of(liricalAnalysisRunner, liricalOptions);
     }
 }

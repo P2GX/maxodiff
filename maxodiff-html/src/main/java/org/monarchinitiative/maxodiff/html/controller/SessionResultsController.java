@@ -32,11 +32,21 @@ public class SessionResultsController {
 
     private final DiffDiagRefiner diffDiagRefiner;
 
+    private final Integer defaultNDiseases;
+    private final Double defaultWeight;
+    private final Integer defaultNMaxoResults;
+
     public SessionResultsController(
             BiometadataService biometadataService,
-            DiffDiagRefiner diffDiagRefiner) {
+            DiffDiagRefiner diffDiagRefiner,
+            Integer defaultNDiseases,
+            Double defaultWeight,
+            Integer defaultNMaxoResults) {
         this.biometadataService = biometadataService;
         this.diffDiagRefiner = diffDiagRefiner;
+        this.defaultNDiseases = defaultNDiseases;
+        this.defaultWeight = defaultWeight;
+        this.defaultNMaxoResults = defaultNMaxoResults;
     }
 
     @RequestMapping("/sessionResults")
@@ -46,16 +56,14 @@ public class SessionResultsController {
                              @RequestParam(value = "nMaxoResults", required = false) Integer nMaxoResults,
                              Model model) throws Exception {
 
-        String maxodiffPropFile = PropertiesLoader.getPropertiesFilepath("maxodiff.properties");
-        Properties maxodiffProps = PropertiesLoader.loadProperties(maxodiffPropFile);
         if (nDiseases == null) {
-            nDiseases = Integer.parseInt(maxodiffProps.getProperty("n-diseases"));
+            nDiseases = defaultNDiseases;
         }
         if (weight == null) {
-            weight = Double.parseDouble(maxodiffProps.getProperty("weight"));
+            weight = defaultWeight;
         }
         if (nMaxoResults == null) {
-            nMaxoResults = Integer.parseInt(maxodiffProps.getProperty("n-maxo-results"));
+            nMaxoResults = defaultNMaxoResults;
         }
         model.addAttribute("nDiseases", nDiseases);
         model.addAttribute("weight", weight);

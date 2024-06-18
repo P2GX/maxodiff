@@ -7,7 +7,7 @@ import org.springframework.context.annotation.Primary;
 import org.springframework.context.annotation.PropertySource;
 
 @Configuration
-@PropertySource("classpath:application.properties")
+@PropertySource(value="classpath:/maxodiff-config/src/main/resources/application.properties", ignoreResourceNotFound = true)
 public class MaxodiffConfig {
 
     //Properties from application.properties file

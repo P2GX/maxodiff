@@ -5,7 +5,10 @@ import org.monarchinitiative.lirical.core.analysis.LiricalAnalysisRunner;
 import org.monarchinitiative.lirical.core.model.TranscriptDatabase;
 import org.monarchinitiative.lirical.io.analysis.PhenopacketData;
 import org.monarchinitiative.maxodiff.config.PropertiesLoader;
+import org.monarchinitiative.maxodiff.core.diffdg.DifferentialDiagnosisEngine;
+import org.monarchinitiative.maxodiff.core.service.BiometadataService;
 import org.monarchinitiative.maxodiff.html.service.InputService;
+import org.monarchinitiative.maxodiff.lirical.LiricalDifferentialDiagnosisEngineConfigurer;
 import org.monarchinitiative.maxodiff.lirical.LiricalRecord;
 import org.monarchinitiative.maxodiff.core.io.PhenopacketFileParser;
 import org.monarchinitiative.maxodiff.core.model.DifferentialDiagnosis;
@@ -29,9 +32,21 @@ import java.util.Properties;
 @SessionAttributes({"liricalRecord", "inputRecord"})
 public class InputController {
 
+    private final Path liricalDir;
+    private final Path maxodiffDataDir;
+    private final LiricalRecord defaultLiricalRecord;
 
     @Autowired
     SessionResultsService sessionResultsService = new SessionResultsService();
+
+    public InputController(Path liricalDataDir,
+                           Path maxodiffDataDir,
+                           LiricalRecord defaultLiricalRecord) {
+
+        this.liricalDir = liricalDataDir;
+        this.maxodiffDataDir = maxodiffDataDir;
+        this.defaultLiricalRecord = defaultLiricalRecord;
+    }
 
 
     @RequestMapping
@@ -51,29 +66,19 @@ public class InputController {
             @RequestParam(value = "phenopacketPath", required = false) Path phenopacketPath,
             Model model) throws Exception {
 
-        //TODO: load elsewhere to be used in all HTML files
-        String propFile = PropertiesLoader.getPropertiesFilepath("application.properties");
-        Properties props = PropertiesLoader.loadProperties(propFile);
-        String liricalPropFile = PropertiesLoader.getPropertiesFilepath("maxodiff.lirical.properties");
-        Properties liricalProps = PropertiesLoader.loadProperties(liricalPropFile);
-
-        InputService inputService = InputService.of(props, liricalProps);
-
         //Run LIRICAL calculation and add records to model
         // TODO: at this place, we need to use the "analysis" service
         // instead of hard-coded LIRICAL
-        Path liricalDataDir = Path.of(props.getProperty("lirical-data-directory"));
         LiricalRecord liricalRecord = new LiricalRecord(genomeBuild, transcriptDatabase, pathogenicityThreshold, defaultVariantBackgroundFrequency,
-                                                        strict, globalAnalysisMode, liricalDataDir, exomiserPath, vcfPath);
+                                                        strict, globalAnalysisMode, liricalDir, exomiserPath, vcfPath);
         if (genomeBuild == null) {
-            liricalRecord = inputService.getDefaultLiricalRecord();
+            liricalRecord = defaultLiricalRecord;
         }
         model.addAttribute("liricalRecord", liricalRecord);
-        LiricalConfiguration liricalConfiguration = LiricalConfiguration.of(liricalRecord);
-        LiricalAnalysisRunner liricalAnalysisRunner = liricalConfiguration.lirical().analysisRunner();
-        AnalysisOptions options = liricalConfiguration.prepareAnalysisOptions();
+        LiricalDifferentialDiagnosisEngineConfigurer configurer = InputService.configureLiricalConfigurer(liricalRecord);
+        DifferentialDiagnosisEngine engine = configurer.configure();
 
-        Path maxodiffDir = Path.of(props.getProperty("maxodiff-data-directory"));
+        Path maxodiffDir = maxodiffDataDir;
         InputRecord inputRecord = new InputRecord(null, null, maxodiffDir, phenopacketPath);
         if (phenopacketPath != null) {
             System.out.println(phenopacketPath);
@@ -83,7 +88,6 @@ public class InputController {
                     phenopacketData.excludedHpoTermIds().toList());
 
             // Get initial differential diagnoses from running LIRICAL
-            LiricalDifferentialDiagnosisEngine engine = new LiricalDifferentialDiagnosisEngine(liricalAnalysisRunner, options);
             List<DifferentialDiagnosis> differentialDiagnoses = engine.run(sample);
             inputRecord = new InputRecord(sample, differentialDiagnoses, maxodiffDir, phenopacketPath);
         }

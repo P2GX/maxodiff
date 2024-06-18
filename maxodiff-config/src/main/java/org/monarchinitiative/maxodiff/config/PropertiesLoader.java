@@ -22,6 +22,7 @@ public class PropertiesLoader {
             configuration.load(inputStream);
         } catch (IOException e) {
             LOGGER.warn("Error loading properties: {}", e.getMessage());
+            e.printStackTrace();
         }
         return configuration;
     }

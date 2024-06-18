@@ -6,6 +6,7 @@ import org.monarchinitiative.lirical.core.model.Sex;
 import org.monarchinitiative.maxodiff.core.diffdg.DifferentialDiagnosisEngine;
 import org.monarchinitiative.maxodiff.core.model.DifferentialDiagnosis;
 import org.monarchinitiative.maxodiff.core.model.Sample;
+import org.monarchinitiative.maxodiff.core.analysis.MaxodiffLiricalAnalysisException;
 
 import java.util.List;
 
@@ -19,7 +20,7 @@ public class LiricalDifferentialDiagnosisEngine implements DifferentialDiagnosis
         this.runner = runner;
     }
 
-    public List<DifferentialDiagnosis> run(Sample sample) {
+    public List<DifferentialDiagnosis> run(Sample sample) throws MaxodiffLiricalAnalysisException {
 
         // Get LIRICAL AnalysisData from sample
         AnalysisData analysisData = AnalysisData.of(sample.id(),
@@ -34,8 +35,14 @@ public class LiricalDifferentialDiagnosisEngine implements DifferentialDiagnosis
         // TODO: we are not allowed to throw a checked exception by `DifferentialDiagnosisEngine`.
         // Let's re-throw `LiricalAnalysisException` as our own unchecked exception 
         // (you may need to create one, in `maxodiff-core`).
-        AnalysisResults results = runner.run(analysisData, options);
+        AnalysisResults results;
+        try {
+            results = runner.run(analysisData, options);
+        } catch (LiricalAnalysisException e) {
+            throw new MaxodiffLiricalAnalysisException("Unable to run LIRICAL analysis with specified data and options.");
+        }
         // Get Differential Diagnoses from LIRICAL AnalysisResults
+        assert results != null;
         return results.resultsWithDescendingPostTestProbability()
                 .map(tr -> DifferentialDiagnosis.of(tr.diseaseId(), tr.posttestProbability(), tr.getCompositeLR()))
                 .toList();

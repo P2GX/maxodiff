@@ -34,21 +34,21 @@ public class DownloadCommand implements Callable<Integer>{
 
     @Override
     public Integer call() throws Exception {
-        String propFilename = "application.properties";
-        Properties properties = PropertiesLoader.loadProperties(propFilename);
+        String appPropFilename = "application.properties";
+        Properties appProperties = PropertiesLoader.loadProperties(appPropFilename);
         Path maxodiffDataPath = Path.of(datadir);
         Path liricalDataPath = Path.of(String.join(File.separator, datadir, "lirical"));
+        downloadMaxodiffData(appProperties, maxodiffDataPath);
+        downloadLiricalData(appProperties, liricalDataPath);
         logger.info(String.format("Download analysis to %s", datadir));
-        String propFilepath = PropertiesLoader.getPropertiesFilepath(propFilename);
 
+        String propFilename = "maxodiff.properties";
+        String propFilepath = PropertiesLoader.getPropertiesFilepath(propFilename);
         PropertiesLoader.addToPropertiesFile(propFilepath, "lirical-data-directory", liricalDataPath.toString());
         PropertiesLoader.addToPropertiesFile(propFilepath, "maxodiff-data-directory", maxodiffDataPath.toString());
 
-        downloadMaxodiffData(properties, maxodiffDataPath);
-        downloadLiricalData(properties, liricalDataPath);
-
-        setDefaultLiricalProperties();
-        setDefaultMaxodiffProperties();
+        setDefaultLiricalProperties("maxodiff.lirical.properties");
+        setDefaultMaxodiffProperties("maxodiff.refiner.properties");
 
         return 0;
     }
@@ -92,8 +92,8 @@ public class DownloadCommand implements Callable<Integer>{
         }
     }
 
-    private void setDefaultLiricalProperties() {
-        String liricalPropFilepath = PropertiesLoader.getPropertiesFilepath("maxodiff.lirical.properties");
+    private void setDefaultLiricalProperties(String filename) {
+        String liricalPropFilepath = PropertiesLoader.getPropertiesFilepath(filename);
         Map<String, String> liricalDefaultProperties = Map.of("genome-build", "hg38",
                 "transcript-database", "REFSEQ",
                 "pathogenicity-threshold", "0.8",
@@ -106,8 +106,8 @@ public class DownloadCommand implements Callable<Integer>{
         }
     }
 
-    private void setDefaultMaxodiffProperties() {
-        String maxodiffPropFilepath = PropertiesLoader.getPropertiesFilepath("maxodiff.properties");
+    private void setDefaultMaxodiffProperties(String filename) {
+        String maxodiffPropFilepath = PropertiesLoader.getPropertiesFilepath(filename);
         Map<String, String> maxodiffDefaultProperties = Map.of("n-diseases", "20",
                 "weight", "0.5",
                 "n-maxo-results", "10");

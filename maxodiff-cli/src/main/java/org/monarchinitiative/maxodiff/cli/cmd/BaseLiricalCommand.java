@@ -3,7 +3,9 @@ package org.monarchinitiative.maxodiff.cli.cmd;
 import org.monarchinitiative.lirical.configuration.LiricalBuilder;
 import org.monarchinitiative.lirical.core.Lirical;
 import org.monarchinitiative.lirical.core.analysis.AnalysisOptions;
+import org.monarchinitiative.lirical.core.analysis.LiricalAnalysisRunner;
 import org.monarchinitiative.lirical.core.analysis.probability.PretestDiseaseProbability;
+import org.monarchinitiative.lirical.core.exception.LiricalException;
 import org.monarchinitiative.lirical.core.io.VariantParser;
 import org.monarchinitiative.lirical.core.model.FilteringStats;
 import org.monarchinitiative.lirical.core.model.GenesAndGenotypes;
@@ -18,6 +20,7 @@ import org.monarchinitiative.lirical.core.service.PhenotypeService;
 import org.monarchinitiative.lirical.io.LiricalDataException;
 import org.monarchinitiative.lirical.io.LiricalDataResolver;
 import org.monarchinitiative.lirical.io.service.JannovarFunctionalVariantAnnotatorService;
+import org.monarchinitiative.maxodiff.lirical.LiricalConfiguration;
 import org.monarchinitiative.maxodiff.lirical.LiricalDifferentialDiagnosisEngineConfigurer;
 import org.monarchinitiative.phenol.annotations.assoc.DiseaseToGeneAssociationLoader;
 import org.monarchinitiative.phenol.annotations.assoc.GeneIdentifierLoaders;
@@ -143,23 +146,19 @@ abstract class BaseLiricalCommand implements Callable<Integer> {
         return errors;
     }
 
-    protected LiricalDifferentialDiagnosisEngineConfigurer configureLiricalConfigurer(
-        // You probably do not need to add any parameters, 
-        // since the values you are after should be all listed as the Picocli options.
-    ) {
-        // You may need to uncomment few of the lines below.
-        // It is 
-        // LiricalConfiguration liricalConfiguration = LiricalConfiguration.of(
-        //     dataSection.liricalDataDirectory, dataSection.exomiserDatabase,
-        //     genomeBuild, 
-        //     runConfiguration.transcriptDb, 
-        //     runConfiguration.pathogenicityThreshold,
-        //     runConfiguration.defaultVariantBackgroundFrequency,
-        //     runConfiguration.strict, runConfiguration.globalAnalysisMode);
-        // LiricalAnalysisRunner liricalAnalysisRunner = liricalConfiguration.lirical().analysisRunner();
-        // AnalysisOptions liricalOptions = liricalConfiguration.prepareAnalysisOptions();
+    protected LiricalDifferentialDiagnosisEngineConfigurer configureLiricalConfigurer() throws LiricalException {
 
-        return new LiricalDifferentialDiagnosisEngineConfigurer();
+         LiricalConfiguration liricalConfiguration = LiricalConfiguration.of(
+             dataSection.liricalDataDirectory, dataSection.exomiserDatabase,
+             getGenomeBuild(),
+             runConfiguration.transcriptDb,
+             runConfiguration.pathogenicityThreshold,
+             runConfiguration.defaultVariantBackgroundFrequency,
+             runConfiguration.strict, runConfiguration.globalAnalysisMode);
+         LiricalAnalysisRunner liricalAnalysisRunner = liricalConfiguration.lirical().analysisRunner();
+         AnalysisOptions liricalOptions = liricalConfiguration.prepareAnalysisOptions();
+
+        return LiricalDifferentialDiagnosisEngineConfigurer.of(liricalAnalysisRunner, liricalOptions);
     }
 
     /**
