@@ -29,3 +29,5 @@ data/
 target/
 venv/
 
+# Jupyter Notebook
+.ipynb_checkpoints
