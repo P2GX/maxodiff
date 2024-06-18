@@ -18,6 +18,7 @@ import org.monarchinitiative.lirical.core.service.PhenotypeService;
 import org.monarchinitiative.lirical.io.LiricalDataException;
 import org.monarchinitiative.lirical.io.LiricalDataResolver;
 import org.monarchinitiative.lirical.io.service.JannovarFunctionalVariantAnnotatorService;
+import org.monarchinitiative.maxodiff.lirical.LiricalDifferentialDiagnosisEngineConfigurer;
 import org.monarchinitiative.phenol.annotations.assoc.DiseaseToGeneAssociationLoader;
 import org.monarchinitiative.phenol.annotations.assoc.GeneIdentifierLoaders;
 import org.monarchinitiative.phenol.annotations.assoc.GeneInfoGeneType;
@@ -31,7 +32,6 @@ import picocli.CommandLine;
 
 import java.io.BufferedReader;
 import java.io.IOException;
-import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
@@ -48,12 +48,9 @@ import java.util.stream.Collectors;
 abstract class BaseLiricalCommand implements Callable<Integer> {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(BaseLiricalCommand.class);
-    private static final Properties PROPERTIES = readProperties();
-    protected static final String LIRICAL_VERSION = PROPERTIES.getProperty("lirical.version", "unknown version");
-
-    private static final String LIRICAL_BANNER = readBanner();
 
     private static final String UNKNOWN_VERSION_PLACEHOLDER = "UNKNOWN VERSION";
+    private static final String BANNER = readBanner();
 
     private static String readBanner() {
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(Objects.requireNonNull(BaseLiricalCommand.class.getResourceAsStream("/banner.txt")), StandardCharsets.UTF_8))) {
@@ -135,21 +132,6 @@ abstract class BaseLiricalCommand implements Callable<Integer> {
         public float defaultAlleleFrequency = 1E-5f;
     }
 
-    private static Properties readProperties() {
-        Properties properties = new Properties();
-
-        try (InputStream is = BaseLiricalCommand.class.getResourceAsStream("/lirical.properties")) {
-            properties.load(is);
-        } catch (IOException e) {
-            LOGGER.warn("Error loading properties: {}", e.getMessage());
-        }
-        return properties;
-    }
-
-    protected static void printBanner() {
-        System.out.println(LIRICAL_BANNER);
-    }
-
     protected List<String> checkInput() {
         List<String> errors = new LinkedList<>();
         // resources
@@ -161,11 +143,29 @@ abstract class BaseLiricalCommand implements Callable<Integer> {
         return errors;
     }
 
+    protected LiricalDifferentialDiagnosisEngineConfigurer configureLiricalConfigurer(
+        // You probably do not need to add any parameters, 
+        // since the values you are after should be all listed as the Picocli options.
+    ) {
+        // You may need to uncomment few of the lines below.
+        // It is 
+        // LiricalConfiguration liricalConfiguration = LiricalConfiguration.of(
+        //     dataSection.liricalDataDirectory, dataSection.exomiserDatabase,
+        //     genomeBuild, 
+        //     runConfiguration.transcriptDb, 
+        //     runConfiguration.pathogenicityThreshold,
+        //     runConfiguration.defaultVariantBackgroundFrequency,
+        //     runConfiguration.strict, runConfiguration.globalAnalysisMode);
+        // LiricalAnalysisRunner liricalAnalysisRunner = liricalConfiguration.lirical().analysisRunner();
+        // AnalysisOptions liricalOptions = liricalConfiguration.prepareAnalysisOptions();
+
+        return new LiricalDifferentialDiagnosisEngineConfigurer();
+    }
+
     /**
      * Build {@link Lirical} based on {@link DataSection} and {@link RunConfiguration} sections.
      */
     protected Lirical bootstrapLirical() throws LiricalDataException {
-        LOGGER.info("Spooling up Lirical v{}", LIRICAL_VERSION);
         if (dataSection.exomiserDatabase == null) {
             return LiricalBuilder.builder(dataSection.liricalDataDirectory)
                    // .exomiserVariantDbPath(parseGenomeBuild(getGenomeBuild()), dataSection.exomiserDatabase)

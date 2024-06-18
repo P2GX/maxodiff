@@ -4,18 +4,16 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
-import org.monarchinitiative.lirical.core.analysis.AnalysisOptions;
-import org.monarchinitiative.lirical.core.analysis.LiricalAnalysisRunner;
 import org.monarchinitiative.lirical.io.analysis.PhenopacketData;
 import org.monarchinitiative.maxodiff.config.MaxodiffDataResolver;
 import org.monarchinitiative.maxodiff.config.MaxodiffPropsConfiguration;
 import org.monarchinitiative.maxodiff.core.analysis.*;
+import org.monarchinitiative.maxodiff.core.diffdg.DifferentialDiagnosisEngine;
 import org.monarchinitiative.maxodiff.core.io.PhenopacketFileParser;
 import org.monarchinitiative.maxodiff.core.model.DifferentialDiagnosis;
 import org.monarchinitiative.maxodiff.core.model.Sample;
 import org.monarchinitiative.maxodiff.core.service.BiometadataService;
-import org.monarchinitiative.maxodiff.lirical.LiricalConfiguration;
-import org.monarchinitiative.maxodiff.lirical.LiricalDifferentialDiagnosisEngine;
+import org.monarchinitiative.maxodiff.lirical.LiricalDifferentialDiagnosisEngineConfigurer;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -101,6 +99,9 @@ public class BenchmarkCommand extends DifferentialDiagnosisCommand {
         List<Integer> nDiseasesList = new ArrayList<>();
         nDiseasesArg.stream().forEach(n -> nDiseasesList.add(n));
 
+        LiricalDifferentialDiagnosisEngineConfigurer configurer = configureLiricalConfigurer();
+        DifferentialDiagnosisEngine engine = configurer.configure();
+
         for (int i = 0; i < phenopacketPaths.size(); i++) {
             try {
 
@@ -115,13 +116,6 @@ public class BenchmarkCommand extends DifferentialDiagnosisCommand {
                 System.out.println(nDiseasesList);
 
                 // Get initial differential diagnoses from running LIRICAL
-                LiricalConfiguration liricalConfiguration = LiricalConfiguration.of(dataSection.liricalDataDirectory, dataSection.exomiserDatabase,
-                        genomeBuild, runConfiguration.transcriptDb, runConfiguration.pathogenicityThreshold,
-                        runConfiguration.defaultVariantBackgroundFrequency,
-                        runConfiguration.strict, runConfiguration.globalAnalysisMode);
-                LiricalAnalysisRunner liricalAnalysisRunner = liricalConfiguration.lirical().analysisRunner();
-                AnalysisOptions liricalOptions = liricalConfiguration.prepareAnalysisOptions();
-                LiricalDifferentialDiagnosisEngine engine = new LiricalDifferentialDiagnosisEngine(liricalAnalysisRunner, liricalOptions);
                 List<DifferentialDiagnosis> differentialDiagnoses = engine.run(sample);
 
                 // Summarize the LIRICAL results.
