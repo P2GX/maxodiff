@@ -12,6 +12,15 @@ import java.nio.file.Paths;
 import java.util.Objects;
 import java.util.Properties;
 
+/**
+ * @deprecated I am not convinced this is what we want to do in the config. 
+ * We are forcing the users to use {@link Properties} - we are making this decision on their behalf.
+ * The better way is to write a builder class. The builder has default values for <em>optional</em> parameters, 
+ * and it either asks the user to provide the <em>required</em> parameters when instantiated (constructor), 
+ * or it fails to build unless the parameters are provided. 
+ * See <code>AnalysisOptions.Builder</code> in LIRICAL for an example of this pattern.
+ */
+@Deprecated(forRemoval = true)
 public class PropertiesLoader {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(PropertiesLoader.class);
