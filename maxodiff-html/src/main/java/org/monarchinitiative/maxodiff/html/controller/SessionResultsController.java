@@ -1,9 +1,6 @@
 package org.monarchinitiative.maxodiff.html.controller;
 
-import org.monarchinitiative.lirical.core.analysis.AnalysisResults;
-import org.monarchinitiative.lirical.core.analysis.TestResult;
 import org.monarchinitiative.lirical.io.analysis.PhenopacketData;
-import org.monarchinitiative.maxodiff.config.PropertiesLoader;
 import org.monarchinitiative.maxodiff.core.analysis.*;
 import org.monarchinitiative.maxodiff.core.io.PhenopacketFileParser;
 import org.monarchinitiative.maxodiff.core.model.DifferentialDiagnosis;
@@ -19,7 +16,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.nio.file.Path;
 import java.util.*;
-import java.util.stream.Collectors;
 
 @Controller("/sessionResults")
 @SessionAttributes({"liricalRecord", "inputRecord"})

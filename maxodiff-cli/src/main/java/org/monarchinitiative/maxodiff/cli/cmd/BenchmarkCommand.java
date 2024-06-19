@@ -4,6 +4,10 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
+
+import org.monarchinitiative.lirical.core.Lirical;
+import org.monarchinitiative.lirical.core.analysis.AnalysisOptions;
+import org.monarchinitiative.lirical.core.analysis.LiricalAnalysisRunner;
 import org.monarchinitiative.lirical.io.analysis.PhenopacketData;
 import org.monarchinitiative.maxodiff.config.MaxodiffDataResolver;
 import org.monarchinitiative.maxodiff.config.MaxodiffPropsConfiguration;
@@ -13,6 +17,7 @@ import org.monarchinitiative.maxodiff.core.io.PhenopacketFileParser;
 import org.monarchinitiative.maxodiff.core.model.DifferentialDiagnosis;
 import org.monarchinitiative.maxodiff.core.model.Sample;
 import org.monarchinitiative.maxodiff.core.service.BiometadataService;
+import org.monarchinitiative.maxodiff.lirical.LiricalDifferentialDiagnosisEngine;
 import org.monarchinitiative.maxodiff.lirical.LiricalDifferentialDiagnosisEngineConfigurer;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 import org.slf4j.Logger;
@@ -99,106 +104,89 @@ public class BenchmarkCommand extends DifferentialDiagnosisCommand {
         List<Integer> nDiseasesList = new ArrayList<>();
         nDiseasesArg.stream().forEach(n -> nDiseasesList.add(n));
 
-        LiricalDifferentialDiagnosisEngineConfigurer configurer = configureLiricalConfigurer();
-        DifferentialDiagnosisEngine engine = configurer.configure();
+        Lirical lirical = bootstrapLirical();
+        try (LiricalAnalysisRunner runner = lirical.analysisRunner()) {
+            LiricalDifferentialDiagnosisEngineConfigurer configurer = LiricalDifferentialDiagnosisEngineConfigurer.of(runner);
+            AnalysisOptions analysisOptions = prepareAnalysisOptions(lirical);
+            LiricalDifferentialDiagnosisEngine engine = configurer.configure(analysisOptions);
 
-        for (int i = 0; i < phenopacketPaths.size(); i++) {
-            try {
+            for (int i = 0; i < phenopacketPaths.size(); i++) {
+                try {
 
-                Path pPath = phenopacketPaths.get(i);
-                PhenopacketData phenopacketData = PhenopacketFileParser.readPhenopacketData(pPath);
-                Sample sample = Sample.of(phenopacketData.sampleId(),
-                        phenopacketData.presentHpoTermIds().toList(),
-                        phenopacketData.excludedHpoTermIds().toList());
-
-
-                System.out.println(weights);
-                System.out.println(nDiseasesList);
-
-                // Get initial differential diagnoses from running LIRICAL
-                List<DifferentialDiagnosis> differentialDiagnoses = engine.run(sample);
-
-                // Summarize the LIRICAL results.
-                //String sampleId = analysisData.sampleId();
-                String phenopacketName = pPath.toFile().getName();
-                //String outFilename = String.join("_",
-                //        phenopacketName.replace(".json", ""),
-                //        "lirical",
-                //        "results");
-                //AnalysisResultsMetadata metadata = prepareAnalysisResultsMetadata(gene2Genotypes, lirical, sampleId);
-                //writeResultsToFile(lirical, OutputFormat.parse(outputFormatArg), analysisData, results, metadata, outFilename);
-
-                // Make maxodiffRefiner
-                MaxodiffDataResolver maxodiffDataResolver = MaxodiffDataResolver.of(maxoDataPath);
-                MaxodiffPropsConfiguration maxodiffPropsConfiguration = MaxodiffPropsConfiguration.createConfig(maxodiffDataResolver);
-
-                Map<String, DiffDiagRefiner> refiners = new HashMap<>();
-                refiners.put("MaxoDiff", maxodiffPropsConfiguration.diffDiagRefiner(false));
-                if (dummy) {
-                    refiners.put("Dummy", maxodiffPropsConfiguration.diffDiagRefiner(true));
-                }
-
-                BiometadataService biometadataService = maxodiffPropsConfiguration.biometadataService();
-
-                //TODO? get list of diseases from LIRICAL results, and add diseases from CLI arg to total list for analysis
-                for (int nDiseases : nDiseasesList) {
-                    System.out.println("n Diseases = " + nDiseases);
-                    // Make MaXo:HPO Term Map
-//                Map<SimpleTerm, Set<SimpleTerm>> maxoToHpoTermMap = maxoTermMap.makeMaxoToHpoTermMap(results, null,
-//                        phenopacketPath, nDiseases);
-//
-//                LOGGER.info(String.valueOf(maxoToHpoTermMap));
-
-                    for (double weight : weights) {
-                        RefinementOptions options = RefinementOptions.of(nDiseases, weight);
-                        for (Map.Entry<String, DiffDiagRefiner> e : refiners.entrySet()) {
-                            RefinementResults refinementResults = e.getValue().run(sample, differentialDiagnoses, options);
-                            List<MaxodiffResult> resultsList = refinementResults.maxodiffResults().stream().toList();
-                            // Get List of Refinement results: maxo term scores and frequencies
-                            String fileName = String.join("_",
-                                    phenopacketName.replace(".json", ""),
-                                    "n" + nDiseases,
-                                    "w" + weight,
-                                    e.getKey() + ".json");
-                            Path maxodiffResultsFilePath = Path.of(String.join(File.separator, outputDir.toString(), fileName));
-                            writeToJsonFile(maxodiffResultsFilePath, refinementResults);
-                            // Take the MaXo term that has the highest score
-                            MaxodiffResult topResult = resultsList.get(0);
-                            String maxScoreMaxoTermId = topResult.maxoTermScore().maxoId();
-                            String maxScoreTermLabel = biometadataService.maxoLabel(maxScoreMaxoTermId).orElse("unknown");
-                            double maxScoreValue = topResult.maxoTermScore().score();
-
-                            System.out.println("Max Score: " + maxScoreMaxoTermId + " (" + maxScoreTermLabel + ")" + " = " + maxScoreValue);
-
-                        }
-                        System.out.println("Weight = " + weight);
+                    Path pPath = phenopacketPaths.get(i);
+                    PhenopacketData phenopacketData = PhenopacketFileParser.readPhenopacketData(pPath);
+                    Sample sample = Sample.of(phenopacketData.sampleId(),
+                            phenopacketData.presentHpoTermIds().toList(),
+                            phenopacketData.excludedHpoTermIds().toList());
 
 
+                    System.out.println(weights);
+                    System.out.println(nDiseasesList);
 
-                        TermId diseaseId = phenopacketData.diseaseIds().get(0);
+                    // Get initial differential diagnoses from running LIRICAL
+                    List<DifferentialDiagnosis> differentialDiagnoses = engine.run(sample);
 
+                    // Summarize the LIRICAL results.
+                    //String sampleId = analysisData.sampleId();
+                    String phenopacketName = pPath.toFile().getName();
+                    //String outFilename = String.join("_",
+                    //        phenopacketName.replace(".json", ""),
+                    //        "lirical",
+                    //        "results");
+                    //AnalysisResultsMetadata metadata = prepareAnalysisResultsMetadata(gene2Genotypes, lirical, sampleId);
+                    //writeResultsToFile(lirical, OutputFormat.parse(outputFormatArg), analysisData, results, metadata, outFilename);
 
-//                        if (dummy) {
-//                            RefinementResults dummyResults = DummyDiffDiagRefiner.run(sample, differentialDiagnoses, options);
-//                            String dummyFileName = String.join("_",
-//                                    phenopacketName.replace(".json", ""),
-//                                    "n" + nDiseases,
-//                                    "w" + weight,
-//                                    "results_dummy.json");
-//                            Path dummyResultsFilePath = Path.of(String.join(File.separator, outputDir.toString(), dummyFileName));
-//                            writeToJsonFile(dummyResultsFilePath, dummyResults);
-//                            List<MaxodiffResult> dummyResultsList = dummyResults.maxodiffResults().stream().toList();
-//                            MaxodiffResult dummyTopResult = dummyResultsList.get(0);
-//                            TermId dummyMaxScoreMaxoTermId = TermId.of(dummyTopResult.maxoTermScore().maxoId());
-//                            String dummyMaxScoreTermLabel = allMaxoTermsMap.get(dummyMaxScoreMaxoTermId);
-//                            double dummyMaxScoreValue = dummyTopResult.maxoTermScore().score();
-//
-//                            System.out.println("Dummy Max Score: " + dummyMaxScoreMaxoTermId + " (" + dummyMaxScoreTermLabel + ")" + " = " + dummyMaxScoreValue);
-//                        }
+                    // Make maxodiffRefiner
+                    MaxodiffDataResolver maxodiffDataResolver = MaxodiffDataResolver.of(maxoDataPath);
+                    MaxodiffPropsConfiguration maxodiffPropsConfiguration = MaxodiffPropsConfiguration.createConfig(maxodiffDataResolver);
+
+                    Map<String, DiffDiagRefiner> refiners = new HashMap<>();
+                    refiners.put("MaxoDiff", maxodiffPropsConfiguration.diffDiagRefiner(false));
+                    if (dummy) {
+                        refiners.put("Dummy", maxodiffPropsConfiguration.diffDiagRefiner(true));
                     }
+
+                    BiometadataService biometadataService = maxodiffPropsConfiguration.biometadataService();
+
+                    //TODO? get list of diseases from LIRICAL results, and add diseases from CLI arg to total list for analysis
+                    for (int nDiseases : nDiseasesList) {
+                        System.out.println("n Diseases = " + nDiseases);
+                        // Make MaXo:HPO Term Map
+    //                Map<SimpleTerm, Set<SimpleTerm>> maxoToHpoTermMap = maxoTermMap.makeMaxoToHpoTermMap(results, null,
+    //                        phenopacketPath, nDiseases);
+    //
+    //                LOGGER.info(String.valueOf(maxoToHpoTermMap));
+
+                        for (double weight : weights) {
+                            RefinementOptions options = RefinementOptions.of(nDiseases, weight);
+                            for (Map.Entry<String, DiffDiagRefiner> e : refiners.entrySet()) {
+                                RefinementResults refinementResults = e.getValue().run(sample, differentialDiagnoses, options);
+                                List<MaxodiffResult> resultsList = refinementResults.maxodiffResults().stream().toList();
+                                // Get List of Refinement results: maxo term scores and frequencies
+                                String fileName = String.join("_",
+                                        phenopacketName.replace(".json", ""),
+                                        "n" + nDiseases,
+                                        "w" + weight,
+                                        e.getKey() + ".json");
+                                Path maxodiffResultsFilePath = Path.of(String.join(File.separator, outputDir.toString(), fileName));
+                                writeToJsonFile(maxodiffResultsFilePath, refinementResults);
+                                // Take the MaXo term that has the highest score
+                                MaxodiffResult topResult = resultsList.get(0);
+                                String maxScoreMaxoTermId = topResult.maxoTermScore().maxoId();
+                                String maxScoreTermLabel = biometadataService.maxoLabel(maxScoreMaxoTermId).orElse("unknown");
+                                double maxScoreValue = topResult.maxoTermScore().score();
+
+                                System.out.println("Max Score: " + maxScoreMaxoTermId + " (" + maxScoreTermLabel + ")" + " = " + maxScoreValue);
+
+                            }
+                            System.out.println("Weight = " + weight);
+
+                            TermId diseaseId = phenopacketData.diseaseIds().get(0);
+                        }
+                    }
+                } catch (Exception ex) {
+                    LOGGER.info(ex.getMessage());
                 }
-            } catch (Exception ex) {
-                LOGGER.info(ex.getMessage());
             }
         }
 

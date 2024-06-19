@@ -1,12 +1,10 @@
 package org.monarchinitiative.maxodiff.html.controller;
 
 import org.monarchinitiative.lirical.core.analysis.AnalysisOptions;
-import org.monarchinitiative.lirical.core.analysis.LiricalAnalysisRunner;
+import org.monarchinitiative.lirical.core.model.GenomeBuild;
 import org.monarchinitiative.lirical.core.model.TranscriptDatabase;
 import org.monarchinitiative.lirical.io.analysis.PhenopacketData;
-import org.monarchinitiative.maxodiff.config.PropertiesLoader;
 import org.monarchinitiative.maxodiff.core.diffdg.DifferentialDiagnosisEngine;
-import org.monarchinitiative.maxodiff.core.service.BiometadataService;
 import org.monarchinitiative.maxodiff.html.service.InputService;
 import org.monarchinitiative.maxodiff.lirical.LiricalDifferentialDiagnosisEngineConfigurer;
 import org.monarchinitiative.maxodiff.lirical.LiricalRecord;
@@ -15,8 +13,6 @@ import org.monarchinitiative.maxodiff.core.model.DifferentialDiagnosis;
 import org.monarchinitiative.maxodiff.core.model.Sample;
 import org.monarchinitiative.maxodiff.html.analysis.InputRecord;
 import org.monarchinitiative.maxodiff.html.service.SessionResultsService;
-import org.monarchinitiative.maxodiff.lirical.LiricalDifferentialDiagnosisEngine;
-import org.monarchinitiative.maxodiff.lirical.LiricalConfiguration;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -24,13 +20,16 @@ import org.springframework.web.bind.annotation.*;
 
 import java.nio.file.Path;
 import java.util.List;
-import java.util.Properties;
 
 
 @Controller
 @RequestMapping("/input")
 @SessionAttributes({"liricalRecord", "inputRecord"})
 public class InputController {
+    // TODO: this should be specific to LIRICAL. In other words, this is not a generic input controller. 
+    // This input controller takes LIRICAL inputs, does LIRICAL things, 
+    // and proceeds to showing the results when it's done.
+    // We should establish a protocol/flow for that within the HTML module.
 
     private final Path liricalDir;
     private final Path maxodiffDataDir;
@@ -74,9 +73,19 @@ public class InputController {
         if (genomeBuild == null) {
             liricalRecord = defaultLiricalRecord;
         }
+        
+
         model.addAttribute("liricalRecord", liricalRecord);
         LiricalDifferentialDiagnosisEngineConfigurer configurer = InputService.configureLiricalConfigurer(liricalRecord);
-        DifferentialDiagnosisEngine engine = configurer.configure();
+        AnalysisOptions analysisOptions = AnalysisOptions.builder()
+                .genomeBuild(GenomeBuild.valueOf(genomeBuild))
+                .transcriptDatabase(transcriptDatabase)
+                .variantDeleteriousnessThreshold(pathogenicityThreshold)
+                .useStrictPenalties(strict)
+                .useGlobal(globalAnalysisMode)
+                .defaultVariantBackgroundFrequency(defaultVariantBackgroundFrequency)
+                .build();
+        DifferentialDiagnosisEngine engine = configurer.configure(analysisOptions);
 
         Path maxodiffDir = maxodiffDataDir;
         InputRecord inputRecord = new InputRecord(null, null, maxodiffDir, phenopacketPath);

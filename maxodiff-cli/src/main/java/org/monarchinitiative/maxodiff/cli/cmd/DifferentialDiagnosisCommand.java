@@ -120,10 +120,12 @@ public class DifferentialDiagnosisCommand extends BaseLiricalCommand {
         System.out.println(weights);
         System.out.println(nDiseasesList);
 
-        LiricalDifferentialDiagnosisEngineConfigurer configurer = configureLiricalConfigurer();
-        DifferentialDiagnosisEngine engine = configurer.configure();
-        try {
-
+        Lirical lirical = bootstrapLirical();
+        try (LiricalAnalysisRunner runner = lirical.analysisRunner()) {
+            LiricalDifferentialDiagnosisEngineConfigurer configurer = LiricalDifferentialDiagnosisEngineConfigurer.of(runner);
+            var analysisOptions = prepareAnalysisOptions(lirical);
+            DifferentialDiagnosisEngine engine = configurer.configure(analysisOptions);
+            
             PhenopacketData phenopacketData = PhenopacketFileParser.readPhenopacketData(phenopacketPath);
             Sample sample = Sample.of(phenopacketData.sampleId(),
                     phenopacketData.presentHpoTermIds().toList(),
@@ -266,34 +268,34 @@ public class DifferentialDiagnosisCommand extends BaseLiricalCommand {
         return data;
     }
 
-    private void writeResultsToFile(Lirical lirical, OutputFormat outputFormat, AnalysisData analysisData,
-                                    AnalysisResults results, AnalysisResultsMetadata metadata, String outFilename) throws IOException {
-        OutputOptions outputOptions = createOutputOptions(outputDir, outFilename);
-        Optional<AnalysisResultsWriter> writer = lirical.analysisResultsWriterFactory().getWriter(outputFormat);
-        if (writer.isPresent()) {
-            writer.get().process(analysisData, results, metadata, outputOptions);
-            outputDir.resolve(outFilename + "." + outputFormatArg.toLowerCase());
-        }
-        if (compress) {
-            zip(outputDir.resolve(outFilename + "." + outputFormatArg.toLowerCase()));
-        }
-    }
+    // private void writeResultsToFile(Lirical lirical, OutputFormat outputFormat, AnalysisData analysisData,
+    //                                 AnalysisResults results, AnalysisResultsMetadata metadata, String outFilename) throws IOException {
+    //     OutputOptions outputOptions = createOutputOptions(outputDir, outFilename);
+    //     Optional<AnalysisResultsWriter> writer = lirical.analysisResultsWriterFactory().getWriter(outputFormat);
+    //     if (writer.isPresent()) {
+    //         writer.get().process(analysisData, results, metadata, outputOptions);
+    //         outputDir.resolve(outFilename + "." + outputFormatArg.toLowerCase());
+    //     }
+    //     if (compress) {
+    //         zip(outputDir.resolve(outFilename + "." + outputFormatArg.toLowerCase()));
+    //     }
+    // }
 
-    private static void zip(Path filePath) throws IOException {
-        if (Files.isRegularFile(filePath) && Files.isReadable(filePath)) {
-            byte[] buffer = new byte[2048];
-            FileInputStream inputStream = new FileInputStream(filePath.toString());
-            FileOutputStream outputStream = new FileOutputStream(filePath + ".gz");
-            GZIPOutputStream gzipOutputStream = new GZIPOutputStream(outputStream);
-            int length;
-            while ((length = inputStream.read(buffer)) > 0) {
-                gzipOutputStream.write(buffer, 0, length);
-            }
-            Files.delete(filePath);
-            inputStream.close();
-            gzipOutputStream.close();
-        }
-    }
+    // private static void zip(Path filePath) throws IOException {
+    //     if (Files.isRegularFile(filePath) && Files.isReadable(filePath)) {
+    //         byte[] buffer = new byte[2048];
+    //         FileInputStream inputStream = new FileInputStream(filePath.toString());
+    //         FileOutputStream outputStream = new FileOutputStream(filePath + ".gz");
+    //         GZIPOutputStream gzipOutputStream = new GZIPOutputStream(outputStream);
+    //         int length;
+    //         while ((length = inputStream.read(buffer)) > 0) {
+    //             gzipOutputStream.write(buffer, 0, length);
+    //         }
+    //         Files.delete(filePath);
+    //         inputStream.close();
+    //         gzipOutputStream.close();
+    //     }
+    // }
 
 
 

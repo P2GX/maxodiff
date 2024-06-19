@@ -10,27 +10,17 @@ import org.monarchinitiative.lirical.core.analysis.LiricalAnalysisRunner;
 public class LiricalDifferentialDiagnosisEngineConfigurer {
 
     private final LiricalAnalysisRunner liricalAnalysisRunner;
-    private final AnalysisOptions analysisOptions;
 
-    public LiricalDifferentialDiagnosisEngine configure() {
-        return new LiricalDifferentialDiagnosisEngine(liricalAnalysisRunner(), analysisOptions());
+    public static LiricalDifferentialDiagnosisEngineConfigurer of(LiricalAnalysisRunner analysisRunner) {
+        return new LiricalDifferentialDiagnosisEngineConfigurer(analysisRunner);
     }
-
-    public static LiricalDifferentialDiagnosisEngineConfigurer of(LiricalAnalysisRunner analysisRunner, AnalysisOptions analysisOptions) {
-        return new LiricalDifferentialDiagnosisEngineConfigurer(analysisRunner, analysisOptions);
-    }
-
-    private LiricalDifferentialDiagnosisEngineConfigurer(LiricalAnalysisRunner analysisRunner, AnalysisOptions analysisOptions) {
+    
+    private LiricalDifferentialDiagnosisEngineConfigurer(LiricalAnalysisRunner analysisRunner) {
         this.liricalAnalysisRunner = analysisRunner;
-        this.analysisOptions = analysisOptions;
     }
 
-    private LiricalAnalysisRunner liricalAnalysisRunner() {
-        return liricalAnalysisRunner;
+    public LiricalDifferentialDiagnosisEngine configure(AnalysisOptions options) {
+        return new LiricalDifferentialDiagnosisEngine(liricalAnalysisRunner, options);
     }
-
-    private AnalysisOptions analysisOptions() {
-        return analysisOptions;
-    }
-
+   
 }
