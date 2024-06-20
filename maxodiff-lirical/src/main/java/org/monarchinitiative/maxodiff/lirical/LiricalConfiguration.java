@@ -131,13 +131,13 @@ public class LiricalConfiguration {
         return AnalysisOptions.builder()
                 .genomeBuild(parseGenomeBuild(genomeBuild))
                 .transcriptDatabase(transcriptDb)
-                .setDiseaseDatabases(List.of(DiseaseDatabase.OMIM))
+//                .setDiseaseDatabases(List.of(DiseaseDatabase.OMIM))
                 .variantDeleteriousnessThreshold(pathogenicityThreshold)
                 .defaultVariantBackgroundFrequency(defaultVariantBackgroundFrequency)
                 .useStrictPenalties(strict)
                 .useGlobal(globalAnalysisMode)
                 .pretestProbability(pretestProba)
-                .includeDiseasesWithNoDeleteriousVariants(true)
+//                .includeDiseasesWithNoDeleteriousVariants(true)
                 .build();
     }
 

@@ -16,7 +16,7 @@ import java.util.concurrent.Callable;
  * <p>
  * By default, we download by default to a subdirectory called {@code data}, which is created if necessary. 
  *
- * @author <a href="mailto:peter.robinson@jax.org">Martha Beckwith</a>
+ * @author <a href="mailto:martha.beckwith@jax.org">Martha Beckwith</a>
  * @author <a href="mailto:daniel.gordon.danis@protonmail.com">Daniel Danis</a>
  * @author <a href="mailto:peter.robinson@jax.org">Peter Robinson</a>
  */

@@ -11,6 +11,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
+@Deprecated(forRemoval = true)
 public class SessionResultsService {
 
     // TODO: use the Spring configuration or delete the service.

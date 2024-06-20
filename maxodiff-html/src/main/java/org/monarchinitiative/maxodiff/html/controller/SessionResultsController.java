@@ -66,25 +66,26 @@ public class SessionResultsController {
         model.addAttribute("nMaxoResults", nMaxoResults);
 
         assert input != null;
-        Path phenopacketPath = input.phenopacketPath();
-        PhenopacketData phenopacketData = PhenopacketFileParser.readPhenopacketData(phenopacketPath);
+//        Path phenopacketPath = input.phenopacketPath();
         Sample sample = input.sample();
         List<DifferentialDiagnosis> differentialDiagnoses = input.differentialDiagnoses();
-        int nLiricalResults = 10;  // TODO: this should not be hard-coded
-        model.addAttribute("nLiricalResults", nLiricalResults);
-        model.addAttribute("differentialDiagnoses", differentialDiagnoses.subList(0, nLiricalResults));
+        int nOrigDiffDiagnosesShown = 10;  // TODO: this should not be hard-coded
+        model.addAttribute("nOrigDiffDiagnosesShown", nOrigDiffDiagnosesShown);
+        model.addAttribute("differentialDiagnoses", differentialDiagnoses.subList(0, nOrigDiffDiagnosesShown));
         model.addAttribute("totalNDiseases", differentialDiagnoses.size());
 
-        if (phenopacketPath != null) {
+        if (sample != null) {
             RefinementOptions options = RefinementOptions.of(nDiseases, weight);
             RefinementResults refinementResults = diffDiagRefiner.run(sample, differentialDiagnoses, options);
             List<MaxodiffResult> resultsList = new ArrayList<>(refinementResults.maxodiffResults());
             resultsList.sort(Comparator.<MaxodiffResult>comparingDouble(mr -> mr.maxoTermScore().scoreDiff()).reversed());
-            TermId diseaseId = phenopacketData.diseaseIds().get(0);
-            String phenopacketName = phenopacketPath.toFile().getName();
-            model.addAttribute("phenopacket", phenopacketName);
-            model.addAttribute("diseaseId", diseaseId);
-            model.addAttribute("diseaseLabel", biometadataService.diseaseLabel(diseaseId).orElse("unknown"));
+//            PhenopacketData phenopacketData = PhenopacketFileParser.readPhenopacketData(phenopacketPath);
+//            TermId diseaseId = phenopacketData.diseaseIds().get(0);
+//            String phenopacketName = phenopacketPath.toFile().getName();
+//            model.addAttribute("phenopacket", phenopacketName);
+            model.addAttribute("sample", sample);
+//            model.addAttribute("diseaseId", diseaseId);
+//            model.addAttribute("diseaseLabel", biometadataService.diseaseLabel(diseaseId).orElse("unknown"));
             model.addAttribute("maxodiffResults", resultsList);
 
             Set<TermId> omimIds = resultsList.get(0).maxoTermScore().omimTermIds();

@@ -126,7 +126,7 @@ abstract class BaseLiricalCommand implements Callable<Integer> {
 
         GenomeBuild genomeBuild = parseGenomeBuild(getGenomeBuild());
         if (dataSection.exomiserDatabase != null) {
-            LOGGER.info("Using Exomiser database at %s", dataSection.exomiserDatabase.toAbsolutePath());
+            LOGGER.info("Using Exomiser database at {}", dataSection.exomiserDatabase.toAbsolutePath());
             builder.exomiserVariantDbPath(genomeBuild, dataSection.exomiserDatabase);
         } else {
             LOGGER.info("Exomiser database not configured");

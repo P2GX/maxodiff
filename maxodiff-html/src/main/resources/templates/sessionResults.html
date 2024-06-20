@@ -10,7 +10,8 @@
     <table>
         <tbody>
         <tr>
-            <td style='font-weight:bold;'>Phenopacket Path:</td><td th:text="${inputRecord.phenopacketPath}"></td>
+<!--            <td style='font-weight:bold;'>Phenopacket Path:</td><td th:text="${inputRecord.phenopacketPath}"></td>-->
+            <td style='font-weight:bold;'>Sample Id:</td><td th:text="${sample.id}"></td>
         </tr>
         </tbody>
     </table>
@@ -35,10 +36,10 @@
             <td>Strict:</td><td th:text="*{strict}"></td>
             <td>Global Mode:</td><td th:text="*{globalAnalysisMode}"></td>
         </tr>
-        <tr>
-            <td>Exomiser Database File:</td><td th:text="*{exomiserPath}"></td>
-            <td>VCF File:</td><td th:text="*{vcfPath}"></td>
-        </tr>
+<!--        <tr>-->
+<!--            <td>Exomiser Database File:</td><td th:text="*{exomiserPath}"></td>-->
+<!--            <td>VCF File:</td><td th:text="*{vcfPath}"></td>-->
+<!--        </tr>-->
         </tbody>
     </table>
     <p></p>
@@ -46,7 +47,7 @@
     <table class="liricalResultsTable">
         <thead>
         <tr>
-            <th colspan="4" th:text="'Top ' + ${nLiricalResults} + ' LIRICAL Results'"></th>
+            <th colspan="4" th:text="'Top ' + ${nOrigDiffDiagnosesShown} + ' LIRICAL Results'"></th>
         </tr>
         <tr>
             <th>Rank</th><th>Disease ID</th><th>Posttest Probability</th><th>LR</th>
@@ -86,11 +87,16 @@
     <p><input type="submit" value="Run Differential Diagnosis Calculation" /></p>
 </form>
 
-<h1 th:text="'maxodiff Analysis Results for ' + ${phenopacket}"></h1>
+<!--<h1 th:text="'maxodiff Analysis Results for ' + ${phenopacket}"></h1>-->
+<h1 th:text="'maxodiff Analysis Results for ' + ${sample.id}"></h1>
 <table>
     <tbody>
         <tr>
-            <td style='font-weight:bold;'>Disease ID:</td><td th:text="${diseaseId}"></td>
+<!--            <td style='font-weight:bold;'>Disease ID:</td><td th:text="${diseaseId}"></td>-->
+            <td style='font-weight:bold;'>Present HPO Term Ids:</td><td th:text="${sample.presentHpoTermIds}"></td>
+        </tr>
+        <tr>
+            <td style='font-weight:bold;'>Excluded HPO Term Ids:</td><td th:text="${sample.excludedHpoTermIds}"></td>
         </tr>
         <tr>
             <td style='font-weight:bold;'>N Diseases:</td><td th:text="${nDiseases}"></td>

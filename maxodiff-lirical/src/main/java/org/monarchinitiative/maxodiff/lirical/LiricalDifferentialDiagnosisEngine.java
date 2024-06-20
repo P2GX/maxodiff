@@ -39,7 +39,6 @@ public class LiricalDifferentialDiagnosisEngine implements DifferentialDiagnosis
             throw new DifferentialDiagnosisEngineException(e);
         }
         // Get Differential Diagnoses from LIRICAL AnalysisResults
-        assert results != null;  // TODO: Martha, I think this never happens. Please explain why it is here or remove, to simplify the code.
         return results.resultsWithDescendingPostTestProbability()
                 .map(tr -> DifferentialDiagnosis.of(tr.diseaseId(), tr.posttestProbability(), tr.getCompositeLR()))
                 .toList();

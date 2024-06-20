@@ -1,0 +1,44 @@
+package org.monarchinitiative.maxodiff.html.service;
+
+
+import org.monarchinitiative.lirical.core.Lirical;
+import org.monarchinitiative.lirical.core.analysis.LiricalAnalysisRunner;
+import org.monarchinitiative.lirical.core.analysis.probability.PretestDiseaseProbability;
+import org.monarchinitiative.lirical.core.exception.LiricalException;
+import org.monarchinitiative.maxodiff.lirical.LiricalConfiguration;
+import org.monarchinitiative.maxodiff.lirical.LiricalDifferentialDiagnosisEngineConfigurer;
+import org.monarchinitiative.maxodiff.lirical.LiricalRecord;
+import org.monarchinitiative.phenol.ontology.data.TermId;
+
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Set;
+
+
+public class LiricalInputService {
+
+    public static LiricalConfiguration liricalConfiguration(LiricalRecord liricalRecord) throws LiricalException {
+
+        return LiricalConfiguration.of(
+                liricalRecord.liricalDataDir(), liricalRecord.exomiserPath(),
+                liricalRecord.genomeBuild(),
+                liricalRecord.transcriptDatabase(),
+                liricalRecord.pathogenicityThreshold(),
+                liricalRecord.defaultVariantBackgroundFrequency(),
+                liricalRecord.strict(), liricalRecord.globalAnalysisMode());
+    }
+
+    public static LiricalDifferentialDiagnosisEngineConfigurer configureLiricalConfigurer(LiricalAnalysisRunner analysisRunner) {
+
+        return LiricalDifferentialDiagnosisEngineConfigurer.of(analysisRunner);
+    }
+
+    public static PretestDiseaseProbability pretestDiseaseProbability(Lirical lirical) {
+        Map<TermId, Double> diseaseIdToPretestProba = new HashMap<>();
+        Set<TermId> diseaseIds = lirical.phenotypeService().diseases().diseaseIds();
+        int nTotalDiseases = diseaseIds.size();
+        diseaseIds.forEach(id -> diseaseIdToPretestProba.put(id, 1./nTotalDiseases));
+
+        return PretestDiseaseProbability.of(diseaseIdToPretestProba);
+    }
+}

@@ -8,8 +8,8 @@ import java.nio.file.Path;
 
 @ConfigurationProperties
 // TODO: the location of the properties file should be configurable, and not set to a specific location.
-//@PropertySource(value="file:${user.home}/.maxodiff/maxodiff.refiner.properties", ignoreResourceNotFound=true)
-@PropertySource(value="classpath:/maxodiff-config/src/main/resources/application.properties", ignoreResourceNotFound = true)
+@PropertySource(value="file:${user.home}/.maxodiff/maxodiff.properties", ignoreResourceNotFound=true)
+//@PropertySource(value="classpath:/maxodiff-config/src/main/resources/application.properties", ignoreResourceNotFound = true)
 public class MaxodiffProperties {
 
     // TODO: make all fields public if we decide to run this on module path (not classpath)
