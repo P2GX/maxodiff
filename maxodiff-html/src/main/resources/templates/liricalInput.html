@@ -40,18 +40,11 @@
         <input type="hidden" th:field="${liricalRecord}"/>
     </div>
 
-    <h2>Differential Diagnosis parameters:</h2>
-    <div>
-<!--        <p>maxodiff Data Directory: <input style='width:20%' type="text" th:field="*{maxodiffDir}"/></p>-->
-        <p>Phenopacket Path: <input style='width:20%' type="text" th:value="${phenopacketPath}" name="phenopacketPath" id="phenopacketPath"/></p>
-<!--        <p class="error" th:if="*{phenopacketPath == null}">Phenopacket is required.</p>-->
-        <input type="hidden" th:field="${inputRecord}"/>
-    </div>
 
     <div method="post">
-        <input type="submit" value="Run LIRICAL Calculation"/><!-- th:onclick="runLirical([[${inputRecord}]], [[${liricalRecord}]]);"/>-->
-        <input type="submit" value="Launch Differential Diagnosis Calculation Page"
-               th:data-url="@{/sessionResults}"
+        <input type="submit" value="Confirm LIRICAL parameters"/><!-- th:onclick="runLirical([[${inputRecord}]], [[${liricalRecord}]]);"/>-->
+        <input type="submit" value="Launch Sample Input Page"
+               th:data-url="@{/sampleInput}"
                onclick="window.open(this.getAttribute('data-url'))"/>
     </div>
 

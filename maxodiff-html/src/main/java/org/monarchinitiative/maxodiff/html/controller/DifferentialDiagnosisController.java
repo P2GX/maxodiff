@@ -1,7 +1,6 @@
 package org.monarchinitiative.maxodiff.html.controller;
 
 import org.monarchinitiative.lirical.io.analysis.PhenopacketData;
-import org.monarchinitiative.maxodiff.config.PropertiesLoader;
 import org.monarchinitiative.maxodiff.core.analysis.*;
 import org.monarchinitiative.maxodiff.core.io.LiricalResultsFileParser;
 import org.monarchinitiative.maxodiff.core.io.PhenopacketFileParser;

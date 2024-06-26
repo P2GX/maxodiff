@@ -1,0 +1,44 @@
+<!DOCTYPE html SYSTEM "http://www.thymeleaf.org/dtd/xhtml1-strict-thymeleaf-spring4-4.dtd">
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<link rel="stylesheet" type="text/css" th:href="@{/css/style.css}"/>
+<head>
+    <meta charset="UTF-8">
+    <title>maxodiff analysis</title>
+</head>
+<body>
+
+<h1>Differential Diagnosis Sample Input</h1>
+
+<form th:action="@{/sampleInput}" th:object="${sample}">
+
+    <p>Phenopacket Path: <input style='width:20%' type="text" th:value="${phenopacketPath}" name="phenopacketPath" id="phenopacketPath"/></p>
+
+    <h2>Sample parameters:</h2>
+    <table>
+        <tbody>
+        <tr>
+            <td>ID:</td><td><input type="text" th:value="*{id}" name="id" id="id"/></td>
+        </tr>
+        <tr>
+            <td>Present HPO Term IDs:</td>
+            <td><textarea rows="1" th:field="*{presentHpoTermIds}" /></td>
+        </tr>
+        <tr>
+            <td>Excluded HPO Term IDs:</td>
+            <td><textarea rows="1" th:field="*{excludedHpoTermIds}" /></td>
+        </tr>
+        </tbody>
+    </table>
+
+    <div method="post">
+        <input type="submit" value="Update Sample"/>
+        <input type="submit" th:value="'Launch ' + ${engineName} + ' Analysis Page'"
+               th:data-url="@{/__${engineName}__Analysis}"
+               onclick="window.open(this.getAttribute('data-url'))"/>
+    </div>
+
+</form>
+
+</body>
+</html>
+

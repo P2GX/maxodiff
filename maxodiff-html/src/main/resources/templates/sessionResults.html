@@ -7,47 +7,22 @@
 </head>
 <body>
 <form th:action="@{/sessionResults}">
-    <table>
-        <tbody>
-        <tr>
-<!--            <td style='font-weight:bold;'>Phenopacket Path:</td><td th:text="${inputRecord.phenopacketPath}"></td>-->
-            <td style='font-weight:bold;'>Sample Id:</td><td th:text="${sample.id}"></td>
-        </tr>
-        </tbody>
-    </table>
-    <p></p>
-
-    <table class="liricalSummaryTable" th:object="${liricalRecord}">
-        <thead>
-        <tr>
-            <th colspan="4">LIRICAL Calculation Parameters</th>
-        </tr>
-        </thead>
-        <tbody>
-        <tr>
-            <td>Genome Build:</td><td th:text="*{genomeBuild}"></td>
-            <td>Transcript Database:</td><td th:text="*{transcriptDatabase}"></td>
-        </tr>
-        <tr>
-            <td>Pathogenicity Threshold:</td><td th:text="*{pathogenicityThreshold}"></td>
-            <td>Default Variant Background Frequency:</td><td th:text="*{defaultVariantBackgroundFrequency}"></td>
-        </tr>
-        <tr>
-            <td>Strict:</td><td th:text="*{strict}"></td>
-            <td>Global Mode:</td><td th:text="*{globalAnalysisMode}"></td>
-        </tr>
+<!--    <table>-->
+<!--        <tbody>-->
 <!--        <tr>-->
-<!--            <td>Exomiser Database File:</td><td th:text="*{exomiserPath}"></td>-->
-<!--            <td>VCF File:</td><td th:text="*{vcfPath}"></td>-->
+<!--&lt;!&ndash;            <td style='font-weight:bold;'>Phenopacket Path:</td><td th:text="${inputRecord.phenopacketPath}"></td>&ndash;&gt;-->
+<!--            <td style='font-weight:bold;'>Sample Id:</td><td th:text="${sample.id}"></td>-->
 <!--        </tr>-->
-        </tbody>
-    </table>
-    <p></p>
+<!--        </tbody>-->
+<!--    </table>-->
+<!--    <p></p>-->
+
+<!--    <p></p>-->
 
     <table class="liricalResultsTable">
         <thead>
         <tr>
-            <th colspan="4" th:text="'Top ' + ${nOrigDiffDiagnosesShown} + ' LIRICAL Results'"></th>
+            <th colspan="4" th:text="'Top ' + ${nOrigDiffDiagnosesShown} + ' ' + ${engineName} + ' Results'"></th>
         </tr>
         <tr>
             <th>Rank</th><th>Disease ID</th><th>Posttest Probability</th><th>LR</th>

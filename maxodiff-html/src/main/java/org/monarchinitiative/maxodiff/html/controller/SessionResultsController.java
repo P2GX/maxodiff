@@ -1,8 +1,6 @@
 package org.monarchinitiative.maxodiff.html.controller;
 
-import org.monarchinitiative.lirical.io.analysis.PhenopacketData;
 import org.monarchinitiative.maxodiff.core.analysis.*;
-import org.monarchinitiative.maxodiff.core.io.PhenopacketFileParser;
 import org.monarchinitiative.maxodiff.core.model.DifferentialDiagnosis;
 import org.monarchinitiative.maxodiff.core.model.Sample;
 import org.monarchinitiative.maxodiff.core.service.BiometadataService;
@@ -18,7 +16,7 @@ import java.nio.file.Path;
 import java.util.*;
 
 @Controller("/sessionResults")
-@SessionAttributes({"liricalRecord", "inputRecord"})
+@SessionAttributes({"engineName", "inputRecord"})
 public class SessionResultsController {
 
     @Autowired

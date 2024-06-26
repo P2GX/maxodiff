@@ -3,7 +3,6 @@ package org.monarchinitiative.maxodiff.html.analysis;
 import org.monarchinitiative.maxodiff.core.model.DifferentialDiagnosis;
 import org.monarchinitiative.maxodiff.core.model.Sample;
 
-import java.nio.file.Path;
 import java.util.List;
 
 

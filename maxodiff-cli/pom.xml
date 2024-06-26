@@ -61,8 +61,7 @@
         <dependency>
             <groupId>org.monarchinitiative.maxodiff</groupId>
             <artifactId>maxodiff-lirical</artifactId>
-            <version>0.0.1</version>
-            <scope>compile</scope>
+            <version>${project.parent.version}</version>
         </dependency>
     </dependencies>
 

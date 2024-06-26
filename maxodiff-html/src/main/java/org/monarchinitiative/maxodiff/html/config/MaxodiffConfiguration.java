@@ -1,5 +1,6 @@
 package org.monarchinitiative.maxodiff.html.config;
 
+import org.monarchinitiative.maxodiff.core.diffdg.DifferentialDiagnosisEngine;
 import org.monarchinitiative.maxodiff.core.io.MaxoDxAnnots;
 import org.monarchinitiative.maxodiff.config.MaxodiffDataException;
 import org.monarchinitiative.maxodiff.core.SimpleTerm;
@@ -8,7 +9,8 @@ import org.monarchinitiative.maxodiff.core.analysis.MaxoDiffRefiner;
 import org.monarchinitiative.maxodiff.config.MaxodiffDataResolver;
 import org.monarchinitiative.maxodiff.core.service.BiometadataService;
 import org.monarchinitiative.maxodiff.core.service.BiometadataServiceImpl;
-import org.monarchinitiative.maxodiff.html.service.DifferentialDiagnosisEngineService;
+import org.monarchinitiative.maxodiff.html.service.DifferentialDiagnosisEngineServiceImpl;
+import org.monarchinitiative.maxodiff.lirical.LiricalDifferentialDiagnosisEngine;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
 import org.monarchinitiative.phenol.annotations.io.hpo.HpoDiseaseLoader;
 import org.monarchinitiative.phenol.annotations.io.hpo.HpoDiseaseLoaderOptions;
@@ -83,8 +85,10 @@ public class MaxodiffConfiguration {
     }
 
     @Bean
-    public DifferentialDiagnosisEngineService differentialDiagnosisEngineService() {
-        //TODO: implement creating this engine
-        return null;
+    public DifferentialDiagnosisEngineServiceImpl differentialDiagnosisEngineServiceImpl() {
+        //TODO: make exomiser differential diagnosis engine
+        Map<String, DifferentialDiagnosisEngine> engineMap = Map.of("lirical", new LiricalDifferentialDiagnosisEngine(null, null),
+                                                                    "exomiser", new LiricalDifferentialDiagnosisEngine(null, null));
+        return DifferentialDiagnosisEngineServiceImpl.of(engineMap);
     }
 }
