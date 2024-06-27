@@ -44,11 +44,11 @@ public class DownloadCommand implements Callable<Integer>{
 
     @Override
     public Integer call() throws Exception {
-        LOGGER.info("Downloading maxodiff data files to %s", datadir.toAbsolutePath());
+        LOGGER.info("Downloading maxodiff data files to {}", datadir.toAbsolutePath());
         downloadMaxodiffData(datadir, overwrite);
         
         Path liricalDataPath = datadir.resolve("lirical");
-        LOGGER.info("Downloading LIRICAL data files to %s", liricalDataPath.toAbsolutePath());
+        LOGGER.info("Downloading LIRICAL data files to {}", liricalDataPath.toAbsolutePath());
         downloadLiricalData(liricalDataPath, overwrite);
         
         LOGGER.info("Download is complete!");
