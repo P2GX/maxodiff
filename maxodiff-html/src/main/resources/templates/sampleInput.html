@@ -32,8 +32,8 @@
 
     <div method="post">
         <input type="submit" value="Update Sample"/>
-        <input type="submit" th:value="'Launch ' + ${engineName} + ' Analysis Page'"
-               th:data-url="@{/__${engineName}__Analysis}"
+        <input type="submit" th:value="'Launch ' + ${engineName} + ' Input Page'"
+               th:data-url="@{/__${engineName}__Input}"
                onclick="window.open(this.getAttribute('data-url'))"/>
     </div>
 

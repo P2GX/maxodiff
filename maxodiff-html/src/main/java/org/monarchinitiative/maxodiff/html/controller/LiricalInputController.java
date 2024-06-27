@@ -1,65 +1,63 @@
 package org.monarchinitiative.maxodiff.html.controller;
 
 import org.monarchinitiative.lirical.core.analysis.AnalysisOptions;
+import org.monarchinitiative.lirical.core.analysis.probability.PretestDiseaseProbabilities;
+import org.monarchinitiative.lirical.core.model.GenomeBuild;
 import org.monarchinitiative.lirical.core.model.TranscriptDatabase;
 import org.monarchinitiative.maxodiff.core.diffdg.DifferentialDiagnosisEngine;
-import org.monarchinitiative.maxodiff.html.service.LiricalInputService;
-import org.monarchinitiative.maxodiff.lirical.LiricalConfiguration;
 import org.monarchinitiative.maxodiff.lirical.LiricalDifferentialDiagnosisEngineConfigurer;
-import org.monarchinitiative.maxodiff.lirical.LiricalRecord;
+import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
-import java.nio.file.Path;
 
-
-//@Controller // TODO: do we really need this controller?
-@RequestMapping("/liricalInput")
-@SessionAttributes({"engine", "engineName", "liricalRecord"})
+@Controller
 public class LiricalInputController {
 
-    private final Path liricalDir;
-    private final LiricalRecord defaultLiricalRecord;
+    private final LiricalDifferentialDiagnosisEngineConfigurer liricalDifferentialDiagnosisEngineConfigurer;
+    private final HpoDiseases hpoDiseases;
 
-
-    public LiricalInputController(Path liricalDataDir,
-                                  LiricalRecord defaultLiricalRecord) {
-
-        this.liricalDir = liricalDataDir;
-        this.defaultLiricalRecord = defaultLiricalRecord;
+    public LiricalInputController(LiricalDifferentialDiagnosisEngineConfigurer liricalDifferentialDiagnosisEngineConfigurer,
+                                  HpoDiseases hpoDiseases) {
+        this.liricalDifferentialDiagnosisEngineConfigurer = liricalDifferentialDiagnosisEngineConfigurer;
+        this.hpoDiseases = hpoDiseases;
     }
 
 
-    @RequestMapping
+    @RequestMapping("/liricalInput")
     public String liricalInput(
-            @SessionAttribute("engine") DifferentialDiagnosisEngine engine,
             @RequestParam(value = "genomeBuild", required = false) String genomeBuild,
             @RequestParam(value = "transcriptDatabase", required = false) TranscriptDatabase transcriptDatabase,
             @RequestParam(value = "pathogenicityThreshold", required = false) Float pathogenicityThreshold,
             @RequestParam(value = "defaultVariantBackgroundFrequency", required = false) Double defaultVariantBackgroundFrequency,
             @RequestParam(value = "strict", required = false) boolean strict,
             @RequestParam(value = "globalAnalysisMode", required = false) boolean globalAnalysisMode,
-            Model model) throws Exception {
+            Model model) {
 
-        //Run LIRICAL calculation and add records to model
-        //TODO: remove record and assign variables separately
-        LiricalRecord liricalRecord = new LiricalRecord(genomeBuild, transcriptDatabase, pathogenicityThreshold, defaultVariantBackgroundFrequency,
-                                                        strict, globalAnalysisMode, liricalDir, null, null);
-        if (genomeBuild == null) {
-            liricalRecord = defaultLiricalRecord;
+        model.addAttribute("genomeBuild", genomeBuild);
+        model.addAttribute("transcriptDatabase", transcriptDatabase);
+        model.addAttribute("pathogenicityThreshold", pathogenicityThreshold);
+        model.addAttribute("defaultVariantBackgroundFrequency", defaultVariantBackgroundFrequency);
+        model.addAttribute("strict", strict);
+        model.addAttribute("globalAnalysisMode", globalAnalysisMode);
+
+        if (genomeBuild != null) {
+            AnalysisOptions options = AnalysisOptions.builder()
+                    .genomeBuild(GenomeBuild.valueOf(genomeBuild))
+                    .transcriptDatabase(transcriptDatabase)
+                    .variantDeleteriousnessThreshold(pathogenicityThreshold)
+                    .defaultVariantBackgroundFrequency(defaultVariantBackgroundFrequency)
+                    .useStrictPenalties(strict)
+                    .useGlobal(globalAnalysisMode)
+                    .pretestProbability(PretestDiseaseProbabilities.uniform(hpoDiseases.diseaseIds()))
+                    .build();
+
+            System.out.println(options);
+
+            DifferentialDiagnosisEngine engine = liricalDifferentialDiagnosisEngineConfigurer.configure(options);
+            model.addAttribute("engine", engine);
         }
-        
-
-        model.addAttribute("liricalRecord", liricalRecord);
-        LiricalConfiguration liricalConfiguration = LiricalInputService.liricalConfiguration(liricalRecord);
-        LiricalDifferentialDiagnosisEngineConfigurer configurer = LiricalInputService.configureLiricalConfigurer(liricalConfiguration.lirical().analysisRunner());
-        //TODO: ideally start with the engine options, remove configuration from lines 54-63
-        AnalysisOptions options = liricalConfiguration.prepareAnalysisOptions();
-        System.out.println(options);
-        //TODO: make separate page for DifferentialDiagnosisEngineService to implement engine as SessionAttribute
-        engine = configurer.configure(options);
-        model.addAttribute("engine", engine);
 
         return "liricalInput";
     }

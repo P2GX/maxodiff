@@ -28,15 +28,15 @@ public class DifferentialDiagnosisEngineController {
                             Model model) {
 
 
-        model.addAttribute("engineService", differentialDiagnosisEngineServiceImpl);
-        List<String> engineNames = differentialDiagnosisEngineServiceImpl.getEngineNames().stream().toList();
-        model.addAttribute("engineNames", engineNames);
-        EngineRecord engineRecord = new EngineRecord(engineName);
+//        model.addAttribute("engineService", differentialDiagnosisEngineServiceImpl);
+//        List<String> engineNames = differentialDiagnosisEngineServiceImpl.getEngineNames().stream().toList();
+//        model.addAttribute("engineNames", engineNames);
+//        EngineRecord engineRecord = new EngineRecord(engineName);
         model.addAttribute("engineName", engineName);
-        if (engineName == null) {
-            engineRecord = new EngineRecord("lirical");
-        }
-        model.addAttribute("engineRecord", engineRecord);
+//        if (engineName == null) {
+//            engineRecord = new EngineRecord("lirical");
+//        }
+//        model.addAttribute("engineRecord", engineRecord);
 
         if (engineName != null) {
             Optional<DifferentialDiagnosisEngine> engineOptional = differentialDiagnosisEngineServiceImpl.getEngine(engineName);

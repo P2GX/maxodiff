@@ -7,26 +7,26 @@ import org.monarchinitiative.lirical.core.analysis.probability.PretestDiseasePro
 import org.monarchinitiative.lirical.core.exception.LiricalException;
 import org.monarchinitiative.maxodiff.lirical.LiricalConfiguration;
 import org.monarchinitiative.maxodiff.lirical.LiricalDifferentialDiagnosisEngineConfigurer;
-import org.monarchinitiative.maxodiff.lirical.LiricalRecord;
+import org.monarchinitiative.maxodiff.html.controller.LiricalRecord;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 
 import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 
-
+//TODO: remove?
 public class LiricalInputService {
 
-    public static LiricalConfiguration liricalConfiguration(LiricalRecord liricalRecord) throws LiricalException {
-
-        return LiricalConfiguration.of(
-                liricalRecord.liricalDataDir(), liricalRecord.exomiserPath(),
-                liricalRecord.genomeBuild(),
-                liricalRecord.transcriptDatabase(),
-                liricalRecord.pathogenicityThreshold(),
-                liricalRecord.defaultVariantBackgroundFrequency(),
-                liricalRecord.strict(), liricalRecord.globalAnalysisMode());
-    }
+//    public static LiricalConfiguration liricalConfiguration(LiricalRecord liricalRecord) throws LiricalException {
+//
+//        return LiricalConfiguration.of(
+//                liricalRecord.liricalDataDir(), liricalRecord.exomiserPath(),
+//                liricalRecord.genomeBuild(),
+//                liricalRecord.transcriptDatabase(),
+//                liricalRecord.pathogenicityThreshold(),
+//                liricalRecord.defaultVariantBackgroundFrequency(),
+//                liricalRecord.strict(), liricalRecord.globalAnalysisMode());
+//    }
 
     public static LiricalDifferentialDiagnosisEngineConfigurer configureLiricalConfigurer(LiricalAnalysisRunner analysisRunner) {
 

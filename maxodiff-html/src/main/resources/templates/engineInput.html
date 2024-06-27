@@ -9,11 +9,17 @@
 
 <h1>Select Differential Diagnosis Engine:</h1>
 
-<form th:action="@{/engineInput}" th:object="${engineRecord}">
+<form th:action="@{/engineInput}">
 
-    <p th:each="name : ${engineNames}">
-        <input type="radio" th:field="*{engineName}" th:value="${name}" th:text="${#strings.toUpperCase(name)}"/>
-    </p>
+    <select th:value="${engineName} ?: lirical" name="engineName" id="engineName">
+        <option th:selected="${engineName} == exomiser ? selected" value="exomiser">EXOMISER</option>
+        <option th:selected="${engineName} == lirical ? selected" value="lirical">LIRICAL</option>
+    </select>
+    <p></p>
+
+<!--    <p th:each="name : ${engineNames}">-->
+<!--        <input type="radio" th:field="${engineName}" th:value="${name}" th:text="${#strings.toUpperCase(name)}"/>-->
+<!--    </p>-->
 
 <!--    <select th:field="*{engineName}">-->
 <!--        <option th:each="name : ${engineNames}" th:value="${name}" th:text="${#strings.toUpperCase(name)}" />-->
@@ -23,8 +29,8 @@
 
     <div method="post">
         <input type="submit" value="Confirm Engine"/>
-        <input type="submit" th:value="'Launch ' + *{engineName} + ' Input Page'"
-               th:data-url="@{/__*{engineName}__Input}"
+        <input type="submit" value="Launch Sample Input Page"
+               th:data-url="@{/sampleInput}"
                onclick="window.open(this.getAttribute('data-url'))"/>
     </div>
 

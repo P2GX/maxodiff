@@ -44,7 +44,7 @@ public class MaxodiffAutoConfiguration {
         }
         Path dataDirectory = Path.of(maxodiffProperties.getDataDirectory());
         if (!Files.isDirectory(dataDirectory)) {
-            throw new MaxodiffDataException("%s is not a directory".formatted(maxodiffProperties.getDataDirectory()));
+            throw new MaxodiffDataException("%s is not a directory".formatted(dataDirectory.toAbsolutePath()));
         }
         LOGGER.info("Loading Maxodiff resources from {}", dataDirectory.toAbsolutePath());
         return dataDirectory;

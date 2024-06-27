@@ -8,7 +8,6 @@ import org.monarchinitiative.lirical.core.exception.LiricalException;
 import org.monarchinitiative.lirical.core.model.GenomeBuild;
 import org.monarchinitiative.lirical.core.model.TranscriptDatabase;
 import org.monarchinitiative.lirical.io.LiricalDataException;
-import org.monarchinitiative.phenol.annotations.io.hpo.DiseaseDatabase;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,12 +44,12 @@ public class LiricalConfiguration {
                 strict, globalAnalysisMode);
     }
 
-    public static LiricalConfiguration of(LiricalRecord liricalRecord) throws LiricalException {
-
-        return new LiricalConfiguration(liricalRecord.liricalDataDir(), liricalRecord.exomiserPath(),
-                liricalRecord.genomeBuild(), liricalRecord.transcriptDatabase(), liricalRecord.pathogenicityThreshold(),
-                liricalRecord.defaultVariantBackgroundFrequency(), liricalRecord.strict(), liricalRecord.globalAnalysisMode());
-    }
+//    public static LiricalConfiguration of(LiricalRecord liricalRecord) throws LiricalException {
+//
+//        return new LiricalConfiguration(liricalRecord.liricalDataDir(), liricalRecord.exomiserPath(),
+//                liricalRecord.genomeBuild(), liricalRecord.transcriptDatabase(), liricalRecord.pathogenicityThreshold(),
+//                liricalRecord.defaultVariantBackgroundFrequency(), liricalRecord.strict(), liricalRecord.globalAnalysisMode());
+//    }
 
     private LiricalConfiguration(Path liricalDataDirectory, Path exomiserDatabase, String genomeBuild,
                                 TranscriptDatabase transcriptDatabase, Float pathogenicityThreshold,
