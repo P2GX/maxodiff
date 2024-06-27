@@ -25,14 +25,14 @@ public class MaxodiffAutoConfigurationTest extends AbstractAutoConfigurationTest
 
     @Test
     public void testBadDataPath() {
-        Throwable thrown = assertThrows(BeanCreationException.class, () -> load(MaxodiffAutoConfiguration.class, "maxodiff.dataDirectory=path/to/junk"));
+        Throwable thrown = assertThrows(BeanCreationException.class, () -> load(MaxodiffAutoConfiguration.class, "maxodiff.data-directory=path/to/junk"));
 
         assertThat(thrown.getMessage(), containsString("path/to/junk is not a directory"));
     }
 
     @Test
     public void testDataPath() {
-        load(MaxodiffAutoConfiguration.class, "maxodiff.dataDirectory=" + TEST_DATA);
+        load(MaxodiffAutoConfiguration.class, "maxodiff.data-directory=" + TEST_DATA);
 
         MaxodiffDataResolver resolver = context.getBean(MaxodiffDataResolver.class);
 
@@ -42,8 +42,8 @@ public class MaxodiffAutoConfigurationTest extends AbstractAutoConfigurationTest
     @Test
     public void testWeCanOverrideVaPropertyValues() {
         load(MaxodiffAutoConfiguration.class,
-                "maxodiff.dataDirectory=" + TEST_DATA,
-                "maxodiff.nDiseases=500",
+                "maxodiff.data-directory=" + TEST_DATA,
+                "maxodiff.n-diseases=500",
                 "maxodiff.weight=0.00123"
                 );
 
@@ -56,7 +56,7 @@ public class MaxodiffAutoConfigurationTest extends AbstractAutoConfigurationTest
 
     @Test
     public void testAppIsReadyToGo() {
-        load(Main.class, "maxodiff.dataDirectory=" + TEST_DATA);
+        load(Main.class, "maxodiff.data-directory=" + TEST_DATA);
 
         // Test that few beans are available.
         assertThat(context.getBean(BiometadataService.class), is(notNullValue()));
