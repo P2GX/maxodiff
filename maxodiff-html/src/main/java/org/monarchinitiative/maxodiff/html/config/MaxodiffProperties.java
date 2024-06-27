@@ -1,32 +1,70 @@
 package org.monarchinitiative.maxodiff.html.config;
 
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.ConfigurationProperties;
-import org.springframework.context.annotation.PropertySource;
 
-import java.nio.file.Path;
+import java.util.Objects;
 
-@ConfigurationProperties
-// TODO: the location of the properties file should be configurable, and not set to a specific location.
-@PropertySource(value="file:${user.home}/.maxodiff/maxodiff.properties", ignoreResourceNotFound=true)
-//@PropertySource(value="classpath:/maxodiff-config/src/main/resources/application.properties", ignoreResourceNotFound = true)
+@ConfigurationProperties(prefix = "maxodiff")
 public class MaxodiffProperties {
 
-    // TODO: make all fields public if we decide to run this on module path (not classpath)
-    @Value("${maxodiff-data-directory:${user.home}/.maxodiff/data}")
-    Path maxodiffDataDir;
+    private String dataDirectory;
+    // TODO: is the scope of the following properties truly the entire application?
+    private int nDiseases = 20;
+    private double weight = 0.5;
+    private int nMaxoResults = 10;
 
-    @Value("${lirical-data-directory:${user.home}/.maxodiff/data/lirical}")
-    Path liricalDataDir;
-
-
-    public Path maxodiffDataDir() {
-        return maxodiffDataDir;
+    public String getDataDirectory() {
+        return dataDirectory;
     }
 
-    public Path liricalDataDir() {
-        return liricalDataDir;
+    public void setDataDirectory(String dataDirectory) {
+        this.dataDirectory = dataDirectory;
     }
 
+    public int getnDiseases() {
+        return nDiseases;
+    }
 
+    public void setnDiseases(int nDiseases) {
+        this.nDiseases = nDiseases;
+    }
+
+    public double getWeight() {
+        return weight;
+    }
+
+    public void setWeight(double weight) {
+        this.weight = weight;
+    }
+
+    public int getnMaxoResults() {
+        return nMaxoResults;
+    }
+
+    public void setnMaxoResults(int nMaxoResults) {
+        this.nMaxoResults = nMaxoResults;
+    }
+
+    @Override
+    public boolean equals(Object o) {
+        if (this == o) return true;
+        if (o == null || getClass() != o.getClass()) return false;
+        MaxodiffProperties that = (MaxodiffProperties) o;
+        return nDiseases == that.nDiseases && Double.compare(weight, that.weight) == 0 && nMaxoResults == that.nMaxoResults && Objects.equals(dataDirectory, that.dataDirectory);
+    }
+
+    @Override
+    public int hashCode() {
+        return Objects.hash(dataDirectory, nDiseases, weight, nMaxoResults);
+    }
+
+    @Override
+    public String toString() {
+        return "MaxodiffProperties{" +
+                "dataDirectory='" + dataDirectory + '\'' +
+                ", nDiseases=" + nDiseases +
+                ", weight=" + weight +
+                ", nMaxoResults=" + nMaxoResults +
+                '}';
+    }
 }

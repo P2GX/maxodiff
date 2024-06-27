@@ -7,6 +7,7 @@ import org.monarchinitiative.maxodiff.core.io.PhenopacketFileParser;
 import org.monarchinitiative.maxodiff.core.model.DifferentialDiagnosis;
 import org.monarchinitiative.maxodiff.core.model.Sample;
 import org.monarchinitiative.maxodiff.core.service.BiometadataService;
+import org.monarchinitiative.maxodiff.html.config.MaxodiffProperties;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -23,21 +24,12 @@ public class DifferentialDiagnosisController {
 
     private final DiffDiagRefiner diffDiagRefiner;
 
-    private final Integer defaultNDiseases;
-    private final Double defaultWeight;
-    private final Integer defaultNMaxoResults;
-
     public DifferentialDiagnosisController(
             BiometadataService biometadataService,
-            DiffDiagRefiner diffDiagRefiner,
-            Integer defaultNDiseases,
-            Double defaultWeight,
-            Integer defaultNMaxoResults) {
+            DiffDiagRefiner diffDiagRefiner
+    ) {
         this.biometadataService = biometadataService;
         this.diffDiagRefiner = diffDiagRefiner;
-        this.defaultNDiseases = defaultNDiseases;
-        this.defaultWeight = defaultWeight;
-        this.defaultNMaxoResults = defaultNMaxoResults;
     }
 
     // TODO: How can we get an object like `Sample` through the wire?
@@ -49,20 +41,12 @@ public class DifferentialDiagnosisController {
             // A list of differential diagnoses, not necessarily the LIRICAL stuff
             @RequestParam(value = "phenopacketPath", required = false) Path phenopacketPath,
             @RequestParam(value = "liricalResultsPath", required = false) Path liricalResultsPath,
+            // TODO: make the values below mandatory
             @RequestParam(value = "nDiseases", required = false) Integer nDiseases,
             @RequestParam(value = "weight", required = false) Double weight,
             @RequestParam(value = "nMaxoResults", required = false) Integer nMaxoResults,
             Model model) throws Exception {
 
-        if (nDiseases == null) {
-            nDiseases = defaultNDiseases;
-        }
-        if (weight == null) {
-            weight = defaultWeight;
-        }
-        if (nMaxoResults == null) {
-            nMaxoResults = defaultNMaxoResults;
-        }
         model.addAttribute("nDiseases", nDiseases);
         model.addAttribute("weight", weight);
         model.addAttribute("nMaxoResults", nMaxoResults);

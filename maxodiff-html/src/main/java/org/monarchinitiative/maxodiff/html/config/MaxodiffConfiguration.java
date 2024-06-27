@@ -9,6 +9,7 @@ import org.monarchinitiative.maxodiff.core.analysis.MaxoDiffRefiner;
 import org.monarchinitiative.maxodiff.config.MaxodiffDataResolver;
 import org.monarchinitiative.maxodiff.core.service.BiometadataService;
 import org.monarchinitiative.maxodiff.core.service.BiometadataServiceImpl;
+import org.monarchinitiative.maxodiff.html.service.DifferentialDiagnosisEngineService;
 import org.monarchinitiative.maxodiff.html.service.DifferentialDiagnosisEngineServiceImpl;
 import org.monarchinitiative.maxodiff.lirical.LiricalDifferentialDiagnosisEngine;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
@@ -25,21 +26,28 @@ import org.springframework.context.annotation.Configuration;
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Path;
 import java.util.*;
 
 @Configuration
-@EnableConfigurationProperties(MaxodiffProperties.class)
+@EnableConfigurationProperties({MaxodiffProperties.class, LiricalProperties.class})
 public class MaxodiffConfiguration {
 
-    private final MaxodiffProperties maxodiffProperties;
-
-    public MaxodiffConfiguration(MaxodiffProperties maxodiffProperties) {
-        this.maxodiffProperties = maxodiffProperties;
+    @Bean
+    public Path maxodiffDataDirectory(MaxodiffProperties maxodiffProperties) throws MaxodiffDataException {
+        if (maxodiffProperties.getDataDirectory() == null) {
+            throw new MaxodiffDataException("Maxodiff data directory was not provided");
+        }
+        Path dataDirectory = Path.of(maxodiffProperties.getDataDirectory());
+        if (!Files.isDirectory(dataDirectory)) {
+            throw new MaxodiffDataException("%s is not a directory".formatted(maxodiffProperties.getDataDirectory()));
+        }
+        return dataDirectory;
     }
 
     @Bean
-    public MaxodiffDataResolver maxodiffDataResolver() throws MaxodiffDataException {
-        return MaxodiffDataResolver.of(maxodiffProperties.maxodiffDataDir());
+    public MaxodiffDataResolver maxodiffDataResolver(Path maxodiffDataDirectory) throws MaxodiffDataException {
+        return MaxodiffDataResolver.of(maxodiffDataDirectory);
     }
 
     @Bean
@@ -85,7 +93,7 @@ public class MaxodiffConfiguration {
     }
 
     @Bean
-    public DifferentialDiagnosisEngineServiceImpl differentialDiagnosisEngineServiceImpl() {
+    public DifferentialDiagnosisEngineService differentialDiagnosisEngineServiceImpl() {
         //TODO: make exomiser differential diagnosis engine
         Map<String, DifferentialDiagnosisEngine> engineMap = Map.of("lirical", new LiricalDifferentialDiagnosisEngine(null, null),
                                                                     "exomiser", new LiricalDifferentialDiagnosisEngine(null, null));

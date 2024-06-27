@@ -5,42 +5,34 @@ import org.monarchinitiative.maxodiff.core.model.DifferentialDiagnosis;
 import org.monarchinitiative.maxodiff.core.model.Sample;
 import org.monarchinitiative.maxodiff.core.service.BiometadataService;
 import org.monarchinitiative.maxodiff.html.analysis.InputRecord;
-import org.monarchinitiative.maxodiff.html.service.SessionResultsService;
 import org.monarchinitiative.phenol.ontology.data.TermId;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
-import java.nio.file.Path;
 import java.util.*;
 
 @Controller("/sessionResults")
 @SessionAttributes({"engineName", "inputRecord"})
 public class SessionResultsController {
 
-    @Autowired
-    SessionResultsService sessionResultsService;
+//    @Autowired
+//    SessionResultsService sessionResultsService;
 
     private final BiometadataService biometadataService;
 
     private final DiffDiagRefiner diffDiagRefiner;
 
-    private final Integer defaultNDiseases;
-    private final Double defaultWeight;
-    private final Integer defaultNMaxoResults;
+//    private final Integer defaultNDiseases;
+//    private final Double defaultWeight;
+//    private final Integer defaultNMaxoResults;
 
     public SessionResultsController(
             BiometadataService biometadataService,
-            DiffDiagRefiner diffDiagRefiner,
-            Integer defaultNDiseases,
-            Double defaultWeight,
-            Integer defaultNMaxoResults) {
+            DiffDiagRefiner diffDiagRefiner
+    ) {
         this.biometadataService = biometadataService;
         this.diffDiagRefiner = diffDiagRefiner;
-        this.defaultNDiseases = defaultNDiseases;
-        this.defaultWeight = defaultWeight;
-        this.defaultNMaxoResults = defaultNMaxoResults;
     }
 
     @RequestMapping("/sessionResults")
@@ -48,17 +40,17 @@ public class SessionResultsController {
                              @RequestParam(value = "nDiseases", required = false) Integer nDiseases,
                              @RequestParam(value = "weight", required = false) Double weight,
                              @RequestParam(value = "nMaxoResults", required = false) Integer nMaxoResults,
-                             Model model) throws Exception {
-
-        if (nDiseases == null) {
-            nDiseases = defaultNDiseases;
-        }
-        if (weight == null) {
-            weight = defaultWeight;
-        }
-        if (nMaxoResults == null) {
-            nMaxoResults = defaultNMaxoResults;
-        }
+                             Model model) {
+//
+//        if (nDiseases == null) {
+//            nDiseases = defaultNDiseases;
+//        }
+//        if (weight == null) {
+//            weight = defaultWeight;
+//        }
+//        if (nMaxoResults == null) {
+//            nMaxoResults = defaultNMaxoResults;
+//        }
         model.addAttribute("nDiseases", nDiseases);
         model.addAttribute("weight", weight);
         model.addAttribute("nMaxoResults", nMaxoResults);

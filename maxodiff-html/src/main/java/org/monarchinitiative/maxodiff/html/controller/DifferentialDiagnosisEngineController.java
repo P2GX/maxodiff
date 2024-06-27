@@ -1,8 +1,7 @@
 package org.monarchinitiative.maxodiff.html.controller;
 
 import org.monarchinitiative.maxodiff.core.diffdg.DifferentialDiagnosisEngine;
-import org.monarchinitiative.maxodiff.html.service.DifferentialDiagnosisEngineServiceImpl;
-import org.monarchinitiative.maxodiff.lirical.LiricalDifferentialDiagnosisEngine;
+import org.monarchinitiative.maxodiff.html.service.DifferentialDiagnosisEngineService;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -14,11 +13,12 @@ import java.util.*;
 @SessionAttributes({"engine", "engineName"})
 public class DifferentialDiagnosisEngineController {
 
-    private final DifferentialDiagnosisEngineServiceImpl differentialDiagnosisEngineServiceImpl;
+    private final DifferentialDiagnosisEngineService differentialDiagnosisEngineServiceImpl;
 
     public DifferentialDiagnosisEngineController(
-            DifferentialDiagnosisEngineServiceImpl differentialDiagnosisEngineServiceImpl) {
-        this.differentialDiagnosisEngineServiceImpl = differentialDiagnosisEngineServiceImpl;
+            DifferentialDiagnosisEngineService differentialDiagnosisEngineService
+    ) {
+        this.differentialDiagnosisEngineServiceImpl = differentialDiagnosisEngineService;
     }
 
     public record EngineRecord(String engineName) {}

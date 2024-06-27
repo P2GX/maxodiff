@@ -14,7 +14,7 @@ import org.springframework.web.bind.annotation.*;
 import java.nio.file.Path;
 
 
-@Controller
+//@Controller // TODO: do we really need this controller?
 @RequestMapping("/liricalInput")
 @SessionAttributes({"engine", "engineName", "liricalRecord"})
 public class LiricalInputController {
