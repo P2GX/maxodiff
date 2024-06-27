@@ -7,7 +7,7 @@ import org.springframework.context.annotation.AnnotationConfigApplicationContext
 
 import java.nio.file.Path;
 
-public abstract class AbstractConfigurationTest {
+public abstract class AbstractAutoConfigurationTest {
 
     protected static Path TEST_DATA = Path.of("src/test/resources/testdata");
 

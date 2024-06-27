@@ -9,7 +9,6 @@ import java.util.Objects;
 @ConfigurationProperties(prefix = "lirical")
 public class LiricalProperties {
 
-    private String dataDirectory = "data/lirical";
     private GenomeBuild genomeBuild = GenomeBuild.HG38;
     private TranscriptDatabase transcriptDatabase = TranscriptDatabase.REFSEQ;
     private float pathogenicityThreshold = .8f;
@@ -18,14 +17,6 @@ public class LiricalProperties {
     private boolean globalMode = false;
     private String exomiserHg19Path;
     private String exomiserHg38Path;
-
-    public String getDataDirectory() {
-        return dataDirectory;
-    }
-
-    public void setDataDirectory(String dataDirectory) {
-        this.dataDirectory = dataDirectory;
-    }
 
     public GenomeBuild getGenomeBuild() {
         return genomeBuild;
@@ -96,19 +87,18 @@ public class LiricalProperties {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         LiricalProperties that = (LiricalProperties) o;
-        return Objects.equals(dataDirectory, that.dataDirectory) && Float.compare(pathogenicityThreshold, that.pathogenicityThreshold) == 0 && Double.compare(defaultVariantBackgroundFrequency, that.defaultVariantBackgroundFrequency) == 0 && strict == that.strict && globalMode == that.globalMode && Objects.equals(genomeBuild, that.genomeBuild) && transcriptDatabase == that.transcriptDatabase && Objects.equals(exomiserHg19Path, that.exomiserHg19Path) && Objects.equals(exomiserHg38Path, that.exomiserHg38Path);
+        return Float.compare(pathogenicityThreshold, that.pathogenicityThreshold) == 0 && Double.compare(defaultVariantBackgroundFrequency, that.defaultVariantBackgroundFrequency) == 0 && strict == that.strict && globalMode == that.globalMode && Objects.equals(genomeBuild, that.genomeBuild) && transcriptDatabase == that.transcriptDatabase && Objects.equals(exomiserHg19Path, that.exomiserHg19Path) && Objects.equals(exomiserHg38Path, that.exomiserHg38Path);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(dataDirectory, genomeBuild, transcriptDatabase, pathogenicityThreshold, defaultVariantBackgroundFrequency, strict, globalMode, exomiserHg19Path, exomiserHg38Path);
+        return Objects.hash(genomeBuild, transcriptDatabase, pathogenicityThreshold, defaultVariantBackgroundFrequency, strict, globalMode, exomiserHg19Path, exomiserHg38Path);
     }
 
     @Override
     public String toString() {
         return "LiricalProperties{" +
-                "dataDirectory='" + dataDirectory + '\'' +
-                ", genomeBuild='" + genomeBuild + '\'' +
+                "genomeBuild='" + genomeBuild + '\'' +
                 ", transcriptDatabase=" + transcriptDatabase +
                 ", pathogenicityThreshold=" + pathogenicityThreshold +
                 ", defaultVariantBackgroundFrequency=" + defaultVariantBackgroundFrequency +

@@ -30,8 +30,8 @@ import java.nio.file.Path;
 import java.util.*;
 
 @Configuration
-@EnableConfigurationProperties({MaxodiffProperties.class, LiricalProperties.class})
-public class MaxodiffConfiguration {
+@EnableConfigurationProperties({MaxodiffProperties.class})
+public class MaxodiffAutoConfiguration {
 
     @Bean
     public Path maxodiffDataDirectory(MaxodiffProperties maxodiffProperties) throws MaxodiffDataException {
@@ -93,7 +93,7 @@ public class MaxodiffConfiguration {
     }
 
     @Bean
-    public DifferentialDiagnosisEngineService differentialDiagnosisEngineServiceImpl() {
+    public DifferentialDiagnosisEngineService differentialDiagnosisEngineService() {
         //TODO: make exomiser differential diagnosis engine
         Map<String, DifferentialDiagnosisEngine> engineMap = Map.of("lirical", new LiricalDifferentialDiagnosisEngine(null, null),
                                                                     "exomiser", new LiricalDifferentialDiagnosisEngine(null, null));
