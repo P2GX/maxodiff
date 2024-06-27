@@ -19,6 +19,8 @@ import org.monarchinitiative.phenol.annotations.io.hpo.HpoDiseaseLoaders;
 import org.monarchinitiative.phenol.io.MinimalOntologyLoader;
 import org.monarchinitiative.phenol.ontology.data.MinimalOntology;
 import org.monarchinitiative.phenol.ontology.data.TermId;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -33,6 +35,8 @@ import java.util.*;
 @EnableConfigurationProperties({MaxodiffProperties.class})
 public class MaxodiffAutoConfiguration {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(MaxodiffAutoConfiguration.class);
+
     @Bean
     public Path maxodiffDataDirectory(MaxodiffProperties maxodiffProperties) throws MaxodiffDataException {
         if (maxodiffProperties.getDataDirectory() == null) {
@@ -42,6 +46,7 @@ public class MaxodiffAutoConfiguration {
         if (!Files.isDirectory(dataDirectory)) {
             throw new MaxodiffDataException("%s is not a directory".formatted(maxodiffProperties.getDataDirectory()));
         }
+        LOGGER.info("Loading Maxodiff resources from {}", dataDirectory.toAbsolutePath());
         return dataDirectory;
     }
 
@@ -52,17 +57,20 @@ public class MaxodiffAutoConfiguration {
 
     @Bean
     public MinimalOntology hpo(MaxodiffDataResolver maxodiffDataResolver) {
+        LOGGER.debug("Loading HPO JSON from {}", maxodiffDataResolver.hpoJson().toAbsolutePath());
         return MinimalOntologyLoader.loadOntology(maxodiffDataResolver.hpoJson().toFile());
     }
 
     @Bean
     public HpoDiseases hpoDiseases(MinimalOntology hpo, MaxodiffDataResolver maxodiffDataResolver) throws IOException {
+        LOGGER.debug("Loading HPO annotations from {}", maxodiffDataResolver.phenotypeAnnotations().toAbsolutePath());
         HpoDiseaseLoader loader = HpoDiseaseLoaders.defaultLoader(hpo, HpoDiseaseLoaderOptions.defaultOptions());
         return loader.load(maxodiffDataResolver.phenotypeAnnotations());
     }
 
     @Bean
     public Map<SimpleTerm, Set<SimpleTerm>> maxoAnnotsMap(MaxodiffDataResolver maxodiffDataResolver) throws IOException {
+        LOGGER.debug("Loading MAxO annotations from {}", maxodiffDataResolver.maxoDxAnnots().toAbsolutePath());
         try (BufferedReader reader = Files.newBufferedReader(maxodiffDataResolver.maxoDxAnnots())) {
             return MaxoDxAnnots.parseHpoToMaxo(reader);
         }

@@ -12,6 +12,8 @@ import org.monarchinitiative.maxodiff.lirical.LiricalDifferentialDiagnosisEngine
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoAssociationData;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
 import org.monarchinitiative.phenol.ontology.data.MinimalOntology;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
@@ -26,12 +28,16 @@ import java.util.Map;
 @EnableConfigurationProperties({LiricalProperties.class})
 public class LiricalAutoConfiguration {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(LiricalAutoConfiguration.class);
+
     @Bean
     public HpoAssociationData hpoAssociationData(
             MinimalOntology hpo,
             HpoDiseases hpoDiseases,
             MaxodiffDataResolver maxodiffDataResolver
     ) {
+        LOGGER.debug("Loading HGNC complete set file at {}", maxodiffDataResolver.hgncCompleteSet().toAbsolutePath());
+        LOGGER.debug("Loading mim2gene medgen file at {}", maxodiffDataResolver.mim2geneMedgen().toAbsolutePath());
         return HpoAssociationData.builder(hpo)
                 .hgncCompleteSetArchive(maxodiffDataResolver.hgncCompleteSet())
                 .mim2GeneMedgen(maxodiffDataResolver.mim2geneMedgen())
@@ -84,6 +90,7 @@ public class LiricalAutoConfiguration {
         if (pathString != null) {
             Path path = Path.of(pathString);
             if (Files.isRegularFile(path)) {
+                LOGGER.debug("Using Exomiser database at {} for {}", path.toAbsolutePath(), genomeBuild);
                 exomiserDbPaths.put(genomeBuild, path);
             } else {
                 throw new RuntimeException("Not a file: %s".formatted(path.toAbsolutePath()));
