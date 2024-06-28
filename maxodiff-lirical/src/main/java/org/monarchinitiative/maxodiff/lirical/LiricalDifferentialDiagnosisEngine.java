@@ -9,6 +9,7 @@ import org.monarchinitiative.maxodiff.core.model.DifferentialDiagnosis;
 import org.monarchinitiative.maxodiff.core.model.Sample;
 
 import java.util.List;
+import java.util.Objects;
 
 public class LiricalDifferentialDiagnosisEngine implements DifferentialDiagnosisEngine {
 
@@ -16,8 +17,8 @@ public class LiricalDifferentialDiagnosisEngine implements DifferentialDiagnosis
     private final LiricalAnalysisRunner runner;
 
     public LiricalDifferentialDiagnosisEngine(LiricalAnalysisRunner runner, AnalysisOptions options) {
-        this.options = options;
-        this.runner = runner;
+        this.options = Objects.requireNonNull(options);
+        this.runner = Objects.requireNonNull(runner);
     }
 
     public List<DifferentialDiagnosis> run(Sample sample) {
