@@ -13,6 +13,7 @@ import org.springframework.web.bind.annotation.*;
 
 
 @Controller
+@SessionAttributes({"engine", "options"})
 public class LiricalInputController {
 
     private final LiricalDifferentialDiagnosisEngineConfigurer liricalDifferentialDiagnosisEngineConfigurer;
@@ -57,6 +58,7 @@ public class LiricalInputController {
 
             DifferentialDiagnosisEngine engine = liricalDifferentialDiagnosisEngineConfigurer.configure(options);
             model.addAttribute("engine", engine);
+            model.addAttribute("options", options);
         }
 
         return "liricalInput";

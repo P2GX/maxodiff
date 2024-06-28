@@ -11,7 +11,7 @@
 
 <form th:action="@{/liricalAnalysis}">
 
-    <table th:object="${inputRecord.sample}">
+    <table th:object="${sample}">
         <tbody>
         <tr>
             <!--            <td style='font-weight:bold;'>Phenopacket Path:</td><td th:text="${inputRecord.phenopacketPath}"></td>-->
@@ -30,7 +30,7 @@
 
     <h2>Differential Diagnosis parameters:</h2>
     <div>
-        <table class="liricalSummaryTable" th:object="${liricalRecord}">
+        <table class="liricalSummaryTable" th:object="${options}">
             <thead>
             <tr>
                 <th colspan="4">LIRICAL Calculation Parameters</th>
@@ -42,12 +42,12 @@
                 <td>Transcript Database:</td><td th:text="*{transcriptDatabase}"></td>
             </tr>
             <tr>
-                <td>Pathogenicity Threshold:</td><td th:text="*{pathogenicityThreshold}"></td>
+                <td>Pathogenicity Threshold:</td><td th:text="*{variantDeleteriousnessThreshold}"></td>
                 <td>Default Variant Background Frequency:</td><td th:text="*{defaultVariantBackgroundFrequency}"></td>
             </tr>
             <tr>
-                <td>Strict:</td><td th:text="*{strict}"></td>
-                <td>Global Mode:</td><td th:text="*{globalAnalysisMode}"></td>
+                <td>Strict:</td><td th:text="*{useStrictPenalties}"></td>
+                <td>Global Mode:</td><td th:text="*{useGlobal}"></td>
             </tr>
     <!--        <tr>-->
     <!--            <td>Exomiser Database File:</td><td th:text="*{exomiserPath}"></td>-->

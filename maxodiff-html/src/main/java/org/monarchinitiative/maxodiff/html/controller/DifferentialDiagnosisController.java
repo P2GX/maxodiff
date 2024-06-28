@@ -7,7 +7,6 @@ import org.monarchinitiative.maxodiff.core.io.PhenopacketFileParser;
 import org.monarchinitiative.maxodiff.core.model.DifferentialDiagnosis;
 import org.monarchinitiative.maxodiff.core.model.Sample;
 import org.monarchinitiative.maxodiff.core.service.BiometadataService;
-import org.monarchinitiative.maxodiff.html.config.MaxodiffProperties;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
