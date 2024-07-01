@@ -115,4 +115,42 @@
     font-weight: bold
 }
 
+.nav, .navbar-header {
+   list-style-type: none;
+   margin: 0;
+   padding: 0;
+   overflow: hidden;
+   background-color: black;
+   position: sticky;
+}
+
+.navbar-brand {
+   display: block;
+   color: lightblue;
+   text-align: center;
+   padding: 14px 16px;
+   text-decoration: none;
+   font-weight: bold;
+}
+
+.nav-link {
+   float: left;
+}
+
+.nav-item {
+   display: block;
+   color: white;
+   text-align: center;
+   padding: 14px 16px;
+   text-decoration: none;
+}
+
+.nav-item:hover:not(.active) {
+   background-color: orange;
+}
+
+.active {
+   background-color: darkorange;
+}
+
 

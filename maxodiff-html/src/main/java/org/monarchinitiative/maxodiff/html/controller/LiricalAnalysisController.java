@@ -29,6 +29,7 @@ public class LiricalAnalysisController {
         if (sample != null) {
             // Get initial differential diagnoses from running LIRICAL
             differentialDiagnoses = engine.run(sample);
+            System.out.println("LIRICAL diffDiag size = " + differentialDiagnoses.size());
         }
         model.addAttribute("differentialDiagnoses", differentialDiagnoses);
 

@@ -44,7 +44,7 @@ public class SessionResultsController {
 
         int nOrigDiffDiagnosesShown = 10;  // TODO: this should not be hard-coded
         model.addAttribute("nOrigDiffDiagnosesShown", nOrigDiffDiagnosesShown);
-        model.addAttribute("differentialDiagnoses", differentialDiagnoses.subList(0, nOrigDiffDiagnosesShown));
+        model.addAttribute("differentialDiagnosesTable", differentialDiagnoses.subList(0, nOrigDiffDiagnosesShown));
         model.addAttribute("totalNDiseases", differentialDiagnoses.size());
 
         if (sample != null && nDiseases != null && weight != null && nMaxoResults != null) {

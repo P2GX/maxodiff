@@ -6,6 +6,11 @@
     <title>maxodiff analysis</title>
 </head>
 <body>
+
+<div th:replace="~{index :: header}">...</div>
+
+<h1>Maxodiff Differential Diagnosis</h1>
+
 <form th:action="@{/sessionResults}">
 
 <!--    TODO: make this table more general-->
@@ -19,7 +24,7 @@
         </tr>
         </thead>
         <tbody>
-        <th:block th:each= "diagnosis, iter : ${differentialDiagnoses}">
+        <th:block th:each= "diagnosis, iter : ${differentialDiagnosesTable}">
             <tr>
                 <td th:text="${iter.index+1}"></td>
                 <td th:text="${diagnosis.diseaseId}"></td>

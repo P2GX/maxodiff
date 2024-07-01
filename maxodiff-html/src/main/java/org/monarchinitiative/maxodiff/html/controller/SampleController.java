@@ -20,13 +20,13 @@ import java.util.stream.Collectors;
 
 @Controller
 @RequestMapping("/sampleInput")
-@SessionAttributes({"engineName", "sample"})
+@SessionAttributes({"sample"})
 public class SampleController {
 
 
     @RequestMapping
     public String sampleInput(//@SessionAttribute("engine") DifferentialDiagnosisEngine engine,
-                              @SessionAttribute("engineName") String engineName,
+//                              @SessionAttribute("engineName") String engineName,
                               @RequestParam(value = "phenopacketPath", required = false) Path phenopacketPath,
                               @RequestParam(value = "id", required = false) String id,
                               @RequestParam(value = "presentHpoTermIds", required = false) String presentHpoTermIds,

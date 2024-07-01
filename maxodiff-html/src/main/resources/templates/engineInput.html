@@ -7,6 +7,8 @@
 </head>
 <body>
 
+<div th:replace="~{index :: header}">...</div>
+
 <h1>Select Differential Diagnosis Engine:</h1>
 
 <form th:action="@{/engineInput}">
@@ -29,9 +31,9 @@
 
     <div method="post">
         <input type="submit" value="Confirm Engine"/>
-        <input type="submit" value="Launch Sample Input Page"
-               th:data-url="@{/sampleInput}"
-               onclick="window.open(this.getAttribute('data-url'))"/>
+<!--        <input type="submit" value="Launch Sample Input Page"-->
+<!--               th:data-url="@{/sampleInput}"-->
+<!--               onclick="window.open(this.getAttribute('data-url'))"/>-->
     </div>
 
 </form>
