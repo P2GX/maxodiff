@@ -20,6 +20,7 @@ import java.util.*;
 
 // Responsibility - parse Maxo diagnostic annotations file into higher level structures.
 // TODO: consider removing the class or moving to a configuration module or moving to Spring configuration/CLI superclass.
+@Deprecated(forRemoval = true)
 public class MaxoTermMap {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(MaxoTermMap.class);

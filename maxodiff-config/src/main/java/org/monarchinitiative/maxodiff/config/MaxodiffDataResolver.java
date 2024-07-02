@@ -64,5 +64,10 @@ public class MaxodiffDataResolver {
         return dataDirectory.resolve("phenotype.hpoa");
     }
 
-
+    @Override
+    public String toString() {
+        return "MaxodiffDataResolver{" +
+                "dataDirectory=" + dataDirectory +
+                '}';
+    }
 }

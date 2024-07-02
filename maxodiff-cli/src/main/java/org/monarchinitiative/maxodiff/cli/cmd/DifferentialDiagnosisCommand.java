@@ -3,7 +3,6 @@ package org.monarchinitiative.maxodiff.cli.cmd;
 import org.monarchinitiative.lirical.core.Lirical;
 import org.monarchinitiative.lirical.core.analysis.*;
 import org.monarchinitiative.lirical.core.exception.LiricalException;
-import org.monarchinitiative.lirical.core.model.TranscriptDatabase;
 import org.monarchinitiative.lirical.core.output.AnalysisResultsMetadata;
 import org.monarchinitiative.lirical.core.output.AnalysisResultsWriter;
 import org.monarchinitiative.lirical.core.output.OutputFormat;
@@ -11,14 +10,15 @@ import org.monarchinitiative.lirical.core.output.OutputOptions;
 import org.monarchinitiative.lirical.io.analysis.PhenopacketData;
 import org.monarchinitiative.lirical.io.analysis.PhenopacketImporter;
 import org.monarchinitiative.lirical.io.analysis.PhenopacketImporters;
-import org.monarchinitiative.maxodiff.config.MaxoTermMap;
-import org.monarchinitiative.maxodiff.core.SimpleTerm;
+import org.monarchinitiative.maxodiff.config.MaxodiffDataResolver;
+import org.monarchinitiative.maxodiff.config.MaxodiffPropsConfiguration;
 import org.monarchinitiative.maxodiff.core.analysis.*;
+import org.monarchinitiative.maxodiff.core.diffdg.DifferentialDiagnosisEngine;
 import org.monarchinitiative.maxodiff.core.io.PhenopacketFileParser;
 import org.monarchinitiative.maxodiff.core.model.DifferentialDiagnosis;
 import org.monarchinitiative.maxodiff.core.model.Sample;
-import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
-import org.monarchinitiative.phenol.ontology.data.MinimalOntology;
+import org.monarchinitiative.maxodiff.core.service.BiometadataService;
+import org.monarchinitiative.maxodiff.lirical.LiricalDifferentialDiagnosisEngineConfigurer;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -28,7 +28,6 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
-import java.util.stream.Collectors;
 import java.util.zip.GZIPOutputStream;
 
 
@@ -112,7 +111,6 @@ public class DifferentialDiagnosisCommand extends BaseLiricalCommand {
         resultsMap.put("weight", new ArrayList<>());
         resultsMap.put("maxScoreValue", new ArrayList<>());
 
-        MaxoTermMap maxoTermMap = new MaxoTermMap(maxoDataPath);
 
         List<Double> weights = new ArrayList<>();
         weightsArg.stream().forEach(w -> weights.add(w));
@@ -122,13 +120,19 @@ public class DifferentialDiagnosisCommand extends BaseLiricalCommand {
         System.out.println(weights);
         System.out.println(nDiseasesList);
 
-        try {
-            // Run LIRICAL analysis
-            LiricalAnalysis liricalAnalysis = new LiricalAnalysis(genomeBuild, TranscriptDatabase.REFSEQ,
-                    runConfiguration.pathogenicityThreshold, runConfiguration.defaultVariantBackgroundFrequency, runConfiguration.strict,
-                    runConfiguration.globalAnalysisMode, dataSection.liricalDataDirectory, dataSection.exomiserDatabase, vcfPath);
+        Lirical lirical = bootstrapLirical();
+        try (LiricalAnalysisRunner runner = lirical.analysisRunner()) {
+            LiricalDifferentialDiagnosisEngineConfigurer configurer = LiricalDifferentialDiagnosisEngineConfigurer.of(runner);
+            var analysisOptions = prepareAnalysisOptions(lirical);
+            DifferentialDiagnosisEngine engine = configurer.configure(analysisOptions);
+            
+            PhenopacketData phenopacketData = PhenopacketFileParser.readPhenopacketData(phenopacketPath);
+            Sample sample = Sample.of(phenopacketData.sampleId(),
+                    phenopacketData.presentHpoTermIds().toList(),
+                    phenopacketData.excludedHpoTermIds().toList());
 
-            AnalysisResults results = liricalAnalysis.runLiricalAnalysis(phenopacketPath);
+            // Get initial differential diagnoses from running LIRICAL
+            List<DifferentialDiagnosis> differentialDiagnoses = engine.run(sample);
 
             // Summarize the LIRICAL results.
             //String sampleId = analysisData.sampleId();
@@ -141,21 +145,11 @@ public class DifferentialDiagnosisCommand extends BaseLiricalCommand {
             //writeResultsToFile(lirical, OutputFormat.parse(outputFormatArg), analysisData, results, metadata, outFilename);
 
             // Make maxodiffRefiner
-            HpoDiseases diseases = maxoTermMap.getDiseases();
-            Map<TermId, Set<TermId>> fullHpoToMaxoTermIdMap = maxoTermMap.getFullHpoToMaxoTermIdMap(maxoTermMap.getFullHpoToMaxoTermMap());
-            MinimalOntology hpo = maxoTermMap.getOntology();
-            MaxoDiffRefiner maxoDiffRefiner = new MaxoDiffRefiner(diseases, fullHpoToMaxoTermIdMap, hpo);
+            MaxodiffDataResolver maxodiffDataResolver = MaxodiffDataResolver.of(maxoDataPath);
+            MaxodiffPropsConfiguration maxodiffPropsConfiguration = MaxodiffPropsConfiguration.createConfig(maxodiffDataResolver);
 
-            List<DifferentialDiagnosis> differentialDiagnoses = new LinkedList<>();
-            for (TestResult result : results.resultsWithDescendingPostTestProbability().toList()) {
-                differentialDiagnoses.add(DifferentialDiagnosis.of(result.diseaseId(),
-                        result.posttestProbability(), result.getCompositeLR()));
-            }
-
-            Set<SimpleTerm> allMaxoTerms = maxoTermMap.getFullHpoToMaxoTermMap().values()
-                    .stream().flatMap(Collection::stream).collect(Collectors.toSet());
-            Map<TermId, String> allMaxoTermsMap = new HashMap<>();
-            allMaxoTerms.forEach(st -> allMaxoTermsMap.put(st.tid(), st.label()));
+            DiffDiagRefiner maxoDiffRefiner = maxodiffPropsConfiguration.diffDiagRefiner(false);
+            BiometadataService biometadataService = maxodiffPropsConfiguration.biometadataService();
 
             //TODO? get list of diseases from LIRICAL results, and add diseases from CLI arg to total list for analysis
 
@@ -172,10 +166,6 @@ public class DifferentialDiagnosisCommand extends BaseLiricalCommand {
                 for (double weight : weights) {
                     System.out.println("Weight = " + weight);
                     // Get List of Refinement results: maxo term scores and frequencies
-                    PhenopacketData phenopacketData = PhenopacketFileParser.readPhenopacketData(phenopacketPath);
-                    Sample sample = Sample.of(phenopacketData.sampleId(),
-                            phenopacketData.presentHpoTermIds().toList(),
-                            phenopacketData.excludedHpoTermIds().toList());
                     RefinementOptions options = RefinementOptions.of(nDiseases, weight);
                     RefinementResults refinementResults = maxoDiffRefiner.run(sample, differentialDiagnoses, options);
 
@@ -183,8 +173,8 @@ public class DifferentialDiagnosisCommand extends BaseLiricalCommand {
                     TermId diseaseId = phenopacketData.diseaseIds().get(0);
                     // Take the MaXo term that has the highest score
                     MaxodiffResult topResult = resultsList.get(0);
-                    TermId maxScoreMaxoTermId = TermId.of(topResult.maxoTermScore().maxoId());
-                    String maxScoreTermLabel = allMaxoTermsMap.get(maxScoreMaxoTermId);
+                    String maxScoreMaxoTermId = topResult.maxoTermScore().maxoId();
+                    String maxScoreTermLabel = biometadataService.maxoLabel(maxScoreMaxoTermId).orElse("unknown");
                     double maxScoreValue = topResult.maxoTermScore().score();
 
                     System.out.println("Max Score: " + maxScoreMaxoTermId + " (" + maxScoreTermLabel + ")" + " = " + maxScoreValue);
@@ -278,34 +268,34 @@ public class DifferentialDiagnosisCommand extends BaseLiricalCommand {
         return data;
     }
 
-    private void writeResultsToFile(Lirical lirical, OutputFormat outputFormat, AnalysisData analysisData,
-                                    AnalysisResults results, AnalysisResultsMetadata metadata, String outFilename) throws IOException {
-        OutputOptions outputOptions = createOutputOptions(outputDir, outFilename);
-        Optional<AnalysisResultsWriter> writer = lirical.analysisResultsWriterFactory().getWriter(outputFormat);
-        if (writer.isPresent()) {
-            writer.get().process(analysisData, results, metadata, outputOptions);
-            outputDir.resolve(outFilename + "." + outputFormatArg.toLowerCase());
-        }
-        if (compress) {
-            zip(outputDir.resolve(outFilename + "." + outputFormatArg.toLowerCase()));
-        }
-    }
+    // private void writeResultsToFile(Lirical lirical, OutputFormat outputFormat, AnalysisData analysisData,
+    //                                 AnalysisResults results, AnalysisResultsMetadata metadata, String outFilename) throws IOException {
+    //     OutputOptions outputOptions = createOutputOptions(outputDir, outFilename);
+    //     Optional<AnalysisResultsWriter> writer = lirical.analysisResultsWriterFactory().getWriter(outputFormat);
+    //     if (writer.isPresent()) {
+    //         writer.get().process(analysisData, results, metadata, outputOptions);
+    //         outputDir.resolve(outFilename + "." + outputFormatArg.toLowerCase());
+    //     }
+    //     if (compress) {
+    //         zip(outputDir.resolve(outFilename + "." + outputFormatArg.toLowerCase()));
+    //     }
+    // }
 
-    private static void zip(Path filePath) throws IOException {
-        if (Files.isRegularFile(filePath) && Files.isReadable(filePath)) {
-            byte[] buffer = new byte[2048];
-            FileInputStream inputStream = new FileInputStream(filePath.toString());
-            FileOutputStream outputStream = new FileOutputStream(filePath + ".gz");
-            GZIPOutputStream gzipOutputStream = new GZIPOutputStream(outputStream);
-            int length;
-            while ((length = inputStream.read(buffer)) > 0) {
-                gzipOutputStream.write(buffer, 0, length);
-            }
-            Files.delete(filePath);
-            inputStream.close();
-            gzipOutputStream.close();
-        }
-    }
+    // private static void zip(Path filePath) throws IOException {
+    //     if (Files.isRegularFile(filePath) && Files.isReadable(filePath)) {
+    //         byte[] buffer = new byte[2048];
+    //         FileInputStream inputStream = new FileInputStream(filePath.toString());
+    //         FileOutputStream outputStream = new FileOutputStream(filePath + ".gz");
+    //         GZIPOutputStream gzipOutputStream = new GZIPOutputStream(outputStream);
+    //         int length;
+    //         while ((length = inputStream.read(buffer)) > 0) {
+    //             gzipOutputStream.write(buffer, 0, length);
+    //         }
+    //         Files.delete(filePath);
+    //         inputStream.close();
+    //         gzipOutputStream.close();
+    //     }
+    // }
 
 
 
