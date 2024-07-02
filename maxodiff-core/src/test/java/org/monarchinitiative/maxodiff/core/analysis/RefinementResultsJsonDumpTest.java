@@ -10,7 +10,6 @@ import org.monarchinitiative.phenol.ontology.data.TermId;
 
 import java.io.StringWriter;
 import java.util.List;
-import java.util.Map;
 import java.util.Set;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -55,7 +54,7 @@ public class RefinementResultsJsonDumpTest {
                     } ]
                   } ]
                 }""";
-        assertThat(writer.toString(), equalTo(expected));
+        assertThat(writer.toString().replaceAll("\r", ""), equalTo(expected));
     }
 
     private static RefinementResults createResults() {

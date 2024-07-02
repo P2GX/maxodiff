@@ -9,6 +9,8 @@ import org.monarchinitiative.maxodiff.html.controller.DifferentialDiagnosisContr
 import org.monarchinitiative.maxodiff.html.service.DifferentialDiagnosisEngineService;
 import org.springframework.beans.factory.BeanCreationException;
 
+import java.io.File;
+
 import static org.hamcrest.CoreMatchers.containsString;
 import static org.hamcrest.Matchers.*;
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -27,7 +29,7 @@ public class MaxodiffAutoConfigurationTest extends AbstractAutoConfigurationTest
     public void testBadDataPath() {
         Throwable thrown = assertThrows(BeanCreationException.class, () -> load(MaxodiffAutoConfiguration.class, "maxodiff.data-directory=path/to/junk"));
 
-        assertThat(thrown.getMessage(), containsString("path/to/junk is not a directory"));
+        assertThat(thrown.getMessage(), containsString(String.join(File.separator,"path", "to", "junk") + " is not a directory"));
     }
 
     @Test
