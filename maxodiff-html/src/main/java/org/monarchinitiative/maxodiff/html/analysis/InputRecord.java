@@ -1,12 +1,10 @@
 package org.monarchinitiative.maxodiff.html.analysis;
 
-import org.monarchinitiative.lirical.core.analysis.AnalysisResults;
-import org.monarchinitiative.maxodiff.core.analysis.MaxoTermMap;
+import org.monarchinitiative.maxodiff.core.model.DifferentialDiagnosis;
+import org.monarchinitiative.maxodiff.core.model.Sample;
 
-import javax.validation.constraints.NotNull;
-import java.nio.file.Path;
+import java.util.List;
 
-
-public record InputRecord(Path maxodiffDir, MaxoTermMap maxoTermMap, AnalysisResults liricalResults,
-                          Path phenopacketPath) {}
+@Deprecated(forRemoval = true)
+public record InputRecord(Sample sample, List<DifferentialDiagnosis> differentialDiagnoses) {}
 

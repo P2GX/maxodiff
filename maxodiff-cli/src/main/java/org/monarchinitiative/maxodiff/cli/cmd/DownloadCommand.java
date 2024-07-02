@@ -1,57 +1,96 @@
 package org.monarchinitiative.maxodiff.cli.cmd;
 
 import org.monarchinitiative.biodownload.BioDownloader;
-import org.monarchinitiative.biodownload.BioDownloaderBuilder;
-import org.monarchinitiative.biodownload.FileDownloadException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+
 import picocli.CommandLine;
 
-import java.io.File;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.List;
 import java.util.concurrent.Callable;
 
 /**
- * Download a number of files needed for the analysis. We download by default to a subdirectory called
- * {@code data}, which is created if necessary. We download the files {@code hp.obo}, {@code phenotype.hpoa},
- * {@code Homo_sapiencs_gene_info.gz}, and {@code mim2gene_medgen}.
+ * Download a number of files needed for the analysis.
+ * <p>
+ * By default, we download by default to a subdirectory called {@code data}, which is created if necessary. 
+ *
+ * @author <a href="mailto:martha.beckwith@jax.org">Martha Beckwith</a>
+ * @author <a href="mailto:daniel.gordon.danis@protonmail.com">Daniel Danis</a>
  * @author <a href="mailto:peter.robinson@jax.org">Peter Robinson</a>
  */
-
-@CommandLine.Command(name = "download", aliases = {"D"},
-        mixinStandardHelpOptions = true,
-        description = "Download files for maxodiff")
+@CommandLine.Command(
+    name = "download", 
+    aliases = {"D"},
+    mixinStandardHelpOptions = true,
+    description = "Download files for maxodiff"
+)
 public class DownloadCommand implements Callable<Integer>{
-    private static final Logger logger = LoggerFactory.getLogger(DownloadCommand.class);
-    @CommandLine.Option(names={"-d","--data"}, description ="directory to download data (default: ${DEFAULT-VALUE})" )
-    public String datadir="data";
 
-    @CommandLine.Option(names={"-w","--overwrite"}, description = "overwrite previously downloaded files (default: ${DEFAULT-VALUE})")
+    private static final Logger LOGGER = LoggerFactory.getLogger(DownloadCommand.class);
+    
+    @CommandLine.Option(
+        names={"-d","--data"}, 
+        description ="directory to download data (default: ${DEFAULT-VALUE})"
+    )
+    public Path datadir= Path.of("data");
+
+    @CommandLine.Option(
+        names={"-w","--overwrite"}, 
+        description = "overwrite previously downloaded files (default: ${DEFAULT-VALUE})"
+    )
     public boolean overwrite;
 
     @Override
-    public Integer call() throws FileDownloadException, MalformedURLException {
-        logger.info(String.format("Download analysis to %s", datadir));
-        Path destination = Paths.get(datadir);
-        BioDownloaderBuilder builder = BioDownloader.builder(destination);
-        builder.hpoJson();
-       // builder.hgnc();
-       // builder.maxoJson();
-        builder.medgene2MIM();
-        builder.hpDiseaseAnnotations();
-        //https://github.com/monarch-initiative/maxo-annotations/blob/master/annotations/maxo_diagnostic_annotations.tsv
-        builder.custom("maxo_diagnostic_annotations.tsv", new URL("https://github.com/monarch-initiative/maxo-annotations/blob/master/annotations/maxo_diagnostic_annotations.tsv"));
-       // builder.custom()
-        BioDownloader downloader = builder.build();
-        List<File> files = downloader.download();
-        for (var f:files) {
-            System.out.printf("Downloaded %s.\n", f.getAbsolutePath());
-        }
+    public Integer call() throws Exception {
+        LOGGER.info("Downloading maxodiff data files to {}", datadir.toAbsolutePath());
+        downloadMaxodiffData(datadir, overwrite);
+        
+        Path liricalDataPath = datadir.resolve("lirical");
+        LOGGER.info("Downloading LIRICAL data files to {}", liricalDataPath.toAbsolutePath());
+        downloadLiricalData(liricalDataPath, overwrite);
+        
+        LOGGER.info("Download is complete!");
+        LOGGER.info("Bye! 😎");
         return 0;
+    }
+
+    private static void downloadLiricalData(Path destinationFolder, boolean overwrite) throws Exception {
+        BioDownloader downloader = BioDownloader.builder(destinationFolder)
+                .overwrite(overwrite)
+                .hpoJson()
+                .hpDiseaseAnnotations()
+                .hgnc()
+                .medgene2MIM()
+                // Jannovar v0.35 transcript databases
+                .custom("hg19_ucsc.ser", createUrlOrExplode("https://storage.googleapis.com/ielis/jannovar/v0.35/hg19_ucsc.ser"))
+                .custom("hg19_refseq.ser", createUrlOrExplode("https://storage.googleapis.com/ielis/jannovar/v0.35/hg19_refseq.ser"))
+                .custom("hg38_ucsc.ser", createUrlOrExplode("https://storage.googleapis.com/ielis/jannovar/v0.35/hg38_ucsc.ser"))
+                .custom("hg38_refseq.ser", createUrlOrExplode("https://storage.googleapis.com/ielis/jannovar/v0.35/hg38_refseq.ser"))
+                .build();
+        downloader.download();
+    }
+
+    private static void downloadMaxodiffData(Path destinationFolder, boolean overwrite) throws Exception { 
+        BioDownloader downloader = BioDownloader.builder(destinationFolder)
+                .overwrite(overwrite)
+                .hpoJson()
+                .hpDiseaseAnnotations()
+                .hgnc()
+                .medgene2MIM()
+                .maxoJson()
+                .custom("maxo_diagnostic_annotations.tsv", createUrlOrExplode("https://raw.githubusercontent.com/monarch-initiative/maxo-annotations/master/annotations/maxo_diagnostic_annotations.tsv"))
+                .build();
+        downloader.download();
+    }
+
+    private static URL createUrlOrExplode(String url) throws Exception {
+        try {
+            return new URL(url);
+        } catch (MalformedURLException e) {
+            throw new Exception(e);
+        }
     }
 
 }

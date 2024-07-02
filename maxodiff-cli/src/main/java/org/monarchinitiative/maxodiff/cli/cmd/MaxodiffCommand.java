@@ -1,10 +1,10 @@
 package org.monarchinitiative.maxodiff.cli.cmd;
 
 import org.monarchinitiative.biodownload.FileDownloadException;
+import org.monarchinitiative.maxodiff.config.MaxodiffBuilder;
 import org.monarchinitiative.maxodiff.core.analysis.MaxoDiffVisualizer;
 import org.monarchinitiative.maxodiff.core.analysis.MaxodiffAnalyzer;
 import org.monarchinitiative.maxodiff.core.io.InputFileParser;
-import org.monarchinitiative.maxodiff.core.io.MaxodiffBuilder;
 import org.monarchinitiative.maxodiff.core.service.MaxoDiffService;
 import org.monarchinitiative.maxodiff.core.service.PhenotypeService;
 import org.monarchinitiative.phenol.ontology.data.TermId;

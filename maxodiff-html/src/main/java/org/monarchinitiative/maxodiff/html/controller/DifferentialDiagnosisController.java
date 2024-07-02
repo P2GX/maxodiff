@@ -6,7 +6,7 @@ import org.monarchinitiative.maxodiff.core.io.LiricalResultsFileParser;
 import org.monarchinitiative.maxodiff.core.io.PhenopacketFileParser;
 import org.monarchinitiative.maxodiff.core.model.DifferentialDiagnosis;
 import org.monarchinitiative.maxodiff.core.model.Sample;
-import org.monarchinitiative.maxodiff.html.service.BiometadataService;
+import org.monarchinitiative.maxodiff.core.service.BiometadataService;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -25,7 +25,8 @@ public class DifferentialDiagnosisController {
 
     public DifferentialDiagnosisController(
             BiometadataService biometadataService,
-            DiffDiagRefiner diffDiagRefiner) {
+            DiffDiagRefiner diffDiagRefiner
+    ) {
         this.biometadataService = biometadataService;
         this.diffDiagRefiner = diffDiagRefiner;
     }
@@ -39,10 +40,15 @@ public class DifferentialDiagnosisController {
             // A list of differential diagnoses, not necessarily the LIRICAL stuff
             @RequestParam(value = "phenopacketPath", required = false) Path phenopacketPath,
             @RequestParam(value = "liricalResultsPath", required = false) Path liricalResultsPath,
+            // TODO: make the values below mandatory
             @RequestParam(value = "nDiseases", required = false) Integer nDiseases,
             @RequestParam(value = "weight", required = false) Double weight,
             @RequestParam(value = "nMaxoResults", required = false) Integer nMaxoResults,
             Model model) throws Exception {
+
+        model.addAttribute("nDiseases", nDiseases);
+        model.addAttribute("weight", weight);
+        model.addAttribute("nMaxoResults", nMaxoResults);
 
         model.addAttribute("phenopacketPath", phenopacketPath);
         model.addAttribute("liricalResultsPath", liricalResultsPath);
@@ -54,11 +60,8 @@ public class DifferentialDiagnosisController {
             model.addAttribute("totalNDiseases", differentialDiagnoses.size());
             model.addAttribute("differentialDiagnoses", differentialDiagnoses.subList(0, nLiricalResults));
         }
-        model.addAttribute("nDiseases", nDiseases);
-        model.addAttribute("weight", weight);
-        model.addAttribute("nMaxoResults", nMaxoResults);
         Map<TermId, Double> initialScores = new LinkedHashMap<>();
-        if (differentialDiagnoses != null && nDiseases != null)
+        if (differentialDiagnoses != null)
             differentialDiagnoses.subList(0, nDiseases).forEach(d -> initialScores.put(d.diseaseId(), d.score()));
         model.addAttribute("initialScores", initialScores);
 
@@ -66,8 +69,7 @@ public class DifferentialDiagnosisController {
          - We should work on the level of sample, not phenopacket.
          */
 
-        if (phenopacketPath != null & differentialDiagnoses != null &
-                nDiseases != null & weight != null & nMaxoResults != null) {
+        if (phenopacketPath != null & differentialDiagnoses != null) {
             PhenopacketData phenopacketData = PhenopacketFileParser.readPhenopacketData(phenopacketPath);
             Sample sample = Sample.of(phenopacketData.sampleId(),
                     phenopacketData.presentHpoTermIds().toList(),
@@ -90,7 +92,9 @@ public class DifferentialDiagnosisController {
 
             Map<String, String> maxoTermsMap = new HashMap<>();
             Map<TermId, String> hpoTermsMap = new HashMap<>();
-            Map<TermId, String> diseaseTermsMap = new HashMap<>();
+            // We MUST use LinkedHashMap to maintain the map order
+            // for the header of the frequency table in the HTML report.
+            Map<TermId, String> diseaseTermsMap = new LinkedHashMap<>();
 
             for (MaxodiffResult maxodiffResult : resultsList.subList(0, nDisplayed)) {
                 MaxoTermScore maxoTermScore = maxodiffResult.maxoTermScore();

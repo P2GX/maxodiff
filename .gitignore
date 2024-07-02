@@ -23,11 +23,11 @@
 hs_err_pid*
 replay_pid*
 
- .idea
- data/
- disease_hpo_maxo.tsv
- hpo_matrix.tsv
- maxo_matrix.tsv
- target/
- venv/
+.idea
+.vscode
+data/
+target/
+venv/
 
+# Jupyter Notebook
+.ipynb_checkpoints
