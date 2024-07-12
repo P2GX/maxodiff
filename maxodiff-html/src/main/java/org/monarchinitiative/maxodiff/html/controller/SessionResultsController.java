@@ -31,8 +31,8 @@ public class SessionResultsController {
     }
 
     @RequestMapping("/sessionResults")
-    public String showResults(@SessionAttribute("sample") Sample sample,
-                             @SessionAttribute("differentialDiagnoses") List<DifferentialDiagnosis> differentialDiagnoses,
+    public String showResults(@SessionAttribute(value = "sample", required = false) Sample sample,
+                             @SessionAttribute(value = "differentialDiagnoses", required = false) List<DifferentialDiagnosis> differentialDiagnoses,
                              @RequestParam(value = "nDiseases", required = false) Integer nDiseases,
                              @RequestParam(value = "weight", required = false) Double weight,
                              @RequestParam(value = "nMaxoResults", required = false) Integer nMaxoResults,
@@ -42,10 +42,12 @@ public class SessionResultsController {
         model.addAttribute("weight", weight);
         model.addAttribute("nMaxoResults", nMaxoResults);
 
-        int nOrigDiffDiagnosesShown = 10;  // TODO: this should not be hard-coded
-        model.addAttribute("nOrigDiffDiagnosesShown", nOrigDiffDiagnosesShown);
-        model.addAttribute("differentialDiagnosesTable", differentialDiagnoses.subList(0, nOrigDiffDiagnosesShown));
-        model.addAttribute("totalNDiseases", differentialDiagnoses.size());
+        if (differentialDiagnoses != null && !differentialDiagnoses.isEmpty()) {
+            int nOrigDiffDiagnosesShown = Math.min(differentialDiagnoses.size(), 10);  // TODO: this should not be hard-coded
+            model.addAttribute("nOrigDiffDiagnosesShown", nOrigDiffDiagnosesShown);
+            model.addAttribute("differentialDiagnosesTable", differentialDiagnoses.subList(0, nOrigDiffDiagnosesShown));
+            model.addAttribute("totalNDiseases", differentialDiagnoses.size());
+        }
 
         if (sample != null && nDiseases != null && weight != null && nMaxoResults != null) {
             RefinementOptions options = RefinementOptions.of(nDiseases, weight);

@@ -5,9 +5,7 @@ import org.monarchinitiative.maxodiff.core.model.DifferentialDiagnosis;
 import org.monarchinitiative.maxodiff.core.model.Sample;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.SessionAttribute;
-import org.springframework.web.bind.annotation.SessionAttributes;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -19,17 +17,16 @@ public class LiricalAnalysisController {
 
     @RequestMapping
     public String liricalAnalysis(
-            @SessionAttribute("engine") DifferentialDiagnosisEngine engine,
-            @SessionAttribute("sample") Sample sample,
+            @SessionAttribute(value = "engine", required = false) DifferentialDiagnosisEngine engine,
+            @SessionAttribute(value = "sample", required = false) Sample sample,
             Model model) {
 
 
         List<DifferentialDiagnosis> differentialDiagnoses = List.of();
 
-        if (sample != null) {
+        if (engine != null && sample != null) {
             // Get initial differential diagnoses from running LIRICAL
             differentialDiagnoses = engine.run(sample);
-            System.out.println("LIRICAL diffDiag size = " + differentialDiagnoses.size());
         }
         model.addAttribute("differentialDiagnoses", differentialDiagnoses);
 

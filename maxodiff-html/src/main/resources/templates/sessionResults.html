@@ -54,19 +54,19 @@
         </tbody>
     </table>
 
-    <p><input type="submit" value="Run Differential Diagnosis Calculation" /></p>
+    <p><input type="submit" value="Run Differential Diagnosis Calculation" th:disabled="${differentialDiagnoses == null or differentialDiagnoses.isEmpty()}"/></p>
 </form>
 
 <!--<h1 th:text="'maxodiff Analysis Results for ' + ${phenopacket}"></h1>-->
-<h1 th:text="'maxodiff Analysis Results for ' + ${sample.id}"></h1>
+<h1 th:text="'maxodiff Analysis Results for ' + ${sample == null ? '' : sample.id}"></h1>
 <table>
     <tbody>
         <tr>
 <!--            <td style='font-weight:bold;'>Disease ID:</td><td th:text="${diseaseId}"></td>-->
-            <td style='font-weight:bold;'>Present HPO Term Ids:</td><td th:text="${sample.presentHpoTermIds}"></td>
+            <td style='font-weight:bold;'>Present HPO Term Ids:</td><td th:text="${sample == null ? '' : sample.presentHpoTermIds}"></td>
         </tr>
         <tr>
-            <td style='font-weight:bold;'>Excluded HPO Term Ids:</td><td th:text="${sample.excludedHpoTermIds}"></td>
+            <td style='font-weight:bold;'>Excluded HPO Term Ids:</td><td th:text="${sample == null ? '' : sample.excludedHpoTermIds}"></td>
         </tr>
         <tr>
             <td style='font-weight:bold;'>N Diseases:</td><td th:text="${nDiseases}"></td>

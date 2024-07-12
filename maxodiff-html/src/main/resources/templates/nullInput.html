@@ -1,0 +1,21 @@
+<!DOCTYPE html SYSTEM "http://www.thymeleaf.org/dtd/xhtml1-strict-thymeleaf-spring4-4.dtd">
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<link rel="stylesheet" type="text/css" th:href="@{/css/style.css}"/>
+<head>
+    <meta charset="UTF-8">
+    <title>maxodiff analysis</title>
+</head>
+<body>
+
+<div th:replace="~{index :: header}">...</div>
+
+<h1>Maxodiff Differential Diagnosis Engine Analysis</h1>
+
+<form th:action="@{/nullInput}">
+    <h2>No Differential Diagnosis Engine selected</h2>
+    <h3>Please choose a differential diagnosis engine in the <a th:href="@{engineInput}">engine</a> tab</h3>
+</form>
+
+</body>
+</html>
+
