@@ -14,9 +14,9 @@ public class DifferentialDiagnosisEngineController {
     public String getInput(@RequestParam(value = "engineName", required = false) String engineName,
                             Model model) {
 
-//        if (engineName == null) {
-//            engineName = "lirical";
-//        }
+        if (engineName == null) {
+            engineName = "lirical";
+        }
 
         model.addAttribute("engineName", engineName);
 

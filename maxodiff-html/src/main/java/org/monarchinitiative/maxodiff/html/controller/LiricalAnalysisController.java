@@ -24,7 +24,7 @@ public class LiricalAnalysisController {
 
         List<DifferentialDiagnosis> differentialDiagnoses = List.of();
 
-        if (engine != null && sample != null) {
+        if (sample != null) {
             // Get initial differential diagnoses from running LIRICAL
             differentialDiagnoses = engine.run(sample);
         }
