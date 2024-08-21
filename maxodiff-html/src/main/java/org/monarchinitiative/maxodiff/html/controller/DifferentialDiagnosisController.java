@@ -7,6 +7,7 @@ import org.monarchinitiative.maxodiff.core.io.PhenopacketFileParser;
 import org.monarchinitiative.maxodiff.core.model.DifferentialDiagnosis;
 import org.monarchinitiative.maxodiff.core.model.Sample;
 import org.monarchinitiative.maxodiff.core.service.BiometadataService;
+import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDisease;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -75,7 +76,23 @@ public class DifferentialDiagnosisController {
                     phenopacketData.presentHpoTermIds().toList(),
                     phenopacketData.excludedHpoTermIds().toList());
             RefinementOptions options = RefinementOptions.of(nDiseases, weight);
-            RefinementResults results = diffDiagRefiner.run(sample, differentialDiagnoses, options);
+
+            List<DifferentialDiagnosis> orderedDiagnoses = null;
+            if (model.getAttribute("hpoTermCounts") == null) {
+                orderedDiagnoses = diffDiagRefiner.getOrderedDiagnoses(differentialDiagnoses, options);
+                List<HpoDisease> diseases = diffDiagRefiner.getDiseases(orderedDiagnoses);
+                Map<TermId, List<HpoFrequency>> hpoTermCounts = diffDiagRefiner.getHpoTermCounts(diseases);
+                model.addAttribute("hpoTermCounts", hpoTermCounts);
+            }
+            Map<TermId, List<HpoFrequency>> hpoTermCounts = (Map<TermId, List<HpoFrequency>>) model.getAttribute("hpoTermCounts");
+
+            if (model.getAttribute("maxoToHpoTermIdMap") == null) {
+                Map<TermId, Set<TermId>> maxoToHpoTermIdMap = diffDiagRefiner.getMaxoToHpoTermIdMap(sample, hpoTermCounts);
+                model.addAttribute("maxoToHpoTermIdMap", maxoToHpoTermIdMap);
+            }
+            Map<TermId, Set<TermId>> maxoToHpoTermIdMap = (Map<TermId, Set<TermId>>) model.getAttribute("maxoToHpoTermIdMap");
+
+            RefinementResults results = diffDiagRefiner.run(sample, orderedDiagnoses, options, null, maxoToHpoTermIdMap, hpoTermCounts, null);
 
             // Show at most n MAxO results
             List<MaxodiffResult> resultsList = new ArrayList<>(results.maxodiffResults());

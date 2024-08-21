@@ -1,9 +1,15 @@
 package org.monarchinitiative.maxodiff.core.analysis;
 
+import org.monarchinitiative.maxodiff.core.diffdg.DifferentialDiagnosisEngine;
 import org.monarchinitiative.maxodiff.core.model.DifferentialDiagnosis;
 import org.monarchinitiative.maxodiff.core.model.Sample;
+import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDisease;
+import org.monarchinitiative.phenol.ontology.data.TermId;
 
 import java.util.Collection;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 /**
  * TODO: insert description
@@ -16,7 +22,26 @@ public interface DiffDiagRefiner {
 
     RefinementResults run(
             Sample sample,
-            Collection<DifferentialDiagnosis> diagnoses,
-            RefinementOptions options
+            Collection<DifferentialDiagnosis> differentialDiagnoses,
+            RefinementOptions options,
+            DifferentialDiagnosisEngine engine,
+            Map<TermId, Set<TermId>> maxoToHpoTermIdMap,
+            Map<TermId, List<HpoFrequency>> hpoTermCounts,
+            Map<TermId, List<DifferentialDiagnosis>> maxoTermToDDEngineDiagnosesMap
     );
+
+    List<DifferentialDiagnosis> getOrderedDiagnoses(Collection<DifferentialDiagnosis> originalDifferentialDiagnoses,
+                                                    RefinementOptions options);
+
+    List<HpoDisease> getDiseases(List<DifferentialDiagnosis> differentialDiagnoses);
+
+    Map<TermId, List<HpoFrequency>> getHpoTermCounts(List<HpoDisease> hpoDiseases);
+
+    Map<TermId, Set<TermId>> getMaxoToHpoTermIdMap(Sample sample,
+                                                   Map<TermId, List<HpoFrequency>> hpoTermCounts);
+
+    Map<TermId, List<DifferentialDiagnosis>> getMaxoTermToDifferentialDiagnosesMap(Sample sample,
+                                                                                   DifferentialDiagnosisEngine engine,
+                                                                                   Map<TermId, Set<TermId>> maxoToHpoTermIdMap,
+                                                                                   Integer nDiseases);
 }

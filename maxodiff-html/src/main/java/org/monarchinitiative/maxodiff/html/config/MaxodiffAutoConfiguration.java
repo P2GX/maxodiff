@@ -77,6 +77,18 @@ public class MaxodiffAutoConfiguration {
     }
 
     @Bean
+    public Map<TermId, Set<TermId>> hpoToMaxoIdMap(Map<SimpleTerm, Set<SimpleTerm>> maxoAnnotsMap) {
+        Map<TermId, Set<TermId>> hpoToMaxoIdMap = new HashMap<>();
+        for (Map.Entry<SimpleTerm, Set<SimpleTerm>> entry : maxoAnnotsMap.entrySet()) {
+            TermId hpoId = entry.getKey().tid();
+            Set<TermId> maxoIds = new HashSet<>();
+            maxoAnnotsMap.get(entry.getKey()).forEach(t -> maxoIds.add(t.tid()));
+            hpoToMaxoIdMap.put(hpoId, maxoIds);
+        }
+        return hpoToMaxoIdMap;
+    }
+
+    @Bean
     public BiometadataService biometadataService(
             MinimalOntology hpo,
             HpoDiseases hpoDiseases,
@@ -88,15 +100,8 @@ public class MaxodiffAutoConfiguration {
     public DiffDiagRefiner diffDiagRefiner(
             MinimalOntology hpo,
             HpoDiseases hpoDiseases,
-            Map<SimpleTerm, Set<SimpleTerm>> maxoAnnotsMap) {
+            Map<TermId, Set<TermId>> hpoToMaxoIdMap) {
 
-        Map<TermId, Set<TermId>> hpoToMaxoIdMap = new HashMap<>();
-        for (Map.Entry<SimpleTerm, Set<SimpleTerm>> entry : maxoAnnotsMap.entrySet()) {
-            TermId hpoId = entry.getKey().tid();
-            Set<TermId> maxoIds = new HashSet<>();
-            maxoAnnotsMap.get(entry.getKey()).forEach(t -> maxoIds.add(t.tid()));
-            hpoToMaxoIdMap.put(hpoId, maxoIds);
-        }
         return new MaxoDiffRefiner(hpoDiseases, hpoToMaxoIdMap, hpo);
     }
 

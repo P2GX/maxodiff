@@ -7,12 +7,16 @@ import java.util.List;
 
 public interface MaxodiffResult {
 
-    static MaxodiffResult of(MaxoTermScore maxoTermScore, Collection<Frequencies> frequencies) {
-        return new MaxodiffResultImpl(maxoTermScore, List.copyOf(frequencies));
+    static MaxodiffResult of(MaxoTermScore maxoTermScore,
+                             Collection<Frequencies> frequencies,
+                             Collection<Frequencies> maxoFrequencies) {
+        return new MaxodiffResultImpl(maxoTermScore, List.copyOf(frequencies), List.copyOf(frequencies));
     }
 
     @JsonGetter
     MaxoTermScore maxoTermScore();
     @JsonGetter
     List<Frequencies> frequencies();
+    @JsonGetter
+    List<Frequencies> maxoFrequencies();
 }
