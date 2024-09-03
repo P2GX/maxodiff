@@ -10,7 +10,7 @@ public interface MaxodiffResult {
     static MaxodiffResult of(MaxoTermScore maxoTermScore,
                              Collection<Frequencies> frequencies,
                              Collection<Frequencies> maxoFrequencies) {
-        return new MaxodiffResultImpl(maxoTermScore, List.copyOf(frequencies), List.copyOf(frequencies));
+        return new MaxodiffResultImpl(maxoTermScore, List.copyOf(frequencies), List.copyOf(maxoFrequencies));
     }
 
     @JsonGetter
