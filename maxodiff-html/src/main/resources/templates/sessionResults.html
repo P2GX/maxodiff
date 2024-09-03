@@ -45,7 +45,7 @@
                 <option th:selected="${refiner} == 'score' ? selected" value="score">SCORE</option>
                 <option th:selected="${refiner} == 'rank' ? selected" value="rank">RANK</option>
                 <option th:selected="${refiner} == 'ddScore' ? selected" value="ddScore">DD SCORE</option>
-                <option th:selected="${refiner} == 'ksTest' ? selected" value="ksTest">KOLMOGOROV-SMIRNOFF TEST</option>
+                <option th:selected="${refiner} == 'ksTest' ? selected" value="ksTest">KOLMOGOROV-SMIRNOV TEST</option>
             </select></td>
         </tr>
         <tr>
@@ -212,8 +212,8 @@
     <table>
         <tbody>
         <tr th:if="${refiner == 'ksTest'}">
-            <td><div th:id="'maxoKolmogorovSmirnoffChartContainer_' + ${iter.index}" style="height:400px; width:700px; border: 1px solid black">
-                </canvas><canvas th:id="'maxoKolmogorovSmirnoffChart_' + ${iter.index}"></canvas></div></td>
+            <td><div th:id="'maxoKolmogorovSmirnovChartContainer_' + ${iter.index}" style="height:400px; width:700px; border: 1px solid black">
+                </canvas><canvas th:id="'maxoKolmogorovSmirnovChart_' + ${iter.index}"></canvas></div></td>
         </tr>
         </tbody>
     </table>
@@ -224,7 +224,7 @@
         var maxoId = [[${maxoTable.maxoTermScore.maxoId}]];
         var chartIdx = [[${iter.index}]]
     </script>
-    <script type="text/javascript" th:src="@{/js/maxoKolmogorovSmirnoffChart.js}"></script>
+    <script type="text/javascript" th:src="@{/js/maxoKolmogorovSmirnovChart.js}"></script>
 
     <h3>Table of HPO Term Frequencies</h3>
     <table class='resultsTable'>

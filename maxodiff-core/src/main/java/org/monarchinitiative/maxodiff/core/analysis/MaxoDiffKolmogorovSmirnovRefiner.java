@@ -9,9 +9,9 @@ import org.monarchinitiative.phenol.ontology.data.TermId;
 
 import java.util.*;
 
-public class MaxoDiffKolmogorovSmirnoffRefiner extends BaseDiffDiagRefiner {
+public class MaxoDiffKolmogorovSmirnovRefiner extends BaseDiffDiagRefiner {
 
-    public MaxoDiffKolmogorovSmirnoffRefiner(HpoDiseases hpoDiseases, Map<TermId, Set<TermId>> fullHpoToMaxoTermMap,
+    public MaxoDiffKolmogorovSmirnovRefiner(HpoDiseases hpoDiseases, Map<TermId, Set<TermId>> fullHpoToMaxoTermMap,
                                              MinimalOntology hpo) {
         super(hpoDiseases, fullHpoToMaxoTermMap, hpo);
     }
@@ -40,7 +40,7 @@ public class MaxoDiffKolmogorovSmirnoffRefiner extends BaseDiffDiagRefiner {
                 maxoTermDiagnoses = AnalysisUtils.getMaxoTermDifferentialDiagnoses(sample, hpoTermIds, engine, nDiseases);
             }
             // Calculate final score and make score record
-            MaxoTermScore maxoTermScore = AnalysisUtils.getMaxoTermKolmogorovSmirnoffRecord(hpoTermIds,
+            MaxoTermScore maxoTermScore = AnalysisUtils.getMaxoTermKolmogorovSmirnovRecord(hpoTermIds,
                     maxoId,
                     differentialDiagnoses.stream().toList(),
                     maxoTermDiagnoses,

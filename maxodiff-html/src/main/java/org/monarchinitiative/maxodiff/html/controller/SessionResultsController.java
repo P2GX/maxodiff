@@ -70,8 +70,8 @@ public class SessionResultsController {
                             algorithm = "Rank";}
             case "ddScore" -> {diffDiagRefiner = new MaxoDiffDDScoreRefiner(hpoDiseases, hpoToMaxoIdMap, hpo);
                                 algorithm = "Differential Diagnosis Score";}
-            case "ksTest" -> {diffDiagRefiner = new MaxoDiffKolmogorovSmirnoffRefiner(hpoDiseases, hpoToMaxoIdMap, hpo);
-                                algorithm = "Kolomogorov-Smirnoff Test";}
+            case "ksTest" -> {diffDiagRefiner = new MaxoDiffKolmogorovSmirnovRefiner(hpoDiseases, hpoToMaxoIdMap, hpo);
+                                algorithm = "Kolomogorov-Smirnov Test";}
         }
 
         model.addAttribute("refiner", refiner);
@@ -91,14 +91,14 @@ public class SessionResultsController {
             RefinementOptions options = RefinementOptions.of(nDiseases, weight);
 
             if (model.getAttribute("orderedDiagnoses") == null || !nDiseases.equals(prevNDiseases)
-                    || diffDiagRefiner instanceof MaxoDiffKolmogorovSmirnoffRefiner) {
+                    || diffDiagRefiner instanceof MaxoDiffKolmogorovSmirnovRefiner) {
                 List<DifferentialDiagnosis> orderedDiagnoses = diffDiagRefiner.getOrderedDiagnoses(differentialDiagnoses, options);
                 model.addAttribute("orderedDiagnoses", orderedDiagnoses);
             }
             List<DifferentialDiagnosis> orderedDiagnoses = (List<DifferentialDiagnosis>) model.getAttribute("orderedDiagnoses");
 
             if (model.getAttribute("hpoTermCounts") == null || !nDiseases.equals(prevNDiseases)
-                    || diffDiagRefiner instanceof MaxoDiffKolmogorovSmirnoffRefiner) {
+                    || diffDiagRefiner instanceof MaxoDiffKolmogorovSmirnovRefiner) {
                 List<HpoDisease> diseases = diffDiagRefiner.getDiseases(orderedDiagnoses);
                 Map<TermId, List<HpoFrequency>> hpoTermCounts = diffDiagRefiner.getHpoTermCounts(diseases);
                 model.addAttribute("hpoTermCounts", hpoTermCounts);
@@ -106,15 +106,15 @@ public class SessionResultsController {
             Map<TermId, List<HpoFrequency>> hpoTermCounts = (Map<TermId, List<HpoFrequency>>) model.getAttribute("hpoTermCounts");
 
             if (model.getAttribute("maxoToHpoTermIdMap") == null || !nDiseases.equals(prevNDiseases)
-                    || diffDiagRefiner instanceof MaxoDiffKolmogorovSmirnoffRefiner) {
+                    || diffDiagRefiner instanceof MaxoDiffKolmogorovSmirnovRefiner) {
                 Map<TermId, Set<TermId>> maxoToHpoTermIdMap = diffDiagRefiner.getMaxoToHpoTermIdMap(sample, hpoTermCounts);
                 model.addAttribute("maxoToHpoTermIdMap", maxoToHpoTermIdMap);
             }
             Map<TermId, Set<TermId>> maxoToHpoTermIdMap = (Map<TermId, Set<TermId>>) model.getAttribute("maxoToHpoTermIdMap");
 
             if ((model.getAttribute("maxoTermToDifferentialDiagnosesMap") == null || !nDiseases.equals(prevNDiseases)
-                    || diffDiagRefiner instanceof MaxoDiffKolmogorovSmirnoffRefiner) && !(diffDiagRefiner instanceof MaxoDiffRefiner)) {
-                Integer nMapDiseases = diffDiagRefiner instanceof MaxoDiffKolmogorovSmirnoffRefiner ? 100 : options.nDiseases();
+                    || diffDiagRefiner instanceof MaxoDiffKolmogorovSmirnovRefiner) && !(diffDiagRefiner instanceof MaxoDiffRefiner)) {
+                Integer nMapDiseases = diffDiagRefiner instanceof MaxoDiffKolmogorovSmirnovRefiner ? 100 : options.nDiseases();
                 Map<TermId, List<DifferentialDiagnosis>> maxoTermToDifferentialDiagnosesMap = diffDiagRefiner.getMaxoTermToDifferentialDiagnosesMap(sample,
                         engine, maxoToHpoTermIdMap, nMapDiseases);
                 model.addAttribute("maxoTermToDifferentialDiagnosesMap", maxoTermToDifferentialDiagnosesMap);
@@ -130,7 +130,7 @@ public class SessionResultsController {
                                                                       maxoTermToDDEngineDiagnosesMap);
 
             List<MaxodiffResult> resultsList = new ArrayList<>(refinementResults.maxodiffResults());
-            if (diffDiagRefiner instanceof MaxoDiffKolmogorovSmirnoffRefiner) {
+            if (diffDiagRefiner instanceof MaxoDiffKolmogorovSmirnovRefiner) {
                 resultsList.sort(Comparator.<MaxodiffResult>comparingDouble(mr -> mr.maxoTermScore().scoreDiff()));
             } else {
                 resultsList.sort(Comparator.<MaxodiffResult>comparingDouble(mr -> mr.maxoTermScore().scoreDiff()).reversed());

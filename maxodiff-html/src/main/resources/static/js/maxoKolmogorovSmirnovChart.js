@@ -1,11 +1,11 @@
-//const posttestChart = document.getElementById(id);//'maxoKolmogorovSmirnoffChart'
+//const posttestChart = document.getElementById(id);//'maxoKolmogorovSmirnovChart'
 
 var initialCDF = initialCDF;
 var maxoCDF = maxoCDF;
 var maxoId = maxoId;
 var idx = chartIdx;
 
-var posttestChart = document.getElementById('maxoKolmogorovSmirnoffChart_' + idx);
+var posttestChart = document.getElementById('maxoKolmogorovSmirnovChart_' + idx);
 console.log("postestChart = " + posttestChart);
 
 var cdfs = [initialCDF, maxoCDF]

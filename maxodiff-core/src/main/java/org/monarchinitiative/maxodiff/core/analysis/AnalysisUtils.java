@@ -452,7 +452,7 @@ class AnalysisUtils {
      * @param options Refinement options.
      * @return MaxoTermScore record.
      */
-    static MaxoTermScore getMaxoTermKolmogorovSmirnoffRecord(Set<TermId> hpoTermIds,
+    static MaxoTermScore getMaxoTermKolmogorovSmirnovRecord(Set<TermId> hpoTermIds,
                                                              TermId maxoId,
                                                              List<DifferentialDiagnosis> originalDifferentialDiagnoses,
                                                              List<DifferentialDiagnosis> maxoTermDifferentialDiagnosesFull,
