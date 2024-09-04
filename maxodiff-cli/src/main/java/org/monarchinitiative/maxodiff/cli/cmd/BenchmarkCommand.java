@@ -19,6 +19,7 @@ import org.monarchinitiative.maxodiff.core.model.Sample;
 import org.monarchinitiative.maxodiff.core.service.BiometadataService;
 import org.monarchinitiative.maxodiff.lirical.LiricalDifferentialDiagnosisEngine;
 import org.monarchinitiative.maxodiff.lirical.LiricalDifferentialDiagnosisEngineConfigurer;
+import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDisease;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -160,7 +161,11 @@ public class BenchmarkCommand extends DifferentialDiagnosisCommand {
                         for (double weight : weights) {
                             RefinementOptions options = RefinementOptions.of(nDiseases, weight);
                             for (Map.Entry<String, DiffDiagRefiner> e : refiners.entrySet()) {
-                                RefinementResults refinementResults = e.getValue().run(sample, differentialDiagnoses, options);
+                                List<DifferentialDiagnosis> orderedDiagnoses = e.getValue().getOrderedDiagnoses(differentialDiagnoses, options);
+                                List<HpoDisease> diseases = e.getValue().getDiseases(orderedDiagnoses);
+                                Map<TermId, List<HpoFrequency>> hpoTermCounts = e.getValue().getHpoTermCounts(diseases);
+                                Map<TermId, Set<TermId>> maxoToHpoTermIdMap = e.getValue().getMaxoToHpoTermIdMap(sample, hpoTermCounts);
+                                RefinementResults refinementResults = e.getValue().run(sample, orderedDiagnoses, options, null, maxoToHpoTermIdMap, hpoTermCounts, null);
                                 List<MaxodiffResult> resultsList = refinementResults.maxodiffResults().stream().toList();
                                 // Get List of Refinement results: maxo term scores and frequencies
                                 String fileName = String.join("_",

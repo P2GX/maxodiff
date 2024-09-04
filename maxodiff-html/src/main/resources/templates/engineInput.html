@@ -23,8 +23,9 @@
 <!--        <input type="radio" th:field="${engineName}" th:value="${name}" th:text="${#strings.toUpperCase(name)}"/>-->
 <!--    </p>-->
 
-<!--    <select th:field="*{engineName}">-->
-<!--        <option th:each="name : ${engineNames}" th:value="${name}" th:text="${#strings.toUpperCase(name)}" />-->
+<!--    <select th:value="${engineName} ?: lirical" name="engineName" id="engineName1">-->
+<!--        <option th:each="name : ${engineNames}" th:value="${name}" th:text="${#strings.toUpperCase(name)}"-->
+<!--                th:selected ="${engineName}"></option>-->
 <!--    </select>-->
 <!--    <p></p>-->
 

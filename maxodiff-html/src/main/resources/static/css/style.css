@@ -64,7 +64,7 @@
   height:1px;
 }
 
-.liricalResultsTable td {
+.liricalResultsTable td, .initialLiricalResultsTable td, .maxoLiricalResultsTable td {
     background-color: white;
 }
 
@@ -105,13 +105,23 @@
     color: white;
 }
 
-.liricalResultsTable td, .liricalResultsTable th, .resultsTable td, .resultsTable th {
+.maxoResultsTable th {
+    background-color: palevioletred;
+    color: white;
+}
+
+.liricalResultsTable td, .liricalResultsTable th, .resultsTable td, .resultsTable th, .maxoResultsTable td, .maxoResultsTable th {
     border: 1px solid black;
     padding: 0px 10px 0px 10px
 }
 
 .resultsTable td:first-child {
     background-color: lightblue;
+    font-weight: bold
+}
+
+.maxoResultsTable td:first-child {
+    background-color: lightpink;
     font-weight: bold
 }
 

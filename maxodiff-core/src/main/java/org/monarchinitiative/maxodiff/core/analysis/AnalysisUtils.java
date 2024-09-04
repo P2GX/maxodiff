@@ -1,11 +1,16 @@
 package org.monarchinitiative.maxodiff.core.analysis;
 
+import org.apache.commons.math3.random.EmpiricalDistribution;
+import org.monarchinitiative.maxodiff.core.diffdg.DifferentialDiagnosisEngine;
 import org.monarchinitiative.maxodiff.core.model.DifferentialDiagnosis;
+import org.monarchinitiative.maxodiff.core.model.Sample;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDisease;
 import org.monarchinitiative.phenol.ontology.data.MinimalOntology;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 
 import java.util.*;
+
+import org.apache.commons.math3.stat.inference.KolmogorovSmirnovTest;
 
 class AnalysisUtils {
 
@@ -223,7 +228,6 @@ class AnalysisUtils {
                                                 List<HpoDisease> diseases,
                                                 RefinementOptions options) {
 
-        //TODO: check if logic for getting initialScore is correct.
         double maxoTermInitialScore = calculateMaxoTermFinalScore(differentialDiagnoses,
                 diseases,
                 hpoCombos,
@@ -241,7 +245,254 @@ class AnalysisUtils {
         int nHpoTerms = hpoTermIds.size();
 
         return new MaxoTermScore(maxoId.toString(), options.nDiseases(),
-                diseaseIds, nHpoTerms, hpoTermIds,
-                maxoTermInitialScore, maxoTermFinalScore, scoreDiff);
+                diseaseIds, Set.of(), nHpoTerms, hpoTermIds,
+                maxoTermInitialScore, maxoTermFinalScore, scoreDiff, TermId.of("HP:000000"),
+                List.of(), List.of(),null,null);
+    }
+
+    /**
+     *
+     * @param sample Sample info, may or may not be from a phenopacket.
+     * @param hpoTermIds The target m disease Ids.
+     * @param engine The engine used for the original differential diagnosis calculation (e.g. LIRICAL).
+     * @return List of DifferentialDiagnosis objects for MAxO term, in reverse score order.
+     */
+    static List<DifferentialDiagnosis> getMaxoTermDifferentialDiagnoses(Sample sample,
+                                                                        Set<TermId> hpoTermIds,
+                                                                        DifferentialDiagnosisEngine engine,
+                                                                        Integer nDiseases) {
+
+        List<TermId> hpoIdList = hpoTermIds.stream().toList();
+        Sample maxoSample = Sample.of(sample.id(), hpoIdList, sample.excludedHpoTermIds());
+        List<DifferentialDiagnosis> maxoDiagnoses = engine.run(maxoSample);
+        List<DifferentialDiagnosis> orderedMaxoDiagnoses = maxoDiagnoses.stream()
+                .sorted(Comparator.comparingDouble(DifferentialDiagnosis::score).reversed())
+                .toList();
+
+        return orderedMaxoDiagnoses.subList(0, nDiseases);
+    }
+
+    static List<DifferentialDiagnosis> getInitialDiagnosesMaxoOrdered(List<DifferentialDiagnosis> originalDiagnoses,
+                                                                      List<DifferentialDiagnosis> maxoDiagnoses) {
+
+        List<DifferentialDiagnosis> initialDiagnosesMaxoOrdered = new LinkedList<>();
+        for (DifferentialDiagnosis maxoDiagnosis : maxoDiagnoses) {
+            List<DifferentialDiagnosis> origDiagnoses = originalDiagnoses.stream()
+                    .filter(dd -> dd.diseaseId().equals(maxoDiagnosis.diseaseId())).toList();
+            if (!origDiagnoses.isEmpty()) {
+                DifferentialDiagnosis origDiagnosis = origDiagnoses.get(0);
+                initialDiagnosesMaxoOrdered.add(origDiagnosis);
+            } else {
+                initialDiagnosesMaxoOrdered.add(DifferentialDiagnosis.of(TermId.of("HP:000000"), 0, 0));
+            }
+        }
+
+        return initialDiagnosesMaxoOrdered;
+    }
+
+    /**
+     *
+     * @param hpoTermIds Set of HPO terms that can be ascertained by the MAXO term.
+     * @param maxoId TermId of MAXO Term.
+     * @param originalDifferentialDiagnoses List of the original differential diagnosis results.
+     * @param maxoTermDifferentialDiagnoses List of the maxo term differential diagnosis results.
+     * @param options Refinement options.
+     * @return MaxoTermScore record.
+     */
+    static MaxoTermScore getMaxoTermRankRecord(Set<TermId> hpoTermIds,
+                                               TermId maxoId,
+                                               List<DifferentialDiagnosis> originalDifferentialDiagnoses,
+                                               List<DifferentialDiagnosis> maxoTermDifferentialDiagnoses,
+                                               RefinementOptions options) {
+
+//        List<DifferentialDiagnosis> maxoTermDifferentialDiagnoses = getMaxoTermDifferentialDiagnoses(sample, hpoTermIds, engine);
+        Map<TermId, List<Double>> rankChanges = new HashMap<>();
+        for (DifferentialDiagnosis origDiagnosis : originalDifferentialDiagnoses) {
+            TermId termId = origDiagnosis.diseaseId();
+            double origRank = originalDifferentialDiagnoses.indexOf(origDiagnosis) + 1;
+            List<DifferentialDiagnosis> maxoDiagnoses = maxoTermDifferentialDiagnoses.stream()
+                    .filter(dd -> dd.diseaseId().equals(termId)).toList();
+            if (!maxoDiagnoses.isEmpty()) {
+                DifferentialDiagnosis maxoDiagnosis = maxoDiagnoses.get(0);
+                double maxoRank = maxoTermDifferentialDiagnoses.indexOf(maxoDiagnosis) + 1;
+                double rankChange = Math.abs(maxoRank - origRank) / maxoRank;
+                rankChanges.put(termId, List.of(origRank, maxoRank, rankChange));
+//                System.out.println(origRank + " " + maxoRank + " " + rankChange);
+//                System.out.println("added to rankChanges. Size = " + rankChanges.size());
+            }
+        }
+
+        List<DifferentialDiagnosis> initialDiagnosesMaxoOrdered = getInitialDiagnosesMaxoOrdered(originalDifferentialDiagnoses, maxoTermDifferentialDiagnoses);
+
+        Optional<Map.Entry<TermId, List<Double>>> maxRankChangeEntryOpt = rankChanges.entrySet()
+                .stream()
+                .max(Comparator.comparing((Map.Entry<TermId, List<Double>> e) -> e.getValue().get(2)));
+
+        double maxoTermInitialRank = 0.0;
+        double maxoTermFinalRank = 0.0;
+        double rankDiff = 0.0;
+        TermId maxChangeDiseaseId = TermId.of("HP:000000");
+        if (maxRankChangeEntryOpt.isPresent()) {
+            Map.Entry<TermId, List<Double>> maxRankChangeEntry = maxRankChangeEntryOpt.get();
+            maxoTermInitialRank = maxRankChangeEntry.getValue().get(0);
+            maxoTermFinalRank = maxRankChangeEntry.getValue().get(1);
+            rankDiff = maxRankChangeEntry.getValue().get(2);
+            maxChangeDiseaseId = maxRankChangeEntry.getKey();
+//            System.out.println("Max Rank Change = " + maxChangeDiseaseId + " " + maxoTermInitialRank + " " + maxoTermFinalRank + " " + rankDiff);
+        }
+
+        Set<TermId> diseaseIds = new LinkedHashSet<>();
+        List<DifferentialDiagnosis> differentialDiagnosisModels = new ArrayList<>(originalDifferentialDiagnoses);
+        differentialDiagnosisModels.sort(Comparator.comparingDouble(DifferentialDiagnosis::score).reversed());
+        differentialDiagnosisModels.forEach(d -> diseaseIds.add(d.diseaseId()));
+        int nHpoTerms = hpoTermIds.size();
+
+        Set<TermId> maxoDiseaseIds = new LinkedHashSet<>();
+        List<DifferentialDiagnosis> maxoDifferentialDiagnosisModels = new ArrayList<>(maxoTermDifferentialDiagnoses);
+        maxoDifferentialDiagnosisModels.sort(Comparator.comparingDouble(DifferentialDiagnosis::score).reversed());
+        maxoDifferentialDiagnosisModels.forEach(d -> maxoDiseaseIds.add(d.diseaseId()));
+
+        return new MaxoTermScore(maxoId.toString(), options.nDiseases(),
+                diseaseIds, maxoDiseaseIds, nHpoTerms, hpoTermIds,
+                maxoTermInitialRank, maxoTermFinalRank, rankDiff, maxChangeDiseaseId,
+                maxoTermDifferentialDiagnoses, initialDiagnosesMaxoOrdered,null, null);
+    }
+
+    /**
+     *
+     * @param hpoTermIds Set of HPO terms that can be ascertained by the MAXO term.
+     * @param maxoId TermId of MAXO Term.
+     * @param originalDifferentialDiagnoses List of the original differential diagnosis results.
+     * @param maxoTermDifferentialDiagnoses List of the maxo term differential diagnosis results.
+     * @param options Refinement options.
+     * @return MaxoTermScore record.
+     */
+    static MaxoTermScore getMaxoTermDDScoreRecord(Set<TermId> hpoTermIds,
+                                                  TermId maxoId,
+                                                  List<DifferentialDiagnosis> originalDifferentialDiagnoses,
+                                                  List<DifferentialDiagnosis> maxoTermDifferentialDiagnoses,
+                                                  RefinementOptions options) {
+
+//        List<DifferentialDiagnosis> maxoTermDifferentialDiagnoses = getMaxoTermDifferentialDiagnoses(sample, hpoTermIds, engine);
+        Map<TermId, List<Double>> ddScoreChanges = new HashMap<>();
+        for (DifferentialDiagnosis origDiagnosis : originalDifferentialDiagnoses) {
+            TermId termId = origDiagnosis.diseaseId();
+            double origDDScore = origDiagnosis.lr();
+            List<DifferentialDiagnosis> maxoDiagnoses = maxoTermDifferentialDiagnoses.stream()
+                    .filter(dd -> dd.diseaseId().equals(termId)).toList();
+            if (!maxoDiagnoses.isEmpty()) {
+                DifferentialDiagnosis maxoDiagnosis = maxoDiagnoses.get(0);
+                double maxoDDScore = maxoDiagnosis.lr();
+                double ddScoreChange = Math.abs(maxoDDScore - origDDScore) / origDDScore;
+                ddScoreChanges.put(termId, List.of(origDDScore, maxoDDScore, ddScoreChange));
+//                System.out.println(origDDScore + " " + maxoDDScore + " " + ddScoreChange);
+//                System.out.println("added to ddScoreChanges. Size = " + ddScoreChanges.size());
+            }
+        }
+
+        List<DifferentialDiagnosis> initialDiagnosesMaxoOrdered = getInitialDiagnosesMaxoOrdered(originalDifferentialDiagnoses, maxoTermDifferentialDiagnoses);
+
+        Optional<Map.Entry<TermId, List<Double>>> maxDDScoreChangeEntryOpt = ddScoreChanges.entrySet()
+                .stream()
+                .max(Comparator.comparing((Map.Entry<TermId, List<Double>> e) -> e.getValue().get(2)));
+
+        double maxoTermInitialDDScore = 0.0;
+        double maxoTermFinalDDScore = 0.0;
+        double ddScoreDiff = 0.0;
+        TermId maxChangeDiseaseId = TermId.of("HP:000000");
+        if (maxDDScoreChangeEntryOpt.isPresent()) {
+            Map.Entry<TermId, List<Double>> maxDDScoreChangeEntry = maxDDScoreChangeEntryOpt.get();
+            maxoTermInitialDDScore = maxDDScoreChangeEntry.getValue().get(0);
+            maxoTermFinalDDScore = maxDDScoreChangeEntry.getValue().get(1);
+            ddScoreDiff = maxDDScoreChangeEntry.getValue().get(2);
+            maxChangeDiseaseId = maxDDScoreChangeEntry.getKey();
+//            System.out.println("Max DD Score Change = " + maxChangeDiseaseId + " " + maxoTermInitialDDScore + " " + maxoTermFinalDDScore + " " + ddScoreDiff);
+        }
+
+        Set<TermId> diseaseIds = new LinkedHashSet<>();
+        List<DifferentialDiagnosis> differentialDiagnosisModels = new ArrayList<>(originalDifferentialDiagnoses);
+        differentialDiagnosisModels.sort(Comparator.comparingDouble(DifferentialDiagnosis::score).reversed());
+        differentialDiagnosisModels.forEach(d -> diseaseIds.add(d.diseaseId()));
+        int nHpoTerms = hpoTermIds.size();
+
+        Set<TermId> maxoDiseaseIds = new LinkedHashSet<>();
+        List<DifferentialDiagnosis> maxoDifferentialDiagnosisModels = new ArrayList<>(maxoTermDifferentialDiagnoses);
+        maxoDifferentialDiagnosisModels.sort(Comparator.comparingDouble(DifferentialDiagnosis::score).reversed());
+        maxoDifferentialDiagnosisModels.forEach(d -> maxoDiseaseIds.add(d.diseaseId()));
+
+        return new MaxoTermScore(maxoId.toString(), options.nDiseases(),
+                diseaseIds, maxoDiseaseIds, nHpoTerms, hpoTermIds,
+                maxoTermInitialDDScore, maxoTermFinalDDScore, ddScoreDiff, maxChangeDiseaseId,
+                maxoTermDifferentialDiagnoses, initialDiagnosesMaxoOrdered,null, null);
+    }
+
+    /**
+     *
+     * @param scores double[]. Array of differential diagnosis scores.
+     * @return List<Double>. List of Empirical Cumulative Distribution probability values.
+     */
+    static List<Double> getScoreCumulativeDistribution(double[] scores) {
+        List<Double> scoreCumulativeDistributionList = new ArrayList<>();
+        int nScores = scores.length;
+        int binCount = nScores/10;
+        EmpiricalDistribution empiricalDistribution = new EmpiricalDistribution(binCount);
+        empiricalDistribution.load(scores);
+        for (double maxoScore : scores) {
+            scoreCumulativeDistributionList.add(empiricalDistribution.cumulativeProbability(maxoScore));
+        }
+        return scoreCumulativeDistributionList;
+    }
+
+    /**
+     *
+     * @param hpoTermIds Set of HPO terms that can be ascertained by the MAXO term.
+     * @param maxoId TermId of MAXO Term.
+     * @param originalDifferentialDiagnoses List of the original differential diagnosis results.
+     * @param maxoTermDifferentialDiagnosesFull Full list of the maxo term differential diagnosis results.
+     * @param options Refinement options.
+     * @return MaxoTermScore record.
+     */
+    static MaxoTermScore getMaxoTermKolmogorovSmirnovRecord(Set<TermId> hpoTermIds,
+                                                             TermId maxoId,
+                                                             List<DifferentialDiagnosis> originalDifferentialDiagnoses,
+                                                             List<DifferentialDiagnosis> maxoTermDifferentialDiagnosesFull,
+                                                             RefinementOptions options) {
+
+        //List<DifferentialDiagnosis> maxoTermDifferentialDiagnosesFull = getMaxoTermDifferentialDiagnoses(sample, hpoTermIds, engine);
+        List<DifferentialDiagnosis> maxoTermDifferentialDiagnoses = maxoTermDifferentialDiagnosesFull;//.subList(0, 100);
+
+        List<DifferentialDiagnosis> originalDifferentialDiagnosisModels = new ArrayList<>(originalDifferentialDiagnoses);
+        originalDifferentialDiagnosisModels.sort(Comparator.comparingDouble(DifferentialDiagnosis::score));
+        List<DifferentialDiagnosis> maxoDifferentialDiagnosisModels = new ArrayList<>(maxoTermDifferentialDiagnoses);
+        maxoDifferentialDiagnosisModels.sort(Comparator.comparingDouble(DifferentialDiagnosis::score));
+        double[] origScores = originalDifferentialDiagnosisModels.stream().mapToDouble(DifferentialDiagnosis::score).toArray();
+        double[] maxoScores = maxoDifferentialDiagnosisModels.stream().mapToDouble(DifferentialDiagnosis::score).toArray();
+
+        List<Double> origCDFList = getScoreCumulativeDistribution(origScores);
+        List<Double> maxoCDFList = getScoreCumulativeDistribution(maxoScores);
+        double[] origCDF = origCDFList.stream().mapToDouble(Double::doubleValue).toArray();
+        double[] maxoCDF = maxoCDFList.stream().mapToDouble(Double::doubleValue).toArray();
+
+        KolmogorovSmirnovTest ksTest = new KolmogorovSmirnovTest();
+        double pValueKS = ksTest.kolmogorovSmirnovTest(origCDF, maxoCDF);
+
+        double maxoTermInitialDDScore = 0.0;
+        double maxoTermFinalDDScore = 0.0;
+        TermId maxChangeDiseaseId = TermId.of("HP:000000");
+
+        Set<TermId> diseaseIds = new LinkedHashSet<>();
+        originalDifferentialDiagnosisModels.sort(Comparator.comparingDouble(DifferentialDiagnosis::score).reversed());
+        originalDifferentialDiagnosisModels.forEach(d -> diseaseIds.add(d.diseaseId()));
+        int nHpoTerms = hpoTermIds.size();
+
+        Set<TermId> maxoDiseaseIds = new LinkedHashSet<>();
+        maxoDifferentialDiagnosisModels.sort(Comparator.comparingDouble(DifferentialDiagnosis::score).reversed());
+        maxoDifferentialDiagnosisModels.forEach(d -> maxoDiseaseIds.add(d.diseaseId()));
+
+        return new MaxoTermScore(maxoId.toString(), options.nDiseases(),
+                diseaseIds, maxoDiseaseIds, nHpoTerms, hpoTermIds,
+                maxoTermInitialDDScore, maxoTermFinalDDScore, pValueKS, maxChangeDiseaseId,
+                maxoTermDifferentialDiagnosesFull, List.of(),
+                origCDF, maxoCDF);
     }
 }

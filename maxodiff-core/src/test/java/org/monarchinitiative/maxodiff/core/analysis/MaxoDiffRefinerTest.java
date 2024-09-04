@@ -9,6 +9,7 @@ import org.monarchinitiative.maxodiff.core.SimpleTerm;
 import org.monarchinitiative.maxodiff.core.TestResources;
 import org.monarchinitiative.maxodiff.core.model.DifferentialDiagnosis;
 import org.monarchinitiative.maxodiff.core.model.Sample;
+import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDisease;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 
 import java.util.*;
@@ -40,8 +41,13 @@ public class MaxoDiffRefinerTest {
         RefinementOptions options = RefinementOptions.of(12, 0.5);
         Sample sample = TestResources.getExampleSample();
         Collection<DifferentialDiagnosis> originalDiagnoses = TestResources.getExampleDiagnoses();
+        List<DifferentialDiagnosis> orderedDiagnoses = refiner.getOrderedDiagnoses(originalDiagnoses, options);
+        List<HpoDisease> diseases = refiner.getDiseases(orderedDiagnoses.stream().toList());
+        Map<TermId, List<HpoFrequency>> hpoTermCounts = refiner.getHpoTermCounts(diseases);
+        Map<TermId, Set<TermId>> maxoToHpoTermIdMap = refiner.getMaxoToHpoTermIdMap(sample, hpoTermCounts);
 
-        RefinementResults results = refiner.run(sample, originalDiagnoses, options);
+        RefinementResults results = refiner.run(sample, orderedDiagnoses, options, null,
+                                                maxoToHpoTermIdMap, hpoTermCounts, null);
 
         List<MaxodiffResult> resultsList = new ArrayList<>(results.maxodiffResults());
         resultsList.sort((a, b) -> b.maxoTermScore().scoreDiff().compareTo(a.maxoTermScore().scoreDiff()));
