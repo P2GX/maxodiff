@@ -29,8 +29,10 @@ import java.util.concurrent.Callable;
  * {@code data}, which is created if necessary. We download the files {@code hp.obo}, {@code phenotype.hpoa},
  * {@code Homo_sapiencs_gene_info.gz}, and {@code mim2gene_medgen}.
  * @author <a href="mailto:peter.robinson@jax.org">Peter Robinson</a>
+ *
+ * TODO -- PROBALBY DEPRECATE
  */
-
+@Deprecated(forRemoval = true)
 @CommandLine.Command(name = "org/monarchinitiative/maxodiff/cli", aliases = {"M"},
         mixinStandardHelpOptions = true,
         description = "maxodiff analysis")

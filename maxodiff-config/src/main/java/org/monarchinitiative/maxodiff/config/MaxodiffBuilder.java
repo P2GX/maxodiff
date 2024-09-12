@@ -21,6 +21,7 @@ import java.nio.file.Path;
 import java.util.Map;
 import java.util.Set;
 
+@Deprecated(forRemoval = true)
 public class MaxodiffBuilder {
     private static final Logger LOGGER = LoggerFactory.getLogger(MaxodiffBuilder.class);
 
