@@ -29,6 +29,7 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.stream.Stream;
 import java.util.zip.GZIPOutputStream;
 
 
@@ -149,7 +150,7 @@ public class DifferentialDiagnosisCommand extends BaseLiricalCommand {
             MaxodiffDataResolver maxodiffDataResolver = MaxodiffDataResolver.of(maxoDataPath);
             MaxodiffPropsConfiguration maxodiffPropsConfiguration = MaxodiffPropsConfiguration.createConfig(maxodiffDataResolver);
 
-            DiffDiagRefiner maxoDiffRefiner = maxodiffPropsConfiguration.diffDiagRefiner(false);
+            DiffDiagRefiner maxoDiffRefiner = maxodiffPropsConfiguration.diffDiagRefiner("score");
             BiometadataService biometadataService = maxodiffPropsConfiguration.biometadataService();
 
             //TODO? get list of diseases from LIRICAL results, and add diseases from CLI arg to total list for analysis
@@ -171,7 +172,9 @@ public class DifferentialDiagnosisCommand extends BaseLiricalCommand {
                     List<DifferentialDiagnosis> orderedDiagnoses = maxoDiffRefiner.getOrderedDiagnoses(differentialDiagnoses, options);
                     List<HpoDisease> diseases = maxoDiffRefiner.getDiseases(orderedDiagnoses);
                     Map<TermId, List<HpoFrequency>> hpoTermCounts = maxoDiffRefiner.getHpoTermCounts(diseases);
-                    Map<TermId, Set<TermId>> maxoToHpoTermIdMap = maxoDiffRefiner.getMaxoToHpoTermIdMap(sample, hpoTermCounts);
+                    List<TermId> termIdsToRemove = Stream.of(sample.presentHpoTermIds(), sample.excludedHpoTermIds())
+                            .flatMap(Collection::stream).toList();
+                    Map<TermId, Set<TermId>> maxoToHpoTermIdMap = maxoDiffRefiner.getMaxoToHpoTermIdMap(termIdsToRemove, hpoTermCounts);
                     RefinementResults refinementResults = maxoDiffRefiner.run(sample, orderedDiagnoses, options, null, maxoToHpoTermIdMap, hpoTermCounts, null);
 
                     List<MaxodiffResult> resultsList = refinementResults.maxodiffResults().stream().toList();

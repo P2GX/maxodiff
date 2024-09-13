@@ -37,7 +37,7 @@ public interface DiffDiagRefiner {
 
     Map<TermId, List<HpoFrequency>> getHpoTermCounts(List<HpoDisease> hpoDiseases);
 
-    Map<TermId, Set<TermId>> getMaxoToHpoTermIdMap(Sample sample,
+    Map<TermId, Set<TermId>> getMaxoToHpoTermIdMap(List<TermId> termIdsToRemove,
                                                    Map<TermId, List<HpoFrequency>> hpoTermCounts);
 
     Map<TermId, List<DifferentialDiagnosis>> getMaxoTermToDifferentialDiagnosesMap(Sample sample,

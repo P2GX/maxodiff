@@ -14,6 +14,7 @@ import org.monarchinitiative.phenol.ontology.data.TermId;
 
 import java.util.*;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 public class MaxoDiffRefinerTest {
 
@@ -44,7 +45,9 @@ public class MaxoDiffRefinerTest {
         List<DifferentialDiagnosis> orderedDiagnoses = refiner.getOrderedDiagnoses(originalDiagnoses, options);
         List<HpoDisease> diseases = refiner.getDiseases(orderedDiagnoses.stream().toList());
         Map<TermId, List<HpoFrequency>> hpoTermCounts = refiner.getHpoTermCounts(diseases);
-        Map<TermId, Set<TermId>> maxoToHpoTermIdMap = refiner.getMaxoToHpoTermIdMap(sample, hpoTermCounts);
+        List<TermId> termIdsToRemove = Stream.of(sample.presentHpoTermIds(), sample.excludedHpoTermIds())
+                .flatMap(Collection::stream).toList();
+        Map<TermId, Set<TermId>> maxoToHpoTermIdMap = refiner.getMaxoToHpoTermIdMap(termIdsToRemove, hpoTermCounts);
 
         RefinementResults results = refiner.run(sample, orderedDiagnoses, options, null,
                                                 maxoToHpoTermIdMap, hpoTermCounts, null);

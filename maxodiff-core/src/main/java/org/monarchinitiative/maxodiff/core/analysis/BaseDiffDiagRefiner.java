@@ -58,7 +58,7 @@ public class BaseDiffDiagRefiner implements DiffDiagRefiner {
             MaxodiffResult maxodiffResult = new MaxodiffResultImpl(maxoTermScore, frequencies, List.of());
             maxodiffResultsList.add(maxodiffResult);
         }
-
+        maxodiffResultsList.sort(Comparator.<MaxodiffResult>comparingDouble(mr -> mr.maxoTermScore().scoreDiff()).reversed());
         // Return RefinementResults object, which contains the list of MaxodiffResult objects.
         return new RefinementResultsImpl(maxodiffResultsList);
     }
@@ -131,13 +131,13 @@ public class BaseDiffDiagRefiner implements DiffDiagRefiner {
     }
 
     @Override
-    public Map<TermId, Set<TermId>> getMaxoToHpoTermIdMap(Sample sample,
+    public Map<TermId, Set<TermId>> getMaxoToHpoTermIdMap(List<TermId> termIdsToRemove,
                                                           Map<TermId, List<HpoFrequency>> hpoTermCounts) {
 
 
-        // Remove HPO terms present in the sample
-        sample.presentHpoTermIds().forEach(hpoTermCounts::remove);
-        sample.excludedHpoTermIds().forEach(hpoTermCounts::remove);
+        // Remove HPO terms if desired
+        termIdsToRemove.forEach(hpoTermCounts::remove);
+//        sample.excludedHpoTermIds().forEach(hpoTermCounts::remove);
         Set<TermId> hpoIds = hpoTermCounts.keySet();
 
         // Get all the MaXo terms that can be used to diagnose the HPO terms, removing ancestors
