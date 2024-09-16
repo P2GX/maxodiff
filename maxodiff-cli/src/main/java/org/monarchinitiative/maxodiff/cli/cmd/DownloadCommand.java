@@ -14,7 +14,9 @@ import java.util.concurrent.Callable;
 /**
  * Download a number of files needed for the analysis.
  * <p>
- * By default, we download by default to a subdirectory called {@code data}, which is created if necessary. 
+ * By default, we download by default to a subdirectory called {@code data}, which is created if necessary.
+ * We download the files {@code hp.json}, {@code maxo.json}, {@code phenotype.hpoa},
+ * @code Homo_sapiens_gene_info.gz}, and {@code mim2gene_medgen}. TODO -- Jannovar? Do we really need this
  *
  * @author <a href="mailto:martha.beckwith@jax.org">Martha Beckwith</a>
  * @author <a href="mailto:daniel.gordon.danis@protonmail.com">Daniel Danis</a>

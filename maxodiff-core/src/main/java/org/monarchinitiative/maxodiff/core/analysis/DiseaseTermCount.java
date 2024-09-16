@@ -1,5 +1,6 @@
 package org.monarchinitiative.maxodiff.core.analysis;
 
+import org.monarchinitiative.maxodiff.core.analysis.impl.DiseaseTermCountImpl;
 import org.monarchinitiative.phenol.annotations.base.Ratio;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDisease;
 import org.monarchinitiative.phenol.ontology.data.TermId;
