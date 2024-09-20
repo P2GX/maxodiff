@@ -4,12 +4,11 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
-
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 import org.monarchinitiative.lirical.core.Lirical;
+import org.monarchinitiative.lirical.core.analysis.AnalysisData;
 import org.monarchinitiative.lirical.core.analysis.AnalysisOptions;
-import org.monarchinitiative.lirical.core.analysis.AnalysisResults;
 import org.monarchinitiative.lirical.core.analysis.LiricalAnalysisRunner;
 import org.monarchinitiative.lirical.io.analysis.PhenopacketData;
 import org.monarchinitiative.maxodiff.config.MaxodiffDataResolver;
@@ -33,7 +32,6 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 import java.util.zip.GZIPOutputStream;
 
@@ -42,60 +40,17 @@ import java.util.zip.GZIPOutputStream;
  * Perform Differential Diagnosis calculations
  */
 
-@CommandLine.Command(name = "benchmark", aliases = {"B"},
+@CommandLine.Command(name = "newBenchmark", aliases = {"nB"},
         mixinStandardHelpOptions = true,
         description = "benchmark maxodiff analysis")
-public class BenchmarkCommand extends DifferentialDiagnosisCommand {
+public class NewBenchmarkCommand extends BenchmarkCommand {
     private static final Logger LOGGER = LoggerFactory.getLogger(DifferentialDiagnosisCommand.class);
 
     private static ObjectMapper OBJECT_MAPPER;
 
-    @CommandLine.Option(names = {"-B", "--batchDir"},
-            description = "Path to directory containing phenopackets.")
-    protected String batchDir;
-
-    @CommandLine.Option(names = {"-W", "--weights"},
-            split=",",
-            arity = "1..*",
-            description = "Comma-separated list of weight values to use in final score calculation.")
-    public List<Double> weightsArg;
-
-    @CommandLine.Option(names = {"-N", "--nDiseasesList"},
-//            required = true,
-            split=",",
-            arity = "1..*",
-            description = "Comma-separated list of posttest probability thresholds for filtering diseases to include in differential diagnosis.")
-    protected List<Integer> nDiseasesArg;
-
-    @CommandLine.Option(names = {"--dummy"},
-            description = "Whether to do dummy refinement (default: ${DEFAULT-VALUE}).")
-    protected boolean dummy = false;
-
-    @CommandLine.Option(names = {"--removeSampleTerms"},
-            description = "Whether to remove Sample HPO terms before analysis (default: ${DEFAULT-VALUE}).")
-    protected boolean removeSampleTerms = false;
-
-    @CommandLine.Option(names = {"-o", "--outputFilename"},
-            description = "Filename of the benchmark results CSV file. The CSV is compressed if the path has the '.gz' suffix")
-    protected Path outputName;
-
-    @CommandLine.Option(names = {"--refinerTypes"},
-//            required = true,
-            split=",",
-            arity = "1..*",
-            description = "Comma-separated list of differential diagnosis refiners.")
-    protected List<String> refinerTypes;
-
-//    private final BiometadataService biometadataService;
-//
-//    private final DiffDiagRefiner diffDiagRefiner;
-
-//    public BenchmarkCommand(
-//            BiometadataService biometadataService,
-//            DiffDiagRefiner diffDiagRefiner) {
-//        this.biometadataService = biometadataService;
-//        this.diffDiagRefiner = diffDiagRefiner;
-//    }
+    @CommandLine.Option(names = {"-R", "--removeIdsFile"},
+            description = "Path to file containing term Ids to remove for each phenopacket.")
+    protected String removeIdsFile;
 
 
     @Override
@@ -150,7 +105,8 @@ public class BenchmarkCommand extends DifferentialDiagnosisCommand {
             try (BufferedWriter writer = openWriter(outputName); CSVPrinter printer = CSVFormat.DEFAULT.print(writer)) {
                 printer.printRecord("phenopacket", "removed_ids", "n_diseases", "weight",
                         "maxo_id", "maxo_label", "maxo_final_score", "changed_disease_id",
-                        "orig_disease_rank", "maxo_disease_rank", "orig_disease_score", "maxo_disease_score", "refiner_type"); // header
+                        "orig_disease_rank", "maxo_disease_rank", "orig_disease_score", "maxo_disease_score",
+                        "maxo_ascertained_removed_ids", "maxo_ascertained_all_ids", "refiner_type"); // header
 
                 for (int i = 0; i < phenopacketPaths.size(); i++) {
                     try {
@@ -169,6 +125,14 @@ public class BenchmarkCommand extends DifferentialDiagnosisCommand {
                         String phenopacketName = pPath.toFile().getName();
 
                         List<TermId> termIdsToRemove = new ArrayList<>();
+                        List<TermId> includedIds = new ArrayList<>(phenopacketData.presentHpoTermIds().toList());
+                        if (removeIdsFile != null) {
+                            termIdsToRemove = getTermIdsToRemove(phenopacketName, removeIdsFile);
+                            termIdsToRemove.forEach(includedIds::remove);
+                            sample = Sample.of(phenopacketData.sampleId(),
+                                    includedIds,
+                                    phenopacketData.excludedHpoTermIds().toList());
+                        }
                         if (removeSampleTerms) {
                             termIdsToRemove = Stream.of(sample.presentHpoTermIds(), sample.excludedHpoTermIds())
                                     .flatMap(Collection::stream).toList();
@@ -179,26 +143,20 @@ public class BenchmarkCommand extends DifferentialDiagnosisCommand {
                         List<DifferentialDiagnosis> differentialDiagnoses = engine.run(sample);
 
                         // Summarize the LIRICAL results.
-                        //String sampleId = analysisData.sampleId();
-                        //String phenopacketName = pPath.toFile().getName();
-                        //String outFilename = String.join("_",
-                        //        phenopacketName.replace(".json", ""),
-                        //        "lirical",
-                        //        "results");
-                        //AnalysisResultsMetadata metadata = prepareAnalysisResultsMetadata(gene2Genotypes, lirical, sampleId);
-                        //writeResultsToFile(lirical, OutputFormat.parse(outputFormatArg), analysisData, results, metadata, outFilename);
+                        String outFilename = String.join("_",
+                                phenopacketName.replace(".json", ""),
+                                "initial",
+                                "removedTerms",
+                                "lirical",
+                                "results");
+                        String ddOutputPath = String.join(File.separator, outputDir.toString(), outFilename + ".csv");
+                        writeDifferentialDiagnosisResults(phenopacketName, differentialDiagnoses, Path.of(ddOutputPath));
 
                         //TODO? get list of diseases from LIRICAL results, and add diseases from CLI arg to total list for analysis
 
                         Map<Integer, Map<TermId, List<DifferentialDiagnosis>>> nDiseaseMaxoTermToDifferentialDiagnosesMap = new HashMap<>();
                         for (Map.Entry<String, DiffDiagRefiner> e : refiners.entrySet()) {
                             for (int nDiseases : nDiseasesList) {
-
-                                // Make MaXo:HPO Term Map
-                                //                Map<SimpleTerm, Set<SimpleTerm>> maxoToHpoTermMap = maxoTermMap.makeMaxoToHpoTermMap(results, null,
-                                //                        phenopacketPath, nDiseases);
-                                //
-                                //                LOGGER.info(String.valueOf(maxoToHpoTermMap));
                                 for (double weight : weights) {
                                     RefinementOptions options = RefinementOptions.of(nDiseases, weight);
                                     LOGGER.info(e.getKey() + ": " + e.getValue());
@@ -207,22 +165,10 @@ public class BenchmarkCommand extends DifferentialDiagnosisCommand {
                                     List<HpoDisease> diseases = e.getValue().getDiseases(orderedDiagnoses);
                                     Map<TermId, List<HpoFrequency>> hpoTermCounts = e.getValue().getHpoTermCounts(diseases);
                                     Map<TermId, Set<TermId>> maxoToHpoTermIdMap = e.getValue().getMaxoToHpoTermIdMap(termIdsToRemove, hpoTermCounts);
-                                    Map<TermId, List<DifferentialDiagnosis>> maxoTermToDifferentialDiagnosesMap = null;
-                                    if (e.getValue() instanceof MaxoDiffDDScoreRefiner | e.getValue() instanceof MaxoDiffRankRefiner) {
-                                        Integer nMapDiseases = options.nDiseases();
-                                        if (!nDiseaseMaxoTermToDifferentialDiagnosesMap.containsKey(nMapDiseases)) {
-                                            maxoTermToDifferentialDiagnosesMap = e.getValue()
-                                                    .getMaxoTermToDifferentialDiagnosesMap(sample, engine, maxoToHpoTermIdMap, nMapDiseases);
-                                            nDiseaseMaxoTermToDifferentialDiagnosesMap.put(nMapDiseases, maxoTermToDifferentialDiagnosesMap);
-                                        }
-                                        maxoTermToDifferentialDiagnosesMap = nDiseaseMaxoTermToDifferentialDiagnosesMap.get(nMapDiseases);
-                                    } else if (e.getValue() instanceof MaxoDiffKolmogorovSmirnovRefiner) {
-                                        Integer nMapDiseases = 100;
-                                        maxoTermToDifferentialDiagnosesMap = e.getValue()
-                                                .getMaxoTermToDifferentialDiagnosesMap(sample, engine, maxoToHpoTermIdMap, nMapDiseases);
-                                    }
+                                    Map<TermId, Set<TermId>> fullMaxoToHpoTermIdMap = e.getValue().getMaxoToHpoTermIdMap(List.of(), hpoTermCounts);
+
                                     RefinementResults refinementResults = e.getValue().run(sample, orderedDiagnoses, options, engine,
-                                            maxoToHpoTermIdMap, hpoTermCounts, maxoTermToDifferentialDiagnosesMap);
+                                            maxoToHpoTermIdMap, hpoTermCounts, null);
                                     List<MaxodiffResult> resultsList = refinementResults.maxodiffResults().stream().toList();
                                     // Get List of Refinement results: maxo term scores and frequencies
                                     String fileName = String.join("_",
@@ -237,33 +183,50 @@ public class BenchmarkCommand extends DifferentialDiagnosisCommand {
                                     String maxScoreMaxoTermId = topResult.maxoTermScore().maxoId();
                                     String maxScoreTermLabel = biometadataService.maxoLabel(maxScoreMaxoTermId).orElse("unknown");
                                     double maxScoreValue = topResult.maxoTermScore().scoreDiff();
-                                    TermId changedDiseaseId;
+                                    TermId changedDiseaseId = null;
                                     int origRank = 0;
                                     double origLR = 0;
                                     int maxoRank = 0;
                                     double maxoLR = 0;
-                                    if (e.getValue() instanceof MaxoDiffDDScoreRefiner | e.getValue() instanceof MaxoDiffRankRefiner) {
-                                        changedDiseaseId = topResult.maxoTermScore().changedDiseaseId();
-                                        Map<String, List<DifferentialDiagnosis>> calculatedDiagnosesMap = new HashMap<>();
-                                        calculatedDiagnosesMap.put("Original", topResult.maxoTermScore().initialDiagnosesMaxoOrdered());
-                                        calculatedDiagnosesMap.put("Maxo", topResult.maxoTermScore().maxoDiagnoses());
-                                        for (Map.Entry<String, List<DifferentialDiagnosis>> entry : calculatedDiagnosesMap.entrySet()) {
-                                            List<DifferentialDiagnosis> calculatedDiagnoses = entry.getValue();
-                                            List<DifferentialDiagnosis> changedDiseaseDiagnosisList = calculatedDiagnoses
-                                                    .stream().filter(dd -> dd.diseaseId().equals(changedDiseaseId)).toList();
-                                            if (!changedDiseaseDiagnosisList.isEmpty()) {
-                                                DifferentialDiagnosis changedDiseaseDiagnosis = changedDiseaseDiagnosisList.get(0);
-                                                if (entry.getKey().equals("Original")) {
-                                                    origRank = calculatedDiagnoses.indexOf(changedDiseaseDiagnosis)+1;
-                                                    origLR = changedDiseaseDiagnosis.lr();
-                                                } else {
-                                                    maxoRank = calculatedDiagnoses.indexOf(changedDiseaseDiagnosis)+1;
-                                                    maxoLR = changedDiseaseDiagnosis.lr();
-                                                }
-                                            }
+                                    Set<TermId> removedIdsMaxoAscertained = new HashSet<>();
+                                    Set<TermId> topMaxoHpoIds = fullMaxoToHpoTermIdMap.get(TermId.of(maxScoreMaxoTermId));
+
+                                    if (removeIdsFile != null) {
+                                        termIdsToRemove.stream().filter(topMaxoHpoIds::contains).forEach(includedIds::add);
+                                        termIdsToRemove.stream().filter(topMaxoHpoIds::contains).forEach(removedIdsMaxoAscertained::add);
+                                        sample = Sample.of(phenopacketData.sampleId(),
+                                                includedIds,
+                                                phenopacketData.excludedHpoTermIds().toList());
+                                        List<DifferentialDiagnosis> differentialDiagnosesAddTermsBack = engine.run(sample);
+                                        // Summarize the LIRICAL results.
+                                        String addOutFilename = String.join("_",
+                                                phenopacketName.replace(".json", ""),
+                                                maxScoreMaxoTermId,
+                                                "n" + nDiseases,
+                                                "w" + weight,
+                                                e.getKey(),
+                                                "addTerms",
+                                                "lirical",
+                                                "results");
+                                        String addDdOutputPath = String.join(File.separator, outputDir.toString(), addOutFilename + ".csv");
+                                        writeDifferentialDiagnosisResults(phenopacketName, differentialDiagnoses, Path.of(addDdOutputPath));
+
+                                        changedDiseaseId = phenopacketData.diseaseIds().get(0); //phenopacket target disease
+                                        TermId finalChangedDiseaseId1 = changedDiseaseId;
+                                        List<DifferentialDiagnosis> changedDiseaseOrigDiagnosisList = differentialDiagnoses
+                                                .stream().filter(dd -> dd.diseaseId().equals(finalChangedDiseaseId1)).toList();
+                                        if (!changedDiseaseOrigDiagnosisList.isEmpty()) {
+                                            DifferentialDiagnosis changedDiseaseOrigDiagnosis = changedDiseaseOrigDiagnosisList.get(0);
+                                            origRank = differentialDiagnoses.indexOf(changedDiseaseOrigDiagnosis) + 1;
+                                            origLR = changedDiseaseOrigDiagnosis.lr();
                                         }
-                                    } else {
-                                        changedDiseaseId = null;
+                                        List<DifferentialDiagnosis> changedDiseaseAddBackDiagnosisList = differentialDiagnoses
+                                                .stream().filter(dd -> dd.diseaseId().equals(finalChangedDiseaseId1)).toList();
+                                        if (!changedDiseaseAddBackDiagnosisList.isEmpty()) {
+                                            DifferentialDiagnosis changedDiseaseAddBackDiagnosis = changedDiseaseAddBackDiagnosisList.get(0);
+                                            maxoRank = differentialDiagnosesAddTermsBack.indexOf(changedDiseaseAddBackDiagnosis) + 1;
+                                            maxoLR = changedDiseaseAddBackDiagnosis.lr();
+                                        }
                                     }
 
                                     LOGGER.info(e.getKey() + ": n Diseases = " + nDiseases + ", Weight = " + weight);
@@ -271,7 +234,8 @@ public class BenchmarkCommand extends DifferentialDiagnosisCommand {
                                     LOGGER.info("Max Score: " + maxScoreMaxoTermId + " (" + maxScoreTermLabel + ")" + " = " + maxScoreValue);
                                     writeResults(phenopacketName, termIdsToRemove, nDiseases, weight,
                                             maxScoreMaxoTermId, maxScoreTermLabel, maxScoreValue, changedDiseaseId,
-                                            origRank, maxoRank, origLR, maxoLR, e.getKey(), printer);
+                                            origRank, maxoRank, origLR, maxoLR, removedIdsMaxoAscertained, topMaxoHpoIds,
+                                            e.getKey(), printer);
 
                                     if (e.getKey().equals("rank") | e.getKey().equals("ddScore") | e.getKey().equals("ksTest")) {
                                         break;
@@ -351,6 +315,8 @@ public class BenchmarkCommand extends DifferentialDiagnosisCommand {
                                      int maxoRank,
                                      double origScore,
                                      double maxoScore,
+                                     Set<TermId> removedIdsMaxoAscertained,
+                                     Set<TermId> maxoAscertainedIds,
                                      String refinerType,
                                      CSVPrinter printer) {
 
@@ -367,10 +333,32 @@ public class BenchmarkCommand extends DifferentialDiagnosisCommand {
             printer.print(maxoRank);
             printer.print(origScore);
             printer.print(maxoScore);
+            printer.print(removedIdsMaxoAscertained);
+            printer.print(maxoAscertainedIds);
             printer.print(refinerType);
             printer.println();
         } catch (IOException e) {
             LOGGER.error("Error writing results for {}: {}", phenopacketName, e.getMessage(), e);
+        }
+    }
+
+    /**
+     * Write results of a differential diagnosis into the provided {@code printer}.
+     */
+    private static void writeDifferentialDiagnosisResults(String phenopacketName,
+                                     List<DifferentialDiagnosis> ddList,
+                                     Path outputName) throws IOException {
+
+        try (BufferedWriter writer = openWriter(outputName); CSVPrinter printer = CSVFormat.DEFAULT.print(writer)) {
+            printer.printRecord("disease_id", "posttest_prob", "lr"); // header
+            for (DifferentialDiagnosis dd : ddList) {
+                printer.print(dd.diseaseId());
+                printer.print(dd.score());
+                printer.print(dd.lr());
+                printer.println();
+            }
+        } catch (IOException e) {
+            LOGGER.error("Error writing differential diagnosis results for {}: {}", phenopacketName, e.getMessage(), e);
         }
     }
 
