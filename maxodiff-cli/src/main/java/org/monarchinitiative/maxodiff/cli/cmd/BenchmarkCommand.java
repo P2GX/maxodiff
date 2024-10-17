@@ -9,7 +9,6 @@ import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 import org.monarchinitiative.lirical.core.Lirical;
 import org.monarchinitiative.lirical.core.analysis.AnalysisOptions;
-import org.monarchinitiative.lirical.core.analysis.AnalysisResults;
 import org.monarchinitiative.lirical.core.analysis.LiricalAnalysisRunner;
 import org.monarchinitiative.lirical.io.analysis.PhenopacketData;
 import org.monarchinitiative.maxodiff.config.MaxodiffDataResolver;
@@ -33,7 +32,6 @@ import java.nio.file.Path;
 import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.*;
-import java.util.concurrent.atomic.AtomicInteger;
 import java.util.stream.Stream;
 import java.util.zip.GZIPOutputStream;
 
@@ -176,17 +174,28 @@ public class BenchmarkCommand extends DifferentialDiagnosisCommand {
                         LOGGER.info(phenopacketName + " removed Ids = " + termIdsToRemove.toString());
 
                         // Get initial differential diagnoses from running LIRICAL
+                        LOGGER.info("Running Initial Differential Diagnosis");
                         List<DifferentialDiagnosis> differentialDiagnoses = engine.run(sample);
 
-                        // Summarize the LIRICAL results.
+                        // Summarize the initial differential diagnosis results.
                         //String sampleId = analysisData.sampleId();
                         //String phenopacketName = pPath.toFile().getName();
-                        //String outFilename = String.join("_",
-                        //        phenopacketName.replace(".json", ""),
-                        //        "lirical",
-                        //        "results");
+                        String outFilename = String.join("_",
+                                phenopacketName.replace(".json", ""),
+                                "initial",
+                                "differential",
+                                "diagnoses");
+                        Path outFilepath = Path.of(String.join(File.separator, outputDir.toString(), outFilename + ".tsv"));
+                        LOGGER.info(outFilepath.toString());
                         //AnalysisResultsMetadata metadata = prepareAnalysisResultsMetadata(gene2Genotypes, lirical, sampleId);
                         //writeResultsToFile(lirical, OutputFormat.parse(outputFormatArg), analysisData, results, metadata, outFilename);
+                        try (BufferedWriter writer2 = openWriter(outFilepath);
+                             CSVPrinter printer2 = CSVFormat.DEFAULT.print(writer2)) {
+                             printer2.printRecord("disease_id", "score", "lr");
+                             writeDifferentialDiagnosesResultsFile(differentialDiagnoses, printer2);
+                        } catch (Exception ex) {
+                            LOGGER.info(ex.getMessage());
+                        }
 
                         //TODO? get list of diseases from LIRICAL results, and add diseases from CLI arg to total list for analysis
 
@@ -207,23 +216,16 @@ public class BenchmarkCommand extends DifferentialDiagnosisCommand {
                                     List<HpoDisease> diseases = e.getValue().getDiseases(orderedDiagnoses);
                                     Map<TermId, List<HpoFrequency>> hpoTermCounts = e.getValue().getHpoTermCounts(diseases);
                                     Map<TermId, Set<TermId>> maxoToHpoTermIdMap = e.getValue().getMaxoToHpoTermIdMap(termIdsToRemove, hpoTermCounts);
-                                    Map<TermId, List<DifferentialDiagnosis>> maxoTermToDifferentialDiagnosesMap = null;
-                                    if (e.getValue() instanceof MaxoDiffDDScoreRefiner | e.getValue() instanceof MaxoDiffRankRefiner) {
-                                        Integer nMapDiseases = options.nDiseases();
-                                        if (!nDiseaseMaxoTermToDifferentialDiagnosesMap.containsKey(nMapDiseases)) {
-                                            maxoTermToDifferentialDiagnosesMap = e.getValue()
-                                                    .getMaxoTermToDifferentialDiagnosesMap(sample, engine, maxoToHpoTermIdMap, nMapDiseases);
-                                            nDiseaseMaxoTermToDifferentialDiagnosesMap.put(nMapDiseases, maxoTermToDifferentialDiagnosesMap);
-                                        }
-                                        maxoTermToDifferentialDiagnosesMap = nDiseaseMaxoTermToDifferentialDiagnosesMap.get(nMapDiseases);
-                                    } else if (e.getValue() instanceof MaxoDiffKolmogorovSmirnovRefiner) {
-                                        Integer nMapDiseases = 100;
-                                        maxoTermToDifferentialDiagnosesMap = e.getValue()
-                                                .getMaxoTermToDifferentialDiagnosesMap(sample, engine, maxoToHpoTermIdMap, nMapDiseases);
-                                    }
+                                    Map<TermId, List<DifferentialDiagnosis>> maxoTermToDifferentialDiagnosesMap = getMaxoTermDifferentialDiagnosesMap(
+                                            e.getValue(), options, sample, engine, nDiseaseMaxoTermToDifferentialDiagnosesMap, maxoToHpoTermIdMap);
                                     RefinementResults refinementResults = e.getValue().run(sample, orderedDiagnoses, options, engine,
                                             maxoToHpoTermIdMap, hpoTermCounts, maxoTermToDifferentialDiagnosesMap);
-                                    List<MaxodiffResult> resultsList = refinementResults.maxodiffResults().stream().toList();
+                                    List<MaxodiffResult> resultsList = new ArrayList<>(refinementResults.maxodiffResults().stream().toList());
+                                    if (e.getValue() instanceof MaxoDiffKolmogorovSmirnovRefiner) {
+                                        resultsList.sort(Comparator.<MaxodiffResult>comparingDouble(mr -> mr.maxoTermScore().scoreDiff()));
+                                    } else {
+                                        resultsList.sort(Comparator.<MaxodiffResult>comparingDouble(mr -> mr.maxoTermScore().scoreDiff()).reversed());
+                                    }
                                     // Get List of Refinement results: maxo term scores and frequencies
                                     String fileName = String.join("_",
                                             phenopacketName.replace(".json", ""),
@@ -244,26 +246,43 @@ public class BenchmarkCommand extends DifferentialDiagnosisCommand {
                                     double maxoLR = 0;
                                     if (e.getValue() instanceof MaxoDiffDDScoreRefiner | e.getValue() instanceof MaxoDiffRankRefiner) {
                                         changedDiseaseId = topResult.maxoTermScore().changedDiseaseId();
-                                        Map<String, List<DifferentialDiagnosis>> calculatedDiagnosesMap = new HashMap<>();
-                                        calculatedDiagnosesMap.put("Original", topResult.maxoTermScore().initialDiagnosesMaxoOrdered());
-                                        calculatedDiagnosesMap.put("Maxo", topResult.maxoTermScore().maxoDiagnoses());
-                                        for (Map.Entry<String, List<DifferentialDiagnosis>> entry : calculatedDiagnosesMap.entrySet()) {
-                                            List<DifferentialDiagnosis> calculatedDiagnoses = entry.getValue();
-                                            List<DifferentialDiagnosis> changedDiseaseDiagnosisList = calculatedDiagnoses
-                                                    .stream().filter(dd -> dd.diseaseId().equals(changedDiseaseId)).toList();
-                                            if (!changedDiseaseDiagnosisList.isEmpty()) {
-                                                DifferentialDiagnosis changedDiseaseDiagnosis = changedDiseaseDiagnosisList.get(0);
-                                                if (entry.getKey().equals("Original")) {
-                                                    origRank = calculatedDiagnoses.indexOf(changedDiseaseDiagnosis)+1;
-                                                    origLR = changedDiseaseDiagnosis.lr();
-                                                } else {
-                                                    maxoRank = calculatedDiagnoses.indexOf(changedDiseaseDiagnosis)+1;
-                                                    maxoLR = changedDiseaseDiagnosis.lr();
-                                                }
+                                    } else {
+                                        changedDiseaseId = phenopacketData.diseaseIds().get(0); //phenopacket target disease
+                                    }
+                                    Map<String, List<DifferentialDiagnosis>> calculatedDiagnosesMap = new HashMap<>();
+                                    calculatedDiagnosesMap.put("Original", differentialDiagnoses); //topResult.maxoTermScore().initialDiagnosesMaxoOrdered());
+                                    calculatedDiagnosesMap.put("Maxo", maxoTermToDifferentialDiagnosesMap.get(TermId.of(topResult.maxoTermScore().maxoId()))); //topResult.maxoTermScore().maxoDiagnoses());
+                                    for (Map.Entry<String, List<DifferentialDiagnosis>> entry : calculatedDiagnosesMap.entrySet()) {
+                                        List<DifferentialDiagnosis> calculatedDiagnoses = entry.getValue();
+                                        String outFilenameMaxo = String.join("_",
+                                                phenopacketName.replace(".json", ""),
+                                                maxScoreMaxoTermId,
+                                                "n" + nDiseases,
+                                                "w" + weight,
+                                                e.getKey(),
+                                                "differential",
+                                                "diagnoses");
+                                        Path outFilepathMaxo = Path.of(String.join(File.separator, outputDir.toString(), outFilenameMaxo + ".tsv"));
+                                        LOGGER.info(outFilepathMaxo.toString());
+                                        try (BufferedWriter writer2 = openWriter(outFilepathMaxo);
+                                             CSVPrinter printer2 = CSVFormat.DEFAULT.print(writer2)) {
+                                            printer2.printRecord("disease_id", "score", "lr");
+                                            writeDifferentialDiagnosesResultsFile(calculatedDiagnoses, printer2);
+                                        } catch (Exception ex) {
+                                            LOGGER.info(ex.getMessage());
+                                        }
+                                        List<DifferentialDiagnosis> changedDiseaseDiagnosisList = calculatedDiagnoses
+                                                .stream().filter(dd -> dd.diseaseId().equals(changedDiseaseId)).toList();
+                                        if (!changedDiseaseDiagnosisList.isEmpty()) {
+                                            DifferentialDiagnosis changedDiseaseDiagnosis = changedDiseaseDiagnosisList.get(0);
+                                            if (entry.getKey().equals("Original")) {
+                                                origRank = calculatedDiagnoses.indexOf(changedDiseaseDiagnosis)+1;
+                                                origLR = changedDiseaseDiagnosis.lr();
+                                            } else {
+                                                maxoRank = calculatedDiagnoses.indexOf(changedDiseaseDiagnosis)+1;
+                                                maxoLR = changedDiseaseDiagnosis.lr();
                                             }
                                         }
-                                    } else {
-                                        changedDiseaseId = null;
                                     }
 
                                     LOGGER.info(e.getKey() + ": n Diseases = " + nDiseases + ", Weight = " + weight);
@@ -295,6 +314,29 @@ public class BenchmarkCommand extends DifferentialDiagnosisCommand {
         }
 
         return 0;
+    }
+
+    protected Map<TermId, List<DifferentialDiagnosis>> getMaxoTermDifferentialDiagnosesMap(DiffDiagRefiner refiner, RefinementOptions options,
+                                                  Sample sample, LiricalDifferentialDiagnosisEngine engine,
+                                                  Map<Integer, Map<TermId, List<DifferentialDiagnosis>>> nDiseaseMaxoTermToDifferentialDiagnosesMap,
+                                                  Map<TermId, Set<TermId>> maxoToHpoTermIdMap) {
+        Map<TermId, List<DifferentialDiagnosis>> maxoTermToDifferentialDiagnosesMap = null;
+        if (refiner instanceof MaxoDiffDDScoreRefiner | refiner instanceof MaxoDiffRankRefiner |
+            refiner instanceof MaxoDiffRefiner | refiner instanceof DummyDiffDiagRefiner) {
+            Integer nMapDiseases = options.nDiseases();
+            if (!nDiseaseMaxoTermToDifferentialDiagnosesMap.containsKey(nMapDiseases)) {
+                maxoTermToDifferentialDiagnosesMap = refiner
+                        .getMaxoTermToDifferentialDiagnosesMap(sample, engine, maxoToHpoTermIdMap, nMapDiseases);
+                nDiseaseMaxoTermToDifferentialDiagnosesMap.put(nMapDiseases, maxoTermToDifferentialDiagnosesMap);
+            }
+            maxoTermToDifferentialDiagnosesMap = nDiseaseMaxoTermToDifferentialDiagnosesMap.get(nMapDiseases);
+        } else if (refiner instanceof MaxoDiffKolmogorovSmirnovRefiner) {
+            Integer nMapDiseases = 100;
+            maxoTermToDifferentialDiagnosesMap = refiner
+                    .getMaxoTermToDifferentialDiagnosesMap(sample, engine, maxoToHpoTermIdMap, nMapDiseases);
+        }
+
+        return maxoTermToDifferentialDiagnosesMap;
     }
 
 
@@ -373,6 +415,23 @@ public class BenchmarkCommand extends DifferentialDiagnosisCommand {
             LOGGER.error("Error writing results for {}: {}", phenopacketName, e.getMessage(), e);
         }
     }
+
+    protected static void writeDifferentialDiagnosesResultsFile(List<DifferentialDiagnosis> differentialDiagnoses,
+                                                                CSVPrinter printer) {
+
+        try {
+            LOGGER.info("Writing Differential Diagnoses to file.");
+            for (DifferentialDiagnosis dd : differentialDiagnoses) {
+                printer.print(dd.diseaseId());
+                printer.print(dd.score());
+                printer.print(dd.lr());
+                printer.println();
+            }
+        } catch (IOException e) {
+            LOGGER.error("Error writing results for {}: {}", differentialDiagnoses.get(0), e.getMessage(), e);
+        }
+    }
+
 
 
 }

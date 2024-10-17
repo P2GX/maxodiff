@@ -166,6 +166,7 @@ public class BaseDiffDiagRefiner implements DiffDiagRefiner {
             // Get the set of HPO terms that can be ascertained by the MAXO term
             Set<TermId> hpoTermIds = maxoToHpoTermIdMap.get(maxoId);
             List<TermId> maxoDiseaseIds = hpoTermIds.stream().toList();
+            System.out.println(maxoId + " ascertained HPO terms: " + maxoDiseaseIds);
             Sample maxoSample = Sample.of(sample.id(), maxoDiseaseIds, sample.excludedHpoTermIds());
             List<DifferentialDiagnosis> maxoDiagnoses = engine.run(maxoSample);
             List<DifferentialDiagnosis> orderedMaxoDiagnoses = maxoDiagnoses.stream()
@@ -175,6 +176,11 @@ public class BaseDiffDiagRefiner implements DiffDiagRefiner {
         }
 
         return maxoTermToDifferentialDiagnosesMap;
+    }
+
+    @Override
+    public HpoDiseases getHPOADiseases() {
+        return this.hpoDiseases;
     }
 
 }
