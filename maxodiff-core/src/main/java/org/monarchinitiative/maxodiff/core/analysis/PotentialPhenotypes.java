@@ -16,26 +16,19 @@ public class PotentialPhenotypes {
         this.hpoDiseases = hpoDiseases;
     }
 
-    public Set<TermId> getPotentialPhenotypeIds(SamplePhenopacket myPpkt) throws PhenolRuntimeException {
-        List<TermId> ppktDiseaseIds = myPpkt.diseaseIds();
-        if (ppktDiseaseIds.isEmpty()) {
-            throw new PhenolRuntimeException("No disease id found");
-        }
+    public Set<TermId> getPotentialPhenotypeIds(SamplePhenopacket myPpkt, TermId targetDiseaseId) throws PhenolRuntimeException {
         Set<TermId> existingTerms = new HashSet<>(myPpkt.presentHpoTermIds());
         existingTerms.addAll(myPpkt.excludedHpoTermIds());
-        Set<TermId> allIds = new HashSet<>();
-        for (TermId id : ppktDiseaseIds) {
-            Optional<HpoDisease> opt = hpoDiseases.diseaseById(id);
-            if (opt.isEmpty()) {
-                throw new RuntimeException("Could not find disease id for phenopacket " + myPpkt.id() + ": " + id.getValue());
-            } else {
-                HpoDisease disease = opt.get();
-                // CHECK -- DOES THIS GIVE US EVERYTHING
-                // Here, we do not care about present or absent. We regard all term annotations as
-                // potentially relevant and worthy to be ascertained by a Maxo-annotated diagnostic method
-                allIds.addAll(disease.annotationTermIdList());
-            }
+        Optional<HpoDisease> opt = hpoDiseases.diseaseById(targetDiseaseId);
+        if (opt.isEmpty()) {
+            throw new PhenolRuntimeException("Could not find disease id " + targetDiseaseId.getValue());
         }
+        HpoDisease disease = opt.get();
+        // CHECK -- DOES THIS GIVE US EVERYTHING
+        // Here, we do not care about present or absent. We regard all term annotations as
+        // potentially relevant and worthy to be ascertained by a Maxo-annotated diagnostic method
+        Set<TermId> allIds = new HashSet<>(disease.annotationTermIdList());
+
         Set<TermId> potentialTerms = new HashSet<>();
         for (TermId id : allIds) {
             //TODO: what about inheritance?
