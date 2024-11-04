@@ -50,7 +50,7 @@ public class DifferentialDiagnosisCommand extends BaseLiricalCommand {
 
     @CommandLine.Option(names = {"-p", "--phenopacket"},
 //            required = true,
-            arity = "1..*",
+//            arity = "1..*",
             description = "Path(s) to phenopacket JSON file(s).")
     protected Path phenopacketPath;
 
@@ -78,10 +78,10 @@ public class DifferentialDiagnosisCommand extends BaseLiricalCommand {
     protected boolean compress = false;
 
     @CommandLine.Option(names = {"-w", "--weight"},
-            split=",",
-            arity = "1..*",
+//            split=",",
+//            arity = "1..*",
             description = "Comma-separated list of weight value to use in final score calculation (default: ${DEFAULT-VALUE}).")
-    public List<Double> weightsArg;
+    public Double weightsArg;
 
     @CommandLine.Option(names = {"-l", "--diseaseList"},
 //            required = true,
@@ -92,10 +92,10 @@ public class DifferentialDiagnosisCommand extends BaseLiricalCommand {
 
     @CommandLine.Option(names = {"-n", "--nDiseases"},
 //            required = true,
-            split=",",
-            arity = "1..*",
+//            split=",",
+//            arity = "1..*",
             description = "Comma-separated list of n diseases for filtering diseases to include in differential diagnosis.")
-    protected List<Integer> nDiseasesArg;
+    protected Integer nDiseasesArg;
 
 
     @Override
@@ -114,13 +114,16 @@ public class DifferentialDiagnosisCommand extends BaseLiricalCommand {
         resultsMap.put("maxScoreValue", new ArrayList<>());
 
 
-        List<Double> weights = new ArrayList<>();
-        weightsArg.stream().forEach(w -> weights.add(w));
-        List<Integer> nDiseasesList = new ArrayList<>();
-        nDiseasesArg.stream().forEach(n -> nDiseasesList.add(n));
+//        List<Double> weights = new ArrayList<>();
+//        weightsArg.stream().forEach(w -> weights.add(w));
+//        List<Integer> nDiseasesList = new ArrayList<>();
+//        nDiseasesArg.stream().forEach(n -> nDiseasesList.add(n));
 
-        System.out.println(weights);
-        System.out.println(nDiseasesList);
+        double weight = weightsArg;
+        int nDiseases = nDiseasesArg;
+
+        System.out.println(weight);
+        System.out.println(nDiseases);
 
         Lirical lirical = bootstrapLirical();
         try (LiricalAnalysisRunner runner = lirical.analysisRunner()) {
@@ -155,9 +158,10 @@ public class DifferentialDiagnosisCommand extends BaseLiricalCommand {
 
             //TODO? get list of diseases from LIRICAL results, and add diseases from CLI arg to total list for analysis
 
-            System.out.println(weights);
-            System.out.println(nDiseasesList);
-            for (int nDiseases : nDiseasesList) {
+//            System.out.println(weights);
+//            System.out.println(nDiseasesList);
+
+//            for (int nDiseases : nDiseasesList) {
                 System.out.println("n Diseases = " + nDiseases);
                 // Make MaXo:HPO Term Map
 //                Map<SimpleTerm, Set<SimpleTerm>> maxoToHpoTermMap = maxoTermMap.makeMaxoToHpoTermMap(results, null,
@@ -165,7 +169,7 @@ public class DifferentialDiagnosisCommand extends BaseLiricalCommand {
 //
 //                LOGGER.info(String.valueOf(maxoToHpoTermMap));
 
-                for (double weight : weights) {
+//                for (double weight : weights) {
                     System.out.println("Weight = " + weight);
                     // Get List of Refinement results: maxo term scores and frequencies
                     RefinementOptions options = RefinementOptions.of(nDiseases, weight);
@@ -218,8 +222,8 @@ public class DifferentialDiagnosisCommand extends BaseLiricalCommand {
                     resultsMap.replace("diseaseIds", diseaseIdsList);
                     resultsMap.replace("weight", weightList);
                     resultsMap.replace("maxScoreValue", maxScoreValues);
-                }
-            }
+//                }
+//            }
             BatchDiagnosisCommand.setResultsMap(resultsMap);
         } catch (Exception ex) {
             System.out.println(ex.getMessage());

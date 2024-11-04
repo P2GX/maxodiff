@@ -63,6 +63,11 @@ public class BatchDiagnosisCommand extends DifferentialDiagnosisCommand {
         }
         Collections.sort(phenopacketPaths);
 
+        List<Double> weights = new ArrayList<>();
+        weightsArg.forEach(w -> weights.add(w));
+        List<Integer> nDiseasesList = new ArrayList<>();
+        nDiseasesArg.forEach(n -> nDiseasesList.add(n));
+
         Path maxodiffResultsFilePath = Path.of(String.join(File.separator, outputDir.toString(), "maxodiff_results.csv"));
 
         try (BufferedWriter writer = openWriter(maxodiffResultsFilePath); CSVPrinter printer = CSVFormat.DEFAULT.print(writer)) {
@@ -70,52 +75,56 @@ public class BatchDiagnosisCommand extends DifferentialDiagnosisCommand {
                     "n_diseases", "disease_ids", "weight", "score"); // header
 
             for (int i = 0; i < phenopacketPaths.size(); i++) {
-                String nDiseases = nDiseasesArg.stream().map(Object::toString).collect(Collectors.joining(","));
-                String weights = weightsArg.stream().map(Object::toString).collect(Collectors.joining(","));
-                try {
-                    DifferentialDiagnosisCommand differentialDiagnosisCommand = new DifferentialDiagnosisCommand();
-                    CommandLine.call(differentialDiagnosisCommand,
-                            "-m", maxoDataPath.toString(),
-                            "-d", dataSection.liricalDataDirectory.toString(),
-                            "-p", phenopacketPaths.get(i).toString(),
+                for (int nDiseases : nDiseasesList) {
+                    for (double weight : weights) {
+//                String nDiseases = nDiseasesArg.stream().map(Object::toString).collect(Collectors.joining(","));
+//                String weights = weightsArg.stream().map(Object::toString).collect(Collectors.joining(","));
+                        try {
+                            DifferentialDiagnosisCommand differentialDiagnosisCommand = new DifferentialDiagnosisCommand();
+                            CommandLine.call(differentialDiagnosisCommand,
+                                    "-m", maxoDataPath.toString(),
+                                    "-d", dataSection.liricalDataDirectory.toString(),
+                                    "-p", phenopacketPaths.get(i).toString(),
 //                            "-e", dataSection.exomiserDatabase.toString(),
 //                            "--vcf", vcfPath.toString(),
-                            "--assembly", genomeBuild.toString(),
-                            "-n", nDiseases,
-                            "-w", weights,
-                            "-O", outputDir.toString());
+                                    "--assembly", genomeBuild.toString(),
+                                    "-n", String.valueOf(nDiseases),
+                                    "-w", String.valueOf(weight),
+                                    "-O", outputDir.toString());
 
 
-                    Map<String, List<Object>> resultsMap = getResultsMap();
+                            Map<String, List<Object>> resultsMap = getResultsMap();
 
-                    System.out.println("BatchCmd resultsMap = " + resultsMap);
+                            System.out.println("BatchCmd resultsMap = " + resultsMap);
 
-                    List<Object> phenopacketNames = resultsMap.get("phenopacketName");
-                    List<Object> backgroundVcfs = resultsMap.get("backgroundVcf");
-                    List<Object> diseaseIdList = resultsMap.get("diseaseId");
-                    List<Object> maxScoreMaxoTermIds = resultsMap.get("maxScoreMaxoTermId");
-                    List<Object> maxScoreTermLabels = resultsMap.get("maxScoreTermLabel");
-                    List<Object> topNDiseasesList = resultsMap.get("topNDiseases");
-                    List<Object> diseaseIdsList = resultsMap.get("diseaseIds");
-                    List<Object> weightList = resultsMap.get("weight");
-                    List<Object> maxScoreValues = resultsMap.get("maxScoreValue");
-                    for (int j = 0; j < phenopacketNames.size(); j++) {
-                        String phenopacketName = phenopacketNames.get(j).toString();
-                        String backgroundVcf = backgroundVcfs.get(j).toString();
-                        TermId diseaseId = TermId.of(diseaseIdList.get(j).toString());
-                        TermId maxScoreMaxoTermId = TermId.of(maxScoreMaxoTermIds.get(j).toString());
-                        String maxScoreTermLabel = maxScoreTermLabels.get(j).toString();
-                        int topNDiseases = Integer.parseInt(topNDiseasesList.get(j).toString());
-                        String diseaseIds = diseaseIdsList.get(j).toString();
-                        double weight = Double.parseDouble(weightList.get(j).toString());
-                        double maxScoreValue = Double.parseDouble(maxScoreValues.get(j).toString());
+                            List<Object> phenopacketNames = resultsMap.get("phenopacketName");
+                            List<Object> backgroundVcfs = resultsMap.get("backgroundVcf");
+                            List<Object> diseaseIdList = resultsMap.get("diseaseId");
+                            List<Object> maxScoreMaxoTermIds = resultsMap.get("maxScoreMaxoTermId");
+                            List<Object> maxScoreTermLabels = resultsMap.get("maxScoreTermLabel");
+                            List<Object> topNDiseasesList = resultsMap.get("topNDiseases");
+                            List<Object> diseaseIdsList = resultsMap.get("diseaseIds");
+                            List<Object> weightList = resultsMap.get("weight");
+                            List<Object> maxScoreValues = resultsMap.get("maxScoreValue");
+                            for (int j = 0; j < phenopacketNames.size(); j++) {
+                                String phenopacketName = phenopacketNames.get(j).toString();
+                                String backgroundVcf = backgroundVcfs.get(j).toString();
+                                TermId diseaseId = TermId.of(diseaseIdList.get(j).toString());
+                                TermId maxScoreMaxoTermId = TermId.of(maxScoreMaxoTermIds.get(j).toString());
+                                String maxScoreTermLabel = maxScoreTermLabels.get(j).toString();
+                                int topNDiseases = Integer.parseInt(topNDiseasesList.get(j).toString());
+                                String diseaseIds = diseaseIdsList.get(j).toString();
+                                double weightValue = Double.parseDouble(weightList.get(j).toString());
+                                double maxScoreValue = Double.parseDouble(maxScoreValues.get(j).toString());
 
-                        writeResults(phenopacketName, backgroundVcf, diseaseId, maxScoreMaxoTermId, maxScoreTermLabel,
-                                topNDiseases, diseaseIds, weight, maxScoreValue, printer);
+                                writeResults(phenopacketName, backgroundVcf, diseaseId, maxScoreMaxoTermId, maxScoreTermLabel,
+                                        topNDiseases, diseaseIds, weightValue, maxScoreValue, printer);
+                            }
+                        } catch (Exception ex) {
+                            System.out.println(ex.getMessage());
+                            continue;
+                        }
                     }
-                } catch (Exception ex) {
-                    System.out.println(ex.getMessage());
-                    continue;
                 }
             }
         }
