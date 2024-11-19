@@ -14,6 +14,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
+import java.util.stream.Stream;
 
 @Controller("/sessionResults")
 @SessionAttributes({"engineName", "sample", "differentialDiagnoses", "nDiseases",
@@ -107,7 +108,9 @@ public class SessionResultsController {
 
             if (model.getAttribute("maxoToHpoTermIdMap") == null || !nDiseases.equals(prevNDiseases)
                     || diffDiagRefiner instanceof MaxoDiffKolmogorovSmirnovRefiner) {
-                Map<TermId, Set<TermId>> maxoToHpoTermIdMap = diffDiagRefiner.getMaxoToHpoTermIdMap(sample, hpoTermCounts);
+                List<TermId> termIdsToRemove = Stream.of(sample.presentHpoTermIds(), sample.excludedHpoTermIds())
+                        .flatMap(Collection::stream).toList();
+                Map<TermId, Set<TermId>> maxoToHpoTermIdMap = diffDiagRefiner.getMaxoToHpoTermIdMap(termIdsToRemove, hpoTermCounts);
                 model.addAttribute("maxoToHpoTermIdMap", maxoToHpoTermIdMap);
             }
             Map<TermId, Set<TermId>> maxoToHpoTermIdMap = (Map<TermId, Set<TermId>>) model.getAttribute("maxoToHpoTermIdMap");

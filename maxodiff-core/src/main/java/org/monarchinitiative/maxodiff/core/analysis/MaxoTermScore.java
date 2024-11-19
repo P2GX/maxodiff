@@ -6,8 +6,9 @@ import org.monarchinitiative.phenol.ontology.data.TermId;
 import java.util.List;
 import java.util.Set;
 
-public record MaxoTermScore(String maxoId, Integer nOmimTerms, Set<TermId> omimTermIds, Set<TermId> maxoOmimTermIds,
-                            Integer nHpoTerms, Set<TermId> hpoTermIds,
+//TODO replace nOmimTerms and nHPOTerms with respective array sizes
+public record MaxoTermScore(String maxoId, int nOmimTerms, Set<TermId> omimTermIds, Set<TermId> maxoOmimTermIds,
+                            int nHpoTerms, Set<TermId> hpoTermIds,
                             Double initialScore, Double score, Double scoreDiff,
                             TermId changedDiseaseId, List<DifferentialDiagnosis> maxoDiagnoses,
                             List<DifferentialDiagnosis> initialDiagnosesMaxoOrdered,

@@ -269,7 +269,7 @@ class AnalysisUtils {
                 .sorted(Comparator.comparingDouble(DifferentialDiagnosis::score).reversed())
                 .toList();
 
-        return orderedMaxoDiagnoses.subList(0, nDiseases);
+        return orderedMaxoDiagnoses;//.subList(0, nDiseases);
     }
 
     static List<DifferentialDiagnosis> getInitialDiagnosesMaxoOrdered(List<DifferentialDiagnosis> originalDiagnoses,

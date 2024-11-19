@@ -1,9 +1,7 @@
 package org.monarchinitiative.maxodiff.config;
 
 import org.monarchinitiative.maxodiff.core.SimpleTerm;
-import org.monarchinitiative.maxodiff.core.analysis.DiffDiagRefiner;
-import org.monarchinitiative.maxodiff.core.analysis.DummyDiffDiagRefiner;
-import org.monarchinitiative.maxodiff.core.analysis.MaxoDiffRefiner;
+import org.monarchinitiative.maxodiff.core.analysis.*;
 import org.monarchinitiative.maxodiff.core.io.MaxoDxAnnots;
 import org.monarchinitiative.maxodiff.core.service.BiometadataService;
 import org.monarchinitiative.maxodiff.core.service.BiometadataServiceImpl;
@@ -35,7 +33,7 @@ public record MaxodiffPropsConfiguration(MinimalOntology hpo, HpoDiseases hpoDis
         return new MaxodiffPropsConfiguration(hpo, diseases, maxoAnnotsMap, biometadataService);
     }
 
-    public DiffDiagRefiner diffDiagRefiner(boolean dummy) {
+    public DiffDiagRefiner diffDiagRefiner(String refiner) {
 
         Map<TermId, Set<TermId>> hpoToMaxoIdMap = new HashMap<>();
         for (Map.Entry<SimpleTerm, Set<SimpleTerm>> entry : maxoAnnotsMap.entrySet()) {
@@ -44,10 +42,19 @@ public record MaxodiffPropsConfiguration(MinimalOntology hpo, HpoDiseases hpoDis
             maxoAnnotsMap.get(entry.getKey()).forEach(t -> maxoIds.add(t.tid()));
             hpoToMaxoIdMap.put(hpoId, maxoIds);
         }
-        if (dummy) {
-            return new DummyDiffDiagRefiner(hpoDiseases, hpoToMaxoIdMap, hpo);
-        } else {
-            return new MaxoDiffRefiner(hpoDiseases, hpoToMaxoIdMap, hpo);
+//        if (dummy) {
+//            return new DummyDiffDiagRefiner(hpoDiseases, hpoToMaxoIdMap, hpo);
+//        } else {
+//            return new MaxoDiffRefiner(hpoDiseases, hpoToMaxoIdMap, hpo);
+//        }
+        DiffDiagRefiner diffDiagRefiner = null;
+        switch (refiner) {
+            case "score" -> diffDiagRefiner = new MaxoDiffRefiner(hpoDiseases, hpoToMaxoIdMap, hpo);
+            case "dummy" -> diffDiagRefiner = new DummyDiffDiagRefiner(hpoDiseases, hpoToMaxoIdMap, hpo);
+            case "rank" -> diffDiagRefiner = new MaxoDiffRankRefiner(hpoDiseases, hpoToMaxoIdMap, hpo);
+            case "ddScore" -> diffDiagRefiner = new MaxoDiffDDScoreRefiner(hpoDiseases, hpoToMaxoIdMap, hpo);
+            case "ksTest" -> diffDiagRefiner = new MaxoDiffKolmogorovSmirnovRefiner(hpoDiseases, hpoToMaxoIdMap, hpo);
         }
+        return diffDiagRefiner;
     }
 }

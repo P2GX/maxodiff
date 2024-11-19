@@ -58,7 +58,7 @@ public class BaseDiffDiagRefiner implements DiffDiagRefiner {
             MaxodiffResult maxodiffResult = new MaxodiffResultImpl(maxoTermScore, frequencies, List.of());
             maxodiffResultsList.add(maxodiffResult);
         }
-
+        maxodiffResultsList.sort(Comparator.<MaxodiffResult>comparingDouble(mr -> mr.maxoTermScore().scoreDiff()).reversed());
         // Return RefinementResults object, which contains the list of MaxodiffResult objects.
         return new RefinementResultsImpl(maxodiffResultsList);
     }
@@ -131,13 +131,13 @@ public class BaseDiffDiagRefiner implements DiffDiagRefiner {
     }
 
     @Override
-    public Map<TermId, Set<TermId>> getMaxoToHpoTermIdMap(Sample sample,
+    public Map<TermId, Set<TermId>> getMaxoToHpoTermIdMap(List<TermId> termIdsToRemove,
                                                           Map<TermId, List<HpoFrequency>> hpoTermCounts) {
 
 
-        // Remove HPO terms present in the sample
-        sample.presentHpoTermIds().forEach(hpoTermCounts::remove);
-        sample.excludedHpoTermIds().forEach(hpoTermCounts::remove);
+        // Remove HPO terms if desired
+        termIdsToRemove.forEach(hpoTermCounts::remove);
+//        sample.excludedHpoTermIds().forEach(hpoTermCounts::remove);
         Set<TermId> hpoIds = hpoTermCounts.keySet();
 
         // Get all the MaXo terms that can be used to diagnose the HPO terms, removing ancestors
@@ -166,6 +166,7 @@ public class BaseDiffDiagRefiner implements DiffDiagRefiner {
             // Get the set of HPO terms that can be ascertained by the MAXO term
             Set<TermId> hpoTermIds = maxoToHpoTermIdMap.get(maxoId);
             List<TermId> maxoDiseaseIds = hpoTermIds.stream().toList();
+            System.out.println(maxoId + " ascertained HPO terms: " + maxoDiseaseIds);
             Sample maxoSample = Sample.of(sample.id(), maxoDiseaseIds, sample.excludedHpoTermIds());
             List<DifferentialDiagnosis> maxoDiagnoses = engine.run(maxoSample);
             List<DifferentialDiagnosis> orderedMaxoDiagnoses = maxoDiagnoses.stream()
@@ -175,6 +176,11 @@ public class BaseDiffDiagRefiner implements DiffDiagRefiner {
         }
 
         return maxoTermToDifferentialDiagnosesMap;
+    }
+
+    @Override
+    public HpoDiseases getHPOADiseases() {
+        return this.hpoDiseases;
     }
 
 }

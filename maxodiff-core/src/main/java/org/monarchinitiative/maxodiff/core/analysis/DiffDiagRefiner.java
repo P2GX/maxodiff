@@ -4,6 +4,7 @@ import org.monarchinitiative.maxodiff.core.diffdg.DifferentialDiagnosisEngine;
 import org.monarchinitiative.maxodiff.core.model.DifferentialDiagnosis;
 import org.monarchinitiative.maxodiff.core.model.Sample;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDisease;
+import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 
 import java.util.Collection;
@@ -37,11 +38,12 @@ public interface DiffDiagRefiner {
 
     Map<TermId, List<HpoFrequency>> getHpoTermCounts(List<HpoDisease> hpoDiseases);
 
-    Map<TermId, Set<TermId>> getMaxoToHpoTermIdMap(Sample sample,
+    Map<TermId, Set<TermId>> getMaxoToHpoTermIdMap(List<TermId> termIdsToRemove,
                                                    Map<TermId, List<HpoFrequency>> hpoTermCounts);
 
     Map<TermId, List<DifferentialDiagnosis>> getMaxoTermToDifferentialDiagnosesMap(Sample sample,
                                                                                    DifferentialDiagnosisEngine engine,
                                                                                    Map<TermId, Set<TermId>> maxoToHpoTermIdMap,
                                                                                    Integer nDiseases);
+    HpoDiseases getHPOADiseases();
 }

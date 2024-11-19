@@ -16,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestParam;
 
 import java.nio.file.Path;
 import java.util.*;
+import java.util.stream.Stream;
 
 @Controller("/")
 public class DifferentialDiagnosisController {
@@ -87,7 +88,9 @@ public class DifferentialDiagnosisController {
             Map<TermId, List<HpoFrequency>> hpoTermCounts = (Map<TermId, List<HpoFrequency>>) model.getAttribute("hpoTermCounts");
 
             if (model.getAttribute("maxoToHpoTermIdMap") == null) {
-                Map<TermId, Set<TermId>> maxoToHpoTermIdMap = diffDiagRefiner.getMaxoToHpoTermIdMap(sample, hpoTermCounts);
+                List<TermId> termIdsToRemove = Stream.of(sample.presentHpoTermIds(), sample.excludedHpoTermIds())
+                        .flatMap(Collection::stream).toList();
+                Map<TermId, Set<TermId>> maxoToHpoTermIdMap = diffDiagRefiner.getMaxoToHpoTermIdMap(termIdsToRemove, hpoTermCounts);
                 model.addAttribute("maxoToHpoTermIdMap", maxoToHpoTermIdMap);
             }
             Map<TermId, Set<TermId>> maxoToHpoTermIdMap = (Map<TermId, Set<TermId>>) model.getAttribute("maxoToHpoTermIdMap");
