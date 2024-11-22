@@ -9,6 +9,10 @@ import org.monarchinitiative.phenol.ontology.data.TermId;
 
 import java.util.*;
 
+/**
+ * This class calculates the excluded phenotypes, i.e. phenotypes that can be ascertained by MAxO terms,
+ * but are not included in the existing phenotypes in the phenopacket
+ */
 public class ExcludedPhenotypes {
 
     private final HpoDiseases hpoDiseases;
@@ -16,6 +20,11 @@ public class ExcludedPhenotypes {
     private final Map<TermId, Set<TermId>> hpoToMaxoTermIdMap;
     private final Map<TermId, Set<TermId>> maxoToHpoTermIdMap;
 
+    /**
+     *
+     * @param hpoDiseases HpoDiseases object //TODO: may not need this
+     * @param hpoToMaxoTermMap Map of HPO terms : Set of associated MAxO terms created using maxo_diagnostic_annotations file.
+     */
     public ExcludedPhenotypes(HpoDiseases hpoDiseases, Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxoTermMap) {
         this.hpoDiseases = hpoDiseases;
         this.hpoToMaxoTermMap = hpoToMaxoTermMap;
@@ -23,6 +32,10 @@ public class ExcludedPhenotypes {
         this.maxoToHpoTermIdMap = getMaxoToHpoTermIdMap();
     }
 
+    /**
+     * Make a map of HPO TermIds : Set of associated MAxO TermIds from HPO : MAxO term Map
+     * @return Map of HPO TermIds : Set of associated MAxO TermIds
+     */
     public Map<TermId, Set<TermId>> getHpoToMaxoTermIdMap() {
         Map<TermId, Set<TermId>> hpoToMaxoTermIdMap = new HashMap<>();
         for (Map.Entry<SimpleTerm, Set<SimpleTerm>> entry : hpoToMaxoTermMap.entrySet()) {
@@ -42,6 +55,10 @@ public class ExcludedPhenotypes {
         return hpoToMaxoTermIdMap;
     }
 
+    /**
+     * Make a map of MAxO TermIds : Set of associated HPO TermIds from HPO : MAxO term Map
+     * @return Map of MAxO TermIds : Set of associated HPO TermIds
+     */
     public Map<TermId, Set<TermId>> getMaxoToHpoTermIdMap() {
         Map<TermId, Set<TermId>> maxoToHpoTermIdMap = new HashMap<>();
         for (Map.Entry<SimpleTerm, Set<SimpleTerm>> entry : hpoToMaxoTermMap.entrySet()) {
@@ -61,70 +78,62 @@ public class ExcludedPhenotypes {
         return maxoToHpoTermIdMap;
     }
 
-    public Set<TermId> getExcludedPhenotypeIds(SamplePhenopacket samplePpkt, TermId targetDiseaseId) throws PhenolRuntimeException {
 
+    /**
+     *
+     * @param hpoId Existing HPO Term Id from phenopacket
+     * @return Set of excluded HPO Ids for the HPO term, including any other existing HPO Ids in the phenopacket.
+     * The other HPO Ids from the phenopacket are removed in getExcludedPhenotypes method.
+     */
+    public Set<TermId> getExcludedForHpoTerm(TermId hpoId) {
+        Set<TermId> excluded;
+        Set<TermId> associatedMaxoTermIds = hpoToMaxoTermIdMap.get(hpoId);
+        List<Set<TermId>> maxoIdHpoIds = new ArrayList<>();
+        if (associatedMaxoTermIds.size() == 1) {
+            TermId maxoId = associatedMaxoTermIds.iterator().next();
+            excluded = maxoToHpoTermIdMap.get(maxoId);
+        } else if (associatedMaxoTermIds.isEmpty()) {
+            excluded = Set.of();
+        } else {
+            associatedMaxoTermIds.forEach(mid -> maxoIdHpoIds.add(maxoToHpoTermIdMap.get(mid)));
+            // get intersection of sets
+            excluded = getIntersection(maxoIdHpoIds);
+        }
+
+        return excluded;
+    }
+
+    /**
+     *
+     * @param samplePpkt Input phenopacket with present and excluded HPO terms.
+     * @return Set of excluded phenotypes. These are phenotypes that can be ascertained by MAxO terms,
+     *  but are not included in the existing phenotypes in the phenopacket.
+     */
+    public Set<TermId> getExcludedPhenotypes(SamplePhenopacket samplePpkt) {
         Set<TermId> existingTerms = new HashSet<>(samplePpkt.presentHpoTermIds());
         existingTerms.addAll(samplePpkt.excludedHpoTermIds());
+        Set<TermId> excludedPhenotypes = new HashSet<>();
+        existingTerms.forEach(tid -> excludedPhenotypes.addAll(getExcludedForHpoTerm(tid)));
+        excludedPhenotypes.removeAll(existingTerms);
+        return excludedPhenotypes;
+    }
 
-        Optional<HpoDisease> opt = hpoDiseases.diseaseById(targetDiseaseId);
-        if (opt.isEmpty()) {
-            throw new PhenolRuntimeException("Could not find disease id " + targetDiseaseId.getValue());
-        }
-        HpoDisease disease = opt.get();
-        // CHECK -- DOES THIS GIVE US EVERYTHING
-        // Here, we do not care about present or absent. We regard all term annotations as
-        // potentially relevant and worthy to be ascertained by a Maxo-annotated diagnostic method
-        Set<TermId> targetDiseaseAnnotatedHpoIds = new HashSet<>(disease.annotationTermIdList());
-
-
-        //get set of maxo ids for each hpo term in phenopacket
-        Set<TermId> associatedMaxoIds = new HashSet<>();
-        for (TermId existingId : existingTerms) {
-            if (hpoToMaxoTermIdMap.containsKey(existingId)) {
-                associatedMaxoIds.addAll(hpoToMaxoTermIdMap.get(existingId));
-            }
+    /**
+     *
+     * @param sets List of Sets of TermIds
+     * @return The intersection of the sets, i.e. only the TermIds that are present in all the sets in the list.
+     */
+    public static Set<TermId> getIntersection(List<Set<TermId>> sets) {
+        if (sets == null || sets.isEmpty()) {
+            return new HashSet<>(); // Return an empty set if no input sets are provided
         }
 
-        //then get intersection of hpo terms associated with each of these maxo terms
-        Map<TermId, Set<TermId>> associatedMaxoHpoIdMap = new HashMap<>();
-        associatedMaxoIds.forEach(tid -> associatedMaxoHpoIdMap.put(tid, maxoToHpoTermIdMap.get(tid)));
-
-//        TermId firstMaxoId = associatedMaxoIds.stream().toList().getFirst();
-//        Set<TermId> intersectionSet = new HashSet<>(associatedMaxoHpoIdMap.get(firstMaxoId));
-//        for (int i = 1; i < associatedMaxoIds.size(); i++) {
-//            TermId maxoId = associatedMaxoIds.stream().toList().get(i);
-//            Set<TermId> set = new HashSet<>(associatedMaxoHpoIdMap.get(maxoId));
-//            intersectionSet.retainAll(set);
-//        }
-
-        //TODO: incorporate HPOA diseases
-        Set<TermId> intersectionSet = new HashSet<>();
-        for (Map.Entry<TermId, Set<TermId>> assocMaxoHpoIdEntry : associatedMaxoHpoIdMap.entrySet()) {
-            TermId maxoId = assocMaxoHpoIdEntry.getKey();
-            Set<TermId> annotIntersectionSet = new HashSet<>(associatedMaxoHpoIdMap.get(maxoId));
-//            System.out.println(maxoId + ": " + annotIntersectionSet);
-            annotIntersectionSet.retainAll(targetDiseaseAnnotatedHpoIds);
-            intersectionSet.addAll(annotIntersectionSet);
-//            System.out.println(maxoId + " intersectSet " + intersectionSet);
+        // Create a new set to avoid modifying the original sets
+        Set<TermId> intersection = new HashSet<>(sets.getFirst()); // Retain only elements that are in all sets
+        for (int i = 1; i < sets.size(); i++) {
+            intersection.retainAll(sets.get(i));
         }
 
-//        Set<TermId> maxoHpoIds = maxoToHpoTermIdMap.get(maxoTermId);
-//        Set<TermId> maxoPpkHpoIds = new HashSet<>();
-//        for (TermId id : maxoHpoIds) {
-//            if (existingTerms.contains(id)) {
-//                maxoPpkHpoIds.add(id);
-//            }
-//        }
-//
-//        Set<TermId> excludedTerms = new HashSet<>();
-//        if (!maxoPpkHpoIds.isEmpty()) {
-//            excludedTerms = maxoHpoIds;
-//        }
-
-//        System.out.println("existingTerms = " + existingTerms);
-//        System.out.println("targetAnnotHpoIds = " + targetDiseaseAnnotatedHpoIds);
-//        System.out.println("final intersectionSet = " + intersectionSet);
-
-        return intersectionSet;
+        return intersection;
     }
 }

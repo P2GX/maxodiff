@@ -18,11 +18,11 @@ import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
 import java.util.zip.GZIPInputStream;
+
+import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Utility class with lazily-loaded resources for testing
@@ -86,6 +86,33 @@ public class TestResources {
             }
         }
         return HPO_2_MAXO;
+    }
+
+    public static Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxoToy() {
+        Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxoToy = new HashMap<>();
+        List<TermId> hpoIdSubset = List.of(
+            TermId.of("HP:0006739"),
+            TermId.of("HP:0002863"),
+            TermId.of("HP:0100651"),
+            TermId.of("HP:0031548"),
+            TermId.of("HP:0031549"),
+            TermId.of("HP:0002860"),
+                TermId.of("HP:0001888"),
+                TermId.of("HP:0001903"),
+                TermId.of("HP:0001873")
+        );
+
+        for (Map.Entry<SimpleTerm, Set<SimpleTerm>> entry : hpoToMaxo().entrySet()) {
+            SimpleTerm hpoTerm = entry.getKey();
+            Set<SimpleTerm> maxoTerms = entry.getValue();
+            for (TermId hpoId : hpoIdSubset) {
+                if (hpoTerm.tid().equals(hpoId)) {
+                    hpoToMaxoToy.put(hpoTerm, maxoTerms);
+                }
+            }
+        }
+
+        return hpoToMaxoToy;
     }
 
     public static Sample getExampleSample() {

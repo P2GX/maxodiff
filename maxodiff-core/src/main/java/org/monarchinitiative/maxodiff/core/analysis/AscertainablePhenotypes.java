@@ -8,15 +8,31 @@ import org.monarchinitiative.phenol.ontology.data.TermId;
 
 import java.util.*;
 
-public class PotentialPhenotypes {
+/**
+ * This class calculates the ascertainable phenotypes, i.e. the HPO terms that are annotated to the disease,
+ * but are not present in the phenopacket.
+ */
+public class AscertainablePhenotypes {
 
     private final HpoDiseases hpoDiseases;
 
-    public PotentialPhenotypes(HpoDiseases hpoDiseases) {
+    /**
+     *
+     * @param hpoDiseases HpoDisease object
+     */
+    public AscertainablePhenotypes(HpoDiseases hpoDiseases) {
         this.hpoDiseases = hpoDiseases;
     }
 
-    public Set<TermId> getPotentialPhenotypeIds(SamplePhenopacket myPpkt, TermId targetDiseaseId) throws PhenolRuntimeException {
+    /**
+     *
+     * @param myPpkt Input phenopacket with present and excluded HPO terms
+     * @param targetDiseaseId TermId of the disease of interest
+     * @return Ascertainable term Ids: HPO terms that are annotated to the disease,
+     *  but are not present in the phenopacket.
+     * @throws PhenolRuntimeException
+     */
+    public Set<TermId> getAscertainablePhenotypeIds(SamplePhenopacket myPpkt, TermId targetDiseaseId) throws PhenolRuntimeException {
         Set<TermId> existingTerms = new HashSet<>(myPpkt.presentHpoTermIds());
         existingTerms.addAll(myPpkt.excludedHpoTermIds());
         Optional<HpoDisease> opt = hpoDiseases.diseaseById(targetDiseaseId);
