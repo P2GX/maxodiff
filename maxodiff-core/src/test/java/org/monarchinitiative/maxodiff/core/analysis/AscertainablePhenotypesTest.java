@@ -127,7 +127,7 @@ public class AscertainablePhenotypesTest {
     @MethodSource("testGetIndividualDiseaseIds")
     void testEvaluateExpression(TestIndividual testCase) {
         SamplePhenopacket ppkti = testCase.myPPkt();
-        TermId targetId = ppkti.diseaseIds().get(0);
+        TermId targetId = ppkti.diseaseIds().getFirst();
         switch (testCase.expectedOutcome()) {
             case TestOutcome.Ok(Set<TermId> expectedResult) ->
                     assertEquals(expectedResult, ASCERTAINABLE_PHENOTYPES.getAscertainablePhenotypeIds(ppkti, targetId),
