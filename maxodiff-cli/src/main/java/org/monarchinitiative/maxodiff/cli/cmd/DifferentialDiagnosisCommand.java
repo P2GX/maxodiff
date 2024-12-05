@@ -3,10 +3,6 @@ package org.monarchinitiative.maxodiff.cli.cmd;
 import org.monarchinitiative.lirical.core.Lirical;
 import org.monarchinitiative.lirical.core.analysis.*;
 import org.monarchinitiative.lirical.core.exception.LiricalException;
-import org.monarchinitiative.lirical.core.output.AnalysisResultsMetadata;
-import org.monarchinitiative.lirical.core.output.AnalysisResultsWriter;
-import org.monarchinitiative.lirical.core.output.OutputFormat;
-import org.monarchinitiative.lirical.core.output.OutputOptions;
 import org.monarchinitiative.lirical.io.analysis.PhenopacketData;
 import org.monarchinitiative.lirical.io.analysis.PhenopacketImporter;
 import org.monarchinitiative.lirical.io.analysis.PhenopacketImporters;
@@ -30,7 +26,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.stream.Stream;
-import java.util.zip.GZIPOutputStream;
 
 
 /**

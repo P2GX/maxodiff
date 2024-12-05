@@ -19,10 +19,7 @@ import java.io.InputStreamReader;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
-import java.util.stream.Collectors;
 import java.util.zip.GZIPInputStream;
-
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 /**
  * Utility class with lazily-loaded resources for testing

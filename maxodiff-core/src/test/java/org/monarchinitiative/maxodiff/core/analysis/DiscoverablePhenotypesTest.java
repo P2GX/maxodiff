@@ -128,10 +128,6 @@ public class DiscoverablePhenotypesTest {
                 potentialPhenotypeIds,
                 excludedPhenotypeIds);
 
-//        System.out.println(potentialPhenotypeIds);
-//        System.out.println(excludedPhenotypeIds);
-//        System.out.println(discoverablePhenotypeIds);
-
         switch (testCase.expectedOutcome()) {
             case TestOutcome.Ok(int expectedResult) ->
                     assertEquals(expectedResult, discoverablePhenotypeIds.size(),
