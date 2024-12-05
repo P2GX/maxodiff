@@ -8,12 +8,14 @@ import org.monarchinitiative.maxodiff.core.TestResources;
 import org.monarchinitiative.maxodiff.core.model.SamplePhenopacket;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDisease;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
+import org.monarchinitiative.phenol.base.PhenolRuntimeException;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.Set;
+import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -23,8 +25,7 @@ public class DiscoverablePhenotypesTest {
      private final static HpoDiseases hpoDiseases = TestResources.hpoDiseases();
      private final static Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxoTermMap = TestResources.hpoToMaxoToy();
 
-     private final static AscertainablePhenotypes ASCERTAINABLE_PHENOTYPES = new AscertainablePhenotypes(hpoDiseases);
-     private final static ExcludedPhenotypes excludedPhenotypes = new ExcludedPhenotypes(hpoToMaxoTermMap);
+     private final static DiscoverablePhenotypes DISCOVERABLE_PHENOTYPES = new DiscoverablePhenotypes(hpoDiseases, hpoToMaxoTermMap);
 
     /**
      * This tests if the right disease is obtained from HpoDiseases, and if it has the correct HPO TermIds.
@@ -72,6 +73,20 @@ public class DiscoverablePhenotypesTest {
         return new SamplePhenopacket("sample1", presentTerms, excludedTerms, diseaseIds);
     }
 
+    /**
+     * We expect this to cause an error, because OMIM:123456 is not aa actual identifier
+     * @return Sample phenopacket with one included HPO term Id and one dummy disease Id.
+     */
+    public static SamplePhenopacket getPPktEmptyDisease() {
+        List<TermId> presentTerms = List.of(
+                TermId.of("HP:0001888")
+        );
+        List<TermId> excludedTerms = List.of();
+        List<TermId> diseaseIds = List.of(TermId.of("OMIM:123456"));
+
+        return new SamplePhenopacket("sample2", presentTerms, excludedTerms, diseaseIds);
+    }
+
 
     /**
      * This tests getting the discoverable phenotypes for the sample phenopacket with one included HPO term.
@@ -81,13 +96,9 @@ public class DiscoverablePhenotypesTest {
          // Get excluded phenotypes given phenopacket
          SamplePhenopacket s1 = getPPkt1();
          TermId targetId = s1.diseaseIds().getFirst();
-         Set<TermId> potentialPhenotypeIds = ASCERTAINABLE_PHENOTYPES.getAscertainablePhenotypeIds(s1, targetId);
-         Set<TermId> excludedPhenotypeIds = excludedPhenotypes.getExcludedPhenotypes(s1);
-         Set<TermId> discoverablePhenotypeIds = DiscoverablePhenotypes.getDiscoverablePhenotypeIds(
-                potentialPhenotypeIds,
-                excludedPhenotypeIds);
-//         System.out.println(potentialPhenotypeIds);
-//         System.out.println(excludedPhenotypeIds);
+         Set<TermId> discoverablePhenotypeIds = DISCOVERABLE_PHENOTYPES.getDiscoverablePhenotypeIds(
+                s1,
+                targetId);
 //         System.out.println(discoverablePhenotypeIds);
          // HPO term in phenopacket can be ascertained by 2 Maxo terms (MAXO:0000671 and MAXO:0000691)
          // 67 total HPO terms can ascertained by both Maxo terms
@@ -96,7 +107,7 @@ public class DiscoverablePhenotypesTest {
 
     public sealed interface TestOutcome {
         record Ok(int nExcludedTerms) implements TestOutcome {}
-//        record Error(Supplier<? extends PhenolRuntimeException> exceptionSupplier) implements TestOutcome {}
+        record Error(Supplier<? extends PhenolRuntimeException> exceptionSupplier) implements TestOutcome {}
     }
 
     public record TestIndividual(String description, SamplePhenopacket myPPkt, TestOutcome expectedOutcome) {}
@@ -113,7 +124,10 @@ public class DiscoverablePhenotypesTest {
                         new TestOutcome.Ok(11)),
                 new TestIndividual("46 year old female, infantile onset (2 terms)",
                         getPPkt2(),
-                        new TestOutcome.Ok(10))
+                        new TestOutcome.Ok(10)),
+                new TestIndividual("No disease id",
+                        getPPktEmptyDisease(),
+                        new TestOutcome.Error(() -> new PhenolRuntimeException("No disease id found")))
         );
     }
 
@@ -122,20 +136,15 @@ public class DiscoverablePhenotypesTest {
     void testEvaluateExpression(TestIndividual testCase) {
         SamplePhenopacket ppkti = testCase.myPPkt();
         TermId targetId = ppkti.diseaseIds().getFirst();
-        Set<TermId> potentialPhenotypeIds = ASCERTAINABLE_PHENOTYPES.getAscertainablePhenotypeIds(ppkti, targetId);
-        Set<TermId> excludedPhenotypeIds = excludedPhenotypes.getExcludedPhenotypes(ppkti);
-        Set<TermId> discoverablePhenotypeIds = DiscoverablePhenotypes.getDiscoverablePhenotypeIds(
-                potentialPhenotypeIds,
-                excludedPhenotypeIds);
 
         switch (testCase.expectedOutcome()) {
             case TestOutcome.Ok(int expectedResult) ->
-                    assertEquals(expectedResult, discoverablePhenotypeIds.size(),
+                    assertEquals(expectedResult, DISCOVERABLE_PHENOTYPES.getDiscoverablePhenotypeIds(ppkti, targetId).size(),
                             "Incorrect evaluation for: " + testCase.description());
-//            case TestOutcome.Error(Supplier<? extends RuntimeException> exceptionSupplier) ->
-//                    assertThrows(exceptionSupplier.get().getClass(),
-//                            () -> discoverablePhenotypeIds,
-//                            "Incorrect error handling for: " + testCase.description());
+            case TestOutcome.Error(Supplier<? extends RuntimeException> exceptionSupplier) ->
+                    assertThrows(exceptionSupplier.get().getClass(),
+                            () -> DISCOVERABLE_PHENOTYPES.getDiscoverablePhenotypeIds(ppkti, targetId),
+                            "Incorrect error handling for: " + testCase.description());
         }
     }
 }
