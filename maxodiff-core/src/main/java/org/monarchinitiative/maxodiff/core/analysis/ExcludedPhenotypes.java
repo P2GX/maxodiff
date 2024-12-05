@@ -11,22 +11,24 @@ import java.util.*;
 
 /**
  * This class calculates the excluded phenotypes, i.e. phenotypes that can be ascertained by MAxO terms,
- * but are not included in the existing phenotypes in the phenopacket
+ * but are not included in the existing phenotypes in the phenopacket.
+ * Optionally, we can assume that certain phenotypes would have been ascertained but were not mentioned.
+ * For instance, if the phenopacket says we observed Ventricular septum defect, then if the HPOAs also has atrial
+ * septal defect for the disease, we can assume that the patient does NOT have ASD because we would have seen it with
+ * echocardiography (which you need to diagnosis both ASD and VSD).
+ * This is not dependent on the disease diagnosis.
  */
 public class ExcludedPhenotypes {
 
-    private final HpoDiseases hpoDiseases;
+
     private final Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxoTermMap;
     private final Map<TermId, Set<TermId>> hpoToMaxoTermIdMap;
     private final Map<TermId, Set<TermId>> maxoToHpoTermIdMap;
 
     /**
-     *
-     * @param hpoDiseases HpoDiseases object //TODO: may not need this
      * @param hpoToMaxoTermMap Map of HPO terms : Set of associated MAxO terms created using maxo_diagnostic_annotations file.
      */
-    public ExcludedPhenotypes(HpoDiseases hpoDiseases, Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxoTermMap) {
-        this.hpoDiseases = hpoDiseases;
+    public ExcludedPhenotypes(Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxoTermMap) {
         this.hpoToMaxoTermMap = hpoToMaxoTermMap;
         this.hpoToMaxoTermIdMap = getHpoToMaxoTermIdMap();
         this.maxoToHpoTermIdMap = getMaxoToHpoTermIdMap();
@@ -99,7 +101,6 @@ public class ExcludedPhenotypes {
             // get intersection of sets
             excluded = getIntersection(maxoIdHpoIds);
         }
-
         return excluded;
     }
 

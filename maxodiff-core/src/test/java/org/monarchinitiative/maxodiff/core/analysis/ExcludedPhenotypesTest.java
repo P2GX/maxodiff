@@ -25,7 +25,7 @@ public class ExcludedPhenotypesTest {
      private final static HpoDiseases hpoDiseases = TestResources.hpoDiseases();
      private final static Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxoTermMap = TestResources.hpoToMaxoToy();
 
-     private final static ExcludedPhenotypes excludedPhenotypes = new ExcludedPhenotypes(hpoDiseases, hpoToMaxoTermMap);
+     private final static ExcludedPhenotypes excludedPhenotypes = new ExcludedPhenotypes(hpoToMaxoTermMap);
 
     /**
      * This tests if the right disease is obtained from HpoDiseases, and if it has the correct HPO TermIds.
