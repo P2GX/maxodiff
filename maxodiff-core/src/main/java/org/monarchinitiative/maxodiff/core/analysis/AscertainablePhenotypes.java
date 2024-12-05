@@ -9,11 +9,16 @@ import org.monarchinitiative.phenol.ontology.data.TermId;
 import java.util.*;
 
 /**
- * This class calculates the ascertainable phenotypes, i.e. the HPO terms that are annotated to the disease,
- * but are not present in the phenopacket.
+ * This class calculates the ascertainable phenotypes.
+ * An \textit{ascertainable phenotype} is defined as a phenotypic feature that is associated with a disease but not
+ * currently mentioned in the phenopacket. If we are considering a disease as a differential diagnosis, then it is
+ * useful to know if such features are present (this would increase our belief that the disease in question is the
+ * correct diagnosis) or absent (this would decrease our belief).
  */
 public class AscertainablePhenotypes {
-
+    /**
+     * Reference to an object containing information about all diseases.
+     */
     private final HpoDiseases hpoDiseases;
 
     /**
@@ -28,9 +33,8 @@ public class AscertainablePhenotypes {
      *
      * @param myPpkt Input phenopacket with present and excluded HPO terms
      * @param targetDiseaseId TermId of the disease of interest
-     * @return Ascertainable term Ids: HPO terms that are annotated to the disease,
-     *  but are not present in the phenopacket.
-     * @throws PhenolRuntimeException
+     * @return Ascertainable term Ids: HPO terms that are annotated to the disease, but are not present in the phenopacket.
+     * @throws PhenolRuntimeException if that targetDiseaseId is not found.
      */
     public Set<TermId> getAscertainablePhenotypeIds(SamplePhenopacket myPpkt, TermId targetDiseaseId) throws PhenolRuntimeException {
         Set<TermId> existingTerms = new HashSet<>(myPpkt.presentHpoTermIds());
@@ -40,21 +44,10 @@ public class AscertainablePhenotypes {
             throw new PhenolRuntimeException("Could not find disease id " + targetDiseaseId.getValue());
         }
         HpoDisease disease = opt.get();
-        // CHECK -- DOES THIS GIVE US EVERYTHING
         // Here, we do not care about present or absent. We regard all term annotations as
-        // potentially relevant and worthy to be ascertained by a Maxo-annotated diagnostic method
-        Set<TermId> allIds = new HashSet<>(disease.annotationTermIdList());
-
-        Set<TermId> potentialTerms = new HashSet<>();
-        for (TermId id : allIds) {
-            //TODO: what about inheritance?
-            if (existingTerms.contains(id)) {
-                continue;
-            } else {
-                potentialTerms.add(id);
-            }
-        }
-
-        return potentialTerms;
+        // potentially relevant and worthy to be ascertained by a MAxO-annotated diagnostic method
+        return new HashSet<>(disease.annotationTermIdList().stream()
+                .filter(id -> !existingTerms.contains(id))
+                .toList());
     }
 }
