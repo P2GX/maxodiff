@@ -57,7 +57,7 @@ public class AscertainablePhenotypesTest {
 
     /**
      *
-     * @return Sample phenopacket with two included HPO term Ids and one disease Ids.
+     * @return Sample phenopacket with two included HPO term Ids and one disease Id.
      */
     public static SamplePhenopacket getPPkt2() {
         List<TermId> presentTerms = List.of(
@@ -71,7 +71,7 @@ public class AscertainablePhenotypesTest {
     }
 
     /**
-     *
+     * We expect this to cause an error, because OMIM:123456 is not aa actual identifier
      * @return Sample phenopacket with one included HPO term Id and one dummy disease Id.
      */
     public static SamplePhenopacket getPPktEmptyDisease() {
