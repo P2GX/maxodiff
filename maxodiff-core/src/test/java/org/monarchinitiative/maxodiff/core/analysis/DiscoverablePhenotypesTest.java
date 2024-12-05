@@ -121,7 +121,7 @@ public class DiscoverablePhenotypesTest {
     @MethodSource("testGetIndividualDiseaseIds")
     void testEvaluateExpression(TestIndividual testCase) {
         SamplePhenopacket ppkti = testCase.myPPkt();
-        TermId targetId = ppkti.diseaseIds().get(0);
+        TermId targetId = ppkti.diseaseIds().getFirst();
         Set<TermId> potentialPhenotypeIds = ASCERTAINABLE_PHENOTYPES.getAscertainablePhenotypeIds(ppkti, targetId);
         Set<TermId> excludedPhenotypeIds = excludedPhenotypes.getExcludedPhenotypes(ppkti);
         Set<TermId> discoverablePhenotypeIds = DiscoverablePhenotypes.getDiscoverablePhenotypeIds(
