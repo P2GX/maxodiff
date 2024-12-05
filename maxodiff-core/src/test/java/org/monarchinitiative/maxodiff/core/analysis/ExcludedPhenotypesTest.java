@@ -76,20 +76,6 @@ public class ExcludedPhenotypesTest {
     //TODO: write edge case test for inheritance, e.g. if maxo term has both hpo Id and it's parent associated w/ it
 
     /**
-     *
-     * @return Sample phenopacket with one included HPO term Id and one dummy disease Id.
-     */
-    public static SamplePhenopacket getPPktEmptyDisease() {
-        List<TermId> presentTerms = List.of(
-                TermId.of("HP:0006739")
-        );
-        List<TermId> excludedTerms = List.of();
-        List<TermId> diseaseIds = List.of(TermId.of("OMIM:123456"));
-
-        return new SamplePhenopacket("sample2", presentTerms, excludedTerms, diseaseIds);
-    }
-
-    /**
      * This tests getting the excluded phenotypes for the sample phenopacket with one included HPO term.
      */
     @Test

@@ -2,9 +2,6 @@ package org.monarchinitiative.maxodiff.core.analysis;
 
 import org.monarchinitiative.maxodiff.core.SimpleTerm;
 import org.monarchinitiative.maxodiff.core.model.SamplePhenopacket;
-import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDisease;
-import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
-import org.monarchinitiative.phenol.base.PhenolRuntimeException;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 
 import java.util.*;

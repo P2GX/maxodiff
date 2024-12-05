@@ -72,19 +72,6 @@ public class DiscoverablePhenotypesTest {
         return new SamplePhenopacket("sample1", presentTerms, excludedTerms, diseaseIds);
     }
 
-    /**
-     *
-     * @return Sample phenopacket with one included HPO term Id and one dummy disease Id.
-     */
-    public static SamplePhenopacket getPPktEmptyDisease() {
-        List<TermId> presentTerms = List.of(
-                TermId.of("HP:0001888")
-        );
-        List<TermId> excludedTerms = List.of();
-        List<TermId> diseaseIds = List.of();
-
-        return new SamplePhenopacket("sample2", presentTerms, excludedTerms, diseaseIds);
-    }
 
     /**
      * This tests getting the discoverable phenotypes for the sample phenopacket with one included HPO term.
