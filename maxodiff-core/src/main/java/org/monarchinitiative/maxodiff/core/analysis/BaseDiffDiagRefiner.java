@@ -7,7 +7,6 @@ import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDisease;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
 import org.monarchinitiative.phenol.ontology.data.MinimalOntology;
 import org.monarchinitiative.phenol.ontology.data.TermId;
-import org.phenopackets.schema.v1.core.Base;
 
 import java.util.*;
 import java.util.stream.Collectors;

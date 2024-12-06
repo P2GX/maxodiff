@@ -11,7 +11,6 @@ import org.monarchinitiative.maxodiff.core.service.BiometadataService;
 import org.monarchinitiative.maxodiff.core.service.BiometadataServiceImpl;
 import org.monarchinitiative.maxodiff.html.service.DifferentialDiagnosisEngineService;
 import org.monarchinitiative.maxodiff.html.service.DifferentialDiagnosisEngineServiceImpl;
-import org.monarchinitiative.maxodiff.lirical.LiricalDifferentialDiagnosisEngine;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
 import org.monarchinitiative.phenol.annotations.io.hpo.HpoDiseaseLoader;
 import org.monarchinitiative.phenol.annotations.io.hpo.HpoDiseaseLoaderOptions;

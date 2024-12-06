@@ -4,10 +4,7 @@ package org.monarchinitiative.maxodiff.html.service;
 import org.monarchinitiative.lirical.core.Lirical;
 import org.monarchinitiative.lirical.core.analysis.LiricalAnalysisRunner;
 import org.monarchinitiative.lirical.core.analysis.probability.PretestDiseaseProbability;
-import org.monarchinitiative.lirical.core.exception.LiricalException;
-import org.monarchinitiative.maxodiff.lirical.LiricalConfiguration;
 import org.monarchinitiative.maxodiff.lirical.LiricalDifferentialDiagnosisEngineConfigurer;
-import org.monarchinitiative.maxodiff.html.controller.LiricalRecord;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 
 import java.util.HashMap;

@@ -18,13 +18,16 @@ import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class PotentialPhenotypesTest {
+public class AscertainablePhenotypesTest {
 
      private final static HpoDiseases hpoDiseases = TestResources.hpoDiseases();
 
-     private final static PotentialPhenotypes potentialPhenotypes = new PotentialPhenotypes(hpoDiseases);
+     private final static AscertainablePhenotypes ASCERTAINABLE_PHENOTYPES = new AscertainablePhenotypes(hpoDiseases);
 
-     @Test
+    /**
+     * This tests if the right disease is obtained from HpoDiseases, and if it has the correct HPO TermIds.
+     */
+    @Test
      public void testFindDisease() {
          //Sanity check: can we get the right disease from HpoDiseases, and does it have the right HPO Term Ids?
          TermId diseaseId = TermId.of("OMIM:615837");
@@ -38,6 +41,10 @@ public class PotentialPhenotypesTest {
          assertTrue(termIdList.contains(TermId.of("HP:0000505")), "Did not find HP:0000505");
      }
 
+    /**
+     *
+     * @return Sample phenopacket with one included HPO term Id and one disease Id.
+     */
     public static SamplePhenopacket getPPkt1() {
         List<TermId> presentTerms = List.of(
                 TermId.of("HP:0008619")
@@ -48,6 +55,10 @@ public class PotentialPhenotypesTest {
         return new SamplePhenopacket("sample1", presentTerms, excludedTerms, diseaseIds);
     }
 
+    /**
+     *
+     * @return Sample phenopacket with two included HPO term Ids and one disease Id.
+     */
     public static SamplePhenopacket getPPkt2() {
         List<TermId> presentTerms = List.of(
                 TermId.of("HP:0008619"),
@@ -59,6 +70,10 @@ public class PotentialPhenotypesTest {
         return new SamplePhenopacket("sample1", presentTerms, excludedTerms, diseaseIds);
     }
 
+    /**
+     * We expect this to cause an error, because OMIM:123456 is not aa actual identifier
+     * @return Sample phenopacket with one included HPO term Id and one dummy disease Id.
+     */
     public static SamplePhenopacket getPPktEmptyDisease() {
         List<TermId> presentTerms = List.of(
                 TermId.of("HP:0008619")
@@ -69,14 +84,17 @@ public class PotentialPhenotypesTest {
         return new SamplePhenopacket("sample2", presentTerms, excludedTerms, diseaseIds);
     }
 
+    /**
+     * This tests getting the potential phenotypes for the sample phenopacket with one included HPO term.
+     */
     @Test
     public void testPotentialPhenotypes1() {
          // Get potential phenotypes given phenopacket
          SamplePhenopacket s1 = getPPkt1();
-         TermId targetId = s1.diseaseIds().get(0);
-         Set<TermId> potentialPhenotypeIds = potentialPhenotypes.getPotentialPhenotypeIds(s1, targetId);
+         TermId targetId = s1.diseaseIds().getFirst();
+         Set<TermId> ascertainablePhenotypeIds = ASCERTAINABLE_PHENOTYPES.getAscertainablePhenotypeIds(s1, targetId);
          // Disease associated with ppkt has 3 phenotype terms, example ppkt already has 1, so expect 2 here
-        assertEquals(2, potentialPhenotypeIds.size());
+        assertEquals(2, ascertainablePhenotypeIds.size());
      }
 
     public sealed interface TestOutcome {
@@ -86,6 +104,11 @@ public class PotentialPhenotypesTest {
 
     public record TestIndividual(String description, SamplePhenopacket myPPkt, TestOutcome expectedOutcome) {}
 
+    /**
+     *
+     * @return Stream of individual test results for 3 tests: potential phenotypes for ppkt with 1 HPO term,
+     * potential phenotypes for ppkt with 2 HPO terms, and exception when no disease id found.
+     */
     private static Stream<TestIndividual> testGetIndividualDiseaseIds() {
         return Stream.of(
                 new TestIndividual("46 year old female, infantile onset (1 term)",
@@ -104,14 +127,14 @@ public class PotentialPhenotypesTest {
     @MethodSource("testGetIndividualDiseaseIds")
     void testEvaluateExpression(TestIndividual testCase) {
         SamplePhenopacket ppkti = testCase.myPPkt();
-        TermId targetId = ppkti.diseaseIds().get(0);
+        TermId targetId = ppkti.diseaseIds().getFirst();
         switch (testCase.expectedOutcome()) {
             case TestOutcome.Ok(Set<TermId> expectedResult) ->
-                    assertEquals(expectedResult, potentialPhenotypes.getPotentialPhenotypeIds(ppkti, targetId),
+                    assertEquals(expectedResult, ASCERTAINABLE_PHENOTYPES.getAscertainablePhenotypeIds(ppkti, targetId),
                             "Incorrect evaluation for: " + testCase.description());
             case TestOutcome.Error(Supplier<? extends RuntimeException> exceptionSupplier) ->
                     assertThrows(exceptionSupplier.get().getClass(),
-                            () -> potentialPhenotypes.getPotentialPhenotypeIds(ppkti, targetId),
+                            () -> ASCERTAINABLE_PHENOTYPES.getAscertainablePhenotypeIds(ppkti, targetId),
                             "Incorrect error handling for: " + testCase.description());
         }
     }
