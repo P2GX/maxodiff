@@ -8,17 +8,17 @@ import org.monarchinitiative.maxodiff.core.model.DifferentialDiagnosis;
 import org.monarchinitiative.phenol.base.PhenolRuntimeException;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 
-import java.util.*;
+import java.util.List;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
 import static org.junit.jupiter.api.Assertions.*;
 
-public class DiseaseProbabilityModelsTest {
+public class DiseaseModelProbabilityTest {
 
     private final static List<DifferentialDiagnosis> DIFFERENTIAL_DIAGNOSES = TestResources.getExampleDiagnoses().stream().toList();
 
-    private final static DiseaseProbabilityModels DISEASE_PROBABILITY_MODELS = new DiseaseProbabilityModels(DIFFERENTIAL_DIAGNOSES);
+//    private final static DiseaseModelProbability DISEASE_MODEL_PROBABILITY = DiseaseModelProbability.of(DIFFERENTIAL_DIAGNOSES);
 
     private final static TermId TARGET_ID = TermId.of("OMIM:154700"); //rank 1 disease in example differential diagnoses
 
@@ -27,7 +27,7 @@ public class DiseaseProbabilityModelsTest {
      */
     @Test
     public void testRankedModel() {
-        double rankedProbability = DISEASE_PROBABILITY_MODELS.ranked(TARGET_ID);
+        double rankedProbability = DiseaseModelProbability.ranked(DIFFERENTIAL_DIAGNOSES).probability(TARGET_ID);
         assertEquals(0.09, rankedProbability, 1e-3);
      }
 
@@ -44,10 +44,10 @@ public class DiseaseProbabilityModelsTest {
 
     /**
      *
-     * @return Stream of individual test results for 4 tests: ranked, softmax, and exponential decay calculations
-     * and no disease found.
+     * @return Stream of individual test results for 2 tests: 1 with 3 results (ranked, softmax, and exponential decay calculations),
+     * and 1 with no disease found.
      */
-    private static Stream<TestIndividual> testGetIndividualDiseaseIds() {
+    private static Stream<TestIndividual> testGetProbabilityModelResults() {
         return Stream.of(
                 new TestIndividual("ranked",
                         TARGET_ID,
@@ -60,27 +60,31 @@ public class DiseaseProbabilityModelsTest {
                         new TestOutcome.OkExpDecay(0.632)),
                 new TestIndividual("no disease",
                         TermId.of("OMIM:123456"),
-                        new TestOutcome.Error(() -> new PhenolRuntimeException("Could not find disease id OMIM:123456 in differential diagnoses")))
+                        new TestOutcome.Error(() ->
+                                new PhenolRuntimeException("Could not find disease id OMIM:123456 in differential diagnoses")))
         );
     }
 
     @ParameterizedTest
-    @MethodSource("testGetIndividualDiseaseIds")
+    @MethodSource("testGetProbabilityModelResults")
     void testEvaluateExpression(TestIndividual testCase) {
         TermId targetId = testCase.targetDiseaseId();
         switch (testCase.expectedOutcome()) {
             case TestOutcome.OkRanked(double expectedResult) ->
-                    assertEquals(expectedResult, DISEASE_PROBABILITY_MODELS.ranked(targetId), 1.e-3,
+                    assertEquals(expectedResult, DiseaseModelProbability.ranked(DIFFERENTIAL_DIAGNOSES).probability(targetId),
+                            1.e-3,
                             "Incorrect evaluation for: " + testCase.description());
             case TestOutcome.OkSoftmax(double expectedResult) ->
-                    assertEquals(expectedResult, DISEASE_PROBABILITY_MODELS.softmax(targetId), 1.e-3,
+                    assertEquals(expectedResult, DiseaseModelProbability.softmax(DIFFERENTIAL_DIAGNOSES).probability(targetId),
+                            1.e-3,
                             "Incorrect evaluation for: " + testCase.description());
             case TestOutcome.OkExpDecay(double expectedResult) ->
-                    assertEquals(expectedResult, DISEASE_PROBABILITY_MODELS.exponentialDecay(targetId, 1), 1.e-3,
+                    assertEquals(expectedResult, DiseaseModelProbability.exponentialDecay(DIFFERENTIAL_DIAGNOSES).probability(targetId),
+                            1.e-3,
                             "Incorrect evaluation for: " + testCase.description());
             case TestOutcome.Error(Supplier<? extends RuntimeException> exceptionSupplier) ->
                     assertThrows(exceptionSupplier.get().getClass(),
-                            () -> DISEASE_PROBABILITY_MODELS.ranked(TermId.of("OMIM:123456")),
+                            () -> DiseaseModelProbability.ranked(DIFFERENTIAL_DIAGNOSES).probability(TermId.of("OMIM:123456")),
                             "Incorrect error handling for: " + testCase.description());
         }
 
