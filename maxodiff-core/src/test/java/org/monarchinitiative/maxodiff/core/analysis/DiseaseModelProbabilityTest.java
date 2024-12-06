@@ -37,6 +37,7 @@ public class DiseaseModelProbabilityTest {
         record OkRanked(double diseaseProbability) implements TestOutcome {}
         record OkSoftmax(double diseaseProbability) implements TestOutcome {}
         record OkExpDecay(double diseaseProbability) implements TestOutcome {}
+        record OkExpDecay1(double diseaseProbability) implements TestOutcome {}
         record Error(Supplier<? extends PhenolRuntimeException> exceptionSupplier) implements TestOutcome {}
     }
 
@@ -58,6 +59,9 @@ public class DiseaseModelProbabilityTest {
                 new TestIndividual("exponential decay",
                         TARGET_ID,
                         new TestOutcome.OkExpDecay(0.632)),
+                new TestIndividual("exponential decay",
+                        TARGET_ID,
+                        new TestOutcome.OkExpDecay1(0.393)),
                 new TestIndividual("no disease",
                         TermId.of("OMIM:123456"),
                         new TestOutcome.Error(() ->
@@ -80,6 +84,10 @@ public class DiseaseModelProbabilityTest {
                             "Incorrect evaluation for: " + testCase.description());
             case TestOutcome.OkExpDecay(double expectedResult) ->
                     assertEquals(expectedResult, DiseaseModelProbability.exponentialDecay(DIFFERENTIAL_DIAGNOSES).probability(targetId),
+                            1.e-3,
+                            "Incorrect evaluation for: " + testCase.description());
+            case TestOutcome.OkExpDecay1(double expectedResult) ->
+                    assertEquals(expectedResult, DiseaseModelProbability.exponentialDecay(DIFFERENTIAL_DIAGNOSES, 0.5).probability(targetId),
                             1.e-3,
                             "Incorrect evaluation for: " + testCase.description());
             case TestOutcome.Error(Supplier<? extends RuntimeException> exceptionSupplier) ->
