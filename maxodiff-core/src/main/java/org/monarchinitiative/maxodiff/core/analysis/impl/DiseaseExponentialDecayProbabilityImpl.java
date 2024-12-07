@@ -9,7 +9,7 @@ import java.util.List;
 /**
  * Assign probabilities using an exponential decay function based on the rank.
  */
-public non-sealed class DiseaseExponentialDecayProbabilityImpl extends DiseaseModelProbabilityImpl  implements DiseaseModelProbability {
+public final class DiseaseExponentialDecayProbabilityImpl extends DiseaseModelProbabilityImpl  implements DiseaseModelProbability {
 
     private final double lambda;
     /** Sum of the ranks with exponential decay. */

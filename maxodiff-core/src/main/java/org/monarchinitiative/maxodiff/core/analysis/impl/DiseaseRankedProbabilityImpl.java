@@ -9,7 +9,7 @@ import java.util.List;
 /**
  * The probability of an item  being the correct diagnosis is proportional to its score.
  */
-public non-sealed class DiseaseRankedProbabilityImpl extends DiseaseModelProbabilityImpl implements DiseaseModelProbability {
+public final class DiseaseRankedProbabilityImpl extends DiseaseModelProbabilityImpl implements DiseaseModelProbability {
 
     private final double ddScoreSum;
 

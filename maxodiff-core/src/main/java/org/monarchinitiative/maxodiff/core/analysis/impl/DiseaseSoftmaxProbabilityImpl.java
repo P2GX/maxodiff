@@ -9,7 +9,7 @@ import java.util.List;
 /**
  * The  softmax function is a normalized exponential function that converts scores into probabilities.
  */
-public non-sealed class DiseaseSoftmaxProbabilityImpl extends DiseaseModelProbabilityImpl  implements DiseaseModelProbability {
+public final class DiseaseSoftmaxProbabilityImpl extends DiseaseModelProbabilityImpl  implements DiseaseModelProbability {
 
     private final double ddScoreSum;
 
