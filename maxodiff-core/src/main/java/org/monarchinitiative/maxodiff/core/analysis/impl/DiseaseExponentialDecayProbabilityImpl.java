@@ -6,22 +6,25 @@ import org.monarchinitiative.phenol.ontology.data.TermId;
 
 import java.util.List;
 
-public class DiseaseExponentialDecayProbabilityImpl extends DiseaseModelProbabilityImpl  implements DiseaseModelProbability {
+/**
+ * Assign probabilities using an exponential decay function based on the rank.
+ */
+public non-sealed class DiseaseExponentialDecayProbabilityImpl extends DiseaseModelProbabilityImpl  implements DiseaseModelProbability {
 
     private final double lambda;
+    /** Sum of the ranks with exponential decay. */
+    private final double ddRankSum;
 
     public DiseaseExponentialDecayProbabilityImpl(List<DifferentialDiagnosis> differentialDiagnoses, double lambda) {
         super(differentialDiagnoses);
         this.lambda = lambda;
+        this.ddRankSum = differentialDiagnoses.stream()
+                .mapToDouble(dd -> Math.exp(-lambda * (differentialDiagnoses.indexOf(dd) + 1)))
+                .sum();
     }
 
     public double probability(TermId targetDiseaseId) {
-        double targetDiagnosisRank = differentialDiagnoses().indexOf(getTargetDiseaseDiagnosis(targetDiseaseId)) + 1;
-
-        double ddRankSum = differentialDiagnoses().stream()
-                .mapToDouble(dd -> Math.exp(-lambda * (differentialDiagnoses().indexOf(dd) + 1)))
-                .sum();
-
+        double targetDiagnosisRank = differentialDiagnoses.indexOf(getTargetDiseaseDiagnosis(targetDiseaseId)) + 1;
         return Math.exp(-lambda * targetDiagnosisRank) / ddRankSum;
     }
 

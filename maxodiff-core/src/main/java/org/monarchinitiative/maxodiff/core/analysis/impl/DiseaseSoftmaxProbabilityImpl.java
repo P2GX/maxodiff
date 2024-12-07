@@ -6,19 +6,22 @@ import org.monarchinitiative.phenol.ontology.data.TermId;
 
 import java.util.List;
 
-public class DiseaseSoftmaxProbabilityImpl extends DiseaseModelProbabilityImpl  implements DiseaseModelProbability {
+/**
+ * The  softmax function is a normalized exponential function that converts scores into probabilities.
+ */
+public non-sealed class DiseaseSoftmaxProbabilityImpl extends DiseaseModelProbabilityImpl  implements DiseaseModelProbability {
+
+    private final double ddScoreSum;
 
     public DiseaseSoftmaxProbabilityImpl(List<DifferentialDiagnosis> differentialDiagnoses) {
         super(differentialDiagnoses);
+        ddScoreSum = differentialDiagnoses.stream()
+                .mapToDouble(dd -> Math.exp(dd.score()))
+                .sum();
     }
 
     public double probability(TermId targetDiseaseId) {
         double targetDiagnosisScore = getTargetDiseaseDiagnosis(targetDiseaseId).score();
-
-        double ddScoreSum = differentialDiagnoses().stream()
-                .mapToDouble(dd -> Math.exp(dd.score()))
-                .sum();
-
         return Math.exp(targetDiagnosisScore) / ddScoreSum;
     }
 

@@ -6,19 +6,22 @@ import org.monarchinitiative.phenol.ontology.data.TermId;
 
 import java.util.List;
 
-public class DiseaseRankedProbabilityImpl extends DiseaseModelProbabilityImpl implements DiseaseModelProbability {
+/**
+ * The probability of an item  being the correct diagnosis is proportional to its score.
+ */
+public non-sealed class DiseaseRankedProbabilityImpl extends DiseaseModelProbabilityImpl implements DiseaseModelProbability {
+
+    private final double ddScoreSum;
 
     public DiseaseRankedProbabilityImpl(List<DifferentialDiagnosis> differentialDiagnoses) {
         super(differentialDiagnoses);
+        this.ddScoreSum = differentialDiagnoses.stream()
+                .mapToDouble(DifferentialDiagnosis::score)
+                .sum();
     }
 
     public double probability(TermId targetDiseaseId) {
         double targetDiagnosisScore = getTargetDiseaseDiagnosis(targetDiseaseId).score();
-
-        double ddScoreSum = differentialDiagnoses().stream()
-                .mapToDouble(DifferentialDiagnosis::score)
-                .sum();
-
         return targetDiagnosisScore / ddScoreSum;
     }
 

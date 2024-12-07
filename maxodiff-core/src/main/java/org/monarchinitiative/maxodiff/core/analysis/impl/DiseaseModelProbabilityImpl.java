@@ -6,22 +6,23 @@ import org.monarchinitiative.phenol.ontology.data.TermId;
 
 import java.util.List;
 
-public class DiseaseModelProbabilityImpl {
+/**
+ * This class and its three subclasses are responsible for calculating the
+ * probability of a disease according to its rank in a differential diagnosis (or its score).
+ */
+public sealed class DiseaseModelProbabilityImpl
+        permits DiseaseRankedProbabilityImpl,
+                DiseaseSoftmaxProbabilityImpl,
+                DiseaseExponentialDecayProbabilityImpl {
 
-    private static final DiseaseModelProbabilityImpl EMPTY = new DiseaseModelProbabilityImpl(List.of());
-
-    public static DiseaseModelProbabilityImpl empty() {
-        return EMPTY;
-    }
-
-    /** A list of differential diagnoses **/
-    private final List<DifferentialDiagnosis> differentialDiagnoses;
+      /** A list of differential diagnoses **/
+    protected final List<DifferentialDiagnosis> differentialDiagnoses;
 
     public DiseaseModelProbabilityImpl(List<DifferentialDiagnosis> differentialDiagnoses) {
         this.differentialDiagnoses = differentialDiagnoses;
     }
 
-    public DifferentialDiagnosis getTargetDiseaseDiagnosis(TermId targetDiseaseId) {
+    protected DifferentialDiagnosis getTargetDiseaseDiagnosis(TermId targetDiseaseId) {
         List<DifferentialDiagnosis> targetDiagnosisList = differentialDiagnoses.stream()
                 .filter(dd -> dd.diseaseId().equals(targetDiseaseId))
                 .toList();
@@ -32,8 +33,4 @@ public class DiseaseModelProbabilityImpl {
 
         return targetDiagnosisList.getFirst();
     }
-
-    public List<DifferentialDiagnosis> differentialDiagnoses() { return differentialDiagnoses; }
-
-
 }
