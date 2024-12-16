@@ -26,7 +26,7 @@ public class CandidateDiseaseScores {
      * @param engine Engine to use for the differential diagnosis, e.g. LIRICAL.
      * @return List of differential diagnosis scores for the given MAxO term.
      */
-    public List<Double> getScoresForMaxoTerm(SamplePhenopacket ppkt, TermId maxoId, DifferentialDiagnosisEngine engine) {
+    public List<Double> getScoresForMaxoTerm(Sample ppkt, TermId maxoId, DifferentialDiagnosisEngine engine) {
         Set<TermId> observed = new HashSet<>(Set.of());
         Set<TermId> excluded = new HashSet<>(Set.of());
 
@@ -58,7 +58,7 @@ public class CandidateDiseaseScores {
         return randomNumber > maxoTermBenefitProbability;
     }
 
-    private Sample getNewSample(SamplePhenopacket ppkt, Set<TermId> observed, Set<TermId> excluded) {
+    private Sample getNewSample(Sample ppkt, Set<TermId> observed, Set<TermId> excluded) {
         Set<TermId> ppktObserved = new HashSet<>(ppkt.presentHpoTermIds());
         Set<TermId> ppktExcluded = new HashSet<>(ppkt.excludedHpoTermIds());
         Set<TermId> newObserved = Stream.concat(ppktObserved.stream(), observed.stream()).collect(Collectors.toSet());

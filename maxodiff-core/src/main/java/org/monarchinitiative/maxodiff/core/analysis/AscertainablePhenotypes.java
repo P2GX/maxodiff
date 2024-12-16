@@ -1,5 +1,6 @@
 package org.monarchinitiative.maxodiff.core.analysis;
 
+import org.monarchinitiative.maxodiff.core.model.Sample;
 import org.monarchinitiative.maxodiff.core.model.SamplePhenopacket;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDisease;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
@@ -37,7 +38,7 @@ public class AscertainablePhenotypes {
      * @throws PhenolRuntimeException if that targetDiseaseId is not found.
      */
     //TODO: use Sample instead of SamplePhenopacket and pass List of diseaseIds separately
-    public Set<TermId> getAscertainablePhenotypeIds(SamplePhenopacket myPpkt, TermId targetDiseaseId) throws PhenolRuntimeException {
+    public Set<TermId> getAscertainablePhenotypeIds(Sample myPpkt, TermId targetDiseaseId) throws PhenolRuntimeException {
         Set<TermId> existingTerms = new HashSet<>(myPpkt.presentHpoTermIds());
         existingTerms.addAll(myPpkt.excludedHpoTermIds());
         Optional<HpoDisease> opt = hpoDiseases.diseaseById(targetDiseaseId);

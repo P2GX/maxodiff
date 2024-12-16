@@ -2,6 +2,7 @@ package org.monarchinitiative.maxodiff.core.analysis;
 
 import org.monarchinitiative.maxodiff.core.SimpleTerm;
 import org.monarchinitiative.maxodiff.core.model.DifferentialDiagnosis;
+import org.monarchinitiative.maxodiff.core.model.Sample;
 import org.monarchinitiative.maxodiff.core.model.SamplePhenopacket;
 import org.monarchinitiative.phenol.annotations.base.Ratio;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDisease;
@@ -33,7 +34,7 @@ public class MaxoHpoTermProbabilities {
      * @return Set of all discoverable phenotypes, i.e. potential phenotypes not including assumed excluded phenotypes,
      * for all K diseases in the differential diagnosis
      */
-    public Set<TermId> getUnionOfDiscoverablePhenotypes(SamplePhenopacket ppkt) {
+    public Set<TermId> getUnionOfDiscoverablePhenotypes(Sample ppkt) {
         Set<TermId> unionDiscoverablePhenotypes = new HashSet<>();
 
         for (DifferentialDiagnosis diagnosis : initialDiagnoses) {
@@ -52,7 +53,7 @@ public class MaxoHpoTermProbabilities {
      * @return Expected benefit of the MAxO term, i.e. the intersection of the HPO terms that can be ascertained by
      * that MAxO term and the union of discoverable phenotypes for the diseases
      */
-    public Set<TermId> getMaxoTermBenefitIds(SamplePhenopacket ppkt, TermId maxoId) {
+    public Set<TermId> getMaxoTermBenefitIds(Sample ppkt, TermId maxoId) {
         Set<TermId> maxoAssociatedHpoIds = excludedPhenotypes.getMaxoToHpoTermIdMap().get(maxoId);
         Set<TermId> unionDiscoverablePhenotypes = getUnionOfDiscoverablePhenotypes(ppkt);
         maxoAssociatedHpoIds.retainAll(unionDiscoverablePhenotypes); //intersection

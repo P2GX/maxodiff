@@ -1,6 +1,7 @@
 package org.monarchinitiative.maxodiff.core.analysis;
 
 import org.monarchinitiative.maxodiff.core.diffdg.DifferentialDiagnosisEngine;
+import org.monarchinitiative.maxodiff.core.model.Sample;
 import org.monarchinitiative.maxodiff.core.model.SamplePhenopacket;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 
@@ -25,7 +26,7 @@ public class RankMaxo {
      * @param nRepetitions number of times to calculate scores for each MAxO term.
      * @return Map of MAxO scores sorted in descending order by score
      */
-    public Map<TermId, Double> rankMaxoTerms(SamplePhenopacket ppkt, int nRepetitions) {
+    public Map<TermId, Double> rankMaxoTerms(Sample ppkt, int nRepetitions) {
         Map<TermId, Double> maxoScores = new HashMap<>();
         CandidateDiseaseScores candidateDiseaseScores = new CandidateDiseaseScores(maxoHpoTermProbabilities);
         for (TermId maxoId : maxoToHpoTermIdMap.keySet()) {

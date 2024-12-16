@@ -1,6 +1,7 @@
 package org.monarchinitiative.maxodiff.core.analysis;
 
 import org.monarchinitiative.maxodiff.core.SimpleTerm;
+import org.monarchinitiative.maxodiff.core.model.Sample;
 import org.monarchinitiative.maxodiff.core.model.SamplePhenopacket;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 
@@ -107,7 +108,7 @@ public class ExcludedPhenotypes {
      * @return Set of excluded phenotypes. These are phenotypes that can be ascertained by MAxO terms,
      *  but are not included in the existing phenotypes in the phenopacket.
      */
-    public Set<TermId> getExcludedPhenotypes(SamplePhenopacket samplePpkt) {
+    public Set<TermId> getExcludedPhenotypes(Sample samplePpkt) {
         Set<TermId> existingTerms = new HashSet<>(samplePpkt.presentHpoTermIds());
         existingTerms.addAll(samplePpkt.excludedHpoTermIds());
         Set<TermId> excludedPhenotypes = new HashSet<>();
