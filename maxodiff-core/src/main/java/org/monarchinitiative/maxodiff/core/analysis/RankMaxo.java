@@ -1,6 +1,7 @@
 package org.monarchinitiative.maxodiff.core.analysis;
 
 import org.monarchinitiative.maxodiff.core.diffdg.DifferentialDiagnosisEngine;
+import org.monarchinitiative.maxodiff.core.model.DifferentialDiagnosis;
 import org.monarchinitiative.maxodiff.core.model.Sample;
 import org.monarchinitiative.maxodiff.core.model.SamplePhenopacket;
 import org.monarchinitiative.phenol.ontology.data.TermId;
@@ -33,8 +34,9 @@ public class RankMaxo {
             List<Double> scores = new ArrayList<>();
             for (int i = 0; i < nRepetitions; i++) {
                 double weight = 0.5;
-                List<Double> ddScores = candidateDiseaseScores.getScoresForMaxoTerm(ppkt, maxoId, engine);
-                double scoreSum = ddScores.stream().mapToDouble(s -> s).sum();
+                List<DifferentialDiagnosis> differentialDiagnoses = candidateDiseaseScores.getScoresForMaxoTerm(ppkt, maxoId, engine);
+                List<Double> ddScores = differentialDiagnoses.stream().map(DifferentialDiagnosis::score).toList();
+                double scoreSum = differentialDiagnoses.stream().mapToDouble(DifferentialDiagnosis::score).sum();
                 double relativeDiseaseDiffSum = calculateRelDiseaseDiffEntropySum(ddScores);
                 double finalScore = weight * scoreSum + (1 - weight) * relativeDiseaseDiffSum;
                 scores.add(finalScore);

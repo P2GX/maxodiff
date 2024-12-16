@@ -3,7 +3,6 @@ package org.monarchinitiative.maxodiff.core.analysis;
 import org.monarchinitiative.maxodiff.core.SimpleTerm;
 import org.monarchinitiative.maxodiff.core.model.DifferentialDiagnosis;
 import org.monarchinitiative.maxodiff.core.model.Sample;
-import org.monarchinitiative.maxodiff.core.model.SamplePhenopacket;
 import org.monarchinitiative.phenol.annotations.base.Ratio;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDisease;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
@@ -50,10 +49,10 @@ public class MaxoHpoTermProbabilities {
      *
      * @param ppkt Input phenopacket with present and excluded HPO terms
      * @param maxoId Term Id for the MAxO term of interest
-     * @return Expected benefit of the MAxO term, i.e. the intersection of the HPO terms that can be ascertained by
+     * @return HPO terms discoverable by the MAxO term, i.e. the intersection of the HPO terms that can be ascertained by
      * that MAxO term and the union of discoverable phenotypes for the diseases
      */
-    public Set<TermId> getMaxoTermBenefitIds(Sample ppkt, TermId maxoId) {
+    public Set<TermId> getDiscoverableByMaxoHpoTerms(Sample ppkt, TermId maxoId) {
         Set<TermId> maxoAssociatedHpoIds = excludedPhenotypes.getMaxoToHpoTermIdMap().get(maxoId);
         Set<TermId> unionDiscoverablePhenotypes = getUnionOfDiscoverablePhenotypes(ppkt);
         maxoAssociatedHpoIds.retainAll(unionDiscoverablePhenotypes); //intersection
@@ -65,7 +64,7 @@ public class MaxoHpoTermProbabilities {
     /**
      *
      * @param hpoId HPO term of interest
-     * @return Probability that the HPO term will ascertained by a diagnostic procedure
+     * @return Probability that the HPO term will be ascertained by a diagnostic procedure
      */
     public double calculateProbabilityOfMaxoTermRevealingPresenceOfHpoTerm(TermId hpoId) {
         double p = 0.;

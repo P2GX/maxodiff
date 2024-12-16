@@ -5,7 +5,6 @@ import org.monarchinitiative.maxodiff.core.SimpleTerm;
 import org.monarchinitiative.maxodiff.core.TestResources;
 import org.monarchinitiative.maxodiff.core.model.DifferentialDiagnosis;
 import org.monarchinitiative.maxodiff.core.model.Sample;
-import org.monarchinitiative.maxodiff.core.model.SamplePhenopacket;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 
@@ -35,7 +34,7 @@ public class MaxoHpoTermProbabilitiesTest {
     @Test
     public void testMaxoTermBenefitIds() {
         TermId maxoId = TermId.of("MAXO:0035006"); //Foot radiography
-        Set<TermId> maxoBenefitIds = MAXO_HPO_TERM_PROBABILITIES.getMaxoTermBenefitIds(samplePhenopacket, maxoId);
+        Set<TermId> maxoBenefitIds = MAXO_HPO_TERM_PROBABILITIES.getDiscoverableByMaxoHpoTerms(samplePhenopacket, maxoId);
         assertEquals(9, maxoBenefitIds.size(), 1e-3);
     }
 
