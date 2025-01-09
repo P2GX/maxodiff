@@ -3,7 +3,6 @@ package org.monarchinitiative.maxodiff.core.analysis;
 import org.monarchinitiative.maxodiff.core.diffdg.DifferentialDiagnosisEngine;
 import org.monarchinitiative.maxodiff.core.model.DifferentialDiagnosis;
 import org.monarchinitiative.maxodiff.core.model.Sample;
-import org.monarchinitiative.maxodiff.core.model.SamplePhenopacket;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 
 import java.util.*;
