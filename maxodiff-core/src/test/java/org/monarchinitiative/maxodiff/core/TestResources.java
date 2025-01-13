@@ -3,6 +3,7 @@ package org.monarchinitiative.maxodiff.core;
 import org.monarchinitiative.maxodiff.core.io.MaxoDxAnnots;
 import org.monarchinitiative.maxodiff.core.model.DifferentialDiagnosis;
 import org.monarchinitiative.maxodiff.core.model.Sample;
+import org.monarchinitiative.maxodiff.core.model.SamplePhenopacket;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
 import org.monarchinitiative.phenol.annotations.io.hpo.DiseaseDatabase;
 import org.monarchinitiative.phenol.annotations.io.hpo.HpoDiseaseLoader;
@@ -130,6 +131,17 @@ public class TestResources {
         Collection<TermId> excludedTerms = List.of();
 
         return Sample.of("B15", presentTerms, excludedTerms);
+    }
+
+    public static SamplePhenopacket getExampleSamplePhenopacket() {
+        //Example terms from phenopacket v2 PMID_11175294-Tiecke-2001-FBN1-B15.json
+        Sample sample = getExampleSample();
+        List<TermId> diseaseIds = List.of(TermId.of("OMIM:154700"));
+
+        return new SamplePhenopacket("B15",
+                sample.presentHpoTermIds().stream().toList(),
+                sample.excludedHpoTermIds().stream().toList(),
+                diseaseIds);
     }
 
     public static Collection<DifferentialDiagnosis> getExampleDiagnoses() {

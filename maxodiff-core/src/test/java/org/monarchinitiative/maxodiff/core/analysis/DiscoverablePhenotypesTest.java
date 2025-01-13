@@ -5,6 +5,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.monarchinitiative.maxodiff.core.SimpleTerm;
 import org.monarchinitiative.maxodiff.core.TestResources;
+import org.monarchinitiative.maxodiff.core.model.Sample;
 import org.monarchinitiative.maxodiff.core.model.SamplePhenopacket;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDisease;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
@@ -48,21 +49,21 @@ public class DiscoverablePhenotypesTest {
      *
      * @return Sample phenopacket with one included HPO term Id and one disease Id.
      */
-    public static SamplePhenopacket getPPkt1() {
+    public static Sample getPPkt1() {
         List<TermId> presentTerms = List.of(
                 TermId.of("HP:0001888")
         );
         List<TermId> excludedTerms = List.of();
         List<TermId> diseaseIds = List.of(TermId.of("OMIM:620365"));
 
-        return new SamplePhenopacket("sample1", presentTerms, excludedTerms, diseaseIds);
+        return Sample.of("sample1", presentTerms, excludedTerms);//, diseaseIds);
     }
 
     /**
      *
      * @return Sample phenopacket with two included HPO term Ids and one disease Ids.
      */
-    public static SamplePhenopacket getPPkt2() {
+    public static Sample getPPkt2() {
         List<TermId> presentTerms = List.of(
                 TermId.of("HP:0001888"),
                 TermId.of("HP:0001903")
@@ -70,21 +71,21 @@ public class DiscoverablePhenotypesTest {
         List<TermId> excludedTerms = List.of();
         List<TermId> diseaseIds = List.of(TermId.of("OMIM:620365"));
 
-        return new SamplePhenopacket("sample1", presentTerms, excludedTerms, diseaseIds);
+        return Sample.of("sample1", presentTerms, excludedTerms);//, diseaseIds);
     }
 
     /**
      * We expect this to cause an error, because OMIM:123456 is not aa actual identifier
      * @return Sample phenopacket with one included HPO term Id and one dummy disease Id.
      */
-    public static SamplePhenopacket getPPktEmptyDisease() {
+    public static Sample getPPktEmptyDisease() {
         List<TermId> presentTerms = List.of(
                 TermId.of("HP:0001888")
         );
         List<TermId> excludedTerms = List.of();
         List<TermId> diseaseIds = List.of(TermId.of("OMIM:123456"));
 
-        return new SamplePhenopacket("sample2", presentTerms, excludedTerms, diseaseIds);
+        return Sample.of("sample2", presentTerms, excludedTerms);//, diseaseIds);
     }
 
 
@@ -94,8 +95,8 @@ public class DiscoverablePhenotypesTest {
     @Test
     public void testDiscoverablePhenotypes1() {
          // Get excluded phenotypes given phenopacket
-         SamplePhenopacket s1 = getPPkt1();
-         TermId targetId = s1.diseaseIds().getFirst();
+         Sample s1 = getPPkt1();
+         TermId targetId = TermId.of("OMIM:620365"); //s1.diseaseIds().getFirst();
          Set<TermId> discoverablePhenotypeIds = DISCOVERABLE_PHENOTYPES.getDiscoverablePhenotypeIds(
                 s1,
                 targetId);
@@ -110,7 +111,7 @@ public class DiscoverablePhenotypesTest {
         record Error(Supplier<? extends PhenolRuntimeException> exceptionSupplier) implements TestOutcome {}
     }
 
-    public record TestIndividual(String description, SamplePhenopacket myPPkt, TestOutcome expectedOutcome) {}
+    public record TestIndividual(String description, Sample myPPkt, TestOutcome expectedOutcome) {}
 
     /**
      *
@@ -134,16 +135,16 @@ public class DiscoverablePhenotypesTest {
     @ParameterizedTest
     @MethodSource("testGetIndividualDiseaseIds")
     void testEvaluateExpression(TestIndividual testCase) {
-        SamplePhenopacket ppkti = testCase.myPPkt();
-        TermId targetId = ppkti.diseaseIds().getFirst();
-
+        Sample ppkti = testCase.myPPkt();
+        TermId targetId = TermId.of("OMIM:620365"); //ppkti.diseaseIds().getFirst();
+        TermId targetId2 = TermId.of("OMIM:123456");
         switch (testCase.expectedOutcome()) {
             case TestOutcome.Ok(int expectedResult) ->
                     assertEquals(expectedResult, DISCOVERABLE_PHENOTYPES.getDiscoverablePhenotypeIds(ppkti, targetId).size(),
                             "Incorrect evaluation for: " + testCase.description());
             case TestOutcome.Error(Supplier<? extends RuntimeException> exceptionSupplier) ->
                     assertThrows(exceptionSupplier.get().getClass(),
-                            () -> DISCOVERABLE_PHENOTYPES.getDiscoverablePhenotypeIds(ppkti, targetId),
+                            () -> DISCOVERABLE_PHENOTYPES.getDiscoverablePhenotypeIds(ppkti, targetId2),
                             "Incorrect error handling for: " + testCase.description());
         }
     }

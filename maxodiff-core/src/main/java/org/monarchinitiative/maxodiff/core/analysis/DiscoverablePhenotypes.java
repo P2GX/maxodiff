@@ -1,6 +1,7 @@
 package org.monarchinitiative.maxodiff.core.analysis;
 
 import org.monarchinitiative.maxodiff.core.SimpleTerm;
+import org.monarchinitiative.maxodiff.core.model.Sample;
 import org.monarchinitiative.maxodiff.core.model.SamplePhenopacket;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
 import org.monarchinitiative.phenol.base.PhenolRuntimeException;
@@ -37,7 +38,7 @@ public class DiscoverablePhenotypes {
      * @param targetDiseaseId TermId of the disease of interest
      * @return Set of discoverable phenotypes, i.e. potential phenotypes not including assumed excluded phenotypes.
      */
-    public Set<TermId> getDiscoverablePhenotypeIds(SamplePhenopacket samplePhenopacket, TermId targetDiseaseId) throws PhenolRuntimeException {
+    public Set<TermId> getDiscoverablePhenotypeIds(Sample samplePhenopacket, TermId targetDiseaseId) throws PhenolRuntimeException {
         AscertainablePhenotypes ascertainablePhenotypes = new AscertainablePhenotypes(hpoDiseases);
         ExcludedPhenotypes excludedPhenotypes = new ExcludedPhenotypes(hpoToMaxoTermMap);
         Set<TermId> ascertainablePhenotypeIds = ascertainablePhenotypes.getAscertainablePhenotypeIds(samplePhenopacket, targetDiseaseId);
