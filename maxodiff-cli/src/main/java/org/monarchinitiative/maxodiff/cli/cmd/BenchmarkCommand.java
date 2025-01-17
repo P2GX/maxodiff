@@ -7,19 +7,18 @@ import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
+import org.monarchinitiative.lirical.configuration.impl.BundledBackgroundVariantFrequencyServiceFactory;
 import org.monarchinitiative.lirical.core.Lirical;
-import org.monarchinitiative.lirical.core.analysis.AnalysisOptions;
-import org.monarchinitiative.lirical.core.analysis.LiricalAnalysisRunner;
+import org.monarchinitiative.lirical.core.service.PhenotypeService;
 import org.monarchinitiative.lirical.io.analysis.PhenopacketData;
 import org.monarchinitiative.maxodiff.config.MaxodiffDataResolver;
 import org.monarchinitiative.maxodiff.config.MaxodiffPropsConfiguration;
 import org.monarchinitiative.maxodiff.core.analysis.*;
 import org.monarchinitiative.maxodiff.core.io.PhenopacketFileParser;
+import org.monarchinitiative.maxodiff.core.lirical.*;
 import org.monarchinitiative.maxodiff.core.model.DifferentialDiagnosis;
 import org.monarchinitiative.maxodiff.core.model.Sample;
 import org.monarchinitiative.maxodiff.core.service.BiometadataService;
-import org.monarchinitiative.maxodiff.lirical.LiricalDifferentialDiagnosisEngine;
-import org.monarchinitiative.maxodiff.lirical.LiricalDifferentialDiagnosisEngineConfigurer;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDisease;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 import org.slf4j.Logger;
@@ -127,12 +126,18 @@ public class BenchmarkCommand extends DifferentialDiagnosisCommand {
         if (refinerTypes != null)
             refinerTypes.forEach(r -> refinersList.add(r));
 
-        Lirical lirical = bootstrapLirical();
-        try (LiricalAnalysisRunner runner = lirical.analysisRunner()) {
-            LiricalDifferentialDiagnosisEngineConfigurer configurer = LiricalDifferentialDiagnosisEngineConfigurer.of(runner);
-            AnalysisOptions analysisOptions = prepareAnalysisOptions(lirical);
-            LiricalDifferentialDiagnosisEngine engine = configurer.configure(analysisOptions);
+        LiricalConfiguration liricalConfiguration = configureLirical();
+        Lirical lirical = liricalConfiguration.lirical();
+        PhenotypeService phenotypeService = lirical.phenotypeService();
+        BundledBackgroundVariantFrequencyServiceFactory bundledBackgroundVariantFrequencyServiceFactory =
+                BundledBackgroundVariantFrequencyServiceFactory.getInstance();
+        Set<TermId> liricalDiseaseIds = lirical.phenotypeService().diseases().diseaseIds();
 
+        try (MaxodiffLiricalAnalysisRunner maxodiffLiricalAnalysisRunner =
+                     MaxodiffLiricalAnalysisRunnerImpl.of(phenotypeService,
+                             bundledBackgroundVariantFrequencyServiceFactory, 1)) {
+            LiricalDifferentialDiagnosisEngine engine = getLiricalEngine(liricalConfiguration,
+                    maxodiffLiricalAnalysisRunner, liricalDiseaseIds);
             // Make maxodiffRefiner
             MaxodiffDataResolver maxodiffDataResolver = MaxodiffDataResolver.of(maxoDataPath);
             MaxodiffPropsConfiguration maxodiffPropsConfiguration = MaxodiffPropsConfiguration.createConfig(maxodiffDataResolver);

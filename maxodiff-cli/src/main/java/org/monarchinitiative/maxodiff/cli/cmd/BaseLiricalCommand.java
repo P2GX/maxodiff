@@ -1,13 +1,9 @@
 package org.monarchinitiative.maxodiff.cli.cmd;
 
-import org.monarchinitiative.lirical.configuration.LiricalBuilder;
-import org.monarchinitiative.lirical.core.Lirical;
 import org.monarchinitiative.lirical.core.analysis.AnalysisOptions;
-import org.monarchinitiative.lirical.core.analysis.probability.PretestDiseaseProbability;
-import org.monarchinitiative.lirical.core.model.GenomeBuild;
+import org.monarchinitiative.lirical.core.exception.LiricalException;
 import org.monarchinitiative.lirical.core.model.TranscriptDatabase;
-import org.monarchinitiative.lirical.io.LiricalDataException;
-import org.monarchinitiative.phenol.annotations.io.hpo.DiseaseDatabase;
+import org.monarchinitiative.maxodiff.core.lirical.*;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -107,142 +103,18 @@ abstract class BaseLiricalCommand implements Callable<Integer> {
         public float defaultAlleleFrequency = 1E-5f;
     }
 
-    protected List<String> checkInput() {
-        List<String> errors = new LinkedList<>();
-        // resources
-        if (dataSection.liricalDataDirectory == null) {
-            String msg = "Path to Lirical data directory must be provided via `-d | --data` option";
-            LOGGER.error(msg);
-            errors.add(msg);
-        }
-        return errors;
+    public static LiricalDifferentialDiagnosisEngine getLiricalEngine(LiricalConfiguration liricalConfiguration,
+                                                                      MaxodiffLiricalAnalysisRunner maxodiffLiricalAnalysisRunner,
+                                                                      Set<TermId> diseaseIds) throws LiricalException {
+
+        LiricalDifferentialDiagnosisEngineConfigurer liricalDifferentialDiagnosisEngineConfigurer =
+                LiricalDifferentialDiagnosisEngineConfigurer.of(maxodiffLiricalAnalysisRunner);
+
+        AnalysisOptions options = liricalConfiguration.prepareAnalysisOptions(diseaseIds);
+
+        final LiricalDifferentialDiagnosisEngine engine = liricalDifferentialDiagnosisEngineConfigurer.configure(options, diseaseIds);
+
+        return engine;
     }
-
-    /**
-     * Build {@link Lirical} based on the {@link DataSection} values.
-     */
-    protected Lirical bootstrapLirical() throws LiricalDataException {
-        LiricalBuilder builder = LiricalBuilder.builder(dataSection.liricalDataDirectory);
-
-        GenomeBuild genomeBuild = parseGenomeBuild(getGenomeBuild());
-        if (dataSection.exomiserDatabase != null) {
-            LOGGER.info("Using Exomiser database at {}", dataSection.exomiserDatabase.toAbsolutePath());
-            builder.exomiserVariantDbPath(genomeBuild, dataSection.exomiserDatabase);
-        } else {
-            LOGGER.info("Exomiser database not configured");
-        }
-        
-        return builder.build();
-    }
-
-    protected abstract String getGenomeBuild();
-
-    private GenomeBuild parseGenomeBuild(String genomeBuild) throws LiricalDataException {
-        Optional<GenomeBuild> genomeBuildOptional = GenomeBuild.parse(genomeBuild);
-        if (genomeBuildOptional.isEmpty())
-            throw new LiricalDataException("Unknown genome build: '" + genomeBuild + "'");
-        return genomeBuildOptional.get();
-    }
-
-    protected AnalysisOptions prepareAnalysisOptions(Lirical lirical) throws LiricalDataException {
-        Map<TermId, Double> diseaseIdToPretestProba = new HashMap<>();
-        Set<TermId> diseaseIds = lirical.phenotypeService().diseases().diseaseIds();
-        int nTotalDiseases = diseaseIds.size();
-        diseaseIds.stream().forEach(id -> diseaseIdToPretestProba.put(id, 1./nTotalDiseases));
-        PretestDiseaseProbability pretestProba = PretestDiseaseProbability.of(diseaseIdToPretestProba);
-
-        return AnalysisOptions.builder()
-                .genomeBuild(parseGenomeBuild(getGenomeBuild()))
-                .transcriptDatabase(runConfiguration.transcriptDb)
-                .setDiseaseDatabases(List.of(DiseaseDatabase.OMIM))
-                .variantDeleteriousnessThreshold(runConfiguration.pathogenicityThreshold)
-                .defaultVariantBackgroundFrequency(runConfiguration.defaultVariantBackgroundFrequency)
-                .useStrictPenalties(runConfiguration.strict)
-                .useGlobal(runConfiguration.globalAnalysisMode)
-                .pretestProbability(pretestProba)
-                .includeDiseasesWithNoDeleteriousVariants(true)
-                .build();
-    }
-
-    // protected OutputOptions createOutputOptions(Path resultsDir, String outfilePrefix) {
-    //     double lrThresholdValue = 0.05;
-    //     LrThreshold lrThreshold = LrThreshold.setToUserDefinedThreshold(lrThresholdValue);
-
-    //     MinDiagnosisCount minDiagnosisCount = MinDiagnosisCount.setToUserDefinedMinCount(10);
-    //     float pathogenicityThreshold = runConfiguration.pathogenicityThreshold;
-    //     boolean displayAllVariants = false;
-    //     boolean showDiseasesWithNoDeleteriousVariants = false;
-
-    //     return new OutputOptions(lrThreshold,
-    //             minDiagnosisCount,
-    //             pathogenicityThreshold,
-    //             displayAllVariants,
-    //             showDiseasesWithNoDeleteriousVariants,
-    //             resultsDir,
-    //             outfilePrefix);
-    // }
-
-    // protected AnalysisResultsMetadata prepareAnalysisResultsMetadata(GenesAndGenotypes gene2Genotypes, Lirical lirical, String sampleId) throws Exception {
-    //     FilteringStats filteringStats = gene2Genotypes.computeFilteringStats();
-    //     return AnalysisResultsMetadata.builder()
-    //             .setLiricalVersion(lirical.version().orElse(UNKNOWN_VERSION_PLACEHOLDER))
-    //             .setHpoVersion(lirical.phenotypeService().hpo().version().orElse(UNKNOWN_VERSION_PLACEHOLDER))
-    //             .setTranscriptDatabase(runConfiguration.transcriptDb.toString())
-    //             .setLiricalPath(dataSection.liricalDataDirectory.toAbsolutePath().toString())
-    //             .setExomiserPath(dataSection.exomiserDatabase.toAbsolutePath().toString())
-    //             .setAnalysisDate(getTodaysDate())
-    //             .setSampleName(sampleId)
-    //             .setnPassingVariants(filteringStats.nPassingVariants())
-    //             .setnFilteredVariants(filteringStats.nFilteredVariants())
-    //             .setGenesWithVar(filteringStats.genesWithVariants())
-    //             .setGlobalMode(runConfiguration.globalAnalysisMode)
-    //             .build();
-    // }
-
-    // protected DiseaseToGeneAssociations getDisease2GeneAssociations() throws IOException {
-    //     String geneInfoFilename = Files.exists(dataSection.liricalDataDirectory.resolve("homo_sapiens.gene_info.gz")) ? "homo_sapiens.gene_info.gz" : "Homo_sapiens.gene_info.gz";
-    //     Path homoSapiensGeneInfo = dataSection.liricalDataDirectory.resolve(geneInfoFilename);
-    //     GeneIdentifiers geneIdentifiers = GeneIdentifierLoaders.forHumanGeneInfo(GeneInfoGeneType.DEFAULT).load(homoSapiensGeneInfo);
-    //     return DiseaseToGeneAssociationLoader.loadDiseaseToGeneAssociations(dataSection.liricalDataDirectory.resolve("mim2gene_medgen"), geneIdentifiers);
-    // }
-
-    // protected GenesAndGenotypes readVariants(Path vcfPath, Lirical lirical, GenomeBuild genomeBuild) throws Exception {
-    //     if (vcfPath != null && Files.isRegularFile(vcfPath)) {
-    //         Optional<VariantParser> variantParser = lirical.variantParserFactory()
-    //                 .forPath(vcfPath, genomeBuild, runConfiguration.transcriptDb);
-    //         if (variantParser.isPresent()) {
-    //             try (VariantParser parser = variantParser.get()) {
-    //                 return GenesAndGenotypes.fromVariants(parser.sampleNames(), parser);
-    //             }
-    //         }
-    //     }
-    //     return GenesAndGenotypes.empty();
-    // }
-
-    // protected static void reportElapsedTime(long startTime, long stopTime) {
-    //     int elapsedTime = (int)((stopTime - startTime)*(1.0)/1000);
-    //     if (elapsedTime > 3599) {
-    //         int elapsedSeconds = elapsedTime % 60;
-    //         int elapsedMinutes = (elapsedTime/60) % 60;
-    //         int elapsedHours = elapsedTime/3600;
-    //         LOGGER.info(String.format("Elapsed time %d:%2d%2d",elapsedHours,elapsedMinutes,elapsedSeconds));
-    //     }
-    //     else if (elapsedTime>59) {
-    //         int elapsedSeconds = elapsedTime % 60;
-    //         int elapsedMinutes = (elapsedTime/60) % 60;
-    //         LOGGER.info(String.format("Elapsed time %d min, %d sec",elapsedMinutes,elapsedSeconds));
-    //     } else {
-    //         LOGGER.info("Elapsed time " + (stopTime - startTime) * (1.0) / 1000 + " seconds.");
-    //     }
-    // }
-
-    // /**
-    //  * @return a string with today's date in the format yyyy/MM/dd.
-    //  */
-    // private static String getTodaysDate() {
-    //     DateFormat dateFormat = new SimpleDateFormat("yyyy/MM/dd");
-    //     Date date = new Date();
-    //     return dateFormat.format(date);
-    // }
 
 }
