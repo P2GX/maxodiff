@@ -1,5 +1,6 @@
 package org.monarchinitiative.maxodiff.core.analysis;
 
+import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
 import org.monarchinitiative.lirical.configuration.LiricalBuilder;
 import org.monarchinitiative.lirical.configuration.impl.BundledBackgroundVariantFrequencyServiceFactory;
@@ -133,16 +134,17 @@ public class RankMaxoTest {
      * This tests ranking MAxO terms
      */
     // Skip this test because it doesn't compile on push
-//    @Test
-//    public void testRankMaxoTerms() throws LiricalException {
-//        Set<TermId> diseaseIds = initialDiagnoses.stream()
-//                .map(DifferentialDiagnosis::diseaseId).collect(Collectors.toSet());
-//        Sample s1 = TestResources.getExampleSample();
-//        LiricalConfiguration liricalConfiguration = configureLirical();
-//        LiricalDifferentialDiagnosisEngine engine = getLiricalEngine(liricalConfiguration, diseaseIds);
-//        RankMaxo rankMaxo = new RankMaxo(maxoToHpoTermIdMap, maxoHpoTermProbabilities, engine);
-//        Map<TermId, Double> maxoTermRanks = rankMaxo.rankMaxoTerms(s1, 2);
-//        System.out.println(maxoTermRanks);
-//    }
+    @Test
+    @Disabled
+    public void testRankMaxoTerms() throws LiricalException {
+        Set<TermId> diseaseIds = initialDiagnoses.stream()
+                .map(DifferentialDiagnosis::diseaseId).collect(Collectors.toSet());
+        Sample s1 = TestResources.getExampleSample();
+        LiricalConfiguration liricalConfiguration = configureLirical();
+        LiricalDifferentialDiagnosisEngine engine = getLiricalEngine(liricalConfiguration, diseaseIds);
+        RankMaxo rankMaxo = new RankMaxo(maxoToHpoTermIdMap, maxoHpoTermProbabilities, engine);
+        Map<TermId, Double> maxoTermRanks = rankMaxo.rankMaxoTerms(s1, 2);
+        System.out.println(maxoTermRanks);
+    }
 
 }
