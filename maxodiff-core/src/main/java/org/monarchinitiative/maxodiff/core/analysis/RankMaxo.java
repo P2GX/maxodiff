@@ -1,6 +1,6 @@
 package org.monarchinitiative.maxodiff.core.analysis;
 
-import org.monarchinitiative.maxodiff.core.diffdg.DifferentialDiagnosisEngine;
+import org.monarchinitiative.maxodiff.core.lirical.LiricalDifferentialDiagnosisEngine;
 import org.monarchinitiative.maxodiff.core.model.DifferentialDiagnosis;
 import org.monarchinitiative.maxodiff.core.model.Sample;
 import org.monarchinitiative.phenol.ontology.data.TermId;
@@ -12,9 +12,9 @@ public class RankMaxo {
 
     private final Map<TermId, Set<TermId>> maxoToHpoTermIdMap;
     private final MaxoHpoTermProbabilities maxoHpoTermProbabilities;
-    private final DifferentialDiagnosisEngine engine;
+    private final LiricalDifferentialDiagnosisEngine engine;
 
-    public RankMaxo(Map<TermId, Set<TermId>> maxoToHpoTermIdMap, MaxoHpoTermProbabilities maxoHpoTermProbabilities, DifferentialDiagnosisEngine engine) {
+    public RankMaxo(Map<TermId, Set<TermId>> maxoToHpoTermIdMap, MaxoHpoTermProbabilities maxoHpoTermProbabilities, LiricalDifferentialDiagnosisEngine engine) {
         this.maxoToHpoTermIdMap = maxoToHpoTermIdMap;
         this.maxoHpoTermProbabilities = maxoHpoTermProbabilities;
         this.engine = engine;
@@ -49,7 +49,7 @@ public class RankMaxo {
         }
 
         return maxoScores.entrySet().stream().sorted(Comparator.<Map.Entry<TermId, Double>>comparingDouble(Map.Entry::getValue)
-                .reversed()).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (a,b)->b, HashMap::new));
+                .reversed()).collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (a,b)->b, LinkedHashMap::new));
     }
 
     private static double calculateRelDiseaseDiffEntropySum(List<Double> differentialDiagnosisScores) {

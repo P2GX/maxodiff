@@ -1,9 +1,9 @@
-package org.monarchinitiative.maxodiff.lirical;
+package org.monarchinitiative.maxodiff.core.lirical;
 
 import org.monarchinitiative.lirical.configuration.LiricalBuilder;
 import org.monarchinitiative.lirical.core.Lirical;
 import org.monarchinitiative.lirical.core.analysis.AnalysisOptions;
-import org.monarchinitiative.lirical.core.analysis.probability.PretestDiseaseProbability;
+import org.monarchinitiative.lirical.core.analysis.probability.PretestDiseaseProbabilities;
 import org.monarchinitiative.lirical.core.exception.LiricalException;
 import org.monarchinitiative.lirical.core.model.GenomeBuild;
 import org.monarchinitiative.lirical.core.model.TranscriptDatabase;
@@ -19,7 +19,7 @@ import java.util.*;
 
 public class LiricalConfiguration {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(LiricalDifferentialDiagnosisEngine.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(LiricalConfiguration.class);
     private static final Properties PROPERTIES = readProperties();
     protected static final String LIRICAL_VERSION = PROPERTIES.getProperty("lirical.version", "unknown version");
 
@@ -43,13 +43,6 @@ public class LiricalConfiguration {
                 transcriptDatabase, pathogenicityThreshold, defaultVariantBackgroundFrequency,
                 strict, globalAnalysisMode);
     }
-
-//    public static LiricalConfiguration of(LiricalRecord liricalRecord) throws LiricalException {
-//
-//        return new LiricalConfiguration(liricalRecord.liricalDataDir(), liricalRecord.exomiserPath(),
-//                liricalRecord.genomeBuild(), liricalRecord.transcriptDatabase(), liricalRecord.pathogenicityThreshold(),
-//                liricalRecord.defaultVariantBackgroundFrequency(), liricalRecord.strict(), liricalRecord.globalAnalysisMode());
-//    }
 
     private LiricalConfiguration(Path liricalDataDirectory, Path exomiserDatabase, String genomeBuild,
                                 TranscriptDatabase transcriptDatabase, Float pathogenicityThreshold,
@@ -112,7 +105,7 @@ public class LiricalConfiguration {
     private static Properties readProperties() {
         Properties properties = new Properties();
 
-        try (InputStream is = LiricalDifferentialDiagnosisEngine.class.getResourceAsStream("/lirical.properties")) {
+        try (InputStream is = LiricalConfiguration.class.getResourceAsStream("/lirical.properties")) {
             properties.load(is);
         } catch (IOException e) {
             LOGGER.warn("Error loading properties: {}", e.getMessage());
@@ -120,12 +113,7 @@ public class LiricalConfiguration {
         return properties;
     }
 
-    public AnalysisOptions prepareAnalysisOptions() throws LiricalDataException {
-        Map<TermId, Double> diseaseIdToPretestProba = new HashMap<>();
-        Set<TermId> diseaseIds = lirical.phenotypeService().diseases().diseaseIds();
-        int nTotalDiseases = diseaseIds.size();
-        diseaseIds.stream().forEach(id -> diseaseIdToPretestProba.put(id, 1./nTotalDiseases));
-        PretestDiseaseProbability pretestProba = PretestDiseaseProbability.of(diseaseIdToPretestProba);
+    public AnalysisOptions prepareAnalysisOptions(Set<TermId> diseaseIds) throws LiricalDataException {
 
         return AnalysisOptions.builder()
                 .genomeBuild(parseGenomeBuild(genomeBuild))
@@ -135,12 +123,12 @@ public class LiricalConfiguration {
                 .defaultVariantBackgroundFrequency(defaultVariantBackgroundFrequency)
                 .useStrictPenalties(strict)
                 .useGlobal(globalAnalysisMode)
-                .pretestProbability(pretestProba)
+                .pretestProbability(PretestDiseaseProbabilities.uniform(diseaseIds))
 //                .includeDiseasesWithNoDeleteriousVariants(true)
                 .build();
     }
 
-    protected GenomeBuild parseGenomeBuild(String genomeBuild) throws LiricalDataException {
+    public static GenomeBuild parseGenomeBuild(String genomeBuild) throws LiricalDataException {
         Optional<GenomeBuild> genomeBuildOptional = GenomeBuild.parse(genomeBuild);
         if (genomeBuildOptional.isEmpty())
             throw new LiricalDataException("Unknown genome build: '" + genomeBuild + "'");

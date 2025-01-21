@@ -1,6 +1,6 @@
 package org.monarchinitiative.maxodiff.core.analysis;
 
-import org.monarchinitiative.maxodiff.core.diffdg.DifferentialDiagnosisEngine;
+import org.monarchinitiative.maxodiff.core.lirical.LiricalDifferentialDiagnosisEngine;
 import org.monarchinitiative.maxodiff.core.model.DifferentialDiagnosis;
 import org.monarchinitiative.maxodiff.core.model.Sample;
 import org.monarchinitiative.phenol.ontology.data.TermId;
@@ -25,7 +25,7 @@ public class CandidateDiseaseScores {
      * @param engine Engine to use for the differential diagnosis, e.g. LIRICAL.
      * @return List of the top K differential diagnoses for the given MAxO term.
      */
-    public List<DifferentialDiagnosis> getScoresForMaxoTerm(Sample ppkt, TermId maxoId, DifferentialDiagnosisEngine engine) {
+    public List<DifferentialDiagnosis> getScoresForMaxoTerm(Sample ppkt, TermId maxoId, LiricalDifferentialDiagnosisEngine engine) {
         Set<TermId> observed = new HashSet<>(Set.of());
         Set<TermId> excluded = new HashSet<>(Set.of());
 
@@ -44,7 +44,7 @@ public class CandidateDiseaseScores {
         //running the differential diagnosis again returns results for all diseases, not just the top K diseases
         List<DifferentialDiagnosis> maxoDiagnoses = engine.run(newSample);
 
-        return maxoDiagnoses.subList(0, maxoHpoTermProbabilities.nDiseases());
+        return maxoDiagnoses;//.subList(0, maxoHpoTermProbabilities.nDiseases());
     }
 
     private boolean getTestResult(double maxoTermBenefitProbability) {

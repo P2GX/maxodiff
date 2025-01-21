@@ -1,20 +1,21 @@
 package org.monarchinitiative.maxodiff.cli.cmd;
 
+import org.monarchinitiative.lirical.configuration.impl.BundledBackgroundVariantFrequencyServiceFactory;
 import org.monarchinitiative.lirical.core.Lirical;
 import org.monarchinitiative.lirical.core.analysis.*;
 import org.monarchinitiative.lirical.core.exception.LiricalException;
+import org.monarchinitiative.lirical.core.service.PhenotypeService;
 import org.monarchinitiative.lirical.io.analysis.PhenopacketData;
 import org.monarchinitiative.lirical.io.analysis.PhenopacketImporter;
 import org.monarchinitiative.lirical.io.analysis.PhenopacketImporters;
 import org.monarchinitiative.maxodiff.config.MaxodiffDataResolver;
 import org.monarchinitiative.maxodiff.config.MaxodiffPropsConfiguration;
 import org.monarchinitiative.maxodiff.core.analysis.*;
-import org.monarchinitiative.maxodiff.core.diffdg.DifferentialDiagnosisEngine;
 import org.monarchinitiative.maxodiff.core.io.PhenopacketFileParser;
+import org.monarchinitiative.maxodiff.core.lirical.*;
 import org.monarchinitiative.maxodiff.core.model.DifferentialDiagnosis;
 import org.monarchinitiative.maxodiff.core.model.Sample;
 import org.monarchinitiative.maxodiff.core.service.BiometadataService;
-import org.monarchinitiative.maxodiff.lirical.LiricalDifferentialDiagnosisEngineConfigurer;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDisease;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 import org.slf4j.Logger;
@@ -25,6 +26,7 @@ import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 
@@ -120,11 +122,18 @@ public class DifferentialDiagnosisCommand extends BaseLiricalCommand {
         System.out.println(weight);
         System.out.println(nDiseases);
 
-        Lirical lirical = bootstrapLirical();
-        try (LiricalAnalysisRunner runner = lirical.analysisRunner()) {
-            LiricalDifferentialDiagnosisEngineConfigurer configurer = LiricalDifferentialDiagnosisEngineConfigurer.of(runner);
-            var analysisOptions = prepareAnalysisOptions(lirical);
-            DifferentialDiagnosisEngine engine = configurer.configure(analysisOptions);
+        LiricalConfiguration liricalConfiguration = configureLirical();
+        Lirical lirical = liricalConfiguration.lirical();
+        PhenotypeService phenotypeService = lirical.phenotypeService();
+        BundledBackgroundVariantFrequencyServiceFactory bundledBackgroundVariantFrequencyServiceFactory =
+                BundledBackgroundVariantFrequencyServiceFactory.getInstance();
+        Set<TermId> liricalDiseaseIds = lirical.phenotypeService().diseases().diseaseIds();
+
+        try (MaxodiffLiricalAnalysisRunner maxodiffLiricalAnalysisRunner =
+                     MaxodiffLiricalAnalysisRunnerImpl.of(phenotypeService,
+                             bundledBackgroundVariantFrequencyServiceFactory, 1)) {
+            LiricalDifferentialDiagnosisEngine engine = getLiricalEngine(liricalConfiguration,
+                    maxodiffLiricalAnalysisRunner, liricalDiseaseIds);
             
             PhenopacketData phenopacketData = PhenopacketFileParser.readPhenopacketData(phenopacketPath);
             Sample sample = Sample.of(phenopacketData.sampleId(),
@@ -229,21 +238,35 @@ public class DifferentialDiagnosisCommand extends BaseLiricalCommand {
         return 0;
     }
 
-    protected Lirical prepareLirical() throws IOException, LiricalException {
-        // Check input.
-        List<String> errors = checkInput();
-        if (!errors.isEmpty())
-            throw new LiricalException(String.format("Errors: %s", String.join(", ", errors)));
+    LiricalConfiguration configureLirical() throws LiricalException {
 
-        // Bootstrap LIRICAL.
-        Lirical lirical = bootstrapLirical();
-        return lirical;
+        return LiricalConfiguration.of(
+                dataSection.liricalDataDirectory,
+                dataSection.exomiserDatabase,
+                genomeBuild,
+                runConfiguration.transcriptDb,
+                runConfiguration.pathogenicityThreshold,
+                runConfiguration.defaultVariantBackgroundFrequency,
+                runConfiguration.strict,
+                runConfiguration.globalAnalysisMode
+        );
     }
 
-    @Override
-    protected String getGenomeBuild() {
-        return genomeBuild;
-    }
+//    protected Lirical prepareLirical() throws IOException, LiricalException {
+//        // Check input.
+//        List<String> errors = checkInput();
+//        if (!errors.isEmpty())
+//            throw new LiricalException(String.format("Errors: %s", String.join(", ", errors)));
+//
+//        // Bootstrap LIRICAL.
+//        Lirical lirical = bootstrapLirical();
+//        return lirical;
+//    }
+
+//    @Override
+//    protected String getGenomeBuild() {
+//        return genomeBuild;
+//    }
 
 
     protected static PhenopacketData readPhenopacketData(Path phenopacketPath) throws LiricalParseException {

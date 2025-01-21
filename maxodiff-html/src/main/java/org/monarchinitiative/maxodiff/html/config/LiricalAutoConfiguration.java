@@ -1,14 +1,14 @@
 package org.monarchinitiative.maxodiff.html.config;
 
 import org.monarchinitiative.lirical.configuration.impl.BundledBackgroundVariantFrequencyServiceFactory;
-import org.monarchinitiative.lirical.core.analysis.LiricalAnalysisRunner;
-import org.monarchinitiative.lirical.core.analysis.impl.LiricalAnalysisRunnerImpl;
 import org.monarchinitiative.lirical.core.model.GenomeBuild;
 import org.monarchinitiative.lirical.core.service.PhenotypeService;
 import org.monarchinitiative.lirical.core.service.VariantMetadataServiceFactory;
 import org.monarchinitiative.lirical.exomiser_db_adapter.ExomiserMvStoreMetadataServiceFactory;
 import org.monarchinitiative.maxodiff.config.MaxodiffDataResolver;
-import org.monarchinitiative.maxodiff.lirical.LiricalDifferentialDiagnosisEngineConfigurer;
+import org.monarchinitiative.maxodiff.core.lirical.LiricalDifferentialDiagnosisEngineConfigurer;
+import org.monarchinitiative.maxodiff.core.lirical.MaxodiffLiricalAnalysisRunner;
+import org.monarchinitiative.maxodiff.core.lirical.MaxodiffLiricalAnalysisRunnerImpl;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoAssociationData;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
 import org.monarchinitiative.phenol.ontology.data.MinimalOntology;
@@ -55,10 +55,10 @@ public class LiricalAutoConfiguration {
     }
 
     @Bean
-    public LiricalAnalysisRunner liricalAnalysisRunner(PhenotypeService liricalPhenotypeService) {
+    public MaxodiffLiricalAnalysisRunner liricalAnalysisRunner(PhenotypeService liricalPhenotypeService) {
         BundledBackgroundVariantFrequencyServiceFactory factory = BundledBackgroundVariantFrequencyServiceFactory.getInstance();
         int parallelism = 4; // TODO: extract into a property
-        return LiricalAnalysisRunnerImpl.of(liricalPhenotypeService, factory, parallelism);
+        return MaxodiffLiricalAnalysisRunnerImpl.of(liricalPhenotypeService, factory, parallelism);
     }
 
     @Bean
@@ -100,7 +100,7 @@ public class LiricalAutoConfiguration {
 
     @Bean
     public LiricalDifferentialDiagnosisEngineConfigurer liricalDifferentialDiagnosisEngineConfigurer(
-            LiricalAnalysisRunner liricalAnalysisRunner
+            MaxodiffLiricalAnalysisRunner liricalAnalysisRunner
     ) {
         return LiricalDifferentialDiagnosisEngineConfigurer.of(liricalAnalysisRunner);
     }
