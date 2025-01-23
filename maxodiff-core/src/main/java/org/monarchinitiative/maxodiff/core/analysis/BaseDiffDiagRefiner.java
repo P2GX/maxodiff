@@ -73,16 +73,24 @@ public class BaseDiffDiagRefiner implements DiffDiagRefiner {
                                  RefinementOptions options,
                                  LiricalDifferentialDiagnosisEngine engine,
                                  Map<TermId, List<HpoFrequency>> hpoTermCounts,
-                                 Map<TermId, Set<TermId>> maxoToHpoTermIdMap) throws LiricalException {
+                                 Map<TermId, Set<TermId>> maxoToHpoTermIdMap,
+                                 String diseaseProbModel) throws LiricalException {
 
         List<MaxodiffResult> maxodiffResultsList = new ArrayList<>();
         List<DifferentialDiagnosis> initialDiagnoses = differentialDiagnoses.stream()
                 .toList().subList(0, options.nDiseases());
 
+        DiseaseModelProbability diseaseModelProbability = DiseaseModelProbability.ranked(initialDiagnoses);
+        switch (diseaseProbModel) {
+            case "ranked" -> diseaseModelProbability = DiseaseModelProbability.ranked(initialDiagnoses);
+            case "softmax" -> diseaseModelProbability = DiseaseModelProbability.softmax(initialDiagnoses);
+            case "expDecay" -> diseaseModelProbability = DiseaseModelProbability.exponentialDecay(initialDiagnoses);
+        }
+
         MaxoHpoTermProbabilities maxoHpoTermProbabilities = new MaxoHpoTermProbabilities(hpoDiseases,
                         hpoToMaxoTermMap,
                         initialDiagnoses,
-                        DiseaseModelProbability.ranked(initialDiagnoses));
+                        diseaseModelProbability);
 
         Set<TermId> initialDiagnosesIds = initialDiagnoses.stream()
                 .map(DifferentialDiagnosis::diseaseId)

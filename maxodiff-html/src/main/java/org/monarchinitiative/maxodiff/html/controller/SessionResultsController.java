@@ -64,6 +64,7 @@ public class SessionResultsController {
                               @RequestParam(value = "nDiseases", required = false) Integer nDiseases,
                               @RequestParam(value = "weight", required = false) Double weight,
                               @RequestParam(value = "nMaxoResults", required = false) Integer nMaxoResults,
+                              @RequestParam(value = "diseaseProbModel", required = false) String diseaseProbModel,
                               Model model) throws LiricalException {
 
         String algorithm = "";
@@ -89,6 +90,7 @@ public class SessionResultsController {
         model.addAttribute("nDiseases", nDiseases);
         model.addAttribute("weight", weight);
         model.addAttribute("nMaxoResults", nMaxoResults);
+        model.addAttribute("diseaseProbModel", diseaseProbModel);
 
         if (differentialDiagnoses != null && !differentialDiagnoses.isEmpty()) {
             int nOrigDiffDiagnosesShown = Math.min(differentialDiagnoses.size(), 10);  // TODO: this should not be hard-coded
@@ -139,7 +141,8 @@ public class SessionResultsController {
                         options,
                         (LiricalDifferentialDiagnosisEngine) engine,
                         hpoTermCounts,
-                        maxoToHpoTermIdMap);
+                        maxoToHpoTermIdMap,
+                        diseaseProbModel);
             } else {
                 refinementResults = diffDiagRefiner.run(sample,
                         orderedDiagnoses,

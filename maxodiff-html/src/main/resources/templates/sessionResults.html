@@ -49,6 +49,14 @@
             </select></td>
         </tr>
         <tr>
+            <td>  Disease Probability Model:</td>
+            <td><select style="width:100%" th:value="${diseaseProbModel} ?: 'ranked'" name="diseaseProbModel" id="diseaseProbModel">
+                <option th:selected="${diseaseProbModel} == 'ranked' ? selected" value="ranked">RANKED</option>
+                <option th:selected="${diseaseProbModel} == 'softmax' ? selected" value="softmax">SOFTMAX</option>
+                <option th:selected="${diseaseProbModel} == 'expDecay' ? selected" value="expDecay">EXP DECAY</option>
+            </select></td>
+        </tr>
+        <tr>
             <td>N Diseases:</td>
             <td><input style="width:90%" type="number" min="0" th:max="${totalNDiseases}" th:value="${nDiseases} ?: 20" name="nDiseases" id="nDiseases"/></td>
         </tr>

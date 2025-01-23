@@ -40,7 +40,8 @@ public interface DiffDiagRefiner {
                           RefinementOptions options,
                           LiricalDifferentialDiagnosisEngine engine,
                           Map<TermId, List<HpoFrequency>> hpoTermCounts,
-                          Map<TermId, Set<TermId>> maxoToHpoTermIdMap
+                          Map<TermId, Set<TermId>> maxoToHpoTermIdMap,
+                          String diseaseProbModel
     ) throws LiricalException;
 
 

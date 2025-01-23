@@ -96,6 +96,11 @@ public class DifferentialDiagnosisCommand extends BaseLiricalCommand {
             description = "Comma-separated list of n diseases for filtering diseases to include in differential diagnosis.")
     protected Integer nDiseasesArg;
 
+    @CommandLine.Option(names = {"--diseaseProbModel"},
+            paramLabel = "{ranked,softmax,expDecay}",
+            description = "Disease Probability Model to use for Rank MAxO algorithm (default: ${DEFAULT-VALUE}).")
+    protected String diseaseProbModel = "ranked";
+
 
     @Override
     public Integer call() throws Exception {
@@ -191,12 +196,20 @@ public class DifferentialDiagnosisCommand extends BaseLiricalCommand {
                     HpoDiseases hpoDiseases = phenotypeService.diseases();
                     List<DifferentialDiagnosis> initialDiagnoses = differentialDiagnoses.subList(0, nDiseases);
                     Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxoTermMap = maxodiffPropsConfiguration.maxoAnnotsMap();
-                     Map<TermId, Set<TermId>> maxoToHpoTermIdMap = MaxoHpoTermIdMaps.getMaxoToHpoTermIdMap(hpoToMaxoTermMap);
-                     MaxoHpoTermProbabilities maxoHpoTermProbabilities =
+                    Map<TermId, Set<TermId>> maxoToHpoTermIdMap = MaxoHpoTermIdMaps.getMaxoToHpoTermIdMap(hpoToMaxoTermMap);
+
+                    DiseaseModelProbability diseaseModelProbability = null;
+                    switch (diseaseProbModel) {
+                        case "ranked" -> diseaseModelProbability = DiseaseModelProbability.ranked(initialDiagnoses);
+                        case "softmax" -> diseaseModelProbability = DiseaseModelProbability.softmax(initialDiagnoses);
+                        case "expDecay" -> diseaseModelProbability = DiseaseModelProbability.exponentialDecay(initialDiagnoses);
+                    }
+
+                    MaxoHpoTermProbabilities maxoHpoTermProbabilities =
                     new MaxoHpoTermProbabilities(hpoDiseases,
                             hpoToMaxoTermMap,
                             initialDiagnoses,
-                            DiseaseModelProbability.ranked(initialDiagnoses));
+                            diseaseModelProbability);
 
                      Set<TermId> initialDiagnosesIds = initialDiagnoses.stream()
                              .map(DifferentialDiagnosis::diseaseId)
