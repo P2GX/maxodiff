@@ -1,7 +1,11 @@
 package org.monarchinitiative.maxodiff.html.controller;
 
+import org.monarchinitiative.lirical.core.exception.LiricalException;
+import org.monarchinitiative.maxodiff.core.SimpleTerm;
 import org.monarchinitiative.maxodiff.core.analysis.*;
 import org.monarchinitiative.maxodiff.core.diffdg.DifferentialDiagnosisEngine;
+import org.monarchinitiative.maxodiff.core.lirical.LiricalConfiguration;
+import org.monarchinitiative.maxodiff.core.lirical.LiricalDifferentialDiagnosisEngine;
 import org.monarchinitiative.maxodiff.core.model.DifferentialDiagnosis;
 import org.monarchinitiative.maxodiff.core.model.Sample;
 import org.monarchinitiative.maxodiff.core.service.BiometadataService;
@@ -34,18 +38,22 @@ public class SessionResultsController {
 
     private final Map<TermId, Set<TermId>> hpoToMaxoIdMap;
 
+    private final Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxoTermMap;
+
     public SessionResultsController(
             BiometadataService biometadataService,
             DiffDiagRefiner diffDiagRefiner,
             MinimalOntology hpo,
             HpoDiseases hpoDiseases,
-            Map<TermId, Set<TermId>> hpoToMaxoIdMap
+            Map<TermId, Set<TermId>> hpoToMaxoIdMap,
+            Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxoTermMap
     ) {
         this.biometadataService = biometadataService;
         this.diffDiagRefiner = diffDiagRefiner;
         this.hpo = hpo;
         this.hpoDiseases = hpoDiseases;
         this.hpoToMaxoIdMap = hpoToMaxoIdMap;
+        this.hpoToMaxoTermMap = hpoToMaxoTermMap;
     }
 
     @RequestMapping("/sessionResults")
@@ -56,7 +64,7 @@ public class SessionResultsController {
                               @RequestParam(value = "nDiseases", required = false) Integer nDiseases,
                               @RequestParam(value = "weight", required = false) Double weight,
                               @RequestParam(value = "nMaxoResults", required = false) Integer nMaxoResults,
-                              Model model) {
+                              Model model) throws LiricalException {
 
         String algorithm = "";
         if (refiner == null) {
@@ -65,13 +73,13 @@ public class SessionResultsController {
         }
 
         switch (refiner) {
-            case "score" -> {diffDiagRefiner = new MaxoDiffRefiner(hpoDiseases, hpoToMaxoIdMap, hpo);
+            case "score" -> {diffDiagRefiner = new MaxoDiffRefiner(hpoDiseases, hpoToMaxoIdMap, hpoToMaxoTermMap, hpo);
                             algorithm = "Score";}
-            case "rank" -> {diffDiagRefiner = new MaxoDiffRankRefiner(hpoDiseases, hpoToMaxoIdMap, hpo);
+            case "rank" -> {diffDiagRefiner = new MaxoDiffRankRefiner(hpoDiseases, hpoToMaxoIdMap, hpoToMaxoTermMap, hpo);
                             algorithm = "Rank";}
-            case "ddScore" -> {diffDiagRefiner = new MaxoDiffDDScoreRefiner(hpoDiseases, hpoToMaxoIdMap, hpo);
+            case "ddScore" -> {diffDiagRefiner = new MaxoDiffDDScoreRefiner(hpoDiseases, hpoToMaxoIdMap, hpoToMaxoTermMap, hpo);
                                 algorithm = "Differential Diagnosis Score";}
-            case "ksTest" -> {diffDiagRefiner = new MaxoDiffKolmogorovSmirnovRefiner(hpoDiseases, hpoToMaxoIdMap, hpo);
+            case "ksTest" -> {diffDiagRefiner = new MaxoDiffKolmogorovSmirnovRefiner(hpoDiseases, hpoToMaxoIdMap, hpoToMaxoTermMap, hpo);
                                 algorithm = "Kolomogorov-Smirnov Test";}
         }
 
@@ -124,13 +132,24 @@ public class SessionResultsController {
             }
             Map<TermId, List<DifferentialDiagnosis>> maxoTermToDDEngineDiagnosesMap = (Map<TermId, List<DifferentialDiagnosis>>) model.getAttribute("maxoTermToDifferentialDiagnosesMap");
 
-            RefinementResults refinementResults = diffDiagRefiner.run(sample,
-                                                                      orderedDiagnoses,
-                                                                      options,
-                                                                      engine,
-                                                                      maxoToHpoTermIdMap,
-                                                                      hpoTermCounts,
-                                                                      maxoTermToDDEngineDiagnosesMap);
+            RefinementResults refinementResults;
+            if (engine instanceof LiricalDifferentialDiagnosisEngine && diffDiagRefiner instanceof MaxoDiffRefiner) {
+                refinementResults = diffDiagRefiner.run(sample,
+                        orderedDiagnoses,
+                        options,
+                        (LiricalDifferentialDiagnosisEngine) engine,
+                        hpoTermCounts,
+                        maxoToHpoTermIdMap);
+            } else {
+                refinementResults = diffDiagRefiner.run(sample,
+                        orderedDiagnoses,
+                        options,
+                        engine,
+                        maxoToHpoTermIdMap,
+                        hpoTermCounts,
+                        maxoTermToDDEngineDiagnosesMap);
+            }
+
 
             List<MaxodiffResult> resultsList = new ArrayList<>(refinementResults.maxodiffResults());
             if (diffDiagRefiner instanceof MaxoDiffKolmogorovSmirnovRefiner) {

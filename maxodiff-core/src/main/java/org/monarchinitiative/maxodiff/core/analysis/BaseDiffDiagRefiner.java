@@ -1,6 +1,9 @@
 package org.monarchinitiative.maxodiff.core.analysis;
 
+import org.monarchinitiative.lirical.core.exception.LiricalException;
+import org.monarchinitiative.maxodiff.core.SimpleTerm;
 import org.monarchinitiative.maxodiff.core.diffdg.DifferentialDiagnosisEngine;
+import org.monarchinitiative.maxodiff.core.lirical.*;
 import org.monarchinitiative.maxodiff.core.model.DifferentialDiagnosis;
 import org.monarchinitiative.maxodiff.core.model.Sample;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDisease;
@@ -14,13 +17,17 @@ import java.util.stream.Collectors;
 public class BaseDiffDiagRefiner implements DiffDiagRefiner {
 
     private final HpoDiseases hpoDiseases;
-    private final Map<TermId, Set<TermId>> fullHpoToMaxoTermMap;
+    private final Map<TermId, Set<TermId>> fullHpoToMaxoTermIdMap;
+    private final Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxoTermMap;
     private final MinimalOntology hpo;
 
-    public BaseDiffDiagRefiner(HpoDiseases hpoDiseases, Map<TermId, Set<TermId>> fullHpoToMaxoTermMap,
+    public BaseDiffDiagRefiner(HpoDiseases hpoDiseases,
+                               Map<TermId, Set<TermId>> fullHpoToMaxoTermIdMap,
+                               Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxoTermMap,
                                MinimalOntology hpo) {
         this.hpoDiseases = hpoDiseases;
-        this.fullHpoToMaxoTermMap = fullHpoToMaxoTermMap;
+        this.fullHpoToMaxoTermIdMap = fullHpoToMaxoTermIdMap;
+        this.hpoToMaxoTermMap = hpoToMaxoTermMap;
         this.hpo = hpo;
     }
 
@@ -32,8 +39,7 @@ public class BaseDiffDiagRefiner implements DiffDiagRefiner {
                                  DifferentialDiagnosisEngine engine,
                                  Map<TermId, Set<TermId>> maxoToHpoTermIdMap,
                                  Map<TermId, List<HpoFrequency>> hpoTermCounts,
-                                 Map<TermId, List<DifferentialDiagnosis>> maxoTermToDDEngineDiagnosesMap) {
-
+                                 Map<TermId, List<DifferentialDiagnosis>> maxoTermToDDEngineDiagnosesMap) throws LiricalException {
         // Get list of Hpo diseases
         List<HpoDisease> diseases = getDiseases(differentialDiagnoses.stream().toList());
         // Calculate final scores and make list of MaxodiffResult objects.
@@ -58,6 +64,54 @@ public class BaseDiffDiagRefiner implements DiffDiagRefiner {
             maxodiffResultsList.add(maxodiffResult);
         }
         maxodiffResultsList.sort(Comparator.<MaxodiffResult>comparingDouble(mr -> mr.maxoTermScore().scoreDiff()).reversed());
+        return new RefinementResultsImpl(maxodiffResultsList);
+    }
+
+    @Override
+    public RefinementResults run(Sample sample,
+                                 Collection<DifferentialDiagnosis> differentialDiagnoses,
+                                 RefinementOptions options,
+                                 LiricalDifferentialDiagnosisEngine engine,
+                                 Map<TermId, List<HpoFrequency>> hpoTermCounts,
+                                 Map<TermId, Set<TermId>> maxoToHpoTermIdMap) throws LiricalException {
+
+        List<MaxodiffResult> maxodiffResultsList = new ArrayList<>();
+        List<DifferentialDiagnosis> initialDiagnoses = differentialDiagnoses.stream()
+                .toList().subList(0, options.nDiseases());
+
+        MaxoHpoTermProbabilities maxoHpoTermProbabilities = new MaxoHpoTermProbabilities(hpoDiseases,
+                        hpoToMaxoTermMap,
+                        initialDiagnoses,
+                        DiseaseModelProbability.ranked(initialDiagnoses));
+
+        Set<TermId> initialDiagnosesIds = initialDiagnoses.stream()
+                .map(DifferentialDiagnosis::diseaseId)
+                .collect(Collectors.toSet());
+
+
+        RankMaxo rankMaxo = new RankMaxo(maxoToHpoTermIdMap, maxoHpoTermProbabilities, engine);
+        Map<TermId, Double> maxoTermRanks = rankMaxo.rankMaxoTerms(sample, options.weight(), 2, initialDiagnosesIds);
+        for (Map.Entry<TermId, Double> entry : maxoTermRanks.entrySet()) {
+            TermId maxoId = entry.getKey();
+            double scoreDiff = entry.getValue();
+            Set<TermId> diseaseIds = new LinkedHashSet<>();
+            List<DifferentialDiagnosis> differentialDiagnosisModels = new ArrayList<>(differentialDiagnoses);
+            differentialDiagnosisModels.sort(Comparator.comparingDouble(DifferentialDiagnosis::score).reversed());
+            differentialDiagnosisModels.forEach(d -> diseaseIds.add(d.diseaseId()));
+            Set<TermId> hpoTermIds = maxoToHpoTermIdMap.get(maxoId);
+            int nHpoTerms = hpoTermIds.size();
+
+            MaxoTermScore maxoTermScore = new MaxoTermScore(maxoId.toString(), options.nDiseases(),
+                    diseaseIds, Set.of(), nHpoTerms, hpoTermIds,
+                    0.0, 0.0, scoreDiff, TermId.of("HP:000000"),
+                    List.of(), List.of(),null,null);
+            // Get HPO frequency records
+            List<Frequencies> frequencies = getFrequencyRecords(maxoTermScore.omimTermIds(),
+                    maxoTermScore.hpoTermIds(), hpoTermCounts);
+            // Make MaxodiffResult for the MAXO term
+            MaxodiffResult maxodiffResult = new MaxodiffResultImpl(maxoTermScore, frequencies, List.of());
+            maxodiffResultsList.add(maxodiffResult);
+        }
         // Return RefinementResults object, which contains the list of MaxodiffResult objects.
         return new RefinementResultsImpl(maxodiffResultsList);
     }
@@ -141,7 +195,7 @@ public class BaseDiffDiagRefiner implements DiffDiagRefiner {
 
         // Get all the MaXo terms that can be used to diagnose the HPO terms, removing ancestors
         //TODO: make MAXO:HPO term map directly from maxo_diagnostic_annotations.tsv file
-        Map<TermId, Set<TermId>> hpoToMaxoTermIdMap = AnalysisUtils.makeHpoToMaxoTermIdMap(fullHpoToMaxoTermMap, hpoIds);
+        Map<TermId, Set<TermId>> hpoToMaxoTermIdMap = AnalysisUtils.makeHpoToMaxoTermIdMap(fullHpoToMaxoTermIdMap, hpoIds);
         Map<TermId, Set<TermId>> maxoToHpoTermIdMap = AnalysisUtils.makeMaxoToHpoTermIdMap(hpo, hpoToMaxoTermIdMap);
 
         return maxoToHpoTermIdMap;

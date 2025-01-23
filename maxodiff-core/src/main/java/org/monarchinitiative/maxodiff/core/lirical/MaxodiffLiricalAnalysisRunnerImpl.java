@@ -49,15 +49,15 @@ public class MaxodiffLiricalAnalysisRunnerImpl implements MaxodiffLiricalAnalysi
     @Override
     public AnalysisResults run(AnalysisData data, AnalysisOptions options) throws LiricalAnalysisException {
 
-//        Collection<String> diseaseDatabasePrefixes = options.diseaseDatabases().stream()
-//                .map(DiseaseDatabase::prefix)
-//                .toList();
-//        Set<TermId> diseaseIds = phenotypeService.diseases().hpoDiseases()
-//                .parallel() // why not?
-//                .map(HpoDisease::id)
-//                .filter(diseaseId -> diseaseDatabasePrefixes.contains(diseaseId.getPrefix()))
-//                .collect(Collectors.toSet());
-        Set<TermId> diseaseIds = phenotypeService.diseases().diseaseIds();
+        Collection<String> diseaseDatabasePrefixes = options.diseaseDatabases().stream()
+                .map(DiseaseDatabase::prefix)
+                .toList();
+        Set<TermId> diseaseIds = phenotypeService.diseases().hpoDiseases()
+                .parallel() // why not?
+                .map(HpoDisease::id)
+                .filter(diseaseId -> diseaseDatabasePrefixes.contains(diseaseId.getPrefix()))
+                .collect(Collectors.toSet());
+//        Set<TermId> diseaseIds = phenotypeService.diseases().diseaseIds();
 
         return runWithTermIds(data, options, diseaseIds);
     }

@@ -27,8 +27,8 @@ public class LiricalDifferentialDiagnosisEngineConfigurer {
         return new LiricalDifferentialDiagnosisEngine(maxodiffLiricalAnalysisRunner, options);
     }
 
-    public LiricalDifferentialDiagnosisEngine configure(AnalysisOptions options, Set<TermId> diseaseIds) {
-        return new LiricalDifferentialDiagnosisEngine(maxodiffLiricalAnalysisRunner, options, diseaseIds);
-    }
+//    public LiricalDifferentialDiagnosisEngine configure(AnalysisOptions options, Set<TermId> diseaseIds) {
+//        return new LiricalDifferentialDiagnosisEngine(maxodiffLiricalAnalysisRunner, options, diseaseIds);
+//    }
    
 }

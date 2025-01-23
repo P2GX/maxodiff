@@ -17,22 +17,17 @@ public class LiricalDifferentialDiagnosisEngine implements DifferentialDiagnosis
 
     private final AnalysisOptions options;
     private final MaxodiffLiricalAnalysisRunner maxodiffRunner;
-    private final Set<TermId> diseaseIds;
 
     public LiricalDifferentialDiagnosisEngine(MaxodiffLiricalAnalysisRunner maxodiffRunner, AnalysisOptions options) {
         this.options = Objects.requireNonNull(options);
         this.maxodiffRunner = Objects.requireNonNull(maxodiffRunner);
-        this.diseaseIds = null;
-    }
-
-    public LiricalDifferentialDiagnosisEngine(MaxodiffLiricalAnalysisRunner maxodiffRunner, AnalysisOptions options,
-                                              Set<TermId> diseaseIds) {
-        this.options = Objects.requireNonNull(options);
-        this.maxodiffRunner = Objects.requireNonNull(maxodiffRunner);
-        this.diseaseIds = diseaseIds;
     }
 
     public List<DifferentialDiagnosis> run(Sample sample) {
+        return runWithDiseaseIds(sample, null);
+    }
+
+    public List<DifferentialDiagnosis> runWithDiseaseIds(Sample sample, Set<TermId> diseaseIds) {
 
         // Get LIRICAL AnalysisData from sample
         AnalysisData analysisData = AnalysisData.of(sample.id(),
@@ -44,21 +39,24 @@ public class LiricalDifferentialDiagnosisEngine implements DifferentialDiagnosis
 
 
         // Get LIRICAL AnalysisResults
-        AnalysisResults results = null;
-        try {
-            if (diseaseIds == null) {
-                results = maxodiffRunner.run(analysisData, options);
-            } else if (diseaseIds != null) {
-                results = maxodiffRunner.runWithTermIds(analysisData, options, diseaseIds);
-            }
-        } catch (LiricalAnalysisException e) {
-            throw new DifferentialDiagnosisEngineException(e);
-        }
+        AnalysisResults results = getLiricalAnalysisResults(analysisData, diseaseIds);
         // Get Differential Diagnoses from LIRICAL AnalysisResults
         assert results != null;
         return results.resultsWithDescendingPostTestProbability()
                 .map(tr -> DifferentialDiagnosis.of(tr.diseaseId(), tr.posttestProbability(), tr.getCompositeLR()))
                 .toList();
+    }
+
+    private AnalysisResults getLiricalAnalysisResults(AnalysisData analysisData, Set<TermId> diseaseIds) {
+        try {
+            if (diseaseIds == null) {
+                return maxodiffRunner.run(analysisData, options);
+            } else {
+                return maxodiffRunner.runWithTermIds(analysisData, options, diseaseIds);
+            }
+        } catch (LiricalAnalysisException e) {
+            throw new DifferentialDiagnosisEngineException(e);
+        }
     }
 
 }

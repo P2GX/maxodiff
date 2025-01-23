@@ -25,7 +25,9 @@ public class CandidateDiseaseScores {
      * @param engine Engine to use for the differential diagnosis, e.g. LIRICAL.
      * @return List of the top K differential diagnoses for the given MAxO term.
      */
-    public List<DifferentialDiagnosis> getScoresForMaxoTerm(Sample ppkt, TermId maxoId, LiricalDifferentialDiagnosisEngine engine) {
+    public List<DifferentialDiagnosis> getScoresForMaxoTerm(Sample ppkt, TermId maxoId,
+                                                            LiricalDifferentialDiagnosisEngine engine,
+                                                            Set<TermId> diseaseIds) {
         Set<TermId> observed = new HashSet<>(Set.of());
         Set<TermId> excluded = new HashSet<>(Set.of());
 
@@ -41,10 +43,10 @@ public class CandidateDiseaseScores {
         }
 
         Sample newSample = getNewSample(ppkt, observed, excluded);
-        //running the differential diagnosis again returns results for all diseases, not just the top K diseases
-        List<DifferentialDiagnosis> maxoDiagnoses = engine.run(newSample);
 
-        return maxoDiagnoses;//.subList(0, maxoHpoTermProbabilities.nDiseases());
+        List<DifferentialDiagnosis> maxoDiagnoses = engine.runWithDiseaseIds(newSample, diseaseIds);
+
+        return maxoDiagnoses;
     }
 
     private boolean getTestResult(double maxoTermBenefitProbability) {

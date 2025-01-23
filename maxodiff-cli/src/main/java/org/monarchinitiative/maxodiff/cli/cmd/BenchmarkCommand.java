@@ -136,8 +136,10 @@ public class BenchmarkCommand extends DifferentialDiagnosisCommand {
         try (MaxodiffLiricalAnalysisRunner maxodiffLiricalAnalysisRunner =
                      MaxodiffLiricalAnalysisRunnerImpl.of(phenotypeService,
                              bundledBackgroundVariantFrequencyServiceFactory, 1)) {
-            LiricalDifferentialDiagnosisEngine engine = getLiricalEngine(liricalConfiguration,
-                    maxodiffLiricalAnalysisRunner, liricalDiseaseIds);
+            LiricalDifferentialDiagnosisEngineConfigurer liricalDifferentialDiagnosisEngineConfigurer = LiricalDifferentialDiagnosisEngineConfigurer.of(maxodiffLiricalAnalysisRunner);
+            var analysisOptions = liricalConfiguration.prepareAnalysisOptions(liricalDiseaseIds);
+            LiricalDifferentialDiagnosisEngine engine = liricalDifferentialDiagnosisEngineConfigurer.configure(analysisOptions);
+
             // Make maxodiffRefiner
             MaxodiffDataResolver maxodiffDataResolver = MaxodiffDataResolver.of(maxoDataPath);
             MaxodiffPropsConfiguration maxodiffPropsConfiguration = MaxodiffPropsConfiguration.createConfig(maxodiffDataResolver);

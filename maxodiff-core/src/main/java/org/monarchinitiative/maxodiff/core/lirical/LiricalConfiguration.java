@@ -8,6 +8,7 @@ import org.monarchinitiative.lirical.core.exception.LiricalException;
 import org.monarchinitiative.lirical.core.model.GenomeBuild;
 import org.monarchinitiative.lirical.core.model.TranscriptDatabase;
 import org.monarchinitiative.lirical.io.LiricalDataException;
+import org.monarchinitiative.phenol.annotations.io.hpo.DiseaseDatabase;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -118,7 +119,7 @@ public class LiricalConfiguration {
         return AnalysisOptions.builder()
                 .genomeBuild(parseGenomeBuild(genomeBuild))
                 .transcriptDatabase(transcriptDb)
-//                .setDiseaseDatabases(List.of(DiseaseDatabase.OMIM))
+                .setDiseaseDatabases(List.of(DiseaseDatabase.OMIM))
                 .variantDeleteriousnessThreshold(pathogenicityThreshold)
                 .defaultVariantBackgroundFrequency(defaultVariantBackgroundFrequency)
                 .useStrictPenalties(strict)

@@ -99,9 +99,10 @@ public class MaxodiffAutoConfiguration {
     public DiffDiagRefiner diffDiagRefiner(
             MinimalOntology hpo,
             HpoDiseases hpoDiseases,
-            Map<TermId, Set<TermId>> hpoToMaxoIdMap) {
+            Map<TermId, Set<TermId>> hpoToMaxoIdMap,
+            Map<SimpleTerm, Set<SimpleTerm>> maxoAnnotsMap) {
 
-        return new MaxoDiffRefiner(hpoDiseases, hpoToMaxoIdMap, hpo);
+        return new MaxoDiffRefiner(hpoDiseases, hpoToMaxoIdMap, maxoAnnotsMap, hpo);
     }
 
     @Bean
