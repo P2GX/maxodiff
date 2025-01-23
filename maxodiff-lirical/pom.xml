@@ -6,7 +6,7 @@
     <parent>
         <groupId>org.monarchinitiative.maxodiff</groupId>
         <artifactId>maxodiff</artifactId>
-        <version>0.0.4</version>
+        <version>0.1.0</version>
     </parent>
 
     <artifactId>maxodiff-lirical</artifactId>
