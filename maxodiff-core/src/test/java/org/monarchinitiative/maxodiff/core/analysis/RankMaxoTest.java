@@ -81,7 +81,7 @@ public class RankMaxoTest {
 
         AnalysisOptions options = liricalConfiguration.prepareAnalysisOptions(diseaseIds);
 
-        final LiricalDifferentialDiagnosisEngine engine = liricalDifferentialDiagnosisEngineConfigurer.configure(options, diseaseIds);
+        final LiricalDifferentialDiagnosisEngine engine = liricalDifferentialDiagnosisEngineConfigurer.configure(options);
 
         return engine;
     }
@@ -140,10 +140,11 @@ public class RankMaxoTest {
         Set<TermId> diseaseIds = initialDiagnoses.stream()
                 .map(DifferentialDiagnosis::diseaseId).collect(Collectors.toSet());
         Sample s1 = TestResources.getExampleSample();
+        double weight = 0.5;
         LiricalConfiguration liricalConfiguration = configureLirical();
         LiricalDifferentialDiagnosisEngine engine = getLiricalEngine(liricalConfiguration, diseaseIds);
         RankMaxo rankMaxo = new RankMaxo(maxoToHpoTermIdMap, maxoHpoTermProbabilities, engine);
-        Map<TermId, Double> maxoTermRanks = rankMaxo.rankMaxoTerms(s1, 2);
+        Map<TermId, Double> maxoTermRanks = rankMaxo.rankMaxoTerms(s1, weight,2, diseaseIds);
         System.out.println(maxoTermRanks);
     }
 

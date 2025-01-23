@@ -49,11 +49,11 @@ public record MaxodiffPropsConfiguration(MinimalOntology hpo, HpoDiseases hpoDis
 //        }
         DiffDiagRefiner diffDiagRefiner = null;
         switch (refiner) {
-            case "score" -> diffDiagRefiner = new MaxoDiffRefiner(hpoDiseases, hpoToMaxoIdMap, hpo);
-            case "dummy" -> diffDiagRefiner = new DummyDiffDiagRefiner(hpoDiseases, hpoToMaxoIdMap, hpo);
-            case "rank" -> diffDiagRefiner = new MaxoDiffRankRefiner(hpoDiseases, hpoToMaxoIdMap, hpo);
-            case "ddScore" -> diffDiagRefiner = new MaxoDiffDDScoreRefiner(hpoDiseases, hpoToMaxoIdMap, hpo);
-            case "ksTest" -> diffDiagRefiner = new MaxoDiffKolmogorovSmirnovRefiner(hpoDiseases, hpoToMaxoIdMap, hpo);
+            case "score" -> diffDiagRefiner = new MaxoDiffRefiner(hpoDiseases, hpoToMaxoIdMap, maxoAnnotsMap, hpo);
+            case "dummy" -> diffDiagRefiner = new DummyDiffDiagRefiner(hpoDiseases, hpoToMaxoIdMap, maxoAnnotsMap, hpo);
+            case "rank" -> diffDiagRefiner = new MaxoDiffRankRefiner(hpoDiseases, hpoToMaxoIdMap, maxoAnnotsMap, hpo);
+            case "ddScore" -> diffDiagRefiner = new MaxoDiffDDScoreRefiner(hpoDiseases, hpoToMaxoIdMap, maxoAnnotsMap, hpo);
+            case "ksTest" -> diffDiagRefiner = new MaxoDiffKolmogorovSmirnovRefiner(hpoDiseases, hpoToMaxoIdMap, maxoAnnotsMap, hpo);
         }
         return diffDiagRefiner;
     }

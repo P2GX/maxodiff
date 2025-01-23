@@ -1,5 +1,6 @@
 package org.monarchinitiative.maxodiff.core.analysis;
 
+import org.monarchinitiative.maxodiff.core.SimpleTerm;
 import org.monarchinitiative.maxodiff.core.diffdg.DifferentialDiagnosisEngine;
 import org.monarchinitiative.maxodiff.core.model.DifferentialDiagnosis;
 import org.monarchinitiative.maxodiff.core.model.Sample;
@@ -12,8 +13,11 @@ import java.util.*;
 
 public class DummyDiffDiagRefiner extends BaseDiffDiagRefiner {
 
-    public DummyDiffDiagRefiner(HpoDiseases hpoDiseases, Map<TermId, Set<TermId>> fullHpoToMaxoTermMap, MinimalOntology hpo) {
-        super(hpoDiseases, fullHpoToMaxoTermMap, hpo);
+    public DummyDiffDiagRefiner(HpoDiseases hpoDiseases,
+                                Map<TermId, Set<TermId>> fullHpoToMaxoTermIdMap,
+                                Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxoTermMap,
+                                MinimalOntology hpo) {
+        super(hpoDiseases, fullHpoToMaxoTermIdMap, hpoToMaxoTermMap, hpo);
     }
 
     public RefinementResults run(Sample sample,

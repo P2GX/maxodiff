@@ -5,6 +5,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.monarchinitiative.lirical.core.exception.LiricalException;
 import org.monarchinitiative.maxodiff.core.SimpleTerm;
 import org.monarchinitiative.maxodiff.core.TestResources;
 import org.monarchinitiative.maxodiff.core.model.DifferentialDiagnosis;
@@ -34,11 +35,11 @@ public class MaxoDiffRefinerTest {
 
     @BeforeEach
     public void setUp() {
-        refiner = new MaxoDiffRefiner(TestResources.hpoDiseases(), HPO_TO_MAXO, TestResources.hpo());
+        refiner = new MaxoDiffRefiner(TestResources.hpoDiseases(), HPO_TO_MAXO, TestResources.hpoToMaxo(), TestResources.hpo());
     }
 
     @Test
-    public void run() {
+    public void run() throws LiricalException {
         RefinementOptions options = RefinementOptions.of(12, 0.5);
         Sample sample = TestResources.getExampleSample();
         Collection<DifferentialDiagnosis> originalDiagnoses = TestResources.getExampleDiagnoses();

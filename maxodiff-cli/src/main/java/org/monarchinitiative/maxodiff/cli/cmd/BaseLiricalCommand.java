@@ -103,18 +103,4 @@ abstract class BaseLiricalCommand implements Callable<Integer> {
         public float defaultAlleleFrequency = 1E-5f;
     }
 
-    public static LiricalDifferentialDiagnosisEngine getLiricalEngine(LiricalConfiguration liricalConfiguration,
-                                                                      MaxodiffLiricalAnalysisRunner maxodiffLiricalAnalysisRunner,
-                                                                      Set<TermId> diseaseIds) throws LiricalException {
-
-        LiricalDifferentialDiagnosisEngineConfigurer liricalDifferentialDiagnosisEngineConfigurer =
-                LiricalDifferentialDiagnosisEngineConfigurer.of(maxodiffLiricalAnalysisRunner);
-
-        AnalysisOptions options = liricalConfiguration.prepareAnalysisOptions(diseaseIds);
-
-        final LiricalDifferentialDiagnosisEngine engine = liricalDifferentialDiagnosisEngineConfigurer.configure(options, diseaseIds);
-
-        return engine;
-    }
-
 }
