@@ -5,6 +5,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.monarchinitiative.maxodiff.core.SimpleTerm;
 import org.monarchinitiative.maxodiff.core.TestResources;
+import org.monarchinitiative.maxodiff.core.model.DiscoverablePhenotypes;
 import org.monarchinitiative.maxodiff.core.model.Sample;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDisease;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;

@@ -1,10 +1,10 @@
-package org.monarchinitiative.maxodiff.core.analysis;
+package org.monarchinitiative.maxodiff.core.analysis.refinement;
 
 import org.monarchinitiative.lirical.core.exception.LiricalException;
+import org.monarchinitiative.maxodiff.core.analysis.HpoFrequency;
 import org.monarchinitiative.maxodiff.core.diffdg.DifferentialDiagnosisEngine;
-import org.monarchinitiative.maxodiff.core.lirical.LiricalConfiguration;
-import org.monarchinitiative.maxodiff.core.lirical.LiricalDifferentialDiagnosisEngine;
 import org.monarchinitiative.maxodiff.core.model.DifferentialDiagnosis;
+import org.monarchinitiative.maxodiff.core.model.RankMaxo;
 import org.monarchinitiative.maxodiff.core.model.Sample;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDisease;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
@@ -38,10 +38,9 @@ public interface DiffDiagRefiner {
     RefinementResults run(Sample sample,
                           Collection<DifferentialDiagnosis> differentialDiagnoses,
                           RefinementOptions options,
-                          LiricalDifferentialDiagnosisEngine engine,
+                          RankMaxo rankMaxo,
                           Map<TermId, List<HpoFrequency>> hpoTermCounts,
-                          Map<TermId, Set<TermId>> maxoToHpoTermIdMap,
-                          String diseaseProbModel
+                          Map<TermId, Set<TermId>> maxoToHpoTermIdMap
     ) throws LiricalException;
 
 

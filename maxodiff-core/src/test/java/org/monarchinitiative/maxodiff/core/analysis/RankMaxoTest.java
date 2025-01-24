@@ -2,23 +2,16 @@ package org.monarchinitiative.maxodiff.core.analysis;
 
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
-import org.monarchinitiative.lirical.configuration.LiricalBuilder;
 import org.monarchinitiative.lirical.configuration.impl.BundledBackgroundVariantFrequencyServiceFactory;
 import org.monarchinitiative.lirical.core.Lirical;
 import org.monarchinitiative.lirical.core.analysis.AnalysisOptions;
-import org.monarchinitiative.lirical.core.analysis.LiricalAnalysisRunner;
 import org.monarchinitiative.lirical.core.exception.LiricalException;
-import org.monarchinitiative.lirical.core.model.GenomeBuild;
 import org.monarchinitiative.lirical.core.model.TranscriptDatabase;
-import org.monarchinitiative.lirical.core.service.BackgroundVariantFrequencyServiceFactory;
 import org.monarchinitiative.lirical.core.service.PhenotypeService;
-import org.monarchinitiative.lirical.io.background.CustomBackgroundVariantFrequencyServiceFactory;
 import org.monarchinitiative.maxodiff.core.SimpleTerm;
 import org.monarchinitiative.maxodiff.core.TestResources;
-import org.monarchinitiative.maxodiff.core.diffdg.DifferentialDiagnosisEngine;
 import org.monarchinitiative.maxodiff.core.lirical.*;
-import org.monarchinitiative.maxodiff.core.model.DifferentialDiagnosis;
-import org.monarchinitiative.maxodiff.core.model.Sample;
+import org.monarchinitiative.maxodiff.core.model.*;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 

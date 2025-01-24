@@ -1,11 +1,11 @@
-package org.monarchinitiative.maxodiff.core.analysis;
+package org.monarchinitiative.maxodiff.core.analysis.refinement;
 
 import org.monarchinitiative.lirical.core.exception.LiricalException;
 import org.monarchinitiative.maxodiff.core.SimpleTerm;
+import org.monarchinitiative.maxodiff.core.analysis.*;
 import org.monarchinitiative.maxodiff.core.diffdg.DifferentialDiagnosisEngine;
 import org.monarchinitiative.maxodiff.core.lirical.*;
-import org.monarchinitiative.maxodiff.core.model.DifferentialDiagnosis;
-import org.monarchinitiative.maxodiff.core.model.Sample;
+import org.monarchinitiative.maxodiff.core.model.*;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDisease;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
 import org.monarchinitiative.phenol.ontology.data.MinimalOntology;
@@ -71,33 +71,18 @@ public class BaseDiffDiagRefiner implements DiffDiagRefiner {
     public RefinementResults run(Sample sample,
                                  Collection<DifferentialDiagnosis> differentialDiagnoses,
                                  RefinementOptions options,
-                                 LiricalDifferentialDiagnosisEngine engine,
+                                 RankMaxo rankMaxo,
                                  Map<TermId, List<HpoFrequency>> hpoTermCounts,
-                                 Map<TermId, Set<TermId>> maxoToHpoTermIdMap,
-                                 String diseaseProbModel) throws LiricalException {
+                                 Map<TermId, Set<TermId>> maxoToHpoTermIdMap) throws LiricalException {
 
         List<MaxodiffResult> maxodiffResultsList = new ArrayList<>();
         List<DifferentialDiagnosis> initialDiagnoses = differentialDiagnoses.stream()
                 .toList().subList(0, options.nDiseases());
 
-        DiseaseModelProbability diseaseModelProbability = DiseaseModelProbability.ranked(initialDiagnoses);
-        switch (diseaseProbModel) {
-            case "ranked" -> diseaseModelProbability = DiseaseModelProbability.ranked(initialDiagnoses);
-            case "softmax" -> diseaseModelProbability = DiseaseModelProbability.softmax(initialDiagnoses);
-            case "expDecay" -> diseaseModelProbability = DiseaseModelProbability.exponentialDecay(initialDiagnoses);
-        }
-
-        MaxoHpoTermProbabilities maxoHpoTermProbabilities = new MaxoHpoTermProbabilities(hpoDiseases,
-                        hpoToMaxoTermMap,
-                        initialDiagnoses,
-                        diseaseModelProbability);
-
         Set<TermId> initialDiagnosesIds = initialDiagnoses.stream()
                 .map(DifferentialDiagnosis::diseaseId)
                 .collect(Collectors.toSet());
 
-
-        RankMaxo rankMaxo = new RankMaxo(maxoToHpoTermIdMap, maxoHpoTermProbabilities, engine);
         Map<TermId, Double> maxoTermRanks = rankMaxo.rankMaxoTerms(sample, options.weight(), 2, initialDiagnosesIds);
         for (Map.Entry<TermId, Double> entry : maxoTermRanks.entrySet()) {
             TermId maxoId = entry.getKey();
@@ -122,6 +107,29 @@ public class BaseDiffDiagRefiner implements DiffDiagRefiner {
         }
         // Return RefinementResults object, which contains the list of MaxodiffResult objects.
         return new RefinementResultsImpl(maxodiffResultsList);
+    }
+
+    public RankMaxo getRankMaxo(List<DifferentialDiagnosis> initialDiagnoses,
+                                 LiricalDifferentialDiagnosisEngine engine,
+                                 Map<TermId, Set<TermId>> maxoToHpoTermIdMap,
+                                 String diseaseProbModel) {
+
+        DiseaseModelProbability diseaseModelProbability = DiseaseModelProbability.ranked(initialDiagnoses);
+        switch (diseaseProbModel) {
+            case "ranked" -> diseaseModelProbability = DiseaseModelProbability.ranked(initialDiagnoses);
+            case "softmax" -> diseaseModelProbability = DiseaseModelProbability.softmax(initialDiagnoses);
+            case "expDecay" -> diseaseModelProbability = DiseaseModelProbability.exponentialDecay(initialDiagnoses);
+        }
+
+        MaxoHpoTermProbabilities maxoHpoTermProbabilities = new MaxoHpoTermProbabilities(hpoDiseases,
+                hpoToMaxoTermMap,
+                initialDiagnoses,
+                diseaseModelProbability);
+
+
+        RankMaxo rankMaxo = new RankMaxo(maxoToHpoTermIdMap, maxoHpoTermProbabilities, engine);
+
+        return rankMaxo;
     }
 
     //TODO: handle possible multiple differential diagnoses with same termId

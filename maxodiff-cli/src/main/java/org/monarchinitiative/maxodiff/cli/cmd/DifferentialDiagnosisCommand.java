@@ -12,12 +12,11 @@ import org.monarchinitiative.maxodiff.config.MaxodiffDataResolver;
 import org.monarchinitiative.maxodiff.config.MaxodiffPropsConfiguration;
 import org.monarchinitiative.maxodiff.core.SimpleTerm;
 import org.monarchinitiative.maxodiff.core.analysis.*;
+import org.monarchinitiative.maxodiff.core.analysis.refinement.DiffDiagRefiner;
 import org.monarchinitiative.maxodiff.core.io.PhenopacketFileParser;
 import org.monarchinitiative.maxodiff.core.lirical.*;
-import org.monarchinitiative.maxodiff.core.model.DifferentialDiagnosis;
-import org.monarchinitiative.maxodiff.core.model.Sample;
+import org.monarchinitiative.maxodiff.core.model.*;
 import org.monarchinitiative.maxodiff.core.service.BiometadataService;
-import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDisease;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 import org.slf4j.Logger;
@@ -29,7 +28,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 
 /**

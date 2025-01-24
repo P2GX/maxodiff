@@ -5,6 +5,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.monarchinitiative.maxodiff.core.TestResources;
 import org.monarchinitiative.maxodiff.core.model.DifferentialDiagnosis;
+import org.monarchinitiative.maxodiff.core.model.DiseaseModelProbability;
 import org.monarchinitiative.phenol.base.PhenolRuntimeException;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 

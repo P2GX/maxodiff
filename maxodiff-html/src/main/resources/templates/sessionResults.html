@@ -72,6 +72,13 @@
     </table>
 
     <p><input type="submit" value="Run Differential Diagnosis Calculation" th:disabled="${differentialDiagnoses == null or differentialDiagnoses.isEmpty()}"/></p>
+    <div
+            role="progressbar"
+            th:style="'width:' + ( ${progress} == 0  ? '0' : ${progress} ) + '%;'"
+            aria-valuemin="0"
+            aria-valuemax="100"
+            th:text="${progress}">
+    </div>
 </form>
 
 <hr class="line">

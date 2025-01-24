@@ -1,4 +1,6 @@
-package org.monarchinitiative.maxodiff.core.analysis;
+package org.monarchinitiative.maxodiff.core.analysis.refinement;
+
+import org.monarchinitiative.maxodiff.core.analysis.refinement.RefinementOptionsImpl;
 
 public interface RefinementOptions {
 

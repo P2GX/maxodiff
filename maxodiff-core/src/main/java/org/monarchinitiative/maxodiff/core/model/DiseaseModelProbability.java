@@ -1,9 +1,8 @@
-package org.monarchinitiative.maxodiff.core.analysis;
+package org.monarchinitiative.maxodiff.core.model;
 
 import org.monarchinitiative.maxodiff.core.analysis.impl.DiseaseExponentialDecayProbabilityImpl;
 import org.monarchinitiative.maxodiff.core.analysis.impl.DiseaseRankedProbabilityImpl;
 import org.monarchinitiative.maxodiff.core.analysis.impl.DiseaseSoftmaxProbabilityImpl;
-import org.monarchinitiative.maxodiff.core.model.DifferentialDiagnosis;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 
 import java.util.List;

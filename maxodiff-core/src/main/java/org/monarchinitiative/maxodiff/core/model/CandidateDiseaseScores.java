@@ -1,8 +1,6 @@
-package org.monarchinitiative.maxodiff.core.analysis;
+package org.monarchinitiative.maxodiff.core.model;
 
 import org.monarchinitiative.maxodiff.core.lirical.LiricalDifferentialDiagnosisEngine;
-import org.monarchinitiative.maxodiff.core.model.DifferentialDiagnosis;
-import org.monarchinitiative.maxodiff.core.model.Sample;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 
 import java.util.*;

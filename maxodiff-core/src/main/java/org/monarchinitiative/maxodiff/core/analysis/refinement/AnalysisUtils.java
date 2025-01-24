@@ -1,6 +1,9 @@
-package org.monarchinitiative.maxodiff.core.analysis;
+package org.monarchinitiative.maxodiff.core.analysis.refinement;
 
 import org.apache.commons.math3.random.EmpiricalDistribution;
+import org.monarchinitiative.maxodiff.core.analysis.DiseaseTermCount;
+import org.monarchinitiative.maxodiff.core.analysis.HpoFrequency;
+import org.monarchinitiative.maxodiff.core.analysis.MaxoTermScore;
 import org.monarchinitiative.maxodiff.core.diffdg.DifferentialDiagnosisEngine;
 import org.monarchinitiative.maxodiff.core.model.DifferentialDiagnosis;
 import org.monarchinitiative.maxodiff.core.model.Sample;

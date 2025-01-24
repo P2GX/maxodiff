@@ -1,8 +1,7 @@
-package org.monarchinitiative.maxodiff.core.analysis;
+package org.monarchinitiative.maxodiff.core.model;
 
 import org.monarchinitiative.maxodiff.core.SimpleTerm;
-import org.monarchinitiative.maxodiff.core.model.DifferentialDiagnosis;
-import org.monarchinitiative.maxodiff.core.model.Sample;
+import org.monarchinitiative.maxodiff.core.analysis.MaxoHpoTermIdMaps;
 import org.monarchinitiative.phenol.annotations.base.Ratio;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDisease;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;

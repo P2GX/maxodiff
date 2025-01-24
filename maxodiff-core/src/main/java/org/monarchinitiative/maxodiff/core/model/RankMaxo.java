@@ -1,8 +1,6 @@
-package org.monarchinitiative.maxodiff.core.analysis;
+package org.monarchinitiative.maxodiff.core.model;
 
 import org.monarchinitiative.maxodiff.core.lirical.LiricalDifferentialDiagnosisEngine;
-import org.monarchinitiative.maxodiff.core.model.DifferentialDiagnosis;
-import org.monarchinitiative.maxodiff.core.model.Sample;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 
 import java.util.*;
@@ -13,6 +11,7 @@ public class RankMaxo {
     private final Map<TermId, Set<TermId>> maxoToHpoTermIdMap;
     private final MaxoHpoTermProbabilities maxoHpoTermProbabilities;
     private final LiricalDifferentialDiagnosisEngine engine;
+    double p;
 
     public RankMaxo(Map<TermId, Set<TermId>> maxoToHpoTermIdMap, MaxoHpoTermProbabilities maxoHpoTermProbabilities, LiricalDifferentialDiagnosisEngine engine) {
         this.maxoToHpoTermIdMap = maxoToHpoTermIdMap;
@@ -30,6 +29,7 @@ public class RankMaxo {
     public Map<TermId, Double> rankMaxoTerms(Sample ppkt, double weight, int nRepetitions, Set<TermId> diseaseIds) {
         Map<TermId, Double> maxoScores = new HashMap<>();
         CandidateDiseaseScores candidateDiseaseScores = new CandidateDiseaseScores(maxoHpoTermProbabilities);
+        p = 0;
         for (TermId maxoId : maxoToHpoTermIdMap.keySet()) {
             List<Double> scores = new ArrayList<>();
             for (int i = 0; i < nRepetitions; i++) {
@@ -46,6 +46,8 @@ public class RankMaxo {
                 meanScore = meanScoreOptional.getAsDouble();
             }
             maxoScores.put(maxoId, meanScore);
+            p++;
+            updateProgress();
         }
 
         return maxoScores.entrySet().stream()
@@ -62,6 +64,12 @@ public class RankMaxo {
             sum += Math.abs(score) < EPSILON ? 0 : Math.log(score)*score;
         }
         return -sum;
+    }
+
+    public double updateProgress() {
+        int nMaxoTermIds = maxoToHpoTermIdMap.keySet().size();
+        return (p / nMaxoTermIds) * 100.;
+
     }
 
 }

@@ -6,6 +6,8 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.monarchinitiative.maxodiff.core.analysis.refinement.MaxodiffResult;
+import org.monarchinitiative.maxodiff.core.analysis.refinement.RefinementResults;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 
 import java.io.StringWriter;

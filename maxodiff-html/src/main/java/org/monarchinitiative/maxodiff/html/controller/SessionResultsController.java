@@ -3,10 +3,11 @@ package org.monarchinitiative.maxodiff.html.controller;
 import org.monarchinitiative.lirical.core.exception.LiricalException;
 import org.monarchinitiative.maxodiff.core.SimpleTerm;
 import org.monarchinitiative.maxodiff.core.analysis.*;
+import org.monarchinitiative.maxodiff.core.analysis.refinement.*;
 import org.monarchinitiative.maxodiff.core.diffdg.DifferentialDiagnosisEngine;
-import org.monarchinitiative.maxodiff.core.lirical.LiricalConfiguration;
 import org.monarchinitiative.maxodiff.core.lirical.LiricalDifferentialDiagnosisEngine;
 import org.monarchinitiative.maxodiff.core.model.DifferentialDiagnosis;
+import org.monarchinitiative.maxodiff.core.model.RankMaxo;
 import org.monarchinitiative.maxodiff.core.model.Sample;
 import org.monarchinitiative.maxodiff.core.service.BiometadataService;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDisease;
@@ -136,13 +137,19 @@ public class SessionResultsController {
 
             RefinementResults refinementResults;
             if (engine instanceof LiricalDifferentialDiagnosisEngine && diffDiagRefiner instanceof MaxoDiffRefiner) {
+                List<DifferentialDiagnosis> initialDiagnoses = orderedDiagnoses.stream()
+                        .toList().subList(0, options.nDiseases());
+                RankMaxo rankMaxo = ((MaxoDiffRefiner) diffDiagRefiner).getRankMaxo(initialDiagnoses,
+                        (LiricalDifferentialDiagnosisEngine) engine,
+                        maxoToHpoTermIdMap,
+                        diseaseProbModel);
+                model.addAttribute("progress", rankMaxo.updateProgress());
                 refinementResults = diffDiagRefiner.run(sample,
                         orderedDiagnoses,
                         options,
-                        (LiricalDifferentialDiagnosisEngine) engine,
+                        rankMaxo,
                         hpoTermCounts,
-                        maxoToHpoTermIdMap,
-                        diseaseProbModel);
+                        maxoToHpoTermIdMap);
             } else {
                 refinementResults = diffDiagRefiner.run(sample,
                         orderedDiagnoses,

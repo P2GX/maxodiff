@@ -1,6 +1,8 @@
-package org.monarchinitiative.maxodiff.core.analysis;
+package org.monarchinitiative.maxodiff.core.analysis.refinement;
 
 import com.fasterxml.jackson.annotation.JsonGetter;
+import org.monarchinitiative.maxodiff.core.analysis.Frequencies;
+import org.monarchinitiative.maxodiff.core.analysis.MaxoTermScore;
 
 import java.util.Collection;
 import java.util.List;

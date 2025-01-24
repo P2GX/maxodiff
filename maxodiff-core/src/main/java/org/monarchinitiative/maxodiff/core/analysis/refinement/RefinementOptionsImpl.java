@@ -1,4 +1,4 @@
-package org.monarchinitiative.maxodiff.core.analysis;
+package org.monarchinitiative.maxodiff.core.analysis.refinement;
 
 record RefinementOptionsImpl(
         int nDiseases,

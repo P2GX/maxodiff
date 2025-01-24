@@ -1,7 +1,7 @@
 package org.monarchinitiative.maxodiff.config;
 
 import org.monarchinitiative.maxodiff.core.SimpleTerm;
-import org.monarchinitiative.maxodiff.core.analysis.*;
+import org.monarchinitiative.maxodiff.core.analysis.refinement.*;
 import org.monarchinitiative.maxodiff.core.io.MaxoDxAnnots;
 import org.monarchinitiative.maxodiff.core.service.BiometadataService;
 import org.monarchinitiative.maxodiff.core.service.BiometadataServiceImpl;
