@@ -1,4 +1,4 @@
-package org.monarchinitiative.maxodiff.core.analysis;
+package org.monarchinitiative.maxodiff.core.analysis.refinement;
 
 import org.monarchinitiative.maxodiff.core.SimpleTerm;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;

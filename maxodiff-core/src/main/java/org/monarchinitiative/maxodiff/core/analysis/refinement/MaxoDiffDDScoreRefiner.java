@@ -1,6 +1,7 @@
-package org.monarchinitiative.maxodiff.core.analysis;
+package org.monarchinitiative.maxodiff.core.analysis.refinement;
 
 import org.monarchinitiative.maxodiff.core.SimpleTerm;
+import org.monarchinitiative.maxodiff.core.analysis.*;
 import org.monarchinitiative.maxodiff.core.diffdg.DifferentialDiagnosisEngine;
 import org.monarchinitiative.maxodiff.core.model.DifferentialDiagnosis;
 import org.monarchinitiative.maxodiff.core.model.Sample;
@@ -10,10 +11,10 @@ import org.monarchinitiative.phenol.ontology.data.TermId;
 
 import java.util.*;
 
-public class MaxoDiffKolmogorovSmirnovRefiner extends BaseDiffDiagRefiner {
+public class MaxoDiffDDScoreRefiner extends BaseDiffDiagRefiner {
 
-    public MaxoDiffKolmogorovSmirnovRefiner(HpoDiseases hpoDiseases, Map<TermId, Set<TermId>> fullHpoToMaxoTermIdMap,
-                                            Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxoTermMap, MinimalOntology hpo) {
+    public MaxoDiffDDScoreRefiner(HpoDiseases hpoDiseases, Map<TermId, Set<TermId>> fullHpoToMaxoTermIdMap,
+                                  Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxoTermMap, MinimalOntology hpo) {
         super(hpoDiseases, fullHpoToMaxoTermIdMap, hpoToMaxoTermMap, hpo);
     }
 
@@ -37,11 +38,11 @@ public class MaxoDiffKolmogorovSmirnovRefiner extends BaseDiffDiagRefiner {
             maxoTermDiagnoses = maxoTermToDDEngineDiagnosesMap.get(maxoId);
             // Calculate MAXO term differential diagnoses, if needed
             if (maxoTermDiagnoses == null) {
-                Integer nDiseases = 100;
+                Integer nDiseases = options.nDiseases();
                 maxoTermDiagnoses = AnalysisUtils.getMaxoTermDifferentialDiagnoses(sample, hpoTermIds, engine, nDiseases);
             }
             // Calculate final score and make score record
-            MaxoTermScore maxoTermScore = AnalysisUtils.getMaxoTermKolmogorovSmirnovRecord(hpoTermIds,
+            MaxoTermScore maxoTermScore = AnalysisUtils.getMaxoTermDDScoreRecord(hpoTermIds,
                     maxoId,
                     differentialDiagnoses.stream().toList(),
                     maxoTermDiagnoses,
@@ -53,27 +54,11 @@ public class MaxoDiffKolmogorovSmirnovRefiner extends BaseDiffDiagRefiner {
                     maxoTermScore.hpoTermIds(), hpoTermCounts);
             // Make MaxodiffResult for the MAXO term
             MaxodiffResult maxodiffResult = new MaxodiffResultImpl(maxoTermScore, frequencies, maxoFrequencies);
-            if (maxoTermScore.scoreDiff() != 0.0) {
-                maxodiffResultsList.add(maxodiffResult);
-            }
-
+            maxodiffResultsList.add(maxodiffResult);
         }
 
         // Return RefinementResults object, which contains the list of MaxodiffResult objects.
         return new RefinementResultsImpl(maxodiffResultsList);
     }
 
-    @Override
-    public List<DifferentialDiagnosis> getOrderedDiagnoses(Collection<DifferentialDiagnosis> originalDifferentialDiagnoses,
-                                                           RefinementOptions options) {
-        if (originalDifferentialDiagnoses.size() < options.nDiseases()) {
-            //TODO: replace with MaxodiffRuntimeException that extends RuntimeException.
-            throw new RuntimeException("Input No. Diseases larger than No. diseases in sample.");
-        }
-        List<DifferentialDiagnosis> orderedDiagnoses = originalDifferentialDiagnoses.stream()
-                .sorted(Comparator.comparingDouble(DifferentialDiagnosis::score).reversed())
-                .toList();
-
-        return orderedDiagnoses.subList(0, 100); //options.nDiseases()
-    }
 }

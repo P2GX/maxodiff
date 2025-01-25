@@ -2,9 +2,6 @@ package org.monarchinitiative.maxodiff.core.lirical;
 
 import org.monarchinitiative.lirical.core.analysis.AnalysisOptions;
 import org.monarchinitiative.lirical.core.analysis.LiricalAnalysisRunner;
-import org.monarchinitiative.phenol.ontology.data.TermId;
-
-import java.util.Set;
 
 /**
  * Configure {@link LiricalDifferentialDiagnosisEngine} for running LIRICAL analysis 

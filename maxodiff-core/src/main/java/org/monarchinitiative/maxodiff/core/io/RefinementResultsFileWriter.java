@@ -3,6 +3,8 @@ package org.monarchinitiative.maxodiff.core.io;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 import org.monarchinitiative.maxodiff.core.analysis.*;
+import org.monarchinitiative.maxodiff.core.analysis.refinement.MaxodiffResult;
+import org.monarchinitiative.maxodiff.core.analysis.refinement.RefinementResults;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

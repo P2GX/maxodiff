@@ -1,6 +1,7 @@
-package org.monarchinitiative.maxodiff.core.analysis;
+package org.monarchinitiative.maxodiff.core.analysis.refinement;
 
 import org.monarchinitiative.maxodiff.core.SimpleTerm;
+import org.monarchinitiative.maxodiff.core.analysis.*;
 import org.monarchinitiative.maxodiff.core.diffdg.DifferentialDiagnosisEngine;
 import org.monarchinitiative.maxodiff.core.model.DifferentialDiagnosis;
 import org.monarchinitiative.maxodiff.core.model.Sample;

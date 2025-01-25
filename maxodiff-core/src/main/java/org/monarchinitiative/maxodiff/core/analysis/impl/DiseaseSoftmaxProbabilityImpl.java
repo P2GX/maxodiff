@@ -1,6 +1,6 @@
 package org.monarchinitiative.maxodiff.core.analysis.impl;
 
-import org.monarchinitiative.maxodiff.core.analysis.DiseaseModelProbability;
+import org.monarchinitiative.maxodiff.core.model.DiseaseModelProbability;
 import org.monarchinitiative.maxodiff.core.model.DifferentialDiagnosis;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 

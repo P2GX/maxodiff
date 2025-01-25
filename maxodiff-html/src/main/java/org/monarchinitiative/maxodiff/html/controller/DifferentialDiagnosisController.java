@@ -2,6 +2,10 @@ package org.monarchinitiative.maxodiff.html.controller;
 
 import org.monarchinitiative.lirical.io.analysis.PhenopacketData;
 import org.monarchinitiative.maxodiff.core.analysis.*;
+import org.monarchinitiative.maxodiff.core.analysis.refinement.DiffDiagRefiner;
+import org.monarchinitiative.maxodiff.core.analysis.refinement.MaxodiffResult;
+import org.monarchinitiative.maxodiff.core.analysis.refinement.RefinementOptions;
+import org.monarchinitiative.maxodiff.core.analysis.refinement.RefinementResults;
 import org.monarchinitiative.maxodiff.core.io.LiricalResultsFileParser;
 import org.monarchinitiative.maxodiff.core.io.PhenopacketFileParser;
 import org.monarchinitiative.maxodiff.core.model.DifferentialDiagnosis;
