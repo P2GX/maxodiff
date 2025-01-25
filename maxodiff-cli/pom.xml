@@ -53,11 +53,6 @@
             <groupId>info.picocli</groupId>
             <artifactId>picocli</artifactId>
         </dependency>
-
-        <dependency>
-            <groupId>ch.qos.logback</groupId>
-            <artifactId>logback-classic</artifactId>
-        </dependency>
         <dependency>
             <groupId>org.monarchinitiative.maxodiff</groupId>
             <artifactId>maxodiff-lirical</artifactId>
