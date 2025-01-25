@@ -63,9 +63,9 @@ public class BatchDiagnosisCommand extends DifferentialDiagnosisCommand {
         Collections.sort(phenopacketPaths);
 
         List<Double> weights = new ArrayList<>();
-        weightsArg.forEach(w -> weights.add(w));
+        weightsArg.forEach(weights::add);
         List<Integer> nDiseasesList = new ArrayList<>();
-        nDiseasesArg.forEach(n -> nDiseasesList.add(n));
+        nDiseasesArg.forEach(nDiseasesList::add);
 
         Path maxodiffResultsFilePath = Path.of(String.join(File.separator, outputDir.toString(), "maxodiff_results.csv"));
 

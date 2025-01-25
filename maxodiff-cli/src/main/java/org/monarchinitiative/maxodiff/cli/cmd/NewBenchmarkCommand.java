@@ -77,12 +77,12 @@ public class NewBenchmarkCommand extends BenchmarkCommand {
         Collections.sort(phenopacketPaths);
 
         List<Double> weights = new ArrayList<>();
-        weightsArg.forEach(w -> weights.add(w));
+        weightsArg.forEach(weights::add);
         List<Integer> nDiseasesList = new ArrayList<>();
-        nDiseasesArg.forEach(n -> nDiseasesList.add(n));
+        nDiseasesArg.forEach(nDiseasesList::add);
         List<String> refinersList = new ArrayList<>();
         if (refinerTypes != null)
-            refinerTypes.forEach(r -> refinersList.add(r));
+            refinerTypes.forEach(refinersList::add);
 
         LiricalConfiguration liricalConfiguration = configureLirical();
         Lirical lirical = liricalConfiguration.lirical();
@@ -126,12 +126,10 @@ public class NewBenchmarkCommand extends BenchmarkCommand {
                                 phenopacketData.excludedHpoTermIds().toList());
 
                         LOGGER.info(String.valueOf(phenopacketPath));
-                        LOGGER.info("weights = " + weights);
-                        LOGGER.info("nDiseases = " + nDiseasesList);
-                        LOGGER.info("refiners = " + refinersList);
-
+                        LOGGER.info("weights = {}", weights);
+                        LOGGER.info("nDiseases = {}", nDiseasesList);
+                        LOGGER.info("refiners = {}", refinersList);
                         String phenopacketName = pPath.toFile().getName();
-
                         List<TermId> termIdsToRemove = new ArrayList<>();
                         List<TermId> includedIds = new ArrayList<>(phenopacketData.presentHpoTermIds().toList());
                         List<TermId> excludedIds = new ArrayList<>(phenopacketData.excludedHpoTermIds().toList());
@@ -145,7 +143,7 @@ public class NewBenchmarkCommand extends BenchmarkCommand {
                             termIdsToRemove = Stream.of(sample.presentHpoTermIds(), sample.excludedHpoTermIds())
                                     .flatMap(Collection::stream).toList();
                         }
-                        LOGGER.info(phenopacketName + " removed Ids = " + termIdsToRemove.toString());
+                        LOGGER.info("{} removed Ids = {}", phenopacketName, termIdsToRemove);
 
                         // Get initial differential diagnoses from running LIRICAL
                         List<DifferentialDiagnosis> differentialDiagnoses = engine.run(sample);
@@ -168,8 +166,8 @@ public class NewBenchmarkCommand extends BenchmarkCommand {
                             for (int nDiseases : nDiseasesList) {
                                 for (double weight : weights) {
                                     RefinementOptions options = RefinementOptions.of(nDiseases, weight);
-                                    LOGGER.info(e.getKey() + ": " + e.getValue());
-                                    LOGGER.info("n Diseases = " + nDiseases + ", Weight = " + weight);
+                                    LOGGER.info("{}: {}", e.getKey(), e.getValue());
+                                    LOGGER.info("n Diseases = {}, Weight = {}", nDiseases, weight);
                                     List<DifferentialDiagnosis> orderedDiagnoses = e.getValue().getOrderedDiagnoses(differentialDiagnoses, options);
                                     List<HpoDisease> diseases = e.getValue().getDiseases(orderedDiagnoses);
                                     Map<TermId, List<HpoFrequency>> hpoTermCounts = e.getValue().getHpoTermCounts(diseases);
@@ -207,16 +205,16 @@ public class NewBenchmarkCommand extends BenchmarkCommand {
                                             TermId diseaseId = diagnosis.diseaseId();
                                             List<TermId> phenopacketDiscoverablePhenotypes = getPhenopacketDiscoverablePhenotypes(diseaseId,
                                                     hpoaDiseases, termIdsToRemove);
-                                            LOGGER.info("pPackDiscPhenotypes = " + phenopacketDiscoverablePhenotypes);
+                                            LOGGER.info("pPackDiscPhenotypes = {}", phenopacketDiscoverablePhenotypes);
                                             List<TermId> maxoTermInferredExcludedPhenotypes = getMaxoTermInferredExcludedPhenotypes(phenopacketData,
                                                     hpoaDiseases, maxoToHpoTermIdMap.get(maxoId));
-                                            LOGGER.info("maxoInferExclPhenotypes = " + maxoTermInferredExcludedPhenotypes);
+                                            LOGGER.info("maxoInferExclPhenotypes = {}", maxoTermInferredExcludedPhenotypes);
                                             Map<TermId, Set<TermId>> maxoTermDiscoverablePhenotypes = getMaxoTermDiscoverablePhenotypes(phenopacketDiscoverablePhenotypes,
                                                     maxoTermInferredExcludedPhenotypes, maxoId);
-                                            LOGGER.info("pPack target disease: " + phenopacketData.diseaseIds().get(0));
-                                            LOGGER.info("diagnosis " + orderedDiagnoses.indexOf(diagnosis)+1 + ": " + diseaseId);
-                                            LOGGER.info("MAxO term " + resultsList.indexOf(result)+1 + ": " + maxoId + " " + biometadataService.maxoLabel(maxoId.toString()).orElse("unknown"));
-                                            LOGGER.info("maxoDiscPhenotypes = " + maxoTermDiscoverablePhenotypes);
+                                            LOGGER.info("pPack target disease: {}", phenopacketData.diseaseIds().get(0));
+                                            LOGGER.info("diagnosis {}: {}", orderedDiagnoses.indexOf(diagnosis)+1, diseaseId);
+                                            LOGGER.info("MAxO term {}: {} {}", resultsList.indexOf(result)+1, maxoId, biometadataService.maxoLabel(maxoId.toString()).orElse("unknown"));
+                                            LOGGER.info("maxoDiscPhenotypes = {}", maxoTermDiscoverablePhenotypes);
                                             maxoTermDiscoverablePhenotypeSum += maxoTermDiscoverablePhenotypes.get(maxoId).size();
                                         }
                                         maxoTermDiscoverablePhenotypeSums.put(maxoId, maxoTermDiscoverablePhenotypeSum);

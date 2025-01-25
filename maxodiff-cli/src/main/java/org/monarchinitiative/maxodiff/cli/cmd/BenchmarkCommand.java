@@ -120,12 +120,12 @@ public class BenchmarkCommand extends DifferentialDiagnosisCommand {
         Collections.sort(phenopacketPaths);
 
         List<Double> weights = new ArrayList<>();
-        weightsArg.forEach(w -> weights.add(w));
+        weightsArg.forEach(weights::add);
         List<Integer> nDiseasesList = new ArrayList<>();
-        nDiseasesArg.forEach(n -> nDiseasesList.add(n));
+        nDiseasesArg.forEach(nDiseasesList::add);
         List<String> refinersList = new ArrayList<>();
         if (refinerTypes != null)
-            refinerTypes.forEach(r -> refinersList.add(r));
+            refinerTypes.forEach(refinersList::add);
 
         LiricalConfiguration liricalConfiguration = configureLirical();
         Lirical lirical = liricalConfiguration.lirical();
@@ -168,9 +168,9 @@ public class BenchmarkCommand extends DifferentialDiagnosisCommand {
                                 phenopacketData.excludedHpoTermIds().toList());
 
                         LOGGER.info(String.valueOf(phenopacketPath));
-                        LOGGER.info("weights = " + weights);
-                        LOGGER.info("nDiseases = " + nDiseasesList);
-                        LOGGER.info("refiners = " + refinersList);
+                        LOGGER.info("weights = {}",weights);
+                        LOGGER.info("nDiseases = {}" , nDiseasesList);
+                        LOGGER.info("refiners = {}", refinersList);
 
                         String phenopacketName = pPath.toFile().getName();
 
@@ -179,7 +179,7 @@ public class BenchmarkCommand extends DifferentialDiagnosisCommand {
                             termIdsToRemove = Stream.of(sample.presentHpoTermIds(), sample.excludedHpoTermIds())
                                     .flatMap(Collection::stream).toList();
                         }
-                        LOGGER.info(phenopacketName + " removed Ids = " + termIdsToRemove.toString());
+                        LOGGER.info("{} removed Ids = {}", phenopacketName, termIdsToRemove);
 
                         // Get initial differential diagnoses from running LIRICAL
                         LOGGER.info("Running Initial Differential Diagnosis");
@@ -218,8 +218,8 @@ public class BenchmarkCommand extends DifferentialDiagnosisCommand {
                                 //                LOGGER.info(String.valueOf(maxoToHpoTermMap));
                                 for (double weight : weights) {
                                     RefinementOptions options = RefinementOptions.of(nDiseases, weight);
-                                    LOGGER.info(e.getKey() + ": " + e.getValue());
-                                    LOGGER.info("n Diseases = " + nDiseases + ", Weight = " + weight);
+                                    LOGGER.info("{}: {}",e.getKey(), e.getValue());
+                                    LOGGER.info("n Diseases = {}, Weight = {}" ,nDiseases, weight);
                                     List<DifferentialDiagnosis> orderedDiagnoses = e.getValue().getOrderedDiagnoses(differentialDiagnoses, options);
                                     List<HpoDisease> diseases = e.getValue().getDiseases(orderedDiagnoses);
                                     Map<TermId, List<HpoFrequency>> hpoTermCounts = e.getValue().getHpoTermCounts(diseases);
@@ -293,9 +293,9 @@ public class BenchmarkCommand extends DifferentialDiagnosisCommand {
                                         }
                                     }
 
-                                    LOGGER.info(e.getKey() + ": n Diseases = " + nDiseases + ", Weight = " + weight);
+                                    LOGGER.info( "{}: n Diseases = {}, Weight = {}", e.getKey(), nDiseases, weight);
 
-                                    LOGGER.info("Max Score: " + maxScoreMaxoTermId + " (" + maxScoreTermLabel + ")" + " = " + maxScoreValue);
+                                    LOGGER.info("Max Score: {}({}) = {}", maxScoreMaxoTermId, maxScoreTermLabel, maxScoreValue);
                                     writeResults(phenopacketName, termIdsToRemove, nDiseases, weight,
                                             maxScoreMaxoTermId, maxScoreTermLabel, maxScoreValue, changedDiseaseId,
                                             origRank, maxoRank, origLR, maxoLR, e.getKey(), printer);
@@ -312,7 +312,7 @@ public class BenchmarkCommand extends DifferentialDiagnosisCommand {
                                 }
                             }
                         }
-                        LOGGER.info("Finished benchmark for " + phenopacketName);
+                        LOGGER.info("Finished benchmark for {}", phenopacketName);
                     } catch (Exception ex) {
                         LOGGER.info(ex.getMessage());
                     }

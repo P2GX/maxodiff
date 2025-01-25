@@ -222,7 +222,7 @@ public class BaseDiffDiagRefiner implements DiffDiagRefiner {
      * @param sample Sample info, may or may not be from a phenopacket.
      * @param engine The engine used for the original differential diagnosis calculation (e.g. LIRICAL).
      * @param maxoToHpoTermIdMap Map of MAXO Term Id to Set of HPO Term Ids.
-     * @return List of DifferentialDiagnosis objects for MAxO term, in reverse score order.
+     * @return MAP of DifferentialDiagnosis objects for MAxO term, in reverse score order.
      */
     @Override
     public Map<TermId, List<DifferentialDiagnosis>> getMaxoTermToDifferentialDiagnosesMap(Sample sample,
