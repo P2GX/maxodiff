@@ -1,5 +1,7 @@
 package org.monarchinitiative.maxodiff.cli.cmd;
 
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.LoggerContext;
 import org.monarchinitiative.lirical.core.model.TranscriptDatabase;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -23,7 +25,7 @@ abstract class BaseLiricalCommand implements Callable<Integer> {
 
     protected static final String BANNER = readBanner();
 
-    private static String readBanner() {
+    static String readBanner() {
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(Objects.requireNonNull(BaseLiricalCommand.class.getResourceAsStream("/banner.txt")), StandardCharsets.UTF_8))) {
             return reader.lines()
                     .collect(Collectors.joining(System.lineSeparator()));

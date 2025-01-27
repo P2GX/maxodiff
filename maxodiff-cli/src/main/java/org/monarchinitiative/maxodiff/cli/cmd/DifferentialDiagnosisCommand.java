@@ -1,5 +1,7 @@
 package org.monarchinitiative.maxodiff.cli.cmd;
 
+import ch.qos.logback.classic.Level;
+import ch.qos.logback.classic.LoggerContext;
 import org.monarchinitiative.lirical.configuration.impl.BundledBackgroundVariantFrequencyServiceFactory;
 import org.monarchinitiative.lirical.core.Lirical;
 import org.monarchinitiative.lirical.core.analysis.*;
@@ -99,9 +101,18 @@ public class DifferentialDiagnosisCommand extends BaseLiricalCommand {
             description = "Disease Probability Model to use for Rank MAxO algorithm (default: ${DEFAULT-VALUE}).")
     protected String diseaseProbModel = "ranked";
 
+    @CommandLine.Option(names = {"-v"},
+            description = {"Specify multiple -v options to increase verbosity.",
+                    "For example, `-v -v -v` or `-vvv`"})
+    public boolean[] verbosity = {};
+
+
 
     @Override
     public Integer call() throws Exception {
+
+        // (0) Setup verbosity and print banner.
+        setupLoggingAndPrintBanner();
 
         Map<String, List<Object>> resultsMap = new HashMap<>();
 
@@ -267,6 +278,34 @@ public class DifferentialDiagnosisCommand extends BaseLiricalCommand {
         }
 
         return 0;
+    }
+
+
+    void setupLoggingAndPrintBanner() {
+        Level level = parseVerbosityLevel();
+
+        LoggerContext context = (LoggerContext) LoggerFactory.getILoggerFactory();
+        context.getLogger(Logger.ROOT_LOGGER_NAME).setLevel(level);
+
+        printBanner();
+    }
+
+    private Level parseVerbosityLevel() {
+        int verbosity = 0;
+        for (boolean a : this.verbosity) {
+            if (a) verbosity++;
+        }
+
+        return switch (verbosity) {
+            case 0 -> Level.INFO;
+            case 1 -> Level.DEBUG;
+            case 2 -> Level.TRACE;
+            default -> Level.ALL;
+        };
+    }
+
+    private static void printBanner() {
+        System.err.println(readBanner());
     }
 
     LiricalConfiguration configureLirical() throws LiricalException {
