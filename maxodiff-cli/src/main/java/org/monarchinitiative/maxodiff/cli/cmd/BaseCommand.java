@@ -19,14 +19,14 @@ import java.util.stream.Collectors;
 /**
  * Base class that describes data and configuration sections of the CLI, and contains common functionalities.
  */
-abstract class BaseLiricalCommand implements Callable<Integer> {
+abstract class BaseCommand implements Callable<Integer> {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(BaseLiricalCommand.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(BaseCommand.class);
 
     protected static final String BANNER = readBanner();
 
     static String readBanner() {
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(Objects.requireNonNull(BaseLiricalCommand.class.getResourceAsStream("/banner.txt")), StandardCharsets.UTF_8))) {
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(Objects.requireNonNull(BaseCommand.class.getResourceAsStream("/banner.txt")), StandardCharsets.UTF_8))) {
             return reader.lines()
                     .collect(Collectors.joining(System.lineSeparator()));
         } catch (IOException e) {
@@ -34,6 +34,14 @@ abstract class BaseLiricalCommand implements Callable<Integer> {
             return "";
         }
     }
+
+    // ---------------------------------------------- LOGGING VERBOSITY ------------------------------------------------
+    @CommandLine.Option(names = {"-v"},
+            description = {"Specify multiple -v options to increase verbosity.",
+                    "For example, `-v -v -v` or `-vvv`"})
+    public boolean[] verbosity = {};
+
+
 
     // ---------------------------------------------- RESOURCES --------------------------------------------------------
     @CommandLine.ArgGroup(validate = false, heading = "Resource paths:%n")
@@ -99,6 +107,43 @@ abstract class BaseLiricalCommand implements Callable<Integer> {
         @CommandLine.Option(names = {"--default-allele-frequency"},
                 description = "Variant with greater allele frequency in at least one population is considered common (default: ${DEFAULT-VALUE}).")
         public float defaultAlleleFrequency = 1E-5f;
+    }
+
+    public Integer call() throws Exception {
+        // (0) Set up verbosity and print banner.
+        setupLoggingAndPrintBanner();
+
+        // (1) Run the command functionality
+        return execute();
+    }
+
+    protected abstract Integer execute() throws Exception;
+
+    void setupLoggingAndPrintBanner() {
+        Level level = parseVerbosityLevel();
+
+        LoggerContext context = (LoggerContext) LoggerFactory.getILoggerFactory();
+        context.getLogger(Logger.ROOT_LOGGER_NAME).setLevel(level);
+
+        printBanner();
+    }
+
+    private Level parseVerbosityLevel() {
+        int verbosity = 0;
+        for (boolean a : this.verbosity) {
+            if (a) verbosity++;
+        }
+
+        return switch (verbosity) {
+            case 0 -> Level.INFO;
+            case 1 -> Level.DEBUG;
+            case 2 -> Level.TRACE;
+            default -> Level.ALL;
+        };
+    }
+
+    private static void printBanner() {
+        System.err.println(readBanner());
     }
 
 }

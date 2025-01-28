@@ -46,7 +46,7 @@ public class BatchDiagnosisCommand extends DifferentialDiagnosisCommand {
 
 
     @Override
-    public Integer call() throws Exception {
+    public Integer execute() throws Exception {
 
         List<Path> phenopacketPaths = new ArrayList<>();
         if (batchDir != null) {

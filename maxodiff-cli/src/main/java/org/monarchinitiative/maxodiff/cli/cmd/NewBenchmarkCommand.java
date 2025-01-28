@@ -54,7 +54,7 @@ public class NewBenchmarkCommand extends BenchmarkCommand {
 
 
     @Override
-    public Integer call() throws Exception {
+    public Integer execute() throws Exception {
 
         OBJECT_MAPPER = new ObjectMapper();
         OBJECT_MAPPER.enable(SerializationFeature.INDENT_OUTPUT);
