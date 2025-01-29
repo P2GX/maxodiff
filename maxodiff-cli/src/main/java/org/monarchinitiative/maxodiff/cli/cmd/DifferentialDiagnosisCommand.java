@@ -37,7 +37,7 @@ import java.util.stream.Collectors;
 @CommandLine.Command(name = "diagnosis", aliases = {"d"},
         mixinStandardHelpOptions = true,
         description = "maxodiff analysis")
-public class DifferentialDiagnosisCommand extends BaseLiricalCommand {
+public class DifferentialDiagnosisCommand extends BaseCommand {
     private static final Logger LOGGER = LoggerFactory.getLogger(DifferentialDiagnosisCommand.class);
 
     @CommandLine.Option(names = {"-m", "--maxoData"},
@@ -99,10 +99,8 @@ public class DifferentialDiagnosisCommand extends BaseLiricalCommand {
             description = "Disease Probability Model to use for Rank MAxO algorithm (default: ${DEFAULT-VALUE}).")
     protected String diseaseProbModel = "ranked";
 
-
     @Override
-    public Integer call() throws Exception {
-
+    public Integer execute() throws Exception {
         Map<String, List<Object>> resultsMap = new HashMap<>();
 
         resultsMap.put("phenopacketName", new ArrayList<>());
