@@ -1,4 +1,4 @@
-package org.monarchinitiative.maxodiff.core.lirical;
+package org.monarchinitiative.maxodiff.lirical;
 
 import java.util.concurrent.ForkJoinPool;
 import java.util.concurrent.ForkJoinWorkerThread;

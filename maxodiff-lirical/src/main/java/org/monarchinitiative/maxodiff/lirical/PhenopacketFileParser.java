@@ -1,4 +1,4 @@
-package org.monarchinitiative.maxodiff.core.io;
+package org.monarchinitiative.maxodiff.lirical;
 
 import org.monarchinitiative.lirical.io.analysis.PhenopacketData;
 import org.monarchinitiative.lirical.io.analysis.PhenopacketImporter;

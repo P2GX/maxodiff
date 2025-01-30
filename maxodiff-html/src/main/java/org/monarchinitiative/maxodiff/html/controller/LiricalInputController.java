@@ -5,7 +5,7 @@ import org.monarchinitiative.lirical.core.analysis.probability.PretestDiseasePro
 import org.monarchinitiative.lirical.core.model.GenomeBuild;
 import org.monarchinitiative.lirical.core.model.TranscriptDatabase;
 import org.monarchinitiative.maxodiff.core.diffdg.DifferentialDiagnosisEngine;
-import org.monarchinitiative.maxodiff.core.lirical.LiricalDifferentialDiagnosisEngineConfigurer;
+import org.monarchinitiative.maxodiff.lirical.LiricalDifferentialDiagnosisEngineConfigurer;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;

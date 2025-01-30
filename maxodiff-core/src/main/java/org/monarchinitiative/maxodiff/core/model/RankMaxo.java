@@ -1,6 +1,6 @@
 package org.monarchinitiative.maxodiff.core.model;
 
-import org.monarchinitiative.maxodiff.core.lirical.LiricalDifferentialDiagnosisEngine;
+import org.monarchinitiative.maxodiff.core.diffdg.DifferentialDiagnosisEngine;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 
 import java.util.*;
@@ -10,10 +10,10 @@ public class RankMaxo {
 
     private final Map<TermId, Set<TermId>> maxoToHpoTermIdMap;
     private final MaxoHpoTermProbabilities maxoHpoTermProbabilities;
-    private final LiricalDifferentialDiagnosisEngine engine;
+    private final DifferentialDiagnosisEngine engine;
     double p;
 
-    public RankMaxo(Map<TermId, Set<TermId>> maxoToHpoTermIdMap, MaxoHpoTermProbabilities maxoHpoTermProbabilities, LiricalDifferentialDiagnosisEngine engine) {
+    public RankMaxo(Map<TermId, Set<TermId>> maxoToHpoTermIdMap, MaxoHpoTermProbabilities maxoHpoTermProbabilities, DifferentialDiagnosisEngine engine) {
         this.maxoToHpoTermIdMap = maxoToHpoTermIdMap;
         this.maxoHpoTermProbabilities = maxoHpoTermProbabilities;
         this.engine = engine;

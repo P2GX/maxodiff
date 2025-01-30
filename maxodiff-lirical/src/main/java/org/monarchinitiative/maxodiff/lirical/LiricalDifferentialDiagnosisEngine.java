@@ -1,6 +1,9 @@
-package org.monarchinitiative.maxodiff.core.lirical;
+package org.monarchinitiative.maxodiff.lirical;
 
-import org.monarchinitiative.lirical.core.analysis.*;
+import org.monarchinitiative.lirical.core.analysis.AnalysisData;
+import org.monarchinitiative.lirical.core.analysis.AnalysisOptions;
+import org.monarchinitiative.lirical.core.analysis.AnalysisResults;
+import org.monarchinitiative.lirical.core.analysis.LiricalAnalysisException;
 import org.monarchinitiative.lirical.core.model.GenesAndGenotypes;
 import org.monarchinitiative.lirical.core.model.Sex;
 import org.monarchinitiative.maxodiff.core.diffdg.DifferentialDiagnosisEngine;
