@@ -40,7 +40,8 @@ public class LiricalDifferentialDiagnosisEngine implements DifferentialDiagnosis
                 GenesAndGenotypes.empty());
 
 
-        Set<TermId> diseaseIdsSet = new HashSet<>(diseaseIds);
+        Set<TermId> diseaseIdsSet = null;
+        if (diseaseIds != null) diseaseIdsSet = new HashSet<>(diseaseIds);
         // Get LIRICAL AnalysisResults
         AnalysisResults results = getLiricalAnalysisResults(analysisData, diseaseIdsSet);
         // Get Differential Diagnoses from LIRICAL AnalysisResults
