@@ -39,6 +39,11 @@ public class RankMaxoTest {
                 //  However, please check..
                 return initialDiagnoses;
             }
+
+            @Override
+            public List<DifferentialDiagnosis> run(Sample sample, Collection<TermId> targetDiseases) {
+                return initialDiagnoses;
+            }
         };
     }
 
