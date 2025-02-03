@@ -247,20 +247,22 @@
         <tr>
             <th></th>
 <!--            <th></th>-->
-            <th:block th:each="omimId : ${omimIds}">
-                <th th:text="${omimId}"></th>
+            <th:block th:each="freqRecord : ${maxoTable.frequencies}">
+                <th th:text="${freqRecord.hpoId} + ' (' + ${allHpoTermsMap.get(freqRecord.hpoId)} + ')'"></th>
             </th:block>
         </tr>
         </thead>
 
         <tbody>
-        <th:block th:each= "freqRecord : ${maxoTable.frequencies}">
+        <th:block th:each= "omimId, omimIter : ${maxoTable.maxoTermScore.omimTermIds}">
             <tr>
-                <td th:text="${freqRecord.hpoId} + ' (' + ${allHpoTermsMap.get(freqRecord.hpoId)} + ')'"></td>
-                <th:block th:each="frequency : ${freqRecord.frequencies}">
-                    <td th:text="${frequency} == null ? ${frequency} :
+                <td th:text="${omimId} + ' (' + ${omimTerms.get(omimId)} + ')'"></td>
+                <th:block th:each= "freqRecord : ${maxoTable.frequencies}">
+                    <th:block th:with="frequency=${freqRecord.frequencies[omimIter.index]}">
+                        <td th:text="${frequency} == null ? ${frequency} :
                     (${frequency} % 1 == 0 ? ${frequency} : ${#numbers.formatDecimal(frequency, 1, 4)})"
-                        th:style="|background: rgba(255, 215, 0, ${frequency})|"></td>
+                            th:style="|background: rgba(255, 215, 0, ${frequency})|"></td>
+                    </th:block>
                 </th:block>
             </tr>
         </th:block>
@@ -273,22 +275,22 @@
         <tr style="background-color: palevioletred; color: white;">
             <th style="border: 1px solid black; padding: 0px 10px 0px 10px"></th>
             <!--            <th></th>-->
-            <th:block th:each="omimId : ${maxoOmimIds}">
-                <th style="border: 1px solid black; padding: 0px 10px 0px 10px" th:text="${omimId}"></th>
+            <th:block th:each="freqRecord : ${maxoTable.maxoFrequencies}">
+                <th th:text="${freqRecord.hpoId} + ' (' + ${allHpoTermsMap.get(freqRecord.hpoId)} + ')'"></th>
             </th:block>
         </tr>
         </thead>
 
         <tbody>
-        <th:block th:each= "freqRecord : ${maxoTable.maxoFrequencies}">
+        <th:block th:each= "omimId, maxoOmimIter : ${maxoTable.maxoTermScore.maxoOmimTermIds}">
             <tr>
-                <td style="border: 1px solid black; padding: 0px 10px 0px 10px; font-weight: bold; background: lightpink"
-                    th:text="${freqRecord.hpoId} + ' (' + ${allHpoTermsMap.get(freqRecord.hpoId)} + ')'"></td>
-                <th:block th:each="frequency : ${freqRecord.frequencies}">
-                    <td th:text="${frequency} == null ? ${frequency} :
+                <td th:text="${omimId} + ' (' + ${omimTerms.get(omimId)} + ')'"></td>
+                <th:block th:each= "freqRecord : ${maxoTable.maxoFrequencies}">
+                    <th:block th:with="frequency=${freqRecord.frequencies[maxoOmimIter.index]}">
+                        <td th:text="${frequency} == null ? ${frequency} :
                     (${frequency} % 1 == 0 ? ${frequency} : ${#numbers.formatDecimal(frequency, 1, 4)})"
-                        th:style=" |border: 1px solid black; padding: 0px 10px 0px 10px;
-                        background: rgba(255, 215, 0, ${frequency})|"></td>
+                            th:style="|background: rgba(255, 215, 0, ${frequency})|"></td>
+                    </th:block>
                 </th:block>
             </tr>
         </th:block>
