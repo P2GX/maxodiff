@@ -1,6 +1,5 @@
 package org.monarchinitiative.maxodiff.core.analysis.refinement;
 
-import org.monarchinitiative.lirical.core.exception.LiricalException;
 import org.monarchinitiative.maxodiff.core.analysis.HpoFrequency;
 import org.monarchinitiative.maxodiff.core.diffdg.DifferentialDiagnosisEngine;
 import org.monarchinitiative.maxodiff.core.model.DifferentialDiagnosis;
@@ -32,7 +31,7 @@ public interface DiffDiagRefiner {
             Map<TermId, Set<TermId>> maxoToHpoTermIdMap,
             Map<TermId, List<HpoFrequency>> hpoTermCounts,
             Map<TermId, List<DifferentialDiagnosis>> maxoTermToDDEngineDiagnosesMap
-    ) throws LiricalException;
+    );
 
 
     RefinementResults run(Sample sample,
@@ -41,7 +40,7 @@ public interface DiffDiagRefiner {
                           RankMaxo rankMaxo,
                           Map<TermId, List<HpoFrequency>> hpoTermCounts,
                           Map<TermId, Set<TermId>> maxoToHpoTermIdMap
-    ) throws LiricalException;
+    );
 
 
     List<DifferentialDiagnosis> getOrderedDiagnoses(Collection<DifferentialDiagnosis> originalDifferentialDiagnoses,

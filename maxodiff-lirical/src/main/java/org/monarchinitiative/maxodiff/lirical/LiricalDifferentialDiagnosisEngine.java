@@ -1,6 +1,9 @@
-package org.monarchinitiative.maxodiff.core.lirical;
+package org.monarchinitiative.maxodiff.lirical;
 
-import org.monarchinitiative.lirical.core.analysis.*;
+import org.monarchinitiative.lirical.core.analysis.AnalysisData;
+import org.monarchinitiative.lirical.core.analysis.AnalysisOptions;
+import org.monarchinitiative.lirical.core.analysis.AnalysisResults;
+import org.monarchinitiative.lirical.core.analysis.LiricalAnalysisException;
 import org.monarchinitiative.lirical.core.model.GenesAndGenotypes;
 import org.monarchinitiative.lirical.core.model.Sex;
 import org.monarchinitiative.maxodiff.core.diffdg.DifferentialDiagnosisEngine;
@@ -9,9 +12,8 @@ import org.monarchinitiative.maxodiff.core.model.DifferentialDiagnosis;
 import org.monarchinitiative.maxodiff.core.model.Sample;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 
-import java.util.List;
-import java.util.Objects;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class LiricalDifferentialDiagnosisEngine implements DifferentialDiagnosisEngine {
 
@@ -24,10 +26,10 @@ public class LiricalDifferentialDiagnosisEngine implements DifferentialDiagnosis
     }
 
     public List<DifferentialDiagnosis> run(Sample sample) {
-        return runWithDiseaseIds(sample, null);
+        return run(sample, null);
     }
 
-    public List<DifferentialDiagnosis> runWithDiseaseIds(Sample sample, Set<TermId> diseaseIds) {
+    public List<DifferentialDiagnosis> run(Sample sample, Collection<TermId> diseaseIds) {
 
         // Get LIRICAL AnalysisData from sample
         AnalysisData analysisData = AnalysisData.of(sample.id(),
@@ -38,8 +40,10 @@ public class LiricalDifferentialDiagnosisEngine implements DifferentialDiagnosis
                 GenesAndGenotypes.empty());
 
 
+        Set<TermId> diseaseIdsSet = null;
+        if (diseaseIds != null) diseaseIdsSet = new HashSet<>(diseaseIds);
         // Get LIRICAL AnalysisResults
-        AnalysisResults results = getLiricalAnalysisResults(analysisData, diseaseIds);
+        AnalysisResults results = getLiricalAnalysisResults(analysisData, diseaseIdsSet);
         // Get Differential Diagnoses from LIRICAL AnalysisResults
         assert results != null;
         return results.resultsWithDescendingPostTestProbability()

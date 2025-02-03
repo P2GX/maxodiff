@@ -1,4 +1,4 @@
-package org.monarchinitiative.maxodiff.core.lirical;
+package org.monarchinitiative.maxodiff.lirical;
 
 import org.monarchinitiative.lirical.core.analysis.*;
 import org.monarchinitiative.lirical.core.likelihoodratio.*;

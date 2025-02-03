@@ -4,7 +4,7 @@ import org.junit.jupiter.api.Test;
 import org.monarchinitiative.lirical.core.model.GenomeBuild;
 import org.monarchinitiative.lirical.core.model.TranscriptDatabase;
 import org.monarchinitiative.maxodiff.html.config.LiricalProperties;
-import org.monarchinitiative.maxodiff.core.lirical.LiricalDifferentialDiagnosisEngineConfigurer;
+import org.monarchinitiative.maxodiff.lirical.LiricalDifferentialDiagnosisEngineConfigurer;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.*;

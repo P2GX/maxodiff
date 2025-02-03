@@ -1,7 +1,7 @@
 package org.monarchinitiative.maxodiff.html.controller;
 
 import org.monarchinitiative.lirical.io.analysis.PhenopacketData;
-import org.monarchinitiative.maxodiff.core.io.PhenopacketFileParser;
+import org.monarchinitiative.maxodiff.lirical.PhenopacketFileParser;
 import org.monarchinitiative.maxodiff.core.model.Sample;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 import org.springframework.stereotype.Controller;

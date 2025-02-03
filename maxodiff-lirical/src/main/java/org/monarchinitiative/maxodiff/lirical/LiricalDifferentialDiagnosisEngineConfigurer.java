@@ -1,10 +1,10 @@
-package org.monarchinitiative.maxodiff.core.lirical;
+package org.monarchinitiative.maxodiff.lirical;
 
 import org.monarchinitiative.lirical.core.analysis.AnalysisOptions;
 import org.monarchinitiative.lirical.core.analysis.LiricalAnalysisRunner;
 
 /**
- * Configure {@link LiricalDifferentialDiagnosisEngine} for running LIRICAL analysis 
+ * Configure {@link LiricalDifferentialDiagnosisEngine} for running LIRICAL analysis
  * with specific parameter/option setup.
  */
 public class LiricalDifferentialDiagnosisEngineConfigurer {

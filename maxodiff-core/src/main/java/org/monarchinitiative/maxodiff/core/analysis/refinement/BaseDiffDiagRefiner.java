@@ -1,10 +1,8 @@
 package org.monarchinitiative.maxodiff.core.analysis.refinement;
 
-import org.monarchinitiative.lirical.core.exception.LiricalException;
 import org.monarchinitiative.maxodiff.core.SimpleTerm;
 import org.monarchinitiative.maxodiff.core.analysis.*;
 import org.monarchinitiative.maxodiff.core.diffdg.DifferentialDiagnosisEngine;
-import org.monarchinitiative.maxodiff.core.lirical.*;
 import org.monarchinitiative.maxodiff.core.model.*;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDisease;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
@@ -39,7 +37,7 @@ public class BaseDiffDiagRefiner implements DiffDiagRefiner {
                                  DifferentialDiagnosisEngine engine,
                                  Map<TermId, Set<TermId>> maxoToHpoTermIdMap,
                                  Map<TermId, List<HpoFrequency>> hpoTermCounts,
-                                 Map<TermId, List<DifferentialDiagnosis>> maxoTermToDDEngineDiagnosesMap) throws LiricalException {
+                                 Map<TermId, List<DifferentialDiagnosis>> maxoTermToDDEngineDiagnosesMap) {
         // Get list of Hpo diseases
         List<HpoDisease> diseases = getDiseases(differentialDiagnoses.stream().toList());
         // Calculate final scores and make list of MaxodiffResult objects.
@@ -73,7 +71,7 @@ public class BaseDiffDiagRefiner implements DiffDiagRefiner {
                                  RefinementOptions options,
                                  RankMaxo rankMaxo,
                                  Map<TermId, List<HpoFrequency>> hpoTermCounts,
-                                 Map<TermId, Set<TermId>> maxoToHpoTermIdMap) throws LiricalException {
+                                 Map<TermId, Set<TermId>> maxoToHpoTermIdMap) {
 
         List<MaxodiffResult> maxodiffResultsList = new ArrayList<>();
         List<DifferentialDiagnosis> initialDiagnoses = differentialDiagnoses.stream()
@@ -110,7 +108,7 @@ public class BaseDiffDiagRefiner implements DiffDiagRefiner {
     }
 
     public RankMaxo getRankMaxo(List<DifferentialDiagnosis> initialDiagnoses,
-                                 LiricalDifferentialDiagnosisEngine engine,
+                                 DifferentialDiagnosisEngine engine,
                                  Map<TermId, Set<TermId>> maxoToHpoTermIdMap,
                                  String diseaseProbModel) {
 

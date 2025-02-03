@@ -1,6 +1,6 @@
 package org.monarchinitiative.maxodiff.core.model;
 
-import org.monarchinitiative.maxodiff.core.lirical.LiricalDifferentialDiagnosisEngine;
+import org.monarchinitiative.maxodiff.core.diffdg.DifferentialDiagnosisEngine;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 
 import java.util.*;
@@ -24,7 +24,7 @@ public class CandidateDiseaseScores {
      * @return List of the top K differential diagnoses for the given MAxO term.
      */
     public List<DifferentialDiagnosis> getScoresForMaxoTerm(Sample ppkt, TermId maxoId,
-                                                            LiricalDifferentialDiagnosisEngine engine,
+                                                            DifferentialDiagnosisEngine engine,
                                                             Set<TermId> diseaseIds) {
         Set<TermId> observed = new HashSet<>(Set.of());
         Set<TermId> excluded = new HashSet<>(Set.of());
@@ -42,9 +42,13 @@ public class CandidateDiseaseScores {
 
         Sample newSample = getNewSample(ppkt, observed, excluded);
 
-        List<DifferentialDiagnosis> maxoDiagnoses = engine.runWithDiseaseIds(newSample, diseaseIds);
-
-        return maxoDiagnoses;
+        // TODO[mabeckwith] - I removed invocation of `runWithDiseaseIds`, since,
+        //  based on looking at the implementation in `MaxodiffLiricalAnalysisRunnerImpl`,
+        //  we obtain the same results by post-filtering the differential diagnoses (below).
+        return engine.run(newSample)
+                .stream()
+                .filter(dd -> diseaseIds.contains((dd.diseaseId())))
+                .toList();
     }
 
     private boolean getTestResult(double maxoTermBenefitProbability) {

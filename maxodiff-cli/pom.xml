@@ -24,9 +24,9 @@
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
-            <groupId>com.github.TheJacksonLaboratory.LIRICAL</groupId>
-<!--            <groupId>org.monarchinitiative.lirical</groupId>-->
-            <artifactId>lirical-configuration</artifactId>
+            <groupId>org.monarchinitiative.maxodiff</groupId>
+            <artifactId>maxodiff-lirical</artifactId>
+            <version>${project.parent.version}</version>
         </dependency>
         <dependency>
             <groupId>org.monarchinitiative.phenol</groupId>
@@ -52,11 +52,6 @@
         <dependency>
             <groupId>info.picocli</groupId>
             <artifactId>picocli</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.monarchinitiative.maxodiff</groupId>
-            <artifactId>maxodiff-lirical</artifactId>
-            <version>${project.parent.version}</version>
         </dependency>
     </dependencies>
 

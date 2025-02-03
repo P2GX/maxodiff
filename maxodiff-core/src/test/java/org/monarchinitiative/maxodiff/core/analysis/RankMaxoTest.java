@@ -1,22 +1,15 @@
 package org.monarchinitiative.maxodiff.core.analysis;
 
+import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Disabled;
 import org.junit.jupiter.api.Test;
-import org.monarchinitiative.lirical.configuration.impl.BundledBackgroundVariantFrequencyServiceFactory;
-import org.monarchinitiative.lirical.core.Lirical;
-import org.monarchinitiative.lirical.core.analysis.AnalysisOptions;
-import org.monarchinitiative.lirical.core.exception.LiricalException;
-import org.monarchinitiative.lirical.core.model.TranscriptDatabase;
-import org.monarchinitiative.lirical.core.service.PhenotypeService;
 import org.monarchinitiative.maxodiff.core.SimpleTerm;
 import org.monarchinitiative.maxodiff.core.TestResources;
-import org.monarchinitiative.maxodiff.core.lirical.*;
+import org.monarchinitiative.maxodiff.core.diffdg.DifferentialDiagnosisEngine;
 import org.monarchinitiative.maxodiff.core.model.*;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 
-import java.io.File;
-import java.nio.file.Path;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -34,51 +27,25 @@ public class RankMaxoTest {
                                          initialDiagnoses,
                                          DiseaseModelProbability.ranked(initialDiagnoses));
 
+    private static DifferentialDiagnosisEngine ENGINE;
 
-    public static LiricalConfiguration configureLirical() throws LiricalException {
-        String homeDir = System.getProperty("user.home");
-        Path liricalDataDir = Path.of(String.join(File.separator, homeDir, ".maxodiff/data/lirical"));
-        Path exomiserDb = null; //Path.of("/Users/beckwm/Exomiser/2109_hg38/2109_hg38");
-        String genomeBuild = "hg38";
-        TranscriptDatabase transcriptDb = TranscriptDatabase.valueOf("REFSEQ");
-        float pathogenicity = 0.8f;
-        double defaultVarBkgFreq = 0.1;
-        boolean strict = false;
-        boolean globalAnalysisMode = false;
+    @BeforeAll
+    public static void setUpBeforeClass() {
+        ENGINE = new DifferentialDiagnosisEngine() {
+            @Override
+            public List<DifferentialDiagnosis> run(Sample sample) {
+                // TODO[mabeckwith] - Returning the initial diagnoses makes sense to me.
+                //  This is, AFAIK, the purpose of the `DifferentialDiagnosisEngine`.
+                //  However, please check..
+                return initialDiagnoses;
+            }
 
-        return LiricalConfiguration.of(
-                liricalDataDir,
-                exomiserDb,
-                genomeBuild,
-                transcriptDb,
-                pathogenicity,
-                defaultVarBkgFreq,
-                strict,
-                globalAnalysisMode
-        );
+            @Override
+            public List<DifferentialDiagnosis> run(Sample sample, Collection<TermId> targetDiseases) {
+                return initialDiagnoses;
+            }
+        };
     }
-
-    public static LiricalDifferentialDiagnosisEngine getLiricalEngine(LiricalConfiguration liricalConfiguration,
-                                                                      Set<TermId> diseaseIds) throws LiricalException {
-
-        Lirical lirical = liricalConfiguration.lirical();
-        PhenotypeService phenotypeService = lirical.phenotypeService();
-        BundledBackgroundVariantFrequencyServiceFactory bundledBackgroundVariantFrequencyServiceFactory =
-                BundledBackgroundVariantFrequencyServiceFactory.getInstance();
-
-        MaxodiffLiricalAnalysisRunner maxodiffLiricalAnalysisRunner =
-                MaxodiffLiricalAnalysisRunnerImpl.of(phenotypeService, bundledBackgroundVariantFrequencyServiceFactory, 1);
-
-        LiricalDifferentialDiagnosisEngineConfigurer liricalDifferentialDiagnosisEngineConfigurer =
-                LiricalDifferentialDiagnosisEngineConfigurer.of(maxodiffLiricalAnalysisRunner);
-
-        AnalysisOptions options = liricalConfiguration.prepareAnalysisOptions(diseaseIds);
-
-        final LiricalDifferentialDiagnosisEngine engine = liricalDifferentialDiagnosisEngineConfigurer.configure(options);
-
-        return engine;
-    }
-
 
     /**
      *
@@ -129,14 +96,12 @@ public class RankMaxoTest {
     // Skip this test because it doesn't compile on push
     @Test
     @Disabled
-    public void testRankMaxoTerms() throws LiricalException {
+    public void testRankMaxoTerms() {
         Set<TermId> diseaseIds = initialDiagnoses.stream()
                 .map(DifferentialDiagnosis::diseaseId).collect(Collectors.toSet());
         Sample s1 = TestResources.getExampleSample();
         double weight = 0.5;
-        LiricalConfiguration liricalConfiguration = configureLirical();
-        LiricalDifferentialDiagnosisEngine engine = getLiricalEngine(liricalConfiguration, diseaseIds);
-        RankMaxo rankMaxo = new RankMaxo(maxoToHpoTermIdMap, maxoHpoTermProbabilities, engine);
+        RankMaxo rankMaxo = new RankMaxo(maxoToHpoTermIdMap, maxoHpoTermProbabilities, ENGINE);
         Map<TermId, Double> maxoTermRanks = rankMaxo.rankMaxoTerms(s1, weight,2, diseaseIds);
         System.out.println(maxoTermRanks);
     }

@@ -21,26 +21,6 @@
             <groupId>org.monarchinitiative.phenol</groupId>
             <artifactId>phenol-annotations</artifactId>
         </dependency>
-
-        <!-- TODO: ideally we should only use LIRICAL core here, or nothing at all,
-              and all LIRICAL should be in a separate module,
-              and provide the implementation of the interface for performing differential diagnosis.
-          -->
-        <dependency>
-            <groupId>com.github.TheJacksonLaboratory.LIRICAL</groupId>
-<!--            <groupId>org.monarchinitiative.lirical</groupId>-->
-            <artifactId>lirical-core</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.github.TheJacksonLaboratory.LIRICAL</groupId>
-<!--            <groupId>org.monarchinitiative.lirical</groupId>-->
-            <artifactId>lirical-configuration</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>com.github.TheJacksonLaboratory.LIRICAL</groupId>
-<!--            <groupId>org.monarchinitiative.lirical</groupId>-->
-            <artifactId>lirical-io</artifactId>
-        </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.core</groupId>
             <artifactId>jackson-annotations</artifactId>
@@ -57,15 +37,29 @@
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-math3</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.monarchinitiative.phenol</groupId>
+            <artifactId>phenol-io</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.datatype</groupId>
+            <artifactId>jackson-datatype-jdk8</artifactId>
+        </dependency>
     </dependencies>
+
     <build>
         <plugins>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <configuration>
-                    <source>21</source>
-                    <target>21</target>
+                    <source>${java.version}</source>
+                    <target>${java.version}</target>
                 </configuration>
             </plugin>
         </plugins>
