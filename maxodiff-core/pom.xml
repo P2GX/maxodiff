@@ -55,16 +55,11 @@
     <build>
         <plugins>
             <plugin>
-                <!--
-                TODO[mabeckwith] - I think this is not a good place to set the Java version.
-                 We should put this into Plugin Management section of the top-level `pom.xml`
-                 and sync it with the `java.version` property.
-                -->
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <configuration>
-                    <source>21</source>
-                    <target>21</target>
+                    <source>${java.version}</source>
+                    <target>${java.version}</target>
                 </configuration>
             </plugin>
         </plugins>
