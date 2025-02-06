@@ -3,6 +3,7 @@ package org.monarchinitiative.maxodiff.cli.cmd;
 import org.monarchinitiative.lirical.configuration.impl.BundledBackgroundVariantFrequencyServiceFactory;
 import org.monarchinitiative.lirical.core.Lirical;
 import org.monarchinitiative.lirical.core.analysis.*;
+import org.monarchinitiative.lirical.core.analysis.probability.PretestDiseaseProbabilities;
 import org.monarchinitiative.lirical.core.exception.LiricalException;
 import org.monarchinitiative.lirical.core.service.PhenotypeService;
 import org.monarchinitiative.lirical.io.analysis.PhenopacketData;
@@ -18,6 +19,7 @@ import org.monarchinitiative.maxodiff.lirical.*;
 import org.monarchinitiative.maxodiff.core.model.*;
 import org.monarchinitiative.maxodiff.core.service.BiometadataService;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
+import org.monarchinitiative.phenol.annotations.io.hpo.DiseaseDatabase;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -136,7 +138,17 @@ public class DifferentialDiagnosisCommand extends BaseCommand {
                      MaxodiffLiricalAnalysisRunnerImpl.of(phenotypeService,
                              bundledBackgroundVariantFrequencyServiceFactory, 1)) {
             LiricalDifferentialDiagnosisEngineConfigurer liricalDifferentialDiagnosisEngineConfigurer = LiricalDifferentialDiagnosisEngineConfigurer.of(maxodiffLiricalAnalysisRunner);
-            var options = liricalConfiguration.prepareAnalysisOptions(liricalDiseaseIds);
+            var options = AnalysisOptions.builder()
+//                    .genomeBuild(parseGenomeBuild(genomeBuild))
+//                    .transcriptDatabase(transcriptDb)
+//                    .setDiseaseDatabases(List.of(DiseaseDatabase.OMIM))
+//                    .variantDeleteriousnessThreshold(pathogenicityThreshold)
+//                    .defaultVariantBackgroundFrequency(defaultVariantBackgroundFrequency)
+                    .useStrictPenalties(runConfiguration.strict)
+                    .useGlobal(runConfiguration.globalAnalysisMode)
+                    .pretestProbability(PretestDiseaseProbabilities.uniform(liricalDiseaseIds))
+//                .includeDiseasesWithNoDeleteriousVariants(true)
+                    .build();
             LiricalDifferentialDiagnosisEngine engine = liricalDifferentialDiagnosisEngineConfigurer.configure(options);
             
             PhenopacketData phenopacketData = PhenopacketFileParser.readPhenopacketData(phenopacketPath);
@@ -211,7 +223,21 @@ public class DifferentialDiagnosisCommand extends BaseCommand {
                              .map(DifferentialDiagnosis::diseaseId)
                              .collect(Collectors.toSet());
 
-                    RankMaxo rankMaxo = new RankMaxo(maxoToHpoTermIdMap, maxoHpoTermProbabilities, engine);
+            var diseaseSubsetOptions = AnalysisOptions.builder()
+//                    .genomeBuild(parseGenomeBuild(genomeBuild))
+//                    .transcriptDatabase(transcriptDb)
+//                    .setDiseaseDatabases(List.of(DiseaseDatabase.OMIM))
+//                    .variantDeleteriousnessThreshold(pathogenicityThreshold)
+//                    .defaultVariantBackgroundFrequency(defaultVariantBackgroundFrequency)
+                    .useStrictPenalties(runConfiguration.strict)
+                    .useGlobal(runConfiguration.globalAnalysisMode)
+                    .pretestProbability(PretestDiseaseProbabilities.uniform(initialDiagnosesIds))
+                    .addTargetDiseases(initialDiagnosesIds)
+//                .includeDiseasesWithNoDeleteriousVariants(true)
+                    .build();
+            LiricalDifferentialDiagnosisEngine diseaseSubsetEngine = liricalDifferentialDiagnosisEngineConfigurer.configure(diseaseSubsetOptions);
+
+                    RankMaxo rankMaxo = new RankMaxo(maxoToHpoTermIdMap, maxoHpoTermProbabilities, diseaseSubsetEngine);
                     Map<TermId, Double> maxoTermRanks = rankMaxo.rankMaxoTerms(sample, weight, 2, initialDiagnosesIds);
                     LOGGER.info(maxoTermRanks.toString());
 //                    List<MaxodiffResult> resultsList = refinementResults.maxodiffResults().stream().toList();

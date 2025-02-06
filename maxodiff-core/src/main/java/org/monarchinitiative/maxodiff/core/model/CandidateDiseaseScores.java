@@ -45,10 +45,10 @@ public class CandidateDiseaseScores {
         // TODO[mabeckwith] - I removed invocation of `runWithDiseaseIds`, since,
         //  based on looking at the implementation in `MaxodiffLiricalAnalysisRunnerImpl`,
         //  we obtain the same results by post-filtering the differential diagnoses (below).
-        return engine.run(newSample)
-                .stream()
-                .filter(dd -> diseaseIds.contains((dd.diseaseId())))
-                .toList();
+        return engine.run(newSample, diseaseIds);
+//                .stream()
+//                .filter(dd -> diseaseIds.contains((dd.diseaseId())))
+//                .toList();
     }
 
     private boolean getTestResult(double maxoTermBenefitProbability) {
