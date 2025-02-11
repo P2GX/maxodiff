@@ -8,6 +8,8 @@ import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 import org.monarchinitiative.lirical.configuration.impl.BundledBackgroundVariantFrequencyServiceFactory;
 import org.monarchinitiative.lirical.core.Lirical;
+import org.monarchinitiative.lirical.core.analysis.AnalysisOptions;
+import org.monarchinitiative.lirical.core.analysis.probability.PretestDiseaseProbabilities;
 import org.monarchinitiative.lirical.core.service.PhenotypeService;
 import org.monarchinitiative.lirical.io.analysis.PhenopacketData;
 import org.monarchinitiative.maxodiff.config.MaxodiffDataResolver;
@@ -84,18 +86,22 @@ public class NewBenchmarkCommand extends BenchmarkCommand {
         if (refinerTypes != null)
             refinerTypes.forEach(refinersList::add);
 
-        LiricalConfiguration liricalConfiguration = configureLirical();
-        Lirical lirical = liricalConfiguration.lirical();
+        Lirical lirical = prepareLirical();
         PhenotypeService phenotypeService = lirical.phenotypeService();
         BundledBackgroundVariantFrequencyServiceFactory bundledBackgroundVariantFrequencyServiceFactory =
                 BundledBackgroundVariantFrequencyServiceFactory.getInstance();
         Set<TermId> liricalDiseaseIds = lirical.phenotypeService().diseases().diseaseIds();
 
         try (MaxodiffLiricalAnalysisRunner maxodiffLiricalAnalysisRunner =
-                     MaxodiffLiricalAnalysisRunnerImpl.of(phenotypeService,
-                             bundledBackgroundVariantFrequencyServiceFactory, 1)) {
+                     MaxodiffLiricalAnalysisRunnerImpl.of(phenotypeService, 4)) {
             LiricalDifferentialDiagnosisEngineConfigurer liricalDifferentialDiagnosisEngineConfigurer = LiricalDifferentialDiagnosisEngineConfigurer.of(maxodiffLiricalAnalysisRunner);
-            var analysisOptions = liricalConfiguration.prepareAnalysisOptions(liricalDiseaseIds);
+            var analysisOptions = AnalysisOptions.builder()
+//                    .setDiseaseDatabases(List.of(DiseaseDatabase.OMIM))
+                    .useStrictPenalties(runConfiguration.strict)
+                    .useGlobal(runConfiguration.globalAnalysisMode)
+                    .pretestProbability(PretestDiseaseProbabilities.uniform(liricalDiseaseIds))
+//                .includeDiseasesWithNoDeleteriousVariants(true)
+                    .build();
             LiricalDifferentialDiagnosisEngine engine = liricalDifferentialDiagnosisEngineConfigurer.configure(analysisOptions);
 
             // Make maxodiffRefiner

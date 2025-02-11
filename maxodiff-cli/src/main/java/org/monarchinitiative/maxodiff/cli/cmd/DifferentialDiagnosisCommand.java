@@ -1,10 +1,8 @@
 package org.monarchinitiative.maxodiff.cli.cmd;
 
-import org.monarchinitiative.lirical.configuration.impl.BundledBackgroundVariantFrequencyServiceFactory;
 import org.monarchinitiative.lirical.core.Lirical;
 import org.monarchinitiative.lirical.core.analysis.*;
 import org.monarchinitiative.lirical.core.analysis.probability.PretestDiseaseProbabilities;
-import org.monarchinitiative.lirical.core.exception.LiricalException;
 import org.monarchinitiative.lirical.core.service.PhenotypeService;
 import org.monarchinitiative.lirical.io.analysis.PhenopacketData;
 import org.monarchinitiative.lirical.io.analysis.PhenopacketImporter;
@@ -19,7 +17,6 @@ import org.monarchinitiative.maxodiff.lirical.*;
 import org.monarchinitiative.maxodiff.core.model.*;
 import org.monarchinitiative.maxodiff.core.service.BiometadataService;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
-import org.monarchinitiative.phenol.annotations.io.hpo.DiseaseDatabase;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -52,11 +49,6 @@ public class DifferentialDiagnosisCommand extends BaseCommand {
 //            arity = "1..*",
             description = "Path(s) to phenopacket JSON file(s).")
     protected Path phenopacketPath;
-
-    @CommandLine.Option(names = {"--assembly"},
-            paramLabel = "{hg19,hg38}",
-            description = "Genome build (default: ${DEFAULT-VALUE}).")
-    protected String genomeBuild = "hg38";
 
     @CommandLine.Option(names = {"--vcf"},
             description = "Path to VCF with background variants.")
@@ -127,23 +119,15 @@ public class DifferentialDiagnosisCommand extends BaseCommand {
         System.out.println(weight);
         System.out.println(nDiseases);
 
-        LiricalConfiguration liricalConfiguration = configureLirical();
-        Lirical lirical = liricalConfiguration.lirical();
+        Lirical lirical = prepareLirical();
         PhenotypeService phenotypeService = lirical.phenotypeService();
-        BundledBackgroundVariantFrequencyServiceFactory bundledBackgroundVariantFrequencyServiceFactory =
-                BundledBackgroundVariantFrequencyServiceFactory.getInstance();
         Set<TermId> liricalDiseaseIds = lirical.phenotypeService().diseases().diseaseIds();
 
         try (MaxodiffLiricalAnalysisRunner maxodiffLiricalAnalysisRunner =
-                     MaxodiffLiricalAnalysisRunnerImpl.of(phenotypeService,
-                             bundledBackgroundVariantFrequencyServiceFactory, 1)) {
+                     MaxodiffLiricalAnalysisRunnerImpl.of(phenotypeService, 4)) {
             LiricalDifferentialDiagnosisEngineConfigurer liricalDifferentialDiagnosisEngineConfigurer = LiricalDifferentialDiagnosisEngineConfigurer.of(maxodiffLiricalAnalysisRunner);
             var options = AnalysisOptions.builder()
-//                    .genomeBuild(parseGenomeBuild(genomeBuild))
-//                    .transcriptDatabase(transcriptDb)
 //                    .setDiseaseDatabases(List.of(DiseaseDatabase.OMIM))
-//                    .variantDeleteriousnessThreshold(pathogenicityThreshold)
-//                    .defaultVariantBackgroundFrequency(defaultVariantBackgroundFrequency)
                     .useStrictPenalties(runConfiguration.strict)
                     .useGlobal(runConfiguration.globalAnalysisMode)
                     .pretestProbability(PretestDiseaseProbabilities.uniform(liricalDiseaseIds))
@@ -224,11 +208,7 @@ public class DifferentialDiagnosisCommand extends BaseCommand {
                              .collect(Collectors.toSet());
 
             var diseaseSubsetOptions = AnalysisOptions.builder()
-//                    .genomeBuild(parseGenomeBuild(genomeBuild))
-//                    .transcriptDatabase(transcriptDb)
 //                    .setDiseaseDatabases(List.of(DiseaseDatabase.OMIM))
-//                    .variantDeleteriousnessThreshold(pathogenicityThreshold)
-//                    .defaultVariantBackgroundFrequency(defaultVariantBackgroundFrequency)
                     .useStrictPenalties(runConfiguration.strict)
                     .useGlobal(runConfiguration.globalAnalysisMode)
                     .pretestProbability(PretestDiseaseProbabilities.uniform(initialDiagnosesIds))
@@ -292,36 +272,6 @@ public class DifferentialDiagnosisCommand extends BaseCommand {
 
         return 0;
     }
-
-    LiricalConfiguration configureLirical() throws LiricalException {
-
-        return LiricalConfiguration.of(
-                dataSection.liricalDataDirectory,
-                dataSection.exomiserDatabase,
-                genomeBuild,
-                runConfiguration.transcriptDb,
-                runConfiguration.pathogenicityThreshold,
-                runConfiguration.defaultVariantBackgroundFrequency,
-                runConfiguration.strict,
-                runConfiguration.globalAnalysisMode
-        );
-    }
-
-//    protected Lirical prepareLirical() throws IOException, LiricalException {
-//        // Check input.
-//        List<String> errors = checkInput();
-//        if (!errors.isEmpty())
-//            throw new LiricalException(String.format("Errors: %s", String.join(", ", errors)));
-//
-//        // Bootstrap LIRICAL.
-//        Lirical lirical = bootstrapLirical();
-//        return lirical;
-//    }
-
-//    @Override
-//    protected String getGenomeBuild() {
-//        return genomeBuild;
-//    }
 
 
     protected static PhenopacketData readPhenopacketData(Path phenopacketPath) throws LiricalParseException {

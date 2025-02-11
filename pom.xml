@@ -33,6 +33,8 @@
         <maven.compiler.source>${java.version}</maven.compiler.source>
         <maven.compiler.target>${java.version}</maven.compiler.target>
         <phenol.version>2.1.1</phenol.version>
+        <phenopacket-schema.version>2.0.2</phenopacket-schema.version>
+        <phenopacket-tools.version>1.0.0-RC3</phenopacket-tools.version>
         <lirical.version>2.0.4</lirical.version>
         <jackson.version>2.15.0</jackson.version>
         <biodownload.version>1.1.0</biodownload.version>
@@ -55,18 +57,24 @@
                 <groupId>org.monarchinitiative.lirical</groupId>
                 <artifactId>lirical-configuration</artifactId>
                 <version>${lirical.version}</version>
+                <scope>system</scope>
+                <systemPath>/Users/beckwm/IdeaProjects/LIRICAL/lirical-configuration/target/lirical-configuration-2.0.4.jar</systemPath>
             </dependency>
             <dependency>
 <!--                <groupId>com.github.TheJacksonLaboratory.LIRICAL</groupId>-->
                 <groupId>org.monarchinitiative.lirical</groupId>
                 <artifactId>lirical-core</artifactId>
                 <version>${lirical.version}</version>
+                <scope>system</scope>
+                <systemPath>/Users/beckwm/IdeaProjects/LIRICAL/lirical-core/target/lirical-core-2.0.4.jar</systemPath>
             </dependency>
             <dependency>
 <!--                <groupId>com.github.TheJacksonLaboratory.LIRICAL</groupId>-->
                 <groupId>org.monarchinitiative.lirical</groupId>
                 <artifactId>lirical-io</artifactId>
                 <version>${lirical.version}</version>
+                <scope>system</scope>
+                <systemPath>/Users/beckwm/IdeaProjects/LIRICAL/lirical-io/target/lirical-io-2.0.4.jar</systemPath>
                 <exclusions>
                     <exclusion>
                         <groupId>commons-logging</groupId>
@@ -88,6 +96,32 @@
                 <groupId>org.monarchinitiative.phenol</groupId>
                 <artifactId>phenol-annotations</artifactId>
                 <version>${phenol.version}</version>
+            </dependency>
+
+            <dependency>
+                <groupId>org.phenopackets</groupId>
+                <artifactId>phenopacket-schema</artifactId>
+                <version>${phenopacket-schema.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.phenopackets.phenopackettools</groupId>
+                <artifactId>phenopacket-tools-core</artifactId>
+                <version>${phenopacket-tools.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.phenopackets.phenopackettools</groupId>
+                <artifactId>phenopacket-tools-util</artifactId>
+                <version>${phenopacket-tools.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.phenopackets.phenopackettools</groupId>
+                <artifactId>phenopacket-tools-io</artifactId>
+                <version>${phenopacket-tools.version}</version>
+            </dependency>
+            <dependency>
+                <groupId>org.phenopackets.phenopackettools</groupId>
+                <artifactId>phenopacket-tools-validator-core</artifactId>
+                <version>${phenopacket-tools.version}</version>
             </dependency>
 
             <dependency>

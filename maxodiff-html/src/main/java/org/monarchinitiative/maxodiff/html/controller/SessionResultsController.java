@@ -153,11 +153,7 @@ public class SessionResultsController {
                 AnalysisOptions originalOptions = ((LiricalDifferentialDiagnosisEngine) engine).getAnalysisOptions();
 
                 var diseaseSubsetOptions = AnalysisOptions.builder()
-//                    .genomeBuild(parseGenomeBuild(genomeBuild))
-//                    .transcriptDatabase(transcriptDb)
 //                    .setDiseaseDatabases(List.of(DiseaseDatabase.OMIM))
-//                    .variantDeleteriousnessThreshold(pathogenicityThreshold)
-//                    .defaultVariantBackgroundFrequency(defaultVariantBackgroundFrequency)
                         .useStrictPenalties(originalOptions.useStrictPenalties())
                         .useGlobal(originalOptions.useGlobal())
                         .pretestProbability(PretestDiseaseProbabilities.uniform(initialDiagnosesIds))

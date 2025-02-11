@@ -24,24 +24,24 @@ public class MaxodiffLiricalAnalysisRunnerImpl implements MaxodiffLiricalAnalysi
     private static final Logger LOGGER = LoggerFactory.getLogger(MaxodiffLiricalAnalysisRunnerImpl.class);
 
     private final PhenotypeService phenotypeService;
-    private final BackgroundVariantFrequencyServiceFactory bgFreqFactory;
+//    private final BackgroundVariantFrequencyServiceFactory bgFreqFactory;
     private final PhenotypeLikelihoodRatio phenotypeLrEvaluator;
     private final ForkJoinPool pool;
 
     public static MaxodiffLiricalAnalysisRunnerImpl of(PhenotypeService phenotypeService,
-                                                       BackgroundVariantFrequencyServiceFactory backgroundVariantFrequencyServiceFactory,
+//                                                       BackgroundVariantFrequencyServiceFactory backgroundVariantFrequencyServiceFactory,
                                                        int parallelism) {
         return new MaxodiffLiricalAnalysisRunnerImpl(phenotypeService,
-                backgroundVariantFrequencyServiceFactory,
+//                backgroundVariantFrequencyServiceFactory,
                 parallelism);
     }
 
     private MaxodiffLiricalAnalysisRunnerImpl(PhenotypeService phenotypeService,
-                                              BackgroundVariantFrequencyServiceFactory backgroundVariantFrequencyServiceFactory,
+//                                              BackgroundVariantFrequencyServiceFactory backgroundVariantFrequencyServiceFactory,
                                               int parallelism) {
         this.phenotypeService = Objects.requireNonNull(phenotypeService);
         this.phenotypeLrEvaluator = new PhenotypeLikelihoodRatio(phenotypeService.hpo(), phenotypeService.diseases());
-        this.bgFreqFactory = backgroundVariantFrequencyServiceFactory;
+//        this.bgFreqFactory = backgroundVariantFrequencyServiceFactory;
         LOGGER.debug("Creating LIRICAL pool with {} worker(s).", parallelism);
         this.pool = new ForkJoinPool(parallelism, LiricalWorkerThread::new, null, false);
     }
@@ -65,21 +65,24 @@ public class MaxodiffLiricalAnalysisRunnerImpl implements MaxodiffLiricalAnalysi
     @Override
     public AnalysisResults runWithTermIds(AnalysisData data, AnalysisOptions options, Set<TermId> diseaseIds) throws LiricalAnalysisException {
 
-        Map<TermId, List<Gene2Genotype>> diseaseToGenotype = groupDiseasesByGene(data.genes());
+        Map<TermId, List<Gene2Genotype>> diseaseToGenotype = Map.of(); //groupDiseasesByGene(data.genes());
 
-        Optional<GenotypeLikelihoodRatio> genotypeLikelihoodRatio = configureGenotypeLikelihoodRatio(options.genomeBuild(),
-                options.variantDeleteriousnessThreshold(),
-                options.defaultVariantBackgroundFrequency(),
-                options.useStrictPenalties());
-        if (genotypeLikelihoodRatio.isEmpty())
-            throw new LiricalAnalysisException("Cannot configure genotype LR for %s".formatted(options.genomeBuild()));
+//        Optional<GenotypeLikelihoodRatio> genotypeLikelihoodRatio = configureGenotypeLikelihoodRatio(options.genomeBuild(),
+//                options.variantDeleteriousnessThreshold(),
+//                options.defaultVariantBackgroundFrequency(),
+//                options.useStrictPenalties());
+//        if (genotypeLikelihoodRatio.isEmpty())
+//            throw new LiricalAnalysisException("Cannot configure genotype LR for %s".formatted(options.genomeBuild()));
+
+        GenotypeLikelihoodRatio genotypeLikelihoodRatio = null;
 
         ProgressReporter progressReporter = new ProgressReporter(1_000, "diseases");
         Stream<TestResult> testResultStream = phenotypeService.diseases().hpoDiseases()
                 .parallel() // why not?
                 .filter(disease -> diseaseIds.contains(disease.id()))
                 .peek(d -> progressReporter.log())
-                .map(disease -> analyzeDisease(genotypeLikelihoodRatio.get(), disease, data, options, diseaseToGenotype))
+                //.map(disease -> analyzeDisease(genotypeLikelihoodRatio.get(), disease, data, options, diseaseToGenotype))
+                .map(disease -> analyzeDisease(genotypeLikelihoodRatio, disease, data, options, diseaseToGenotype))
                 .flatMap(Optional::stream);
 
         try {
@@ -185,17 +188,6 @@ public class MaxodiffLiricalAnalysisRunnerImpl implements MaxodiffLiricalAnalysi
                 : base.lr() > candidate.lr()
                 ? base
                 : candidate;
-    }
-
-    private Optional<GenotypeLikelihoodRatio> configureGenotypeLikelihoodRatio(GenomeBuild genomeBuild,
-                                                                     float deleteriousnessThreshold,
-                                                                     double defaultVariantBackgroundFrequency,
-                                                                     boolean strict) {
-        return bgFreqFactory.forGenomeBuild(genomeBuild, defaultVariantBackgroundFrequency)
-                .map(bgFreqService -> {
-                    GenotypeLikelihoodRatio.Options options = new GenotypeLikelihoodRatio.Options(deleteriousnessThreshold, strict);
-                    return new GenotypeLikelihoodRatio(bgFreqService, options);
-                });
     }
 
     @Override

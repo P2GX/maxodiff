@@ -2,13 +2,17 @@ package org.monarchinitiative.maxodiff.cli.cmd;
 
 import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.LoggerContext;
-import org.monarchinitiative.lirical.core.model.TranscriptDatabase;
+import org.monarchinitiative.lirical.configuration.LiricalBuilder;
+import org.monarchinitiative.lirical.core.Lirical;
+import org.monarchinitiative.lirical.core.exception.LiricalException;
+import org.monarchinitiative.lirical.io.LiricalDataException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import picocli.CommandLine;
 
 import java.io.BufferedReader;
 import java.io.IOException;
+import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
@@ -53,9 +57,6 @@ abstract class BaseCommand implements Callable<Integer> {
                 description = "Path to Lirical data directory.")
         public Path liricalDataDirectory;
 
-        @CommandLine.Option(names = {"-e", "--exomiser"},
-                description = "Path to the Exomiser variant database.")
-        public Path exomiserDatabase = null;
     }
 
 
@@ -72,41 +73,11 @@ abstract class BaseCommand implements Callable<Integer> {
                 description = "Global analysis (default: ${DEFAULT-VALUE}).")
         public boolean globalAnalysisMode = false;
 
-        @CommandLine.Option(names = {"--ddndv"},
-                description = "Disregard a disease if no deleterious variants are found in the gene associated with the disease. "
-                        + "Used only if running with a VCF file. (default: ${DEFAULT-VALUE})")
-        public boolean disregardDiseaseWithNoDeleteriousVariants = true;
-
-        @CommandLine.Option(names = {"--transcript-db"},
-                paramLabel = "{REFSEQ,UCSC}",
-                description = "Transcript database (default: ${DEFAULT-VALUE}).")
-        public TranscriptDatabase transcriptDb = TranscriptDatabase.REFSEQ;
-
-        @CommandLine.Option(names = {"--use-orphanet"},
-                description = "Use Orphanet annotation data (default: ${DEFAULT-VALUE}).")
-        public boolean useOrphanet = false;
-
         @CommandLine.Option(names = {"--strict"},
                 description = "Use strict penalties if the genotype does not match the disease model in terms " +
                         "of number of called pathogenic alleles. (default: ${DEFAULT-VALUE}).")
         public boolean strict = false;
 
-        /* Default frequency of called-pathogenic variants in the general population (gnomAD). In the vast majority of
-         * cases, we can derive this information from gnomAD. This constant is used if for whatever reason,
-         * data was not available.
-         */
-        @CommandLine.Option(names = {"--variant-background-frequency"},
-                // TODO - add better description
-                description = "Default background frequency of variants in a gene (default: ${DEFAULT-VALUE}).")
-        public double defaultVariantBackgroundFrequency = 0.1;
-
-        @CommandLine.Option(names = {"--pathogenicity-threshold"},
-                description = "Variant with greater pathogenicity score is considered deleterious (default: ${DEFAULT-VALUE}).")
-        public float pathogenicityThreshold = .8f;
-
-        @CommandLine.Option(names = {"--default-allele-frequency"},
-                description = "Variant with greater allele frequency in at least one population is considered common (default: ${DEFAULT-VALUE}).")
-        public float defaultAlleleFrequency = 1E-5f;
     }
 
     public Integer call() throws Exception {
@@ -144,6 +115,50 @@ abstract class BaseCommand implements Callable<Integer> {
 
     private static void printBanner() {
         System.err.println(readBanner());
+    }
+
+    protected Lirical prepareLirical() throws LiricalException {
+        // Check input.
+        List<String> errors = checkInput();
+        if (!errors.isEmpty())
+            throw new LiricalException(String.format("Errors: %s", String.join(", ", errors)));
+
+        // Bootstrap LIRICAL.
+        return bootstrapLirical();
+    }
+
+    protected List<String> checkInput() {
+        List<String> errors = new LinkedList<>();
+        // resources
+        LOGGER.info(String.valueOf(dataSection.liricalDataDirectory));
+        if (dataSection.liricalDataDirectory == null) {
+            String msg = "Path to Lirical data directory must be provided via `-d | --data` option";
+            LOGGER.error(msg);
+            errors.add(msg);
+        }
+        return errors;
+    }
+
+    protected Lirical bootstrapLirical() throws LiricalDataException {
+        Properties properties = readProperties();
+        String liricalVersion = properties.getProperty("lirical.version", "unknown version");
+        LOGGER.info("Spooling up Lirical v{}", liricalVersion);
+        return LiricalBuilder.builder(dataSection.liricalDataDirectory)
+                // .exomiserVariantDbPath(parseGenomeBuild(getGenomeBuild()), dataSection.exomiserDatabase)
+//                .defaultVariantAlleleFrequency(runConfiguration.defaultAlleleFrequency)
+                .build();
+
+    }
+
+    private static Properties readProperties() {
+        Properties properties = new Properties();
+
+        try (InputStream is = BaseCommand.class.getResourceAsStream("/lirical.properties")) {
+            properties.load(is);
+        } catch (IOException e) {
+            LOGGER.warn("Error loading properties: {}", e.getMessage());
+        }
+        return properties;
     }
 
 }

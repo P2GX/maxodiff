@@ -86,7 +86,7 @@ public class BatchDiagnosisCommand extends DifferentialDiagnosisCommand {
                                     "-p", phenopacketPaths.get(i).toString(),
 //                            "-e", dataSection.exomiserDatabase.toString(),
 //                            "--vcf", vcfPath.toString(),
-                                    "--assembly", genomeBuild.toString(),
+//                                    "--assembly", genomeBuild.toString(),
                                     "-n", String.valueOf(nDiseases),
                                     "-w", String.valueOf(weight),
                                     "-O", outputDir.toString());

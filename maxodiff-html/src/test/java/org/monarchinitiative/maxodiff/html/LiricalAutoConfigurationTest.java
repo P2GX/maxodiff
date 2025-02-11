@@ -17,25 +17,9 @@ public class LiricalAutoConfigurationTest extends AbstractAutoConfigurationTest 
 
         LiricalProperties properties = context.getBean(LiricalProperties.class);
 
-        assertThat(properties.getGenomeBuild(), equalTo(GenomeBuild.HG38));
-        assertThat(properties.getTranscriptDatabase(), equalTo(TranscriptDatabase.REFSEQ));
 
         // Test if the app is ready to go.
         assertThat(context.getBean(LiricalDifferentialDiagnosisEngineConfigurer.class), is(notNullValue()));
-    }
-
-    @Test
-    public void testSettingCustomProperties() {
-        load(Main.class,
-                "maxodiff.dataDirectory=" + TEST_DATA,
-                "lirical.genome-build=HG19",
-                "lirical.transcript-database=UCSC"
-        );
-
-        LiricalProperties properties = context.getBean(LiricalProperties.class);
-
-        assertThat(properties.getGenomeBuild(), equalTo(GenomeBuild.HG19));
-        assertThat(properties.getTranscriptDatabase(), equalTo(TranscriptDatabase.UCSC));
     }
 
 }
