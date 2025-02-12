@@ -159,6 +159,34 @@ public class TestResources {
         );
     }
 
+    public static Collection<DifferentialDiagnosis> getExampleMaxoDiagnoses() {
+        //Example Top 20 Diagnoses from LIRICAL analysis of modified phenopacket v2 PMID_11175294-Tiecke-2001-FBN1-B15.json
+        //using top MAxO term from RankMaxo analysis (MAXO:0000428: MRI of the chest)
+        //score = posttest probability
+        return List.of(
+                DifferentialDiagnosis.of(TermId.of("OMIM:154700"), 1.000, 8.548e12),
+                DifferentialDiagnosis.of(TermId.of("OMIM:616914"), 1.000, 1.362e10),
+                DifferentialDiagnosis.of(TermId.of("OMIM:236200"), 1.000, 5.921e9),
+                DifferentialDiagnosis.of(TermId.of("OMIM:609008"), 1.000, 3.283e8),
+                DifferentialDiagnosis.of(TermId.of("OMIM:615582"), 1.000, 2.630e8),
+                DifferentialDiagnosis.of(TermId.of("OMIM:121050"), 1.000, 8.685e5),
+                DifferentialDiagnosis.of(TermId.of("OMIM:617506"), 1.000, 4.637e4),
+                DifferentialDiagnosis.of(TermId.of("OMIM:219150"), 1.000, 3.898e4),
+                DifferentialDiagnosis.of(TermId.of("OMIM:608328"), 0.999, 3.600e4),
+                DifferentialDiagnosis.of(TermId.of("OMIM:610443"), 0.999, 1.584e4),
+                DifferentialDiagnosis.of(TermId.of("OMIM:277600"), 0.997, 6.280e3),
+                DifferentialDiagnosis.of(TermId.of("OMIM:271640"), 0.996, 4.641e3),
+                DifferentialDiagnosis.of(TermId.of("OMIM:602535"), 0.994, 3.165e3),
+                DifferentialDiagnosis.of(TermId.of("OMIM:619472"), 0.993, 2.892e3),
+                DifferentialDiagnosis.of(TermId.of("OMIM:225400"), 0.989, 1.683e3),
+                DifferentialDiagnosis.of(TermId.of("OMIM:601776"), 0.979, 881.924),
+                DifferentialDiagnosis.of(TermId.of("OMIM:617602"), 0.976, 786.372),
+                DifferentialDiagnosis.of(TermId.of("OMIM:163950"), 0.939, 294.117),
+                DifferentialDiagnosis.of(TermId.of("OMIM:208050"), 0.851, 108.937),
+                DifferentialDiagnosis.of(TermId.of("OMIM:301039"), 0.811, 81.700)
+        );
+    }
+
     private TestResources() {
     }
 }
