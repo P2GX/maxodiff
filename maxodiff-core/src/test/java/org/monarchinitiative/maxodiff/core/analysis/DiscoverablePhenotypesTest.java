@@ -26,7 +26,9 @@ public class DiscoverablePhenotypesTest {
      private final static HpoDiseases hpoDiseases = TestResources.hpoDiseases();
      private final static Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxoTermMap = TestResources.hpoToMaxoToy();
 
-     private final static DiscoverablePhenotypes DISCOVERABLE_PHENOTYPES = new DiscoverablePhenotypes(hpoDiseases, hpoToMaxoTermMap);
+     private final static Map<TermId, Set<TermId>> hpoToMaxoTermIdMap = MaxoHpoTermIdMaps.getHpoToMaxoTermIdMap(hpoToMaxoTermMap);
+     private final static Map<TermId, Set<TermId>> maxoToHpoTermIdMap = MaxoHpoTermIdMaps.getMaxoToHpoTermIdMap(hpoToMaxoTermMap);
+     private final static DiscoverablePhenotypes DISCOVERABLE_PHENOTYPES = new DiscoverablePhenotypes(hpoDiseases, hpoToMaxoTermIdMap, maxoToHpoTermIdMap);
 
     /**
      * This tests if the right disease is obtained from HpoDiseases, and if it has the correct HPO TermIds.
