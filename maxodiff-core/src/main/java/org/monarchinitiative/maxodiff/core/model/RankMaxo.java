@@ -1,5 +1,7 @@
 package org.monarchinitiative.maxodiff.core.model;
 
+import org.monarchinitiative.maxodiff.core.SimpleTerm;
+import org.monarchinitiative.maxodiff.core.analysis.ValidationModel;
 import org.monarchinitiative.maxodiff.core.diffdg.DifferentialDiagnosisEngine;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 
@@ -8,12 +10,17 @@ import java.util.stream.Collectors;
 
 public class RankMaxo {
 
+    private final Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxoTermMap;
     private final Map<TermId, Set<TermId>> maxoToHpoTermIdMap;
     private final MaxoHpoTermProbabilities maxoHpoTermProbabilities;
     private final DifferentialDiagnosisEngine engine;
     double p;
 
-    public RankMaxo(Map<TermId, Set<TermId>> maxoToHpoTermIdMap, MaxoHpoTermProbabilities maxoHpoTermProbabilities, DifferentialDiagnosisEngine engine) {
+    public RankMaxo(Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxoTermMap,
+                    Map<TermId, Set<TermId>> maxoToHpoTermIdMap,
+                    MaxoHpoTermProbabilities maxoHpoTermProbabilities,
+                    DifferentialDiagnosisEngine engine) {
+        this.hpoToMaxoTermMap = hpoToMaxoTermMap;
         this.maxoToHpoTermIdMap = maxoToHpoTermIdMap;
         this.maxoHpoTermProbabilities = maxoHpoTermProbabilities;
         this.engine = engine;
@@ -26,18 +33,16 @@ public class RankMaxo {
      * @param diseaseIds Set of OMIM disease Ids to use for analysis.
      * @return Map of MAxO scores sorted in descending order by score
      */
-    public Map<TermId, Double> rankMaxoTerms(Sample ppkt, double weight, int nRepetitions, Set<TermId> diseaseIds) {
+    public Map<TermId, Double> rankMaxoTerms(Sample ppkt, int nRepetitions, Set<TermId> diseaseIds) {
         Map<TermId, Double> maxoScores = new HashMap<>();
         CandidateDiseaseScores candidateDiseaseScores = new CandidateDiseaseScores(maxoHpoTermProbabilities);
         p = 0;
         for (TermId maxoId : maxoToHpoTermIdMap.keySet()) {
             List<Double> scores = new ArrayList<>();
+            List<DifferentialDiagnosis> initialDiagnoses = maxoHpoTermProbabilities.getInitialDiagnoses();
             for (int i = 0; i < nRepetitions; i++) {
-                List<DifferentialDiagnosis> differentialDiagnoses = candidateDiseaseScores.getScoresForMaxoTerm(ppkt, maxoId, engine, diseaseIds);
-                List<Double> ddScores = differentialDiagnoses.stream().map(DifferentialDiagnosis::score).toList();
-                double scoreSum = differentialDiagnoses.stream().mapToDouble(DifferentialDiagnosis::score).sum();
-                double relativeDiseaseDiffSum = calculateRelDiseaseDiffEntropySum(ddScores);
-                double finalScore = weight * scoreSum + (1 - weight) * relativeDiseaseDiffSum;
+                List<DifferentialDiagnosis> differentialDiagnoses = candidateDiseaseScores.getScoresForMaxoTerm(ppkt, maxoId, engine, diseaseIds, hpoToMaxoTermMap);
+                double finalScore = ValidationModel.weightedRankDiff(initialDiagnoses, differentialDiagnoses).validationScore();
                 scores.add(finalScore);
             }
             OptionalDouble meanScoreOptional = scores.stream().mapToDouble(s -> s).average();

@@ -117,11 +117,11 @@ abstract class BaseCommand implements Callable<Integer> {
         System.err.println(readBanner());
     }
 
-    protected Lirical prepareLirical() throws LiricalException {
+    protected Lirical prepareLirical() throws Exception {
         // Check input.
         List<String> errors = checkInput();
         if (!errors.isEmpty())
-            throw new LiricalException(String.format("Errors: %s", String.join(", ", errors)));
+            throw new Exception(String.format("Errors: %s", String.join(", ", errors)));
 
         // Bootstrap LIRICAL.
         return bootstrapLirical();
@@ -139,7 +139,7 @@ abstract class BaseCommand implements Callable<Integer> {
         return errors;
     }
 
-    protected Lirical bootstrapLirical() throws LiricalDataException {
+    protected Lirical bootstrapLirical() throws Exception {
         Properties properties = readProperties();
         String liricalVersion = properties.getProperty("lirical.version", "unknown version");
         LOGGER.info("Spooling up Lirical v{}", liricalVersion);

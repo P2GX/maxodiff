@@ -217,8 +217,8 @@ public class DifferentialDiagnosisCommand extends BaseCommand {
                     .build();
             LiricalDifferentialDiagnosisEngine diseaseSubsetEngine = liricalDifferentialDiagnosisEngineConfigurer.configure(diseaseSubsetOptions);
 
-                    RankMaxo rankMaxo = new RankMaxo(maxoToHpoTermIdMap, maxoHpoTermProbabilities, diseaseSubsetEngine);
-                    Map<TermId, Double> maxoTermRanks = rankMaxo.rankMaxoTerms(sample, weight, 2, initialDiagnosesIds);
+                    RankMaxo rankMaxo = new RankMaxo(hpoToMaxoTermMap, maxoToHpoTermIdMap, maxoHpoTermProbabilities, diseaseSubsetEngine);
+                    Map<TermId, Double> maxoTermRanks = rankMaxo.rankMaxoTerms(sample, 2, initialDiagnosesIds);
                     LOGGER.info(maxoTermRanks.toString());
 //                    List<MaxodiffResult> resultsList = refinementResults.maxodiffResults().stream().toList();
 //                    TermId diseaseId = phenopacketData.diseaseIds().get(0);
@@ -274,7 +274,7 @@ public class DifferentialDiagnosisCommand extends BaseCommand {
     }
 
 
-    protected static PhenopacketData readPhenopacketData(Path phenopacketPath) throws LiricalParseException {
+    protected static PhenopacketData readPhenopacketData(Path phenopacketPath) throws Exception {
         PhenopacketData data = null;
         try (InputStream is = new BufferedInputStream(Files.newInputStream(phenopacketPath))) {
             PhenopacketImporter v2 = PhenopacketImporters.v2();
@@ -291,15 +291,15 @@ public class DifferentialDiagnosisCommand extends BaseCommand {
                 LOGGER.debug("Success!");
             } catch (IOException e) {
                 LOGGER.debug("Unable to parser as v1 phenopacket.");
-                throw new LiricalParseException("Unable to parse phenopacket from " + phenopacketPath.toAbsolutePath());
+                throw new Exception("Unable to parse phenopacket from " + phenopacketPath.toAbsolutePath());
             }
         }
 
         // Check we have exactly one disease ID.
         if (data.diseaseIds().isEmpty())
-            throw new LiricalParseException("Missing disease ID which is required for the benchmark!");
+            throw new Exception("Missing disease ID which is required for the benchmark!");
         else if (data.diseaseIds().size() > 1)
-            throw new LiricalParseException("Saw >1 disease IDs {}, but we need exactly one for the benchmark!");
+            throw new Exception("Saw >1 disease IDs {}, but we need exactly one for the benchmark!");
         return data;
     }
 
