@@ -194,10 +194,10 @@ public class SessionResultsController {
 
             model.addAttribute("maxodiffResults", resultsList);
 
-            Set<TermId> omimIds = resultsList.get(0).maxoTermScore().omimTermIds();
-            model.addAttribute("omimIds", omimIds);
-            Set<TermId> maxoOmimIds = resultsList.get(0).maxoTermScore().maxoOmimTermIds();
-            model.addAttribute("maxoOmimIds", maxoOmimIds);
+//            Set<TermId> omimIds = resultsList.get(0).maxoTermScore().omimTermIds();
+//            model.addAttribute("omimIds", omimIds);
+//            Set<TermId> maxoOmimIds = resultsList.get(0).maxoTermScore().maxoOmimTermIds();
+//            model.addAttribute("maxoOmimIds", maxoOmimIds);
 
             int nDisplayed = Math.min(resultsList.size(), nMaxoResults);
             model.addAttribute("nDisplayed", nDisplayed);

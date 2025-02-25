@@ -22,11 +22,13 @@ public class ExcludedPhenotypes {
     private final Map<TermId, Set<TermId>> maxoToHpoTermIdMap;
 
     /**
-     * @param hpoToMaxoTermMap Map of HPO terms : Set of associated MAxO terms created using maxo_diagnostic_annotations file.
+     * @param hpoToMaxoTermIdMap Map of HPO term ids : Set of associated MAxO term ids created using maxo_diagnostic_annotations file.
+     * @param maxoToHpoTermIdMap Map of MAxO term ids : Set of associated HPO term ids created using maxo_diagnostic_annotations file.
      */
-    public ExcludedPhenotypes(Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxoTermMap) {
-        this.hpoToMaxoTermIdMap = MaxoHpoTermIdMaps.getHpoToMaxoTermIdMap(hpoToMaxoTermMap);
-        this.maxoToHpoTermIdMap = MaxoHpoTermIdMaps.getMaxoToHpoTermIdMap(hpoToMaxoTermMap);
+    public ExcludedPhenotypes(Map<TermId, Set<TermId>> hpoToMaxoTermIdMap,
+                              Map<TermId, Set<TermId>> maxoToHpoTermIdMap) {
+        this.hpoToMaxoTermIdMap = hpoToMaxoTermIdMap;
+        this.maxoToHpoTermIdMap = maxoToHpoTermIdMap;
     }
 
 

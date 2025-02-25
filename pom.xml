@@ -37,7 +37,7 @@
         <phenopacket-tools.version>1.0.0-RC3</phenopacket-tools.version>
         <lirical.version>2.0.4</lirical.version>
         <jackson.version>2.15.0</jackson.version>
-        <biodownload.version>1.1.0</biodownload.version>
+        <biodownload.version>1.1.1</biodownload.version>
         <picocli.version>4.7.4</picocli.version>
         <junit.version>5.7.0</junit.version>
         <slf4j.version>[2.0.0,3.0.0)</slf4j.version>

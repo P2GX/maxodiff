@@ -19,15 +19,21 @@ public class DiscoverablePhenotypes {
      * Reference to an object containing information about all diseases.
      */
     private final HpoDiseases hpoDiseases;
-    private final Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxoTermMap;
+    private final Map<TermId, Set<TermId>> hpoToMaxoTermIdMap;
+    private final Map<TermId, Set<TermId>> maxoToHpoTermIdMap;
 
     /**
      *
      * @param hpoDiseases HpoDisease object
+     * @param hpoToMaxoTermIdMap Map of HPO term ids : Set of associated MAxO term ids created using maxo_diagnostic_annotations file.
+     * @param hpoToMaxoTermIdMap Map of HPO term ids : Set of associated MAxO term ids created using maxo_diagnostic_annotations file.
      */
-    public DiscoverablePhenotypes(HpoDiseases hpoDiseases, Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxoTermMap) {
+    public DiscoverablePhenotypes(HpoDiseases hpoDiseases,
+                                  Map<TermId, Set<TermId>> hpoToMaxoTermIdMap,
+                                  Map<TermId, Set<TermId>> maxoToHpoTermIdMap) {
         this.hpoDiseases = hpoDiseases;
-        this.hpoToMaxoTermMap = hpoToMaxoTermMap;
+        this.hpoToMaxoTermIdMap = hpoToMaxoTermIdMap;
+        this.maxoToHpoTermIdMap = maxoToHpoTermIdMap;
     }
 
     /**
@@ -38,7 +44,7 @@ public class DiscoverablePhenotypes {
      */
     public Set<TermId> getDiscoverablePhenotypeIds(Sample samplePhenopacket, TermId targetDiseaseId) throws PhenolRuntimeException {
         AscertainablePhenotypes ascertainablePhenotypes = new AscertainablePhenotypes(hpoDiseases);
-        ExcludedPhenotypes excludedPhenotypes = new ExcludedPhenotypes(hpoToMaxoTermMap);
+        ExcludedPhenotypes excludedPhenotypes = new ExcludedPhenotypes(hpoToMaxoTermIdMap, maxoToHpoTermIdMap);
         Set<TermId> ascertainablePhenotypeIds = ascertainablePhenotypes.getAscertainablePhenotypeIds(samplePhenopacket, targetDiseaseId);
         Set<TermId> excludedPhenotypeIds = excludedPhenotypes.getExcludedPhenotypes(samplePhenopacket);
 
