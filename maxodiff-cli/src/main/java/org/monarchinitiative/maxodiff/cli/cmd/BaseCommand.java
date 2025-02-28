@@ -119,7 +119,7 @@ abstract class BaseCommand implements Callable<Integer> {
 
     protected Lirical prepareLirical() throws Exception {
         // Check input.
-        List<String> errors = checkInput();
+        Collection<String> errors = checkInput();
         if (!errors.isEmpty())
             throw new Exception(String.format("Errors: %s", String.join(", ", errors)));
 
@@ -127,8 +127,8 @@ abstract class BaseCommand implements Callable<Integer> {
         return bootstrapLirical();
     }
 
-    protected List<String> checkInput() {
-        List<String> errors = new LinkedList<>();
+    protected Collection<String> checkInput() {
+        Collection<String> errors = new LinkedList<>();
         // resources
         LOGGER.info(String.valueOf(dataSection.liricalDataDirectory));
         if (dataSection.liricalDataDirectory == null) {
@@ -144,8 +144,6 @@ abstract class BaseCommand implements Callable<Integer> {
         String liricalVersion = properties.getProperty("lirical.version", "unknown version");
         LOGGER.info("Spooling up Lirical v{}", liricalVersion);
         return LiricalBuilder.builder(dataSection.liricalDataDirectory)
-                // .exomiserVariantDbPath(parseGenomeBuild(getGenomeBuild()), dataSection.exomiserDatabase)
-//                .defaultVariantAlleleFrequency(runConfiguration.defaultAlleleFrequency)
                 .build();
 
     }

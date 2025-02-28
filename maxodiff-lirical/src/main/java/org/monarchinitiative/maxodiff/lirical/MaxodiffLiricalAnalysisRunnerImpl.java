@@ -3,9 +3,6 @@ package org.monarchinitiative.maxodiff.lirical;
 import org.monarchinitiative.lirical.core.analysis.*;
 import org.monarchinitiative.lirical.core.likelihoodratio.*;
 import org.monarchinitiative.lirical.core.model.Gene2Genotype;
-import org.monarchinitiative.lirical.core.model.GenesAndGenotypes;
-import org.monarchinitiative.lirical.core.model.GenomeBuild;
-import org.monarchinitiative.lirical.core.service.BackgroundVariantFrequencyServiceFactory;
 import org.monarchinitiative.lirical.core.service.PhenotypeService;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDisease;
 import org.monarchinitiative.phenol.annotations.io.hpo.DiseaseDatabase;
@@ -24,15 +21,12 @@ public class MaxodiffLiricalAnalysisRunnerImpl implements MaxodiffLiricalAnalysi
     private static final Logger LOGGER = LoggerFactory.getLogger(MaxodiffLiricalAnalysisRunnerImpl.class);
 
     private final PhenotypeService phenotypeService;
-//    private final BackgroundVariantFrequencyServiceFactory bgFreqFactory;
     private final PhenotypeLikelihoodRatio phenotypeLrEvaluator;
     private final ForkJoinPool pool;
 
     public static MaxodiffLiricalAnalysisRunnerImpl of(PhenotypeService phenotypeService,
-//                                                       BackgroundVariantFrequencyServiceFactory backgroundVariantFrequencyServiceFactory,
                                                        int parallelism) {
         return new MaxodiffLiricalAnalysisRunnerImpl(phenotypeService,
-//                backgroundVariantFrequencyServiceFactory,
                 parallelism);
     }
 
@@ -65,14 +59,7 @@ public class MaxodiffLiricalAnalysisRunnerImpl implements MaxodiffLiricalAnalysi
     @Override
     public AnalysisResults runWithTermIds(AnalysisData data, AnalysisOptions options, Set<TermId> diseaseIds) throws LiricalAnalysisException {
 
-        Map<TermId, List<Gene2Genotype>> diseaseToGenotype = Map.of(); //groupDiseasesByGene(data.genes());
-
-//        Optional<GenotypeLikelihoodRatio> genotypeLikelihoodRatio = configureGenotypeLikelihoodRatio(options.genomeBuild(),
-//                options.variantDeleteriousnessThreshold(),
-//                options.defaultVariantBackgroundFrequency(),
-//                options.useStrictPenalties());
-//        if (genotypeLikelihoodRatio.isEmpty())
-//            throw new LiricalAnalysisException("Cannot configure genotype LR for %s".formatted(options.genomeBuild()));
+        Map<TermId, List<Gene2Genotype>> diseaseToGenotype = Map.of(); 
 
         GenotypeLikelihoodRatio genotypeLikelihoodRatio = null;
 
@@ -81,7 +68,6 @@ public class MaxodiffLiricalAnalysisRunnerImpl implements MaxodiffLiricalAnalysi
                 .parallel() // why not?
                 .filter(disease -> diseaseIds.contains(disease.id()))
                 .peek(d -> progressReporter.log())
-                //.map(disease -> analyzeDisease(genotypeLikelihoodRatio.get(), disease, data, options, diseaseToGenotype))
                 .map(disease -> analyzeDisease(genotypeLikelihoodRatio, disease, data, options, diseaseToGenotype))
                 .flatMap(Optional::stream);
 
@@ -93,21 +79,6 @@ public class MaxodiffLiricalAnalysisRunnerImpl implements MaxodiffLiricalAnalysi
             LOGGER.error(e.getMessage(), e);
             return AnalysisResults.empty();
         }
-    }
-
-    private Map<TermId, List<Gene2Genotype>> groupDiseasesByGene(GenesAndGenotypes genes) {
-        Map<TermId, Collection<TermId>> geneToDisease = phenotypeService.associationData().associations().geneIdToDiseaseIds();
-        Map<TermId, List<Gene2Genotype>> diseaseToGenotype = new HashMap<>(genes.size());
-
-        for (Gene2Genotype gene : genes) {
-            Collection<TermId> diseaseIds = geneToDisease.getOrDefault(gene.geneId().id(), List.of());
-            for (TermId diseaseId : diseaseIds) {
-                diseaseToGenotype.computeIfAbsent(diseaseId, k -> new LinkedList<>())
-                        .add(gene);
-            }
-        }
-
-        return diseaseToGenotype;
     }
 
     private Optional<TestResult> analyzeDisease(GenotypeLikelihoodRatio genotypeLikelihoodRatio,

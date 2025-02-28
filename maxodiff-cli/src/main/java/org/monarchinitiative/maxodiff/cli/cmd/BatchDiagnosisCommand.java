@@ -76,17 +76,12 @@ public class BatchDiagnosisCommand extends DifferentialDiagnosisCommand {
             for (int i = 0; i < phenopacketPaths.size(); i++) {
                 for (int nDiseases : nDiseasesList) {
                     for (double weight : weights) {
-//                String nDiseases = nDiseasesArg.stream().map(Object::toString).collect(Collectors.joining(","));
-//                String weights = weightsArg.stream().map(Object::toString).collect(Collectors.joining(","));
                         try {
                             DifferentialDiagnosisCommand differentialDiagnosisCommand = new DifferentialDiagnosisCommand();
                             CommandLine.call(differentialDiagnosisCommand,
                                     "-m", maxoDataPath.toString(),
                                     "-d", dataSection.liricalDataDirectory.toString(),
                                     "-p", phenopacketPaths.get(i).toString(),
-//                            "-e", dataSection.exomiserDatabase.toString(),
-//                            "--vcf", vcfPath.toString(),
-//                                    "--assembly", genomeBuild.toString(),
                                     "-n", String.valueOf(nDiseases),
                                     "-w", String.valueOf(weight),
                                     "-O", outputDir.toString());

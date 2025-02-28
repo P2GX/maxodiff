@@ -86,17 +86,6 @@ public class BenchmarkCommand extends DifferentialDiagnosisCommand {
             description = "Comma-separated list of differential diagnosis refiners.")
     protected List<String> refinerTypes;
 
-//    private final BiometadataService biometadataService;
-//
-//    private final DiffDiagRefiner diffDiagRefiner;
-
-//    public BenchmarkCommand(
-//            BiometadataService biometadataService,
-//            DiffDiagRefiner diffDiagRefiner) {
-//        this.biometadataService = biometadataService;
-//        this.diffDiagRefiner = diffDiagRefiner;
-//    }
-
 
     @Override
     public Integer execute() throws Exception {
@@ -131,14 +120,12 @@ public class BenchmarkCommand extends DifferentialDiagnosisCommand {
 
         Lirical lirical = prepareLirical();
         PhenotypeService phenotypeService = lirical.phenotypeService();
-        BundledBackgroundVariantFrequencyServiceFactory bundledBackgroundVariantFrequencyServiceFactory =
-                BundledBackgroundVariantFrequencyServiceFactory.getInstance();
         Set<TermId> liricalDiseaseIds = lirical.phenotypeService().diseases().diseaseIds();
 
         try (MaxodiffLiricalAnalysisRunner maxodiffLiricalAnalysisRunner =
                      MaxodiffLiricalAnalysisRunnerImpl.of(phenotypeService, 4)) {
             LiricalDifferentialDiagnosisEngineConfigurer liricalDifferentialDiagnosisEngineConfigurer = LiricalDifferentialDiagnosisEngineConfigurer.of(maxodiffLiricalAnalysisRunner);
-            var analysisOptions = AnalysisOptions.builder()
+            AnalysisOptions analysisOptions = AnalysisOptions.builder()
 //                    .setDiseaseDatabases(List.of(DiseaseDatabase.OMIM))
                     .useStrictPenalties(runConfiguration.strict)
                     .useGlobal(runConfiguration.globalAnalysisMode)

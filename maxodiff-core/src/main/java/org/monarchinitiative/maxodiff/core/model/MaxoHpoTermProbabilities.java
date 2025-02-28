@@ -14,7 +14,7 @@ public class MaxoHpoTermProbabilities {
     private final HpoDiseases hpoDiseases;
     private final List<DifferentialDiagnosis> initialDiagnoses; //top K diagnoses only
     private final DiseaseModelProbability diseaseModelProbability;
-//    private final Map<TermId, Set<TermId>> maxoToHpoTermIdMap;
+    private final Map<TermId, Set<TermId>> maxoToHpoTermIdMap;
     private final DiscoverablePhenotypes discoverablePhenotypes;
 
     public MaxoHpoTermProbabilities(HpoDiseases hpoDiseases, Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxoTermMap,
@@ -22,8 +22,9 @@ public class MaxoHpoTermProbabilities {
         this.hpoDiseases = hpoDiseases;
         this.initialDiagnoses = initialDiagnoses;
         this.diseaseModelProbability = diseaseModelProbability;
-//        this.maxoToHpoTermIdMap = MaxoHpoTermIdMaps.getMaxoToHpoTermIdMap(hpoToMaxoTermMap);
-        this.discoverablePhenotypes = new DiscoverablePhenotypes(hpoDiseases, hpoToMaxoTermMap);
+        Map<TermId, Set<TermId>> hpoToMaxoTermIdMap = MaxoHpoTermIdMaps.getHpoToMaxoTermIdMap(hpoToMaxoTermMap);
+        this.maxoToHpoTermIdMap = MaxoHpoTermIdMaps.getMaxoToHpoTermIdMap(hpoToMaxoTermMap);
+        this.discoverablePhenotypes = new DiscoverablePhenotypes(hpoDiseases, hpoToMaxoTermIdMap, maxoToHpoTermIdMap);
     }
 
     /**

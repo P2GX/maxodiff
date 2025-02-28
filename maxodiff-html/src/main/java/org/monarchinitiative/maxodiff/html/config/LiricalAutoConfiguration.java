@@ -48,47 +48,9 @@ public class LiricalAutoConfiguration {
 
     @Bean
     public MaxodiffLiricalAnalysisRunner liricalAnalysisRunner(PhenotypeService liricalPhenotypeService) {
-//        BundledBackgroundVariantFrequencyServiceFactory factory = BundledBackgroundVariantFrequencyServiceFactory.getInstance();
         int parallelism = 4; // TODO: extract into a property
         return MaxodiffLiricalAnalysisRunnerImpl.of(liricalPhenotypeService, parallelism);
     }
-
-//    @Bean
-//    public VariantMetadataServiceFactory variantMetadataServiceFactory(LiricalProperties liricalProperties) {
-//        Map<GenomeBuild, Path> exomiserDbPaths = new HashMap<>();
-//
-//        // Check HG19
-//        checkExomiserDbPath(
-//                GenomeBuild.HG19,
-//                liricalProperties.getExomiserHg19Path(),
-//                exomiserDbPaths
-//        );
-//
-//        // Check HG38
-//        checkExomiserDbPath(
-//                GenomeBuild.HG38,
-//                liricalProperties.getExomiserHg38Path(),
-//                exomiserDbPaths
-//        );
-//
-//        return ExomiserMvStoreMetadataServiceFactory.of(exomiserDbPaths);
-//    }
-
-//    private static void checkExomiserDbPath(
-//            GenomeBuild genomeBuild,
-//            String pathString,
-//            Map<GenomeBuild, Path> exomiserDbPaths
-//    ) {
-//        if (pathString != null) {
-//            Path path = Path.of(pathString);
-//            if (Files.isRegularFile(path)) {
-//                LOGGER.debug("Using Exomiser database at {} for {}", path.toAbsolutePath(), genomeBuild);
-//                exomiserDbPaths.put(genomeBuild, path);
-//            } else {
-//                throw new RuntimeException("Not a file: %s".formatted(path.toAbsolutePath()));
-//            }
-//        }
-//    }
 
     @Bean
     public LiricalDifferentialDiagnosisEngineConfigurer liricalDifferentialDiagnosisEngineConfigurer(
