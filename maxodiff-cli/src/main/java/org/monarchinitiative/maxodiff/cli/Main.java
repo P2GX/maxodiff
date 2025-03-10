@@ -19,7 +19,6 @@ public class Main implements Callable<Integer> {
                 .addSubcommand("diagnosis", new DifferentialDiagnosisCommand())
                 .addSubcommand("batchDiagnosis", new BatchDiagnosisCommand())
                 .addSubcommand("benchmark", new BenchmarkCommand())
-                .addSubcommand("newBenchmark", new NewBenchmarkCommand())
                 ;
         cline.setToggleBooleanFlags(false);
         int exitCode = cline.execute(args);

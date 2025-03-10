@@ -17,24 +17,6 @@
         <table>
             <tbody>
             <tr>
-                <td>Genome Build:</td>
-                <td><select th:value="${genomeBuild}" name="genomeBuild" id="genomeBuild">
-                        <option th:selected="${genomeBuild} == HG19 ? selected" value="HG19">HG19</option>
-                        <option th:selected="${genomeBuild} == HG38 ? selected" value="HG38">HG38</option></select></td>
-                <td>Transcript Database:</td>
-                <td><select th:value="${transcriptDatabase}" name="transcriptDatabase" id="transcriptDatabase">
-                        <option th:selected="${transcriptDatabase} == UCSC ? selected" value="UCSC">UCSC</option>
-                        <option th:selected="${transcriptDatabase} == REFSEQ ? selected" value="REFSEQ">REFSEQ</option></select></td>
-            </tr>
-            <tr>
-                <td>Pathogenicity Threshold:</td>
-                <td><input style='width:50%'type="number" step="0.05" min="0" max="1" th:value="${pathogenicityThreshold} ?: 0.8"
-                                        name="pathogenicityThreshold" id="pathogenicityThreshold"/></td>
-                <td>Default Variant Background Frequency:</td>
-                <td><input style='width:50%' type="number" step="0.000005" min="0" max="1" th:value="${defaultVariantBackgroundFrequency} ?: 0.1"
-                                        name="defaultVariantBackgroundFrequency" id="defaultVariantBackgroundFrequency"/></td>
-            </tr>
-            <tr>
                 <td>Strict:</td>
                 <td><select th:value="${strict}" name="strict" id="strict">
                     <option th:selected="${strict} == true ? selected" value="true">True</option>

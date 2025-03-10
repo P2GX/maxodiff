@@ -21,6 +21,8 @@ jobs:
     runs-on: ${{ matrix.os }}
     env:
       JDK_VERSION:  ${{ matrix.jdk }}
+      # The LIRICAL tag to check out. The tag must correspond to the LIRICAL version used by maxodiff
+      LIRICAL_TAG: v2.0.4
 
     strategy:
       fail-fast: false
@@ -36,6 +38,16 @@ jobs:
         with:
           java-version: '21'
           distribution: 'adopt'
+
+      # Install LIRICAL before building maxodiff
+      - name: Install LIRICAL
+        run: |
+          cd ..
+          git clone https://github.com/TheJacksonLaboratory/LIRICAL
+          cd LIRICAL
+          git checkout $LIRICAL_TAG
+          ./mvnw --quiet -PskipTests -Prelease install
+
       # Runs a set of commands using the runners shell
       - name: Build with Maven
         run: ./mvnw --batch-mode --update-snapshots test

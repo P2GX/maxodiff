@@ -13,7 +13,7 @@ import org.springframework.web.bind.annotation.*;
 
 
 @Controller
-@SessionAttributes({"engine", "options"})
+@SessionAttributes({"engine", "options", "liricalEngineConfigurer"})
 public class LiricalInputController {
 
     private final LiricalDifferentialDiagnosisEngineConfigurer liricalDifferentialDiagnosisEngineConfigurer;
@@ -28,27 +28,14 @@ public class LiricalInputController {
 
     @RequestMapping("/liricalInput")
     public String liricalInput(
-            @RequestParam(value = "genomeBuild", required = false) String genomeBuild,
-            @RequestParam(value = "transcriptDatabase", required = false) TranscriptDatabase transcriptDatabase,
-            @RequestParam(value = "pathogenicityThreshold", required = false) Float pathogenicityThreshold,
-            @RequestParam(value = "defaultVariantBackgroundFrequency", required = false) Double defaultVariantBackgroundFrequency,
             @RequestParam(value = "strict", required = false) boolean strict,
             @RequestParam(value = "globalAnalysisMode", required = false) boolean globalAnalysisMode,
             Model model) {
 
-        model.addAttribute("genomeBuild", genomeBuild);
-        model.addAttribute("transcriptDatabase", transcriptDatabase);
-        model.addAttribute("pathogenicityThreshold", pathogenicityThreshold);
-        model.addAttribute("defaultVariantBackgroundFrequency", defaultVariantBackgroundFrequency);
         model.addAttribute("strict", strict);
         model.addAttribute("globalAnalysisMode", globalAnalysisMode);
 
-        if (genomeBuild != null) {
             AnalysisOptions options = AnalysisOptions.builder()
-                    .genomeBuild(GenomeBuild.valueOf(genomeBuild))
-                    .transcriptDatabase(transcriptDatabase)
-                    .variantDeleteriousnessThreshold(pathogenicityThreshold)
-                    .defaultVariantBackgroundFrequency(defaultVariantBackgroundFrequency)
                     .useStrictPenalties(strict)
                     .useGlobal(globalAnalysisMode)
                     .pretestProbability(PretestDiseaseProbabilities.uniform(hpoDiseases.diseaseIds()))
@@ -59,7 +46,7 @@ public class LiricalInputController {
             DifferentialDiagnosisEngine engine = liricalDifferentialDiagnosisEngineConfigurer.configure(options);
             model.addAttribute("engine", engine);
             model.addAttribute("options", options);
-        }
+            model.addAttribute("liricalEngineConfigurer", liricalDifferentialDiagnosisEngineConfigurer);
 
         return "liricalInput";
     }

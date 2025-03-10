@@ -1,5 +1,7 @@
 package org.monarchinitiative.maxodiff.html.controller;
 
+import org.monarchinitiative.lirical.core.analysis.AnalysisOptions;
+import org.monarchinitiative.lirical.core.analysis.probability.PretestDiseaseProbabilities;
 import org.monarchinitiative.lirical.core.exception.LiricalException;
 import org.monarchinitiative.maxodiff.core.SimpleTerm;
 import org.monarchinitiative.maxodiff.core.analysis.*;
@@ -10,6 +12,7 @@ import org.monarchinitiative.maxodiff.core.model.DifferentialDiagnosis;
 import org.monarchinitiative.maxodiff.core.model.RankMaxo;
 import org.monarchinitiative.maxodiff.core.model.Sample;
 import org.monarchinitiative.maxodiff.core.service.BiometadataService;
+import org.monarchinitiative.maxodiff.lirical.LiricalDifferentialDiagnosisEngineConfigurer;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDisease;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
 import org.monarchinitiative.phenol.ontology.data.MinimalOntology;
@@ -19,6 +22,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 @Controller("/sessionResults")
@@ -61,6 +65,7 @@ public class SessionResultsController {
     public String showResults(@SessionAttribute(value = "sample", required = false) Sample sample,
                               @SessionAttribute(value = "differentialDiagnoses", required = false) List<DifferentialDiagnosis> differentialDiagnoses,
                               @SessionAttribute(value = "engine", required = false) DifferentialDiagnosisEngine engine,
+                              @SessionAttribute(value = "liricalEngineConfigurer", required = false) LiricalDifferentialDiagnosisEngineConfigurer liricalDifferentialDiagnosisEngineConfigurer,
                               @RequestParam(value = "refiner", required = false) String refiner,
                               @RequestParam(value = "nDiseases", required = false) Integer nDiseases,
                               @RequestParam(value = "weight", required = false) Double weight,
@@ -137,10 +142,29 @@ public class SessionResultsController {
 
             RefinementResults refinementResults;
             if (engine instanceof LiricalDifferentialDiagnosisEngine && diffDiagRefiner instanceof MaxoDiffRefiner) {
-                List<DifferentialDiagnosis> initialDiagnoses = orderedDiagnoses.stream()
-                        .toList().subList(0, options.nDiseases());
+                assert orderedDiagnoses != null;
+                List<DifferentialDiagnosis> initialDiagnoses = orderedDiagnoses.stream().toList()
+                        .subList(0, options.nDiseases());
+
+                Set<TermId> initialDiagnosesIds = initialDiagnoses.stream()
+                        .map(DifferentialDiagnosis::diseaseId)
+                        .collect(Collectors.toSet());
+
+                AnalysisOptions originalOptions = ((LiricalDifferentialDiagnosisEngine) engine).getAnalysisOptions();
+
+                var diseaseSubsetOptions = AnalysisOptions.builder()
+//                    .setDiseaseDatabases(List.of(DiseaseDatabase.OMIM))
+                        .useStrictPenalties(originalOptions.useStrictPenalties())
+                        .useGlobal(originalOptions.useGlobal())
+                        .pretestProbability(PretestDiseaseProbabilities.uniform(initialDiagnosesIds))
+                        .addTargetDiseases(initialDiagnosesIds)
+//                .includeDiseasesWithNoDeleteriousVariants(true)
+                        .build();
+                DifferentialDiagnosisEngine diseaseSubsetEngine = liricalDifferentialDiagnosisEngineConfigurer.configure(diseaseSubsetOptions);
+
+                assert maxoToHpoTermIdMap != null;
                 RankMaxo rankMaxo = ((MaxoDiffRefiner) diffDiagRefiner).getRankMaxo(initialDiagnoses,
-                        (LiricalDifferentialDiagnosisEngine) engine,
+                        diseaseSubsetEngine,
                         maxoToHpoTermIdMap,
                         diseaseProbModel);
                 model.addAttribute("progress", rankMaxo.updateProgress());

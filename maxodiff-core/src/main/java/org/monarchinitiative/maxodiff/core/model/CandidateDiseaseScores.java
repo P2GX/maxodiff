@@ -1,5 +1,7 @@
 package org.monarchinitiative.maxodiff.core.model;
 
+import org.monarchinitiative.maxodiff.core.SimpleTerm;
+import org.monarchinitiative.maxodiff.core.analysis.MaxoHpoTermIdMaps;
 import org.monarchinitiative.maxodiff.core.diffdg.DifferentialDiagnosisEngine;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 
@@ -25,11 +27,13 @@ public class CandidateDiseaseScores {
      */
     public List<DifferentialDiagnosis> getScoresForMaxoTerm(Sample ppkt, TermId maxoId,
                                                             DifferentialDiagnosisEngine engine,
-                                                            Set<TermId> diseaseIds) {
+                                                            Set<TermId> diseaseIds,
+                                                            Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxoTermMap) {
         Set<TermId> observed = new HashSet<>(Set.of());
         Set<TermId> excluded = new HashSet<>(Set.of());
 
-        Set<TermId> maxoBenefitHpoIds = maxoHpoTermProbabilities.getDiscoverableByMaxoHpoTerms(ppkt, maxoId);
+        Map<TermId, Set<TermId>> maxoToHpoTermIdMap = MaxoHpoTermIdMaps.getMaxoToHpoTermIdMap(hpoToMaxoTermMap);
+        Set<TermId> maxoBenefitHpoIds = maxoHpoTermProbabilities.getDiscoverableByMaxoHpoTerms(ppkt, maxoId, maxoToHpoTermIdMap);
         for (TermId hpoId : maxoBenefitHpoIds) {
             double maxoTermBenefitProbability = maxoHpoTermProbabilities.calculateProbabilityOfMaxoTermRevealingPresenceOfHpoTerm(hpoId);
             boolean result = getTestResult(maxoTermBenefitProbability);
@@ -42,13 +46,7 @@ public class CandidateDiseaseScores {
 
         Sample newSample = getNewSample(ppkt, observed, excluded);
 
-        // TODO[mabeckwith] - I removed invocation of `runWithDiseaseIds`, since,
-        //  based on looking at the implementation in `MaxodiffLiricalAnalysisRunnerImpl`,
-        //  we obtain the same results by post-filtering the differential diagnoses (below).
-        return engine.run(newSample)
-                .stream()
-                .filter(dd -> diseaseIds.contains((dd.diseaseId())))
-                .toList();
+        return engine.run(newSample, diseaseIds);
     }
 
     private boolean getTestResult(double maxoTermBenefitProbability) {

@@ -1,9 +1,8 @@
 package org.monarchinitiative.maxodiff.cli.cmd;
 
-import org.monarchinitiative.lirical.configuration.impl.BundledBackgroundVariantFrequencyServiceFactory;
 import org.monarchinitiative.lirical.core.Lirical;
 import org.monarchinitiative.lirical.core.analysis.*;
-import org.monarchinitiative.lirical.core.exception.LiricalException;
+import org.monarchinitiative.lirical.core.analysis.probability.PretestDiseaseProbabilities;
 import org.monarchinitiative.lirical.core.service.PhenotypeService;
 import org.monarchinitiative.lirical.io.analysis.PhenopacketData;
 import org.monarchinitiative.lirical.io.analysis.PhenopacketImporter;
@@ -50,11 +49,6 @@ public class DifferentialDiagnosisCommand extends BaseCommand {
 //            arity = "1..*",
             description = "Path(s) to phenopacket JSON file(s).")
     protected Path phenopacketPath;
-
-    @CommandLine.Option(names = {"--assembly"},
-            paramLabel = "{hg19,hg38}",
-            description = "Genome build (default: ${DEFAULT-VALUE}).")
-    protected String genomeBuild = "hg38";
 
     @CommandLine.Option(names = {"--vcf"},
             description = "Path to VCF with background variants.")
@@ -125,18 +119,20 @@ public class DifferentialDiagnosisCommand extends BaseCommand {
         System.out.println(weight);
         System.out.println(nDiseases);
 
-        LiricalConfiguration liricalConfiguration = configureLirical();
-        Lirical lirical = liricalConfiguration.lirical();
+        Lirical lirical = prepareLirical();
         PhenotypeService phenotypeService = lirical.phenotypeService();
-        BundledBackgroundVariantFrequencyServiceFactory bundledBackgroundVariantFrequencyServiceFactory =
-                BundledBackgroundVariantFrequencyServiceFactory.getInstance();
         Set<TermId> liricalDiseaseIds = lirical.phenotypeService().diseases().diseaseIds();
 
         try (MaxodiffLiricalAnalysisRunner maxodiffLiricalAnalysisRunner =
-                     MaxodiffLiricalAnalysisRunnerImpl.of(phenotypeService,
-                             bundledBackgroundVariantFrequencyServiceFactory, 1)) {
+                     MaxodiffLiricalAnalysisRunnerImpl.of(phenotypeService, 4)) {
             LiricalDifferentialDiagnosisEngineConfigurer liricalDifferentialDiagnosisEngineConfigurer = LiricalDifferentialDiagnosisEngineConfigurer.of(maxodiffLiricalAnalysisRunner);
-            var options = liricalConfiguration.prepareAnalysisOptions(liricalDiseaseIds);
+            var options = AnalysisOptions.builder()
+//                    .setDiseaseDatabases(List.of(DiseaseDatabase.OMIM))
+                    .useStrictPenalties(runConfiguration.strict)
+                    .useGlobal(runConfiguration.globalAnalysisMode)
+                    .pretestProbability(PretestDiseaseProbabilities.uniform(liricalDiseaseIds))
+//                .includeDiseasesWithNoDeleteriousVariants(true)
+                    .build();
             LiricalDifferentialDiagnosisEngine engine = liricalDifferentialDiagnosisEngineConfigurer.configure(options);
             
             PhenopacketData phenopacketData = PhenopacketFileParser.readPhenopacketData(phenopacketPath);
@@ -211,8 +207,18 @@ public class DifferentialDiagnosisCommand extends BaseCommand {
                              .map(DifferentialDiagnosis::diseaseId)
                              .collect(Collectors.toSet());
 
-                    RankMaxo rankMaxo = new RankMaxo(maxoToHpoTermIdMap, maxoHpoTermProbabilities, engine);
-                    Map<TermId, Double> maxoTermRanks = rankMaxo.rankMaxoTerms(sample, weight, 2, initialDiagnosesIds);
+            var diseaseSubsetOptions = AnalysisOptions.builder()
+//                    .setDiseaseDatabases(List.of(DiseaseDatabase.OMIM))
+                    .useStrictPenalties(runConfiguration.strict)
+                    .useGlobal(runConfiguration.globalAnalysisMode)
+                    .pretestProbability(PretestDiseaseProbabilities.uniform(initialDiagnosesIds))
+                    .addTargetDiseases(initialDiagnosesIds)
+//                .includeDiseasesWithNoDeleteriousVariants(true)
+                    .build();
+            LiricalDifferentialDiagnosisEngine diseaseSubsetEngine = liricalDifferentialDiagnosisEngineConfigurer.configure(diseaseSubsetOptions);
+
+                    RankMaxo rankMaxo = new RankMaxo(hpoToMaxoTermMap, maxoToHpoTermIdMap, maxoHpoTermProbabilities, diseaseSubsetEngine);
+                    Map<TermId, Double> maxoTermRanks = rankMaxo.rankMaxoTerms(sample, 2, initialDiagnosesIds);
                     LOGGER.info(maxoTermRanks.toString());
 //                    List<MaxodiffResult> resultsList = refinementResults.maxodiffResults().stream().toList();
 //                    TermId diseaseId = phenopacketData.diseaseIds().get(0);
@@ -267,38 +273,8 @@ public class DifferentialDiagnosisCommand extends BaseCommand {
         return 0;
     }
 
-    LiricalConfiguration configureLirical() throws LiricalException {
 
-        return LiricalConfiguration.of(
-                dataSection.liricalDataDirectory,
-                dataSection.exomiserDatabase,
-                genomeBuild,
-                runConfiguration.transcriptDb,
-                runConfiguration.pathogenicityThreshold,
-                runConfiguration.defaultVariantBackgroundFrequency,
-                runConfiguration.strict,
-                runConfiguration.globalAnalysisMode
-        );
-    }
-
-//    protected Lirical prepareLirical() throws IOException, LiricalException {
-//        // Check input.
-//        List<String> errors = checkInput();
-//        if (!errors.isEmpty())
-//            throw new LiricalException(String.format("Errors: %s", String.join(", ", errors)));
-//
-//        // Bootstrap LIRICAL.
-//        Lirical lirical = bootstrapLirical();
-//        return lirical;
-//    }
-
-//    @Override
-//    protected String getGenomeBuild() {
-//        return genomeBuild;
-//    }
-
-
-    protected static PhenopacketData readPhenopacketData(Path phenopacketPath) throws LiricalParseException {
+    protected static PhenopacketData readPhenopacketData(Path phenopacketPath) throws Exception {
         PhenopacketData data = null;
         try (InputStream is = new BufferedInputStream(Files.newInputStream(phenopacketPath))) {
             PhenopacketImporter v2 = PhenopacketImporters.v2();
@@ -315,15 +291,15 @@ public class DifferentialDiagnosisCommand extends BaseCommand {
                 LOGGER.debug("Success!");
             } catch (IOException e) {
                 LOGGER.debug("Unable to parser as v1 phenopacket.");
-                throw new LiricalParseException("Unable to parse phenopacket from " + phenopacketPath.toAbsolutePath());
+                throw new Exception("Unable to parse phenopacket from " + phenopacketPath.toAbsolutePath());
             }
         }
 
         // Check we have exactly one disease ID.
         if (data.diseaseIds().isEmpty())
-            throw new LiricalParseException("Missing disease ID which is required for the benchmark!");
+            throw new Exception("Missing disease ID which is required for the benchmark!");
         else if (data.diseaseIds().size() > 1)
-            throw new LiricalParseException("Saw >1 disease IDs {}, but we need exactly one for the benchmark!");
+            throw new Exception("Saw >1 disease IDs {}, but we need exactly one for the benchmark!");
         return data;
     }
 

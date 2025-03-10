@@ -52,10 +52,14 @@ public class MaxoHpoTermProbabilities {
      * @return HPO terms discoverable by the MAxO term, i.e. the intersection of the HPO terms that can be ascertained by
      * that MAxO term and the union of discoverable phenotypes for the diseases
      */
-    public Set<TermId> getDiscoverableByMaxoHpoTerms(Sample ppkt, TermId maxoId) {
+    public Set<TermId> getDiscoverableByMaxoHpoTerms(Sample ppkt, TermId maxoId, Map<TermId, Set<TermId>> maxoToHpoTermIdMap) {
         Set<TermId> maxoAssociatedHpoIds = maxoToHpoTermIdMap.get(maxoId);
-        Set<TermId> unionDiscoverablePhenotypes = getUnionOfDiscoverablePhenotypes(ppkt);
-        maxoAssociatedHpoIds.retainAll(unionDiscoverablePhenotypes); //intersection
+        if (maxoAssociatedHpoIds != null) {
+            Set<TermId> unionDiscoverablePhenotypes = getUnionOfDiscoverablePhenotypes(ppkt);
+            maxoAssociatedHpoIds.retainAll(unionDiscoverablePhenotypes); //intersection
+        } else {
+            maxoAssociatedHpoIds = Set.of();
+        }
 
         return maxoAssociatedHpoIds;
 
@@ -85,4 +89,6 @@ public class MaxoHpoTermProbabilities {
     }
 
     public int nDiseases() { return initialDiagnoses.size(); }
+
+    public List<DifferentialDiagnosis> getInitialDiagnoses() { return initialDiagnoses; }
 }

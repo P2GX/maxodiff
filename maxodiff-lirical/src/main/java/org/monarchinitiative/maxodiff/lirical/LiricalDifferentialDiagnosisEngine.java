@@ -63,4 +63,8 @@ public class LiricalDifferentialDiagnosisEngine implements DifferentialDiagnosis
         }
     }
 
+    public AnalysisOptions getAnalysisOptions() {
+        return options;
+    }
+
 }

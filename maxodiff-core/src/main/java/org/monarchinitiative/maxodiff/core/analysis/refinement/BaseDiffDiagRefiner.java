@@ -81,7 +81,7 @@ public class BaseDiffDiagRefiner implements DiffDiagRefiner {
                 .map(DifferentialDiagnosis::diseaseId)
                 .collect(Collectors.toSet());
 
-        Map<TermId, Double> maxoTermRanks = rankMaxo.rankMaxoTerms(sample, options.weight(), 2, initialDiagnosesIds);
+        Map<TermId, Double> maxoTermRanks = rankMaxo.rankMaxoTerms(sample, 2, initialDiagnosesIds);
         for (Map.Entry<TermId, Double> entry : maxoTermRanks.entrySet()) {
             TermId maxoId = entry.getKey();
             double scoreDiff = entry.getValue();
@@ -125,7 +125,7 @@ public class BaseDiffDiagRefiner implements DiffDiagRefiner {
                 diseaseModelProbability);
 
 
-        RankMaxo rankMaxo = new RankMaxo(maxoToHpoTermIdMap, maxoHpoTermProbabilities, engine);
+        RankMaxo rankMaxo = new RankMaxo(hpoToMaxoTermMap, maxoToHpoTermIdMap, maxoHpoTermProbabilities, engine);
 
         return rankMaxo;
     }

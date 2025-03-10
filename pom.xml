@@ -33,7 +33,9 @@
         <maven.compiler.source>${java.version}</maven.compiler.source>
         <maven.compiler.target>${java.version}</maven.compiler.target>
         <phenol.version>2.1.1</phenol.version>
-        <lirical.version>2.0.2</lirical.version>
+        <phenopacket-schema.version>2.0.2</phenopacket-schema.version>
+        <phenopacket-tools.version>1.0.0-RC3</phenopacket-tools.version>
+        <lirical.version>2.0.4</lirical.version>
         <jackson.version>2.15.0</jackson.version>
         <biodownload.version>1.1.1</biodownload.version>
         <picocli.version>4.7.4</picocli.version>
@@ -41,30 +43,20 @@
         <slf4j.version>[2.0.0,3.0.0)</slf4j.version>
     </properties>
 
-    <repositories>
-        <repository>
-            <id>jitpack.io</id>
-            <url>https://jitpack.io</url>
-        </repository>
-    </repositories>
-
     <dependencyManagement>
         <dependencies>
             <dependency>
-                <groupId>com.github.TheJacksonLaboratory.LIRICAL</groupId>
-<!--                <groupId>org.monarchinitiative.lirical</groupId>-->
+                <groupId>org.monarchinitiative.lirical</groupId>
                 <artifactId>lirical-configuration</artifactId>
                 <version>${lirical.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.github.TheJacksonLaboratory.LIRICAL</groupId>
-<!--                <groupId>org.monarchinitiative.lirical</groupId>-->
+                <groupId>org.monarchinitiative.lirical</groupId>
                 <artifactId>lirical-core</artifactId>
                 <version>${lirical.version}</version>
             </dependency>
             <dependency>
-                <groupId>com.github.TheJacksonLaboratory.LIRICAL</groupId>
-<!--                <groupId>org.monarchinitiative.lirical</groupId>-->
+                <groupId>org.monarchinitiative.lirical</groupId>
                 <artifactId>lirical-io</artifactId>
                 <version>${lirical.version}</version>
                 <exclusions>
@@ -89,7 +81,6 @@
                 <artifactId>phenol-annotations</artifactId>
                 <version>${phenol.version}</version>
             </dependency>
-
             <dependency>
                 <groupId>com.fasterxml.jackson.core</groupId>
                 <artifactId>jackson-annotations</artifactId>
