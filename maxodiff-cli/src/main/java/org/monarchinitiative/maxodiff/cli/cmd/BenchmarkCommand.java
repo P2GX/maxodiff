@@ -134,11 +134,9 @@ public class BenchmarkCommand extends DifferentialDiagnosisCommand {
                      MaxodiffLiricalAnalysisRunnerImpl.of(phenotypeService, 4)) {
             LiricalDifferentialDiagnosisEngineConfigurer liricalDifferentialDiagnosisEngineConfigurer = LiricalDifferentialDiagnosisEngineConfigurer.of(maxodiffLiricalAnalysisRunner);
             var analysisOptions = AnalysisOptions.builder()
-//                    .setDiseaseDatabases(List.of(DiseaseDatabase.OMIM))
                     .useStrictPenalties(runConfiguration.strict)
                     .useGlobal(runConfiguration.globalAnalysisMode)
                     .pretestProbability(PretestDiseaseProbabilities.uniform(liricalDiseaseIds))
-//                .includeDiseasesWithNoDeleteriousVariants(true)
                     .build();
             LiricalDifferentialDiagnosisEngine engine = liricalDifferentialDiagnosisEngineConfigurer.configure(analysisOptions);
 
