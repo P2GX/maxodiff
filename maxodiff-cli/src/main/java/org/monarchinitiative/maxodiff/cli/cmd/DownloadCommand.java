@@ -15,8 +15,8 @@ import java.util.concurrent.Callable;
  * Download a number of files needed for the analysis.
  * <p>
  * By default, we download by default to a subdirectory called {@code data}, which is created if necessary.
- * We download the files {@code hp.json}, {@code maxo.json}, {@code phenotype.hpoa},
- * @code Homo_sapiens_gene_info.gz}, and {@code mim2gene_medgen}. TODO -- Jannovar? Do we really need this
+ * We download the files {@code hp.json}, {@code maxo.json}, {@code phenotype.hpoa}, and
+ * @code Homo_sapiens_gene_info.gz}
  *
  * @author <a href="mailto:martha.beckwith@jax.org">Martha Beckwith</a>
  * @author <a href="mailto:daniel.gordon.danis@protonmail.com">Daniel Danis</a>
@@ -65,11 +65,6 @@ public class DownloadCommand implements Callable<Integer>{
                 .hpDiseaseAnnotations()
                 .hgnc()
                 .medgene2MIM()
-                // Jannovar v0.35 transcript databases
-                .custom("hg19_ucsc.ser", createUrlOrExplode("https://storage.googleapis.com/ielis/jannovar/v0.35/hg19_ucsc.ser"))
-                .custom("hg19_refseq.ser", createUrlOrExplode("https://storage.googleapis.com/ielis/jannovar/v0.35/hg19_refseq.ser"))
-                .custom("hg38_ucsc.ser", createUrlOrExplode("https://storage.googleapis.com/ielis/jannovar/v0.35/hg38_ucsc.ser"))
-                .custom("hg38_refseq.ser", createUrlOrExplode("https://storage.googleapis.com/ielis/jannovar/v0.35/hg38_refseq.ser"))
                 .build();
         downloader.download();
     }
