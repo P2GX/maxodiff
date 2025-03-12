@@ -84,7 +84,7 @@ public class BaseDiffDiagRefiner implements DiffDiagRefiner {
                 .map(DifferentialDiagnosis::diseaseId)
                 .collect(Collectors.toSet());
 
-        Map<TermId, RankMaxoScore> maxoTermRanks = rankMaxo.rankMaxoTerms(sample, 2, initialDiagnosesIds);
+        Map<TermId, RankMaxoScore> maxoTermRanks = rankMaxo.rankMaxoTerms(sample, options.nRepetitions(), initialDiagnosesIds);
         for (Map.Entry<TermId, RankMaxoScore> entry : maxoTermRanks.entrySet()) {
             TermId maxoId = entry.getKey();
             RankMaxoScore rankMaxoScore = entry.getValue();

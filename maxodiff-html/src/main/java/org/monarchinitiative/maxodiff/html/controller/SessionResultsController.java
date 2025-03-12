@@ -68,6 +68,7 @@ public class SessionResultsController {
                               @SessionAttribute(value = "liricalEngineConfigurer", required = false) LiricalDifferentialDiagnosisEngineConfigurer liricalDifferentialDiagnosisEngineConfigurer,
                               @RequestParam(value = "refiner", required = false) String refiner,
                               @RequestParam(value = "nDiseases", required = false) Integer nDiseases,
+                              @RequestParam(value = "nRepetitions", required = false) Integer nRepetitions,
                               @RequestParam(value = "weight", required = false) Double weight,
                               @RequestParam(value = "nMaxoResults", required = false) Integer nMaxoResults,
                               @RequestParam(value = "diseaseProbModel", required = false) String diseaseProbModel,
@@ -94,6 +95,7 @@ public class SessionResultsController {
         model.addAttribute("algorithm", algorithm);
         Integer prevNDiseases = (Integer) model.getAttribute("nDiseases");
         model.addAttribute("nDiseases", nDiseases);
+        model.addAttribute("nRepetitions", nRepetitions);
         model.addAttribute("weight", weight);
         model.addAttribute("nMaxoResults", nMaxoResults);
         model.addAttribute("diseaseProbModel", diseaseProbModel);
@@ -104,8 +106,8 @@ public class SessionResultsController {
             model.addAttribute("totalNDiseases", differentialDiagnoses.size());
         }
 
-        if (sample != null && nDiseases != null && weight != null && nMaxoResults != null) {
-            RefinementOptions options = RefinementOptions.of(nDiseases, weight);
+        if (sample != null && nDiseases != null && nRepetitions != null && weight != null && nMaxoResults != null) {
+            RefinementOptions options = RefinementOptions.of(nDiseases, nRepetitions, weight);
 
             if (model.getAttribute("orderedDiagnoses") == null || !nDiseases.equals(prevNDiseases)
                     || diffDiagRefiner instanceof MaxoDiffKolmogorovSmirnovRefiner) {

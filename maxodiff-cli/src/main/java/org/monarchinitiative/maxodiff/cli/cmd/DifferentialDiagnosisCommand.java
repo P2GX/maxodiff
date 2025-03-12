@@ -93,6 +93,13 @@ public class DifferentialDiagnosisCommand extends BaseCommand {
             description = "Disease Probability Model to use for Rank MAxO algorithm (default: ${DEFAULT-VALUE}).")
     protected String diseaseProbModel = "ranked";
 
+    @CommandLine.Option(names = {"-nr", "--nRepetitions"},
+//            required = true,
+//            split=",",
+//            arity = "1..*",
+            description = "Number of repetitions for running differential diagnosis.")
+    protected Integer nRepetitionsArg;
+
     @Override
     public Integer execute() throws Exception {
         Map<String, List<Object>> resultsMap = new HashMap<>();
@@ -109,9 +116,11 @@ public class DifferentialDiagnosisCommand extends BaseCommand {
 
         double weight = weightsArg;
         int nDiseases = nDiseasesArg;
+        int nRepetitions = nRepetitionsArg;
 
         System.out.println(weight);
         System.out.println(nDiseases);
+        System.out.println(nRepetitions);
 
         Lirical lirical = prepareLirical();
         PhenotypeService phenotypeService = lirical.phenotypeService();
@@ -198,7 +207,7 @@ public class DifferentialDiagnosisCommand extends BaseCommand {
             LiricalDifferentialDiagnosisEngine diseaseSubsetEngine = liricalDifferentialDiagnosisEngineConfigurer.configure(diseaseSubsetOptions);
 
                     RankMaxo rankMaxo = new RankMaxo(hpoToMaxoTermMap, maxoToHpoTermIdMap, maxoHpoTermProbabilities, diseaseSubsetEngine);
-                    Map<TermId, RankMaxoScore> maxoTermRanks = rankMaxo.rankMaxoTerms(sample, 2, initialDiagnosesIds);
+                    Map<TermId, RankMaxoScore> maxoTermRanks = rankMaxo.rankMaxoTerms(sample, nRepetitions, initialDiagnosesIds);
                     LOGGER.info(maxoTermRanks.toString());
 //                    List<MaxodiffResult> resultsList = refinementResults.maxodiffResults().stream().toList();
 //                    TermId diseaseId = phenopacketData.diseaseIds().get(0);

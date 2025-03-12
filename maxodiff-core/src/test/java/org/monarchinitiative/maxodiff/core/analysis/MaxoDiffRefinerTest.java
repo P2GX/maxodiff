@@ -43,7 +43,7 @@ public class MaxoDiffRefinerTest {
 
     @Test
     public void run() {
-        RefinementOptions options = RefinementOptions.of(12, 0.5);
+        RefinementOptions options = RefinementOptions.of(12, 2,0.5);
         Sample sample = TestResources.getExampleSample();
         Collection<DifferentialDiagnosis> originalDiagnoses = TestResources.getExampleDiagnoses();
         List<DifferentialDiagnosis> orderedDiagnoses = refiner.getOrderedDiagnoses(originalDiagnoses, options);

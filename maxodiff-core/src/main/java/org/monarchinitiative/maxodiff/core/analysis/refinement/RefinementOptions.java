@@ -4,11 +4,12 @@ import org.monarchinitiative.maxodiff.core.analysis.refinement.RefinementOptions
 
 public interface RefinementOptions {
 
-    static RefinementOptions of(int nDiseases, double weight) {
-        return new RefinementOptionsImpl(nDiseases, weight);
+    static RefinementOptions of(int nDiseases, int nRepetitions, double weight) {
+        return new RefinementOptionsImpl(nDiseases, nRepetitions, weight);
     }
 
     int nDiseases();
+    int nRepetitions();
     double weight();
 
 }
