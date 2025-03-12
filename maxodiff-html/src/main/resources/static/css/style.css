@@ -120,6 +120,24 @@
     font-weight: bold
 }
 
+.countsTable td {
+    padding: 0px 10px 0px 10px;
+}
+
+.countsTable td:first-child {
+    font-weight: bold
+}
+
+.countsTable th {
+  text-align: center;
+  transform-origin: 50% 50%;
+  transform: rotate(315deg);
+  padding: 0;
+  margin: 0;
+  height: 200px;
+  white-space: no-wrap;
+}
+
 .maxoResultsTable td:first-child {
     background-color: lightpink;
     font-weight: bold

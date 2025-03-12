@@ -73,7 +73,7 @@ public class MaxoHpoTermProbabilities {
     public double calculateProbabilityOfMaxoTermRevealingPresenceOfHpoTerm(TermId hpoId) {
         double p = 0.;
         for (DifferentialDiagnosis diagnosis : initialDiagnoses) {
-            double diseaseProbability = diseaseModelProbability.probability(diagnosis.diseaseId());
+            double diseaseProbability = diseaseModelProbability.probability(diagnosis.diseaseId()); //1./initialDiagnoses.size()
             Optional<HpoDisease> hpoDiseaseOpt = hpoDiseases.diseaseById(diagnosis.diseaseId());
             if (hpoDiseaseOpt.isPresent()) {
                 HpoDisease hpoDisease = hpoDiseaseOpt.get();
@@ -91,4 +91,6 @@ public class MaxoHpoTermProbabilities {
     public int nDiseases() { return initialDiagnoses.size(); }
 
     public List<DifferentialDiagnosis> getInitialDiagnoses() { return initialDiagnoses; }
+
+    public HpoDiseases getHpoDiseases() { return hpoDiseases; }
 }

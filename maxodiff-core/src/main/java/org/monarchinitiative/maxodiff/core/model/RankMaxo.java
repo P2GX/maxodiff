@@ -1,8 +1,12 @@
 package org.monarchinitiative.maxodiff.core.model;
 
 import org.monarchinitiative.maxodiff.core.SimpleTerm;
+import org.monarchinitiative.maxodiff.core.analysis.MaxoDDResults;
+import org.monarchinitiative.maxodiff.core.analysis.RankMaxoScore;
 import org.monarchinitiative.maxodiff.core.analysis.ValidationModel;
 import org.monarchinitiative.maxodiff.core.diffdg.DifferentialDiagnosisEngine;
+import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDisease;
+import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 
 import java.util.*;
@@ -33,16 +37,47 @@ public class RankMaxo {
      * @param diseaseIds Set of OMIM disease Ids to use for analysis.
      * @return Map of MAxO scores sorted in descending order by score
      */
-    public Map<TermId, Double> rankMaxoTerms(Sample ppkt, int nRepetitions, Set<TermId> diseaseIds) {
-        Map<TermId, Double> maxoScores = new HashMap<>();
+    public Map<TermId, RankMaxoScore> rankMaxoTerms(Sample ppkt, int nRepetitions, Set<TermId> diseaseIds) {
+        Map<TermId, RankMaxoScore> maxoScores = new HashMap<>();
         CandidateDiseaseScores candidateDiseaseScores = new CandidateDiseaseScores(maxoHpoTermProbabilities);
         p = 0;
         for (TermId maxoId : maxoToHpoTermIdMap.keySet()) {
             List<Double> scores = new ArrayList<>();
             List<DifferentialDiagnosis> initialDiagnoses = maxoHpoTermProbabilities.getInitialDiagnoses();
+            List<MaxoDDResults> maxoDDResultsList = new ArrayList<>();
+            Map<TermId, Map<TermId, Integer>> maxoDiscoverableHpoIdCts = new HashMap<>();
             for (int i = 0; i < nRepetitions; i++) {
-                List<DifferentialDiagnosis> differentialDiagnoses = candidateDiseaseScores.getScoresForMaxoTerm(ppkt, maxoId, engine, diseaseIds, hpoToMaxoTermMap);
-                double finalScore = ValidationModel.weightedRankDiff(initialDiagnoses, differentialDiagnoses).validationScore();
+                MaxoDDResults maxoDDResults = candidateDiseaseScores.getScoresForMaxoTerm(ppkt, maxoId, engine, diseaseIds, hpoToMaxoTermMap);
+                maxoDDResultsList.add(maxoDDResults);
+                Set<TermId> discoverableHpoIds = maxoDDResults.maxoDiscoverableHpoIds();
+                for (TermId diseaseId : diseaseIds) {
+                    List<TermId> diseaseAssociatedHpoIds = List.of();
+                    Optional<HpoDisease> opt = maxoHpoTermProbabilities.getHpoDiseases().diseaseById(diseaseId);
+                    if (opt.isPresent()) {
+                        HpoDisease disease = opt.get();
+                        diseaseAssociatedHpoIds = disease.annotationTermIdList();
+                    }
+                    if (!maxoDiscoverableHpoIdCts.containsKey(diseaseId)) {
+                        maxoDiscoverableHpoIdCts.put(diseaseId, new HashMap<>());
+                    }
+                    Map<TermId, Integer> hpoIdCtsMap = maxoDiscoverableHpoIdCts.get(diseaseId);
+                    for (TermId discoverableHpoId : discoverableHpoIds) {
+                        if (!hpoIdCtsMap.containsKey(discoverableHpoId)) {
+                            if (diseaseAssociatedHpoIds.contains(discoverableHpoId)) {
+                                hpoIdCtsMap.put(discoverableHpoId, 1);
+                            } else {
+                                hpoIdCtsMap.put(discoverableHpoId, null);
+                            }
+                        } else {
+                            Integer ct = hpoIdCtsMap.get(discoverableHpoId);
+                            if (ct != null) {
+                                hpoIdCtsMap.replace(discoverableHpoId, ct + 1);
+                            }
+                        }
+                        maxoDiscoverableHpoIdCts.replace(diseaseId, hpoIdCtsMap);
+                    }
+                }
+                double finalScore = ValidationModel.weightedRankDiff(initialDiagnoses, maxoDDResults.maxoDifferentialDiagnoses()).validationScore();
                 scores.add(finalScore);
             }
             OptionalDouble meanScoreOptional = scores.stream().mapToDouble(s -> s).average();
@@ -50,13 +85,29 @@ public class RankMaxo {
             if (meanScoreOptional.isPresent()) {
                 meanScore = meanScoreOptional.getAsDouble();
             }
-            maxoScores.put(maxoId, meanScore);
+
+            Set<TermId> initialDiagnosesDiseaseIds = initialDiagnoses.stream()
+                    .map(DifferentialDiagnosis::diseaseId)
+                    .collect(Collectors.toSet());
+            Set<TermId> maxoDiagnosesDiseaseIds = maxoDDResultsList.getLast().maxoDifferentialDiagnoses().stream()
+                    .map(DifferentialDiagnosis::diseaseId)
+                    .collect(Collectors.toSet());
+            Set<TermId> maxoDiscoverableHpoIds = new HashSet<>();
+            for (MaxoDDResults maxoDDResults : maxoDDResultsList) {
+                Set<TermId> discoverableHpoIds = maxoDDResults.maxoDiscoverableHpoIds();
+                maxoDiscoverableHpoIds.addAll(discoverableHpoIds);
+            }
+
+            RankMaxoScore rankMaxoScore = new RankMaxoScore(maxoId, initialDiagnosesDiseaseIds, maxoDiagnosesDiseaseIds,
+                    maxoDiscoverableHpoIds, meanScore, maxoDDResultsList.getLast().maxoDifferentialDiagnoses(),
+                    maxoDiscoverableHpoIdCts);
+            maxoScores.put(maxoId, rankMaxoScore);
             p++;
             updateProgress();
         }
 
         return maxoScores.entrySet().stream()
-                .sorted(Comparator.<Map.Entry<TermId, Double>>comparingDouble(Map.Entry::getValue)
+                .sorted(Comparator.comparing((Map.Entry<TermId, RankMaxoScore> e) -> e.getValue().maxoScore())
                 .reversed())
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (a,b)->b, LinkedHashMap::new));
     }

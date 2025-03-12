@@ -188,6 +188,8 @@ public class SessionResultsController {
             List<MaxodiffResult> resultsList = new ArrayList<>(refinementResults.maxodiffResults());
             if (diffDiagRefiner instanceof MaxoDiffKolmogorovSmirnovRefiner) {
                 resultsList.sort(Comparator.<MaxodiffResult>comparingDouble(mr -> mr.maxoTermScore().scoreDiff()));
+            } else if (diffDiagRefiner instanceof MaxoDiffRefiner) {
+                resultsList.sort(Comparator.<MaxodiffResult>comparingDouble(mr -> mr.rankMaxoScore().maxoScore()).reversed());
             } else {
                 resultsList.sort(Comparator.<MaxodiffResult>comparingDouble(mr -> mr.maxoTermScore().scoreDiff()).reversed());
             }
@@ -207,11 +209,20 @@ public class SessionResultsController {
             Map<TermId, String> diseaseTermsMap = new LinkedHashMap<>();
 
             for (MaxodiffResult maxodiffResult : resultsList.subList(0, nDisplayed)) {
-                MaxoTermScore maxoTermScore = maxodiffResult.maxoTermScore();
-                maxoTermsMap.put(maxoTermScore.maxoId(), biometadataService.maxoLabel(maxoTermScore.maxoId()).orElse("unknown"));
-                maxoTermScore.hpoTermIds().forEach(id -> hpoTermsMap.put(id, biometadataService.hpoLabel(id).orElse("unknown")));
-                maxoTermScore.omimTermIds().forEach(id -> diseaseTermsMap.put(id, biometadataService.diseaseLabel(id).orElse("unknown")));
-                maxoTermScore.maxoOmimTermIds().forEach(id -> diseaseTermsMap.put(id, biometadataService.diseaseLabel(id).orElse("unknown")));
+                if (diffDiagRefiner instanceof MaxoDiffRefiner) {
+                    RankMaxoScore rankMaxoScore = maxodiffResult.rankMaxoScore();
+                    maxoTermsMap.put(rankMaxoScore.maxoId().toString(), biometadataService.maxoLabel(rankMaxoScore.maxoId().toString()).orElse("unknown"));
+                    rankMaxoScore.discoverableHpoTermIds().forEach(id -> hpoTermsMap.put(id, biometadataService.hpoLabel(id).orElse("unknown")));
+                    rankMaxoScore.initialOmimTermIds().forEach(id -> diseaseTermsMap.put(id, biometadataService.diseaseLabel(id).orElse("unknown")));
+                    rankMaxoScore.maxoOmimTermIds().forEach(id -> diseaseTermsMap.put(id, biometadataService.diseaseLabel(id).orElse("unknown")));
+                } else {
+                    MaxoTermScore maxoTermScore = maxodiffResult.maxoTermScore();
+                    maxoTermsMap.put(maxoTermScore.maxoId(), biometadataService.maxoLabel(maxoTermScore.maxoId()).orElse("unknown"));
+                    maxoTermScore.hpoTermIds().forEach(id -> hpoTermsMap.put(id, biometadataService.hpoLabel(id).orElse("unknown")));
+                    maxoTermScore.omimTermIds().forEach(id -> diseaseTermsMap.put(id, biometadataService.diseaseLabel(id).orElse("unknown")));
+                    maxoTermScore.maxoOmimTermIds().forEach(id -> diseaseTermsMap.put(id, biometadataService.diseaseLabel(id).orElse("unknown")));
+                }
+
             }
             model.addAttribute("omimTerms", diseaseTermsMap);
             model.addAttribute("allHpoTermsMap", hpoTermsMap);

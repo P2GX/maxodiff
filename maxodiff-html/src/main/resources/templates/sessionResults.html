@@ -126,10 +126,16 @@
         <tr th:if="${refiner != 'score' && refiner != 'ksTest'}">
             <td>Final Rank/Score:</td><td th:text="${#numbers.formatDecimal(maxoTable.maxoTermScore.score, 0, 2)}"></td>
         </tr>
-        <tr>
+        <tr th:if="${refiner == 'score'}">
+            <td>N Diseases:</td><td th:text="${maxoTable.rankMaxoScore.maxoOmimTermIds.size}"></td>
+        </tr>
+        <tr th:if="${refiner == 'score'}">
+            <td>N HPO Terms:</td><td th:text="${maxoTable.rankMaxoScore.discoverableHpoTermIds.size}"></td>
+        </tr>
+        <tr th:if="${refiner != 'score'}">
             <td>N Diseases:</td><td th:text="${maxoTable.maxoTermScore.nOmimTerms}"></td>
         </tr>
-        <tr>
+        <tr th:if="${refiner != 'score'}">
             <td>N HPO Terms:</td><td th:text="${maxoTable.maxoTermScore.nHpoTerms}"></td>
         </tr>
         </tbody>
@@ -241,10 +247,38 @@
     </script>
     <script type="text/javascript" th:src="@{/js/maxoKolmogorovSmirnovChart.js}"></script>
 
-    <h3>Table of HPO Term Frequencies</h3>
+    <h3 th:if="${refiner == 'score'}">Table of HPO Term Repetition Counts</h3>
+    <table class='countsTable'>
+        <thead>
+        <tr th:if="${refiner == 'score'}">
+            <th></th>
+            <!--            <th></th>-->
+            <th:block th:each="hpoId : ${maxoTable.rankMaxoScore.discoverableHpoTermIds}">
+                <th th:text="${hpoId} + ' (' + ${allHpoTermsMap.get(hpoId)} + ')'"></th>
+            </th:block>
+        </tr>
+        </thead>
+
+        <tbody>
+        <th:block th:each= "omimId, omimIter : ${maxoTable.rankMaxoScore.maxoOmimTermIds}">
+            <tr th:if="${refiner == 'score'}">
+                <td th:text="${omimId} + ' (' + ${omimTerms.get(omimId)} + ')'"></td>
+                <th:block th:each= "hpoId : ${maxoTable.rankMaxoScore.discoverableHpoTermIds}">
+                    <th:block th:with="ct=${maxoTable.rankMaxoScore.hpoTermIdRepCtsMap.get(omimId).get(hpoId)}">
+                        <td th:text="${ct} == null ? ${ct} :
+                    (${ct} % 1 == 0 ? ${ct} : ${#numbers.formatDecimal(ct, 1, 4)})"
+                            th:style="|background: rgba(255, 215, 0, ${ct})|"></td>
+                    </th:block>
+                </th:block>
+            </tr>
+        </th:block>
+        </tbody>
+    </table>
+
+    <h3 th:if="${refiner != 'score'}">Table of HPO Term Frequencies</h3>
     <table class='resultsTable'>
         <thead>
-        <tr>
+        <tr th:if="${refiner != 'score'}">
             <th></th>
 <!--            <th></th>-->
             <th:block th:each="freqRecord : ${maxoTable.frequencies}">
@@ -255,7 +289,7 @@
 
         <tbody>
         <th:block th:each= "omimId, omimIter : ${maxoTable.maxoTermScore.omimTermIds}">
-            <tr>
+            <tr th:if="${refiner != 'score'}">
                 <td th:text="${omimId} + ' (' + ${omimTerms.get(omimId)} + ')'"></td>
                 <th:block th:each= "freqRecord : ${maxoTable.frequencies}">
                     <th:block th:with="frequency=${freqRecord.frequencies[omimIter.index]}">

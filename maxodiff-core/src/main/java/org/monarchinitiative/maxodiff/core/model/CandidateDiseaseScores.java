@@ -1,6 +1,7 @@
 package org.monarchinitiative.maxodiff.core.model;
 
 import org.monarchinitiative.maxodiff.core.SimpleTerm;
+import org.monarchinitiative.maxodiff.core.analysis.MaxoDDResults;
 import org.monarchinitiative.maxodiff.core.analysis.MaxoHpoTermIdMaps;
 import org.monarchinitiative.maxodiff.core.diffdg.DifferentialDiagnosisEngine;
 import org.monarchinitiative.phenol.ontology.data.TermId;
@@ -11,7 +12,6 @@ import java.util.stream.Stream;
 
 public class CandidateDiseaseScores {
 
-    private final Random random = new Random();
     private final MaxoHpoTermProbabilities maxoHpoTermProbabilities; //contains top K initial diagnoses only
 
     public CandidateDiseaseScores(MaxoHpoTermProbabilities maxoHpoTermProbabilities) {
@@ -25,10 +25,10 @@ public class CandidateDiseaseScores {
      * @param engine Engine to use for the differential diagnosis, e.g. LIRICAL.
      * @return List of the top K differential diagnoses for the given MAxO term.
      */
-    public List<DifferentialDiagnosis> getScoresForMaxoTerm(Sample ppkt, TermId maxoId,
-                                                            DifferentialDiagnosisEngine engine,
-                                                            Set<TermId> diseaseIds,
-                                                            Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxoTermMap) {
+    public MaxoDDResults getScoresForMaxoTerm(Sample ppkt, TermId maxoId,
+                                              DifferentialDiagnosisEngine engine,
+                                              Set<TermId> diseaseIds,
+                                              Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxoTermMap) {
         Set<TermId> observed = new HashSet<>(Set.of());
         Set<TermId> excluded = new HashSet<>(Set.of());
 
@@ -45,12 +45,14 @@ public class CandidateDiseaseScores {
         }
 
         Sample newSample = getNewSample(ppkt, observed, excluded);
+        List<DifferentialDiagnosis> newMaxoDiagnoses = engine.run(newSample, diseaseIds);
 
-        return engine.run(newSample, diseaseIds);
+        return new MaxoDDResults(maxoBenefitHpoIds, newMaxoDiagnoses);
     }
 
     private boolean getTestResult(double maxoTermBenefitProbability) {
-        float randomNumber = random.nextFloat();
+        // Generate random number between 0 and 1
+        double randomNumber = Math.random();
 
         return randomNumber > maxoTermBenefitProbability;
     }

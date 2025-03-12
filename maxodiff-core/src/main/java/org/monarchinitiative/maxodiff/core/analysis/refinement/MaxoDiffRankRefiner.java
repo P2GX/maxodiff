@@ -52,8 +52,11 @@ public class MaxoDiffRankRefiner extends BaseDiffDiagRefiner {
                     maxoTermScore.hpoTermIds(), hpoTermCounts);
             List<Frequencies> maxoFrequencies = getFrequencyRecords(maxoTermScore.maxoOmimTermIds(),
                     maxoTermScore.hpoTermIds(), hpoTermCounts);
+            // Make dummy RankMaxoScore record
+            RankMaxoScore rankMaxoScore = new RankMaxoScore(maxoId, maxoTermScore.omimTermIds(), maxoTermScore.maxoOmimTermIds(),
+                    Set.of(), maxoTermScore.scoreDiff(), List.of(), Map.of());
             // Make MaxodiffResult for the MAXO term
-            MaxodiffResult maxodiffResult = new MaxodiffResultImpl(maxoTermScore, frequencies, maxoFrequencies);
+            MaxodiffResult maxodiffResult = new MaxodiffResultImpl(maxoTermScore, rankMaxoScore, frequencies, maxoFrequencies);
             maxodiffResultsList.add(maxodiffResult);
         }
 
