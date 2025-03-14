@@ -272,9 +272,9 @@
                 <td th:text="${omimId} + ' (' + ${omimTerms.get(omimId)} + ')'"></td>
                 <th:block th:each= "hpoId : ${maxoTable.rankMaxoScore.discoverableHpoTermIds}">
                     <th:block th:with="ct=${maxoTable.rankMaxoScore.hpoTermIdRepCtsMap.get(omimId).get(hpoId)}">
-                        <td th:text="${ct} == null ? ${ct} :
-                    (${ct} % 1 == 0 ? ${ct} : ${#numbers.formatDecimal(ct, 1, 4)})"
-                            th:style="|background: rgba(255, 215, 0, ${ct})|"></td>
+                        <td th:text="${ct}"
+                            th:style= "${ct} == null ? |background: rgba(255, 215, 0, 0.0)| :
+                            |background: rgba(255, 215, 0, ${#numbers.formatDecimal(ct / (nRepetitions * 1.0), 1, 4)})|"></td>
                     </th:block>
                 </th:block>
             </tr>

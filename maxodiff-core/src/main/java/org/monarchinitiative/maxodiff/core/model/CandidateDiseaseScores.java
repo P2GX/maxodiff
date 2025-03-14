@@ -34,11 +34,13 @@ public class CandidateDiseaseScores {
 
         Map<TermId, Set<TermId>> maxoToHpoTermIdMap = MaxoHpoTermIdMaps.getMaxoToHpoTermIdMap(hpoToMaxoTermMap);
         Set<TermId> maxoBenefitHpoIds = maxoHpoTermProbabilities.getDiscoverableByMaxoHpoTerms(ppkt, maxoId, maxoToHpoTermIdMap);
+        Set<TermId> maxoAddedObservedHpoIds = new HashSet<>();
         for (TermId hpoId : maxoBenefitHpoIds) {
             double maxoTermBenefitProbability = maxoHpoTermProbabilities.calculateProbabilityOfMaxoTermRevealingPresenceOfHpoTerm(hpoId);
             boolean result = getTestResult(maxoTermBenefitProbability);
             if (result) {
                 observed.add(hpoId);
+                maxoAddedObservedHpoIds.add(hpoId);
             } else {
                 excluded.add(hpoId);
             }
@@ -47,7 +49,7 @@ public class CandidateDiseaseScores {
         Sample newSample = getNewSample(ppkt, observed, excluded);
         List<DifferentialDiagnosis> newMaxoDiagnoses = engine.run(newSample, diseaseIds);
 
-        return new MaxoDDResults(maxoBenefitHpoIds, newMaxoDiagnoses);
+        return new MaxoDDResults(maxoAddedObservedHpoIds, newMaxoDiagnoses);
     }
 
     private boolean getTestResult(double maxoTermBenefitProbability) {
