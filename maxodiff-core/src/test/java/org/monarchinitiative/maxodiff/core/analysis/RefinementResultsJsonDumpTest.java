@@ -64,7 +64,10 @@ public class RefinementResultsJsonDumpTest {
                       "discoverableHpoTermIds" : [ ],
                       "maxoScore" : 2.0,
                       "maxoDiagnoses" : [ ],
-                      "hpoTermIdRepCtsMap" : { }
+                      "hpoTermIdRepCtsMap" : { },
+                      "maxoDiseaseAvgRankChangeMap" : { },
+                      "minRankChange" : 0,
+                      "maxRankChange" : 0
                     },
                     "frequencies" : [ {
                       "hpoId" : "HP:123",
@@ -100,7 +103,10 @@ public class RefinementResultsJsonDumpTest {
                                         Set.of(),
                                         2.,
                                         List.of(),
-                                        Map.of()
+                                        Map.of(),
+                                        Map.of(),
+                                        0,
+                                        0
                                 ),
                                 List.of(
                                         new Frequencies(TermId.of("HP:123"), List.of(1.f, 4.6f, 8.19f))
