@@ -259,9 +259,13 @@
         <thead>
         <tr th:if="${refiner == 'score'}">
             <th></th>
+            <th>Average Rank Change</th>
             <!--            <th></th>-->
             <th:block th:each="hpoId : ${maxoTable.rankMaxoScore.discoverableHpoTermIds}">
-                <th th:text="${hpoId} + ' (' + ${allHpoTermsMap.get(hpoId)} + ')'"></th>
+                <th>
+                    <a th:href="@{|https://hpo.jax.org/browse/term/${hpoId}|}"
+                       th:text="${#strings.abbreviate(allHpoTermsMap.get(hpoId),20)}"></a>
+                </th>
             </th:block>
         </tr>
         </thead>
@@ -269,7 +273,14 @@
         <tbody>
         <th:block th:each= "omimId, omimIter : ${maxoTable.rankMaxoScore.maxoOmimTermIds}">
             <tr th:if="${refiner == 'score'}">
-                <td th:text="${omimId} + ' (' + ${omimTerms.get(omimId)} + ')'"></td>
+                <td th:text="${omimTerms.get(omimId)}"></td>
+                <th:block th:with="rankChangeMap = ${maxoTable.rankMaxoScore.maxoDiseaseAvgRankChangeMap},
+                                   avgRankDiff = ${rankChangeMap.get(omimId)}">
+                    <td th:text="${avgRankDiff}"
+                        th:style="${avgRankDiff} < 0 ?
+                        |background: rgba(0, 255, 0, ${#numbers.formatDecimal(avgRankDiff / (maxoTable.rankMaxoScore.minRankChange * 1.0), 1, 4)})| :
+                        |background: rgba(255, 0, 0, ${#numbers.formatDecimal(avgRankDiff / (maxoTable.rankMaxoScore.maxRankChange * 1.0), 1, 4)})|"></td>
+                </th:block>
                 <th:block th:each= "hpoId : ${maxoTable.rankMaxoScore.discoverableHpoTermIds}">
                     <th:block th:with="ct=${maxoTable.rankMaxoScore.hpoTermIdRepCtsMap.get(omimId).get(hpoId)}">
                         <td th:text="${ct}"

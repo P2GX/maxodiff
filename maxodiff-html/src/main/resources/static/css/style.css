@@ -128,14 +128,18 @@
     font-weight: bold
 }
 
+.countsTable td:nth-child(2) {
+    border-right: thick double;
+}
+
 .countsTable th {
-  text-align: center;
-  transform-origin: 50% 50%;
-  transform: rotate(315deg);
-  padding: 0;
-  margin: 0;
-  height: 200px;
-  white-space: no-wrap;
+    text-align: center;
+    transform-origin: 50% 50%;
+    transform: rotate(315deg);
+    padding: 0;
+    margin: 0;
+    height: 200px;
+    white-space: no-wrap;
 }
 
 .maxoResultsTable td:first-child {

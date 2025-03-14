@@ -92,15 +92,47 @@ public class RankMaxo {
             Set<TermId> maxoDiagnosesDiseaseIds = maxoDDResultsList.getLast().maxoDifferentialDiagnoses().stream()
                     .map(DifferentialDiagnosis::diseaseId)
                     .collect(Collectors.toSet());
-            Set<TermId> maxoDiscoverableHpoIds = new HashSet<>();
-            for (MaxoDDResults maxoDDResults : maxoDDResultsList) {
-                Set<TermId> discoverableHpoIds = maxoDDResults.maxoDiscoverableHpoIds();
-                maxoDiscoverableHpoIds.addAll(discoverableHpoIds);
+            Set<TermId> maxoDiscoverableHpoIds;
+            maxoDiscoverableHpoIds = maxoDDResultsList.stream()
+                    .map(MaxoDDResults::maxoDiscoverableHpoIds)
+                    .flatMap(Collection::stream)
+                    .collect(Collectors.toSet());
+
+            Map<TermId, Integer> maxoDiseaseAvgRankChangeMap = new HashMap<>();
+            for (TermId omimId : maxoDiagnosesDiseaseIds) {
+                int initialRank = 0;
+                List<DifferentialDiagnosis> initialDiffDiagnoses = initialDiagnoses.stream()
+                        .filter(dd -> dd.diseaseId().equals(omimId)).toList();
+                if (!initialDiffDiagnoses.isEmpty()) {
+                    DifferentialDiagnosis initialDiagnosis = initialDiffDiagnoses.getFirst();
+                    initialRank = initialDiagnoses.indexOf(initialDiagnosis) + 1;
+                }
+
+                List<Integer> rankDiffs = new ArrayList<>();
+                int meanRankDiff = 0;
+                for (MaxoDDResults maxoDDResults : maxoDDResultsList) {
+                    List<DifferentialDiagnosis> maxoDiagnoses = maxoDDResults.maxoDifferentialDiagnoses().stream()
+                            .filter(dd -> dd.diseaseId().equals(omimId)).toList();
+                    if (!maxoDiagnoses.isEmpty()) {
+                        DifferentialDiagnosis maxoDiagnosis = maxoDiagnoses.getFirst();
+                        int maxoRank = maxoDDResults.maxoDifferentialDiagnoses().indexOf(maxoDiagnosis) + 1;
+                        int maxoRankDiff = maxoRank - initialRank;
+                        rankDiffs.add(maxoRankDiff);
+                    }
+                }
+
+                OptionalDouble meanRankDiffOptional = rankDiffs.stream().mapToDouble(s -> s).average();
+                if (meanRankDiffOptional.isPresent()) {
+                    double meanRankDiffDouble = meanRankDiffOptional.getAsDouble();
+                    meanRankDiff = (int) Math.round(meanRankDiffDouble);
+                }
+                maxoDiseaseAvgRankChangeMap.put(omimId, meanRankDiff);
             }
 
             RankMaxoScore rankMaxoScore = new RankMaxoScore(maxoId, initialDiagnosesDiseaseIds, maxoDiagnosesDiseaseIds,
                     maxoDiscoverableHpoIds, meanScore, maxoDDResultsList.getLast().maxoDifferentialDiagnoses(),
-                    maxoDiscoverableHpoIdCts);
+                    maxoDiscoverableHpoIdCts, maxoDiseaseAvgRankChangeMap,
+                    Collections.min(maxoDiseaseAvgRankChangeMap.values()), Collections.max(maxoDiseaseAvgRankChangeMap.values()));
             maxoScores.put(maxoId, rankMaxoScore);
             p++;
             updateProgress();
