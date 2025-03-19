@@ -120,6 +120,11 @@
     font-weight: bold
 }
 
+.apexcharts-tooltip {
+    font-family: Arial, Helvetica, sans-serif !important;
+    white-space: pre-wrap !important;
+}
+
 .countsTable td {
     padding: 0px 10px 0px 10px;
 }

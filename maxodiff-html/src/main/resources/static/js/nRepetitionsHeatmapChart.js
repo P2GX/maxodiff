@@ -213,24 +213,24 @@ var options = {
           custom: function({series, seriesIndex, dataPointIndex, w}) {
             var data = w.globals.initialSeries[seriesIndex].data[dataPointIndex];
             var omimLabel = w.globals.initialSeries[seriesIndex].name;
-            var x = data.x;
+            var hpoLabel = data.x;
             var y = data.y;
 
             if (y >= minRankChange && y <= -1) {
-                return '<div style="font-family: Arial, Helvetica, sans-serif;"><b>OMIM Term</b>: ' + omimLabel + '</div>' +
-                       '<div></div>' +
-                       '<div style="font-family: Arial, Helvetica, sans-serif;"><b>Average Rank Improvement</b>: ' + -y + '</div>';
+                return '<div style="background-color: lightgray; color: blue"><b>Disease Term</b>: ' + omimLabel + '</div>' +
+                       '<div><p></p></div>' +
+                       '<div><b>Average Rank Improvement</b>: ' + -y + '</div>';
             } else if (y >= 1 && y <= maxRankChange) {
-                return '<div style="font-family: Arial, Helvetica, sans-serif;"><b>OMIM Term</b>: ' + omimLabel + '</div>' +
-                       '<div></div>' +
-                       '<div style="font-family: Arial, Helvetica, sans-serif;"><b>Average Rank Decline</b>: ' + y + '</div>';
+                return '<div style="background-color: lightgray; color: blue"><b>Disease Term</b>: ' + omimLabel + '</div>' +
+                       '<div><p></p></div>' +
+                       '<div><b>Average Rank Decline</b>: ' + y + '</div>';
             } else if (y >= repCtMultiplier) {
                 frequency = 0
                 for (let [omimIdKey, omimLabelValue] of omimIdToLabelMap) {
                     if (omimLabelValue == omimLabel) {
                         var omimId = omimIdKey
                         for (let [hpoIdKey, hpoLabelValue] of hpoIdToLabelMap) {
-                            if (hpoLabelValue == x) {
+                            if (hpoLabelValue == hpoLabel) {
                                 var hpoId = hpoIdKey
                                 for (i = 0; i < hpoFrequencies.length; i++) {
                                     var freqRecord = hpoFrequencies[i]
@@ -246,11 +246,13 @@ var options = {
                     }
                 }
 
-                return '<div style="font-family: Arial, Helvetica, sans-serif;"><b>OMIM Term</b>: ' + omimLabel + '</div>' +
-                       '<div style="font-family: Arial, Helvetica, sans-serif;"><b>HPO Term</b>: ' + x + '</div>' +
-                       '<div></div>' +
-                       '<div style="font-family: Arial, Helvetica, sans-serif;"><b>Repetition Count</b>: ' + (y/repCtMultiplier) + '</div>' +
-                       '<div style="font-family: Arial, Helvetica, sans-serif;"><b>Frequency</b>: ' + frequency + '</div>';
+                return '<div style="background-color: lightgray; color: blue"><b>Disease Term</b>: ' + omimLabel + '</div>' +
+                       '<div style="background-color: lightgray; color: red"><b>HPO Term</b>: ' + hpoLabel + '</div>' +
+                       '<div><p></p></div>' +
+                       '<div><b>Frequency of ' + '<span style="color: red">' + hpoLabel + '</span>' +
+                           ' in ' + '<span style="color: blue">' + omimLabel + '</span>' + '</b>: ' + frequency + '</div>' +
+                       '<div><p></p></div>' +
+                       '<div style="background-color: gold"><b>Repetition Count</b>: ' + (y/repCtMultiplier) + '</div>';
             }
           }
       }
