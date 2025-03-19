@@ -11,6 +11,8 @@ var idx = chartIdx;
 var heatmapChart = document.getElementById('nRepHeatmapChartContainer_' + idx);
 console.log("nRepHeatmapChart = " + heatmapChart);
 
+var repCtMultiplier = 100;
+
 var omimIdToLabelMap = htmlObjectToMap(omimTerms)
 var hpoIdToLabelMap = htmlObjectToMap(allHpoTermsMap)
 var repMap = htmlObjectToRepMap(hpoTermIdRepCtsMap);
@@ -75,7 +77,7 @@ function getDatasetValues(repMap, rankChangeMap) {
         var ctData = [{x: 'Average Rank Change', y: rankChangeMap[diseaseIdKey]}];
         for (let [hpoIdKey, repCtValue] of ctMapDataset) {
             var hpoLabel = allHpoTermsMap[hpoIdKey]
-            var repCt = repCtValue * 100
+            var repCt = repCtValue * repCtMultiplier
             var dataPt = {x: hpoLabel, y: repCt};
             ctData.push(dataPt);
         }
@@ -141,6 +143,7 @@ var options = {
           type: 'heatmap',
           events: {
              xAxisLabelClick: function(event, chartContext, opts) {
+               console.log(opts)
                var labelIdx = opts.labelIndex;
                var label = opts.globals.labels[labelIdx]
                if (label != 'Average Rank Change') {
@@ -163,10 +166,22 @@ var options = {
       },
       xaxis: {
         labels: {
+          formatter: function(str) {
+            const n = 25
+            return str.length > n ? str.substr(0, n - 1) + '...' : str
+          },
           style: {
             colors: xAxisLabelColors,
           },
         },
+      },
+      yaxis: {
+        labels: {
+          formatter: function(str) {
+            const n = 30
+            return str.length > n ? str.substr(0, n - 1) + '...' : str
+          }
+        }
       },
       plotOptions: {
           heatmap: {
@@ -185,8 +200,8 @@ var options = {
                     name: 'Rank Decline',
                   },
                   {
-                    from: 100,
-                    to: nRepetitions * 100,
+                    from: repCtMultiplier,
+                    to: nRepetitions * repCtMultiplier,
                     color: '#FFB200', //gold
                     name: 'Repetition Counts',
                   }
@@ -209,7 +224,7 @@ var options = {
                 return '<div style="font-family: Arial, Helvetica, sans-serif;"><b>OMIM Term</b>: ' + omimLabel + '</div>' +
                        '<div></div>' +
                        '<div style="font-family: Arial, Helvetica, sans-serif;"><b>Average Rank Decline</b>: ' + y + '</div>';
-            } else if (y >= 100) {
+            } else if (y >= repCtMultiplier) {
                 frequency = 0
                 for (let [omimIdKey, omimLabelValue] of omimIdToLabelMap) {
                     if (omimLabelValue == omimLabel) {
@@ -234,7 +249,7 @@ var options = {
                 return '<div style="font-family: Arial, Helvetica, sans-serif;"><b>OMIM Term</b>: ' + omimLabel + '</div>' +
                        '<div style="font-family: Arial, Helvetica, sans-serif;"><b>HPO Term</b>: ' + x + '</div>' +
                        '<div></div>' +
-                       '<div style="font-family: Arial, Helvetica, sans-serif;"><b>Repetition Count</b>: ' + (y/100) + '</div>' +
+                       '<div style="font-family: Arial, Helvetica, sans-serif;"><b>Repetition Count</b>: ' + (y/repCtMultiplier) + '</div>' +
                        '<div style="font-family: Arial, Helvetica, sans-serif;"><b>Frequency</b>: ' + frequency + '</div>';
             }
           }
