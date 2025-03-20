@@ -12,7 +12,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.*;
-import java.util.zip.GZIPOutputStream;
 
 
 /**
@@ -69,8 +68,8 @@ public class BatchDiagnosisCommand extends DifferentialDiagnosisCommand {
 
         Path maxodiffResultsFilePath = Path.of(String.join(File.separator, outputDir.toString(), "maxodiff_results.csv"));
 
-        try (BufferedWriter writer = openWriter(maxodiffResultsFilePath); CSVPrinter printer = CSVFormat.DEFAULT.print(writer)) {
-            printer.printRecord("phenopacket", "background_vcf", "disease_id", "maxo_id", "maxo_label",
+        try (BufferedWriter writer = openOutputFileWriter(maxodiffResultsFilePath); CSVPrinter printer = CSVFormat.DEFAULT.print(writer)) {
+            printer.printRecord("phenopacket", "disease_id", "maxo_id", "maxo_label",
                     "n_diseases", "disease_ids", "weight", "score"); // header
 
             for (int i = 0; i < phenopacketPaths.size(); i++) {
@@ -92,7 +91,6 @@ public class BatchDiagnosisCommand extends DifferentialDiagnosisCommand {
                             System.out.println("BatchCmd resultsMap = " + resultsMap);
 
                             List<Object> phenopacketNames = resultsMap.get("phenopacketName");
-                            List<Object> backgroundVcfs = resultsMap.get("backgroundVcf");
                             List<Object> diseaseIdList = resultsMap.get("diseaseId");
                             List<Object> maxScoreMaxoTermIds = resultsMap.get("maxScoreMaxoTermId");
                             List<Object> maxScoreTermLabels = resultsMap.get("maxScoreTermLabel");
@@ -102,7 +100,6 @@ public class BatchDiagnosisCommand extends DifferentialDiagnosisCommand {
                             List<Object> maxScoreValues = resultsMap.get("maxScoreValue");
                             for (int j = 0; j < phenopacketNames.size(); j++) {
                                 String phenopacketName = phenopacketNames.get(j).toString();
-                                String backgroundVcf = backgroundVcfs.get(j).toString();
                                 TermId diseaseId = TermId.of(diseaseIdList.get(j).toString());
                                 TermId maxScoreMaxoTermId = TermId.of(maxScoreMaxoTermIds.get(j).toString());
                                 String maxScoreTermLabel = maxScoreTermLabels.get(j).toString();
@@ -111,7 +108,7 @@ public class BatchDiagnosisCommand extends DifferentialDiagnosisCommand {
                                 double weightValue = Double.parseDouble(weightList.get(j).toString());
                                 double maxScoreValue = Double.parseDouble(maxScoreValues.get(j).toString());
 
-                                writeResults(phenopacketName, backgroundVcf, diseaseId, maxScoreMaxoTermId, maxScoreTermLabel,
+                                writeResults(phenopacketName, diseaseId, maxScoreMaxoTermId, maxScoreTermLabel,
                                         topNDiseases, diseaseIds, weightValue, maxScoreValue, printer);
                             }
                         } catch (Exception ex) {
@@ -136,42 +133,6 @@ public class BatchDiagnosisCommand extends DifferentialDiagnosisCommand {
         return resultsMap;
     }
 
-    private static BufferedWriter openWriter(Path outputPath) throws IOException {
-        return outputPath.toFile().getName().endsWith(".gz")
-                ? new BufferedWriter(new OutputStreamWriter(new GZIPOutputStream(Files.newOutputStream(outputPath))))
-                : Files.newBufferedWriter(outputPath);
-    }
 
-
-
-    /**
-     * Write results of a single benchmark into the provided {@code printer}.
-     */
-    private static void writeResults(String phenopacketName,
-                                     String backgroundVcfName,
-                                     TermId diseaseId,
-                                     TermId maxoId,
-                                     String maxoLabel,
-                                     int topNdiseases,
-                                     String diseaseIds,
-                                     double weight,
-                                     double score,
-                                     CSVPrinter printer) {
-
-        try {
-            printer.print(phenopacketName);
-            printer.print(backgroundVcfName);
-            printer.print(diseaseId);
-            printer.print(maxoId);
-            printer.print(maxoLabel);
-            printer.print(topNdiseases);
-            printer.print(diseaseIds);
-            printer.print(weight);
-            printer.print(score);
-            printer.println();
-        } catch (IOException e) {
-            LOGGER.error("Error writing results for {}: {}", diseaseId, e.getMessage(), e);
-        }
-    }
 
 }
