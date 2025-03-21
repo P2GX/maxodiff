@@ -57,8 +57,11 @@ public class BaseDiffDiagRefiner implements DiffDiagRefiner {
             // Get HPO frequency records
             List<Frequencies> frequencies = getFrequencyRecords(maxoTermScore.omimTermIds(),
                     maxoTermScore.hpoTermIds(), hpoTermCounts);
+            // Make dummy RankMaxoScore record
+            RankMaxoScore rankMaxoScore = new RankMaxoScore(maxoId, maxoTermScore.omimTermIds(), maxoTermScore.maxoOmimTermIds(),
+                    Set.of(), maxoTermScore.scoreDiff(), List.of(), Map.of(), Map.of(), 0, 0);
             // Make MaxodiffResult for the MAXO term
-            MaxodiffResult maxodiffResult = new MaxodiffResultImpl(maxoTermScore, frequencies, List.of());
+            MaxodiffResult maxodiffResult = new MaxodiffResultImpl(maxoTermScore, rankMaxoScore, frequencies, List.of());
             maxodiffResultsList.add(maxodiffResult);
         }
         maxodiffResultsList.sort(Comparator.<MaxodiffResult>comparingDouble(mr -> mr.maxoTermScore().scoreDiff()).reversed());
@@ -81,10 +84,11 @@ public class BaseDiffDiagRefiner implements DiffDiagRefiner {
                 .map(DifferentialDiagnosis::diseaseId)
                 .collect(Collectors.toSet());
 
-        Map<TermId, Double> maxoTermRanks = rankMaxo.rankMaxoTerms(sample, 2, initialDiagnosesIds);
-        for (Map.Entry<TermId, Double> entry : maxoTermRanks.entrySet()) {
+        Map<TermId, RankMaxoScore> maxoTermRanks = rankMaxo.rankMaxoTerms(sample, options.nRepetitions(), initialDiagnosesIds);
+        for (Map.Entry<TermId, RankMaxoScore> entry : maxoTermRanks.entrySet()) {
             TermId maxoId = entry.getKey();
-            double scoreDiff = entry.getValue();
+            RankMaxoScore rankMaxoScore = entry.getValue();
+            double scoreDiff = rankMaxoScore.maxoScore();
             Set<TermId> diseaseIds = new LinkedHashSet<>();
             List<DifferentialDiagnosis> differentialDiagnosisModels = new ArrayList<>(differentialDiagnoses);
             differentialDiagnosisModels.sort(Comparator.comparingDouble(DifferentialDiagnosis::score).reversed());
@@ -100,7 +104,7 @@ public class BaseDiffDiagRefiner implements DiffDiagRefiner {
             List<Frequencies> frequencies = getFrequencyRecords(maxoTermScore.omimTermIds(),
                     maxoTermScore.hpoTermIds(), hpoTermCounts);
             // Make MaxodiffResult for the MAXO term
-            MaxodiffResult maxodiffResult = new MaxodiffResultImpl(maxoTermScore, frequencies, List.of());
+            MaxodiffResult maxodiffResult = new MaxodiffResultImpl(maxoTermScore, rankMaxoScore, frequencies, List.of());
             maxodiffResultsList.add(maxodiffResult);
         }
         // Return RefinementResults object, which contains the list of MaxodiffResult objects.

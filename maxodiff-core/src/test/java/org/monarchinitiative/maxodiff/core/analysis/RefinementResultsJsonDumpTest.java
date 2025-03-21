@@ -12,6 +12,7 @@ import org.monarchinitiative.phenol.ontology.data.TermId;
 
 import java.io.StringWriter;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import static org.hamcrest.MatcherAssert.assertThat;
@@ -56,6 +57,18 @@ public class RefinementResultsJsonDumpTest {
                       "originalCDF" : [ 0.0 ],
                       "maxoTermCDF" : [ 0.0 ]
                     },
+                    "rankMaxoScore" : {
+                      "maxoId" : "MAXO:123",
+                      "initialOmimTermIds" : [ "OMIM:256000" ],
+                      "maxoOmimTermIds" : [ "OMIM:128000" ],
+                      "discoverableHpoTermIds" : [ ],
+                      "maxoScore" : 2.0,
+                      "maxoDiagnoses" : [ ],
+                      "hpoTermIdRepCtsMap" : { },
+                      "maxoDiseaseAvgRankChangeMap" : { },
+                      "minRankChange" : 0,
+                      "maxRankChange" : 0
+                    },
                     "frequencies" : [ {
                       "hpoId" : "HP:123",
                       "frequencies" : [ 1.0, 4.6, 8.19 ]
@@ -82,6 +95,18 @@ public class RefinementResultsJsonDumpTest {
                                         2.,
                                         TermId.of("OMIM:640000"),
                                         List.of(), List.of(), new double[1], new double[1]
+                                ),
+                                new RankMaxoScore(
+                                        TermId.of("MAXO:123"),
+                                        Set.of(TermId.of("OMIM:256000")),
+                                        Set.of(TermId.of("OMIM:128000")),
+                                        Set.of(),
+                                        2.,
+                                        List.of(),
+                                        Map.of(),
+                                        Map.of(),
+                                        0,
+                                        0
                                 ),
                                 List.of(
                                         new Frequencies(TermId.of("HP:123"), List.of(1.f, 4.6f, 8.19f))

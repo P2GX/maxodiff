@@ -80,7 +80,7 @@ public class DifferentialDiagnosisController {
             Sample sample = Sample.of(phenopacketData.sampleId(),
                     phenopacketData.presentHpoTermIds().toList(),
                     phenopacketData.excludedHpoTermIds().toList());
-            RefinementOptions options = RefinementOptions.of(nDiseases, weight);
+            RefinementOptions options = RefinementOptions.of(nDiseases, 10, weight);
 
             List<DifferentialDiagnosis> orderedDiagnoses = null;
             if (model.getAttribute("hpoTermCounts") == null) {

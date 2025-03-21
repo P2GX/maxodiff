@@ -93,6 +93,13 @@ public class DifferentialDiagnosisCommand extends BaseCommand {
             description = "Disease Probability Model to use for Rank MAxO algorithm (default: ${DEFAULT-VALUE}).")
     protected String diseaseProbModel = "ranked";
 
+    @CommandLine.Option(names = {"-nr", "--nRepetitions"},
+//            required = true,
+//            split=",",
+//            arity = "1..*",
+            description = "Number of repetitions for running differential diagnosis.")
+    protected Integer nRepetitionsArg;
+
     @Override
     public Integer execute() throws Exception {
         Map<String, List<Object>> resultsMap = new HashMap<>();
@@ -107,17 +114,13 @@ public class DifferentialDiagnosisCommand extends BaseCommand {
         resultsMap.put("weight", new ArrayList<>());
         resultsMap.put("maxScoreValue", new ArrayList<>());
 
-
-//        List<Double> weights = new ArrayList<>();
-//        weightsArg.stream().forEach(w -> weights.add(w));
-//        List<Integer> nDiseasesList = new ArrayList<>();
-//        nDiseasesArg.stream().forEach(n -> nDiseasesList.add(n));
-
         double weight = weightsArg;
         int nDiseases = nDiseasesArg;
+        int nRepetitions = nRepetitionsArg;
 
         System.out.println(weight);
         System.out.println(nDiseases);
+        System.out.println(nRepetitions);
 
         Lirical lirical = prepareLirical();
         PhenotypeService phenotypeService = lirical.phenotypeService();
@@ -127,11 +130,9 @@ public class DifferentialDiagnosisCommand extends BaseCommand {
                      MaxodiffLiricalAnalysisRunnerImpl.of(phenotypeService, 4)) {
             LiricalDifferentialDiagnosisEngineConfigurer liricalDifferentialDiagnosisEngineConfigurer = LiricalDifferentialDiagnosisEngineConfigurer.of(maxodiffLiricalAnalysisRunner);
             var options = AnalysisOptions.builder()
-//                    .setDiseaseDatabases(List.of(DiseaseDatabase.OMIM))
                     .useStrictPenalties(runConfiguration.strict)
                     .useGlobal(runConfiguration.globalAnalysisMode)
                     .pretestProbability(PretestDiseaseProbabilities.uniform(liricalDiseaseIds))
-//                .includeDiseasesWithNoDeleteriousVariants(true)
                     .build();
             LiricalDifferentialDiagnosisEngine engine = liricalDifferentialDiagnosisEngineConfigurer.configure(options);
             
@@ -142,16 +143,6 @@ public class DifferentialDiagnosisCommand extends BaseCommand {
 
             // Get initial differential diagnoses from running LIRICAL
             List<DifferentialDiagnosis> differentialDiagnoses = engine.run(sample);
-
-            // Summarize the LIRICAL results.
-            //String sampleId = analysisData.sampleId();
-            String phenopacketName = phenopacketPath.toFile().getName();
-            //String outFilename = String.join("_",
-            //        phenopacketName.replace(".json", ""),
-            //        "lirical",
-            //        "results");
-            //AnalysisResultsMetadata metadata = prepareAnalysisResultsMetadata(gene2Genotypes, lirical, sampleId);
-            //writeResultsToFile(lirical, OutputFormat.parse(outputFormatArg), analysisData, results, metadata, outFilename);
 
             // Make maxodiffRefiner
             MaxodiffDataResolver maxodiffDataResolver = MaxodiffDataResolver.of(maxoDataPath);
@@ -208,17 +199,15 @@ public class DifferentialDiagnosisCommand extends BaseCommand {
                              .collect(Collectors.toSet());
 
             var diseaseSubsetOptions = AnalysisOptions.builder()
-//                    .setDiseaseDatabases(List.of(DiseaseDatabase.OMIM))
                     .useStrictPenalties(runConfiguration.strict)
                     .useGlobal(runConfiguration.globalAnalysisMode)
                     .pretestProbability(PretestDiseaseProbabilities.uniform(initialDiagnosesIds))
                     .addTargetDiseases(initialDiagnosesIds)
-//                .includeDiseasesWithNoDeleteriousVariants(true)
                     .build();
             LiricalDifferentialDiagnosisEngine diseaseSubsetEngine = liricalDifferentialDiagnosisEngineConfigurer.configure(diseaseSubsetOptions);
 
                     RankMaxo rankMaxo = new RankMaxo(hpoToMaxoTermMap, maxoToHpoTermIdMap, maxoHpoTermProbabilities, diseaseSubsetEngine);
-                    Map<TermId, Double> maxoTermRanks = rankMaxo.rankMaxoTerms(sample, 2, initialDiagnosesIds);
+                    Map<TermId, RankMaxoScore> maxoTermRanks = rankMaxo.rankMaxoTerms(sample, nRepetitions, initialDiagnosesIds);
                     LOGGER.info(maxoTermRanks.toString());
 //                    List<MaxodiffResult> resultsList = refinementResults.maxodiffResults().stream().toList();
 //                    TermId diseaseId = phenopacketData.diseaseIds().get(0);
