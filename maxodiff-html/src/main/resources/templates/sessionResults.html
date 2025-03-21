@@ -61,6 +61,10 @@
             <td><input style="width:90%" type="number" min="0" th:max="${totalNDiseases}" th:value="${nDiseases} ?: 20" name="nDiseases" id="nDiseases"/></td>
         </tr>
         <tr>
+            <td>N Repetitions:</td>
+            <td><input style="width:90%" type="number" min="0" th:max="100" th:value="${nRepetitions} ?: 10" name="nRepetitions" id="nRepetitions"/></td>
+        </tr>
+        <tr>
             <td>Weight: </td>
             <td><input style="width:90%" type="number" step="0.01" min="0" max="1" th:value="${weight} ?: 0.5" name="weight" id="weight"/></td><!--th:disabled="${refiner != 'score'}"-->
         </tr>
@@ -100,6 +104,9 @@
             <td style='font-weight:bold;'>N Diseases:</td><td th:text="${nDiseases}"></td>
         </tr>
         <tr>
+            <td style='font-weight:bold;'>N Repetitions:</td><td th:text="${nRepetitions}"></td>
+        </tr>
+        <tr>
             <td style='font-weight:bold;'>Weight:</td><td th:text="${weight}"></td>
         </tr>
     </tbody>
@@ -126,10 +133,16 @@
         <tr th:if="${refiner != 'score' && refiner != 'ksTest'}">
             <td>Final Rank/Score:</td><td th:text="${#numbers.formatDecimal(maxoTable.maxoTermScore.score, 0, 2)}"></td>
         </tr>
-        <tr>
+        <tr th:if="${refiner == 'score'}">
+            <td>N Diseases:</td><td th:text="${maxoTable.rankMaxoScore.maxoOmimTermIds.size}"></td>
+        </tr>
+        <tr th:if="${refiner == 'score'}">
+            <td>N HPO Terms:</td><td th:text="${maxoTable.rankMaxoScore.discoverableHpoTermIds.size}"></td>
+        </tr>
+        <tr th:if="${refiner != 'score'}">
             <td>N Diseases:</td><td th:text="${maxoTable.maxoTermScore.nOmimTerms}"></td>
         </tr>
-        <tr>
+        <tr th:if="${refiner != 'score'}">
             <td>N HPO Terms:</td><td th:text="${maxoTable.maxoTermScore.nHpoTerms}"></td>
         </tr>
         </tbody>
@@ -241,10 +254,31 @@
     </script>
     <script type="text/javascript" th:src="@{/js/maxoKolmogorovSmirnovChart.js}"></script>
 
-    <h3>Table of HPO Term Frequencies</h3>
+    <table>
+        <tbody>
+        <tr th:if="${refiner == 'score'}">
+            <td><div th:id="'nRepHeatmapChartContainer_' + ${iter.index}" style="height:600px; width:1000px; border: 1px solid black"></div></td>
+        </tr>
+        </tbody>
+    </table>
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+    <script th:inline="javascript">
+        var hpoTermIdRepCtsMap = [[${maxoTable.rankMaxoScore.hpoTermIdRepCtsMap}]];
+        var nDiseases = [[${nDiseases}]];
+        var nRepetitions = [[${nRepetitions}]];
+        var maxoDiseaseAvgRankChangeMap = [[${maxoTable.rankMaxoScore.maxoDiseaseAvgRankChangeMap}]];
+        var allHpoTermsMap = [[${allHpoTermsMap}]];
+        var omimTerms = [[${omimTerms}]];
+        var hpoTermCounts = [[${hpoTermCounts}]]
+        var chartIdx = [[${iter.index}]]
+    </script>
+    <script type="text/javascript" th:src="@{/js/nRepetitionsHeatmapChart.js}"></script>
+
+
+    <h3 th:if="${refiner != 'score'}">Table of HPO Term Frequencies</h3>
     <table class='resultsTable'>
         <thead>
-        <tr>
+        <tr th:if="${refiner != 'score'}">
             <th></th>
 <!--            <th></th>-->
             <th:block th:each="freqRecord : ${maxoTable.frequencies}">
@@ -255,7 +289,7 @@
 
         <tbody>
         <th:block th:each= "omimId, omimIter : ${maxoTable.maxoTermScore.omimTermIds}">
-            <tr>
+            <tr th:if="${refiner != 'score'}">
                 <td th:text="${omimId} + ' (' + ${omimTerms.get(omimId)} + ')'"></td>
                 <th:block th:each= "freqRecord : ${maxoTable.frequencies}">
                     <th:block th:with="frequency=${freqRecord.frequencies[omimIter.index]}">

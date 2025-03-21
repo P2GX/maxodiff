@@ -98,6 +98,13 @@ public class DifferentialDiagnosisCommand extends BaseCommand {
             description = "Disease Probability Model to use for Rank MAxO algorithm (default: ${DEFAULT-VALUE}).")
     protected String diseaseProbModel = "ranked";
 
+    @CommandLine.Option(names = {"-nr", "--nRepetitions"},
+//            required = true,
+//            split=",",
+//            arity = "1..*",
+            description = "Number of repetitions for running differential diagnosis.")
+    protected Integer nRepetitionsArg;
+
     @Override
     public Integer execute() throws Exception {
 
@@ -135,15 +142,13 @@ public class DifferentialDiagnosisCommand extends BaseCommand {
         resultsMap.put("weight", new ArrayList<>());
         resultsMap.put("maxScoreValue", new ArrayList<>());
 
-
-//        List<Double> weights = new ArrayList<>();
-//        weightsArg.stream().forEach(w -> weights.add(w));
-//        List<Integer> nDiseasesList = new ArrayList<>();
-//        nDiseasesArg.stream().forEach(n -> nDiseasesList.add(n));
-
+        double weight = weightsArg;
+        int nDiseases = nDiseasesArg;
+        int nRepetitions = nRepetitionsArg;
 
         System.out.println(weight);
         System.out.println(nDiseases);
+        System.out.println(nRepetitions);
 
         Lirical lirical = prepareLirical();
         PhenotypeService phenotypeService = lirical.phenotypeService();
@@ -166,16 +171,6 @@ public class DifferentialDiagnosisCommand extends BaseCommand {
 
             // Get initial differential diagnoses from running LIRICAL
             List<DifferentialDiagnosis> differentialDiagnoses = engine.run(sample);
-
-            // Summarize the LIRICAL results.
-            //String sampleId = analysisData.sampleId();
-
-            //String outFilename = String.join("_",
-            //        phenopacketName.replace(".json", ""),
-            //        "lirical",
-            //        "results");
-            //AnalysisResultsMetadata metadata = prepareAnalysisResultsMetadata(gene2Genotypes, lirical, sampleId);
-            //writeResultsToFile(lirical, OutputFormat.parse(outputFormatArg), analysisData, results, metadata, outFilename);
 
             // Make maxodiffRefiner
             MaxodiffDataResolver maxodiffDataResolver = MaxodiffDataResolver.of(maxoDataPath);
@@ -200,7 +195,7 @@ public class DifferentialDiagnosisCommand extends BaseCommand {
 //                for (double weight : weights) {
             System.out.println("Weight = " + weight);
             // Get List of Refinement results: maxo term scores and frequencies
-            RefinementOptions options = RefinementOptions.of(nDiseases, weight);
+            RefinementOptions options = RefinementOptions.of(nDiseases, nRepetitions, weight);
             List<DifferentialDiagnosis> orderedDiagnoses = maxoDiffRefiner.getOrderedDiagnoses(differentialDiagnoses, options);
             List<HpoDisease> diseases = maxoDiffRefiner.getDiseases(orderedDiagnoses);
             Map<TermId, List<HpoFrequency>> hpoTermCounts = maxoDiffRefiner.getHpoTermCounts(diseases);

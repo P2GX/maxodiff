@@ -68,6 +68,7 @@ public class SessionResultsController {
                               @SessionAttribute(value = "liricalEngineConfigurer", required = false) LiricalDifferentialDiagnosisEngineConfigurer liricalDifferentialDiagnosisEngineConfigurer,
                               @RequestParam(value = "refiner", required = false) String refiner,
                               @RequestParam(value = "nDiseases", required = false) Integer nDiseases,
+                              @RequestParam(value = "nRepetitions", required = false) Integer nRepetitions,
                               @RequestParam(value = "weight", required = false) Double weight,
                               @RequestParam(value = "nMaxoResults", required = false) Integer nMaxoResults,
                               @RequestParam(value = "diseaseProbModel", required = false) String diseaseProbModel,
@@ -94,6 +95,7 @@ public class SessionResultsController {
         model.addAttribute("algorithm", algorithm);
         Integer prevNDiseases = (Integer) model.getAttribute("nDiseases");
         model.addAttribute("nDiseases", nDiseases);
+        model.addAttribute("nRepetitions", nRepetitions);
         model.addAttribute("weight", weight);
         model.addAttribute("nMaxoResults", nMaxoResults);
         model.addAttribute("diseaseProbModel", diseaseProbModel);
@@ -104,8 +106,8 @@ public class SessionResultsController {
             model.addAttribute("totalNDiseases", differentialDiagnoses.size());
         }
 
-        if (sample != null && nDiseases != null && weight != null && nMaxoResults != null) {
-            RefinementOptions options = RefinementOptions.of(nDiseases, weight);
+        if (sample != null && nDiseases != null && nRepetitions != null && weight != null && nMaxoResults != null) {
+            RefinementOptions options = RefinementOptions.of(nDiseases, nRepetitions, weight);
 
             if (model.getAttribute("orderedDiagnoses") == null || !nDiseases.equals(prevNDiseases)
                     || diffDiagRefiner instanceof MaxoDiffKolmogorovSmirnovRefiner) {
@@ -188,6 +190,8 @@ public class SessionResultsController {
             List<MaxodiffResult> resultsList = new ArrayList<>(refinementResults.maxodiffResults());
             if (diffDiagRefiner instanceof MaxoDiffKolmogorovSmirnovRefiner) {
                 resultsList.sort(Comparator.<MaxodiffResult>comparingDouble(mr -> mr.maxoTermScore().scoreDiff()));
+            } else if (diffDiagRefiner instanceof MaxoDiffRefiner) {
+                resultsList.sort(Comparator.<MaxodiffResult>comparingDouble(mr -> mr.rankMaxoScore().maxoScore()).reversed());
             } else {
                 resultsList.sort(Comparator.<MaxodiffResult>comparingDouble(mr -> mr.maxoTermScore().scoreDiff()).reversed());
             }
@@ -207,11 +211,20 @@ public class SessionResultsController {
             Map<TermId, String> diseaseTermsMap = new LinkedHashMap<>();
 
             for (MaxodiffResult maxodiffResult : resultsList.subList(0, nDisplayed)) {
-                MaxoTermScore maxoTermScore = maxodiffResult.maxoTermScore();
-                maxoTermsMap.put(maxoTermScore.maxoId(), biometadataService.maxoLabel(maxoTermScore.maxoId()).orElse("unknown"));
-                maxoTermScore.hpoTermIds().forEach(id -> hpoTermsMap.put(id, biometadataService.hpoLabel(id).orElse("unknown")));
-                maxoTermScore.omimTermIds().forEach(id -> diseaseTermsMap.put(id, biometadataService.diseaseLabel(id).orElse("unknown")));
-                maxoTermScore.maxoOmimTermIds().forEach(id -> diseaseTermsMap.put(id, biometadataService.diseaseLabel(id).orElse("unknown")));
+                if (diffDiagRefiner instanceof MaxoDiffRefiner) {
+                    RankMaxoScore rankMaxoScore = maxodiffResult.rankMaxoScore();
+                    maxoTermsMap.put(rankMaxoScore.maxoId().toString(), biometadataService.maxoLabel(rankMaxoScore.maxoId().toString()).orElse("unknown"));
+                    rankMaxoScore.discoverableHpoTermIds().forEach(id -> hpoTermsMap.put(id, biometadataService.hpoLabel(id).orElse("unknown")));
+                    rankMaxoScore.initialOmimTermIds().forEach(id -> diseaseTermsMap.put(id, biometadataService.diseaseLabel(id).orElse("unknown")));
+                    rankMaxoScore.maxoOmimTermIds().forEach(id -> diseaseTermsMap.put(id, biometadataService.diseaseLabel(id).orElse("unknown")));
+                } else {
+                    MaxoTermScore maxoTermScore = maxodiffResult.maxoTermScore();
+                    maxoTermsMap.put(maxoTermScore.maxoId(), biometadataService.maxoLabel(maxoTermScore.maxoId()).orElse("unknown"));
+                    maxoTermScore.hpoTermIds().forEach(id -> hpoTermsMap.put(id, biometadataService.hpoLabel(id).orElse("unknown")));
+                    maxoTermScore.omimTermIds().forEach(id -> diseaseTermsMap.put(id, biometadataService.diseaseLabel(id).orElse("unknown")));
+                    maxoTermScore.maxoOmimTermIds().forEach(id -> diseaseTermsMap.put(id, biometadataService.diseaseLabel(id).orElse("unknown")));
+                }
+
             }
             model.addAttribute("omimTerms", diseaseTermsMap);
             model.addAttribute("allHpoTermsMap", hpoTermsMap);
