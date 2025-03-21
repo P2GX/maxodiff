@@ -38,8 +38,14 @@ public class BatchDiagnosisCommand extends DifferentialDiagnosisCommand {
 //            required = true,
             split=",",
             arity = "1..*",
-            description = "Comma-separated list of posttest probability thresholds for filtering diseases to include in differential diagnosis.")
+            description = "Comma-separated list of n diseases to include in differential diagnosis.")
     protected List<Integer> nDiseasesArg;
+    @CommandLine.Option(names = {"-NR", "--nRepetitionsList"},
+//            required = true,
+            split=",",
+            arity = "1..*",
+            description = "Comma-separated list of n repetitions to include in differential diagnosis.")
+    protected List<Integer> nRepetitionsArg;
 
     public static Map<String, List<Object>> resultsMap;
 
@@ -65,50 +71,56 @@ public class BatchDiagnosisCommand extends DifferentialDiagnosisCommand {
         weightsArg.forEach(weights::add);
         List<Integer> nDiseasesList = new ArrayList<>();
         nDiseasesArg.forEach(nDiseasesList::add);
+        List<Integer> nRepetitionsList = new ArrayList<>();
+        nRepetitionsArg.forEach(nRepetitionsList::add);
 
         Path maxodiffResultsFilePath = Path.of(String.join(File.separator, outputDir.toString(), "maxodiff_results.csv"));
 
         try (BufferedWriter writer = openOutputFileWriter(maxodiffResultsFilePath); CSVPrinter printer = CSVFormat.DEFAULT.print(writer)) {
             printer.printRecord("phenopacket", "disease_id", "maxo_id", "maxo_label",
-                    "n_diseases", "disease_ids", "weight", "score"); // header
+                    "n_diseases", "disease_ids", "n_repetitions", "weight", "score"); // header
 
             for (Path phenopacketPath : phenopacketPaths) {
                 for (int nDiseases : nDiseasesList) {
-                    for (double weight : weights) {
-                        try {
+                    for (int nRepetitions : nRepetitionsList) {
+                        for (double weight : weights) {
+                            try {
 
-                            String phenopacketFileName = phenopacketPath.toFile().getName();
+                                String phenopacketFileName = phenopacketPath.toFile().getName();
 
-                            runSingleMaxodiffAnalysis(phenopacketPath, phenopacketFileName, nDiseases, weight, false, printer);
+                                runSingleMaxodiffAnalysis(phenopacketPath, phenopacketFileName, nDiseases, nRepetitions, weight, false, printer);
 
 
-                            Map<String, List<Object>> resultsMap = getResultsMap();
+                                Map<String, List<Object>> resultsMap = getResultsMap();
 
-                            System.out.println("BatchCmd resultsMap = " + resultsMap);
+                                System.out.println("BatchCmd resultsMap = " + resultsMap);
 
-                            List<Object> phenopacketNames = resultsMap.get("phenopacketName");
-                            List<Object> diseaseIdList = resultsMap.get("diseaseId");
-                            List<Object> maxScoreMaxoTermIds = resultsMap.get("maxScoreMaxoTermId");
-                            List<Object> maxScoreTermLabels = resultsMap.get("maxScoreTermLabel");
-                            List<Object> topNDiseasesList = resultsMap.get("topNDiseases");
-                            List<Object> diseaseIdsList = resultsMap.get("diseaseIds");
-                            List<Object> weightList = resultsMap.get("weight");
-                            List<Object> maxScoreValues = resultsMap.get("maxScoreValue");
-                            for (int j = 0; j < phenopacketNames.size(); j++) {
-                                String phenopacketName = phenopacketNames.get(j).toString();
-                                TermId diseaseId = TermId.of(diseaseIdList.get(j).toString());
-                                TermId maxScoreMaxoTermId = TermId.of(maxScoreMaxoTermIds.get(j).toString());
-                                String maxScoreTermLabel = maxScoreTermLabels.get(j).toString();
-                                int topNDiseases = Integer.parseInt(topNDiseasesList.get(j).toString());
-                                String diseaseIds = diseaseIdsList.get(j).toString();
-                                double weightValue = Double.parseDouble(weightList.get(j).toString());
-                                double maxScoreValue = Double.parseDouble(maxScoreValues.get(j).toString());
+                                List<Object> phenopacketNames = resultsMap.get("phenopacketName");
+                                List<Object> diseaseIdList = resultsMap.get("diseaseId");
+                                List<Object> maxScoreMaxoTermIds = resultsMap.get("maxScoreMaxoTermId");
+                                List<Object> maxScoreTermLabels = resultsMap.get("maxScoreTermLabel");
+                                List<Object> topNDiseasesList = resultsMap.get("topNDiseases");
+                                List<Object> diseaseIdsList = resultsMap.get("diseaseIds");
+                                List<Object> nRepList = resultsMap.get("nRepetitions");
+                                List<Object> weightList = resultsMap.get("weight");
+                                List<Object> maxScoreValues = resultsMap.get("maxScoreValue");
+                                for (int j = 0; j < phenopacketNames.size(); j++) {
+                                    String phenopacketName = phenopacketNames.get(j).toString();
+                                    TermId diseaseId = TermId.of(diseaseIdList.get(j).toString());
+                                    TermId maxScoreMaxoTermId = TermId.of(maxScoreMaxoTermIds.get(j).toString());
+                                    String maxScoreTermLabel = maxScoreTermLabels.get(j).toString();
+                                    int topNDiseases = Integer.parseInt(topNDiseasesList.get(j).toString());
+                                    String diseaseIds = diseaseIdsList.get(j).toString();
+                                    int nRepetitionsValue = Integer.parseInt(nRepList.get(j).toString());
+                                    double weightValue = Double.parseDouble(weightList.get(j).toString());
+                                    double maxScoreValue = Double.parseDouble(maxScoreValues.get(j).toString());
 
-                                writeResults(phenopacketName, diseaseId, maxScoreMaxoTermId, maxScoreTermLabel,
-                                        topNDiseases, diseaseIds, weightValue, maxScoreValue, printer);
+                                    writeResults(phenopacketName, diseaseId, maxScoreMaxoTermId, maxScoreTermLabel,
+                                            topNDiseases, diseaseIds, nRepetitionsValue, weightValue, maxScoreValue, printer);
+                                }
+                            } catch (Exception ex) {
+                                System.out.println(ex.getMessage());
                             }
-                        } catch (Exception ex) {
-                            System.out.println(ex.getMessage());
                         }
                     }
                 }

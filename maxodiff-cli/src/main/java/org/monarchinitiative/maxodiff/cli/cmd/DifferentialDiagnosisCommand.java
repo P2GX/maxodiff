@@ -114,21 +114,22 @@ public class DifferentialDiagnosisCommand extends BaseCommand {
 
         double weight = weightsArg;
         int nDiseases = nDiseasesArg;
+        int nRepetitions = nRepetitionsArg;
 
         try (BufferedWriter writer = openOutputFileWriter(maxodiffResultsFilePath); CSVPrinter printer = CSVFormat.DEFAULT.print(writer)) {
-            runSingleMaxodiffAnalysis(phenopacketPath, phenopacketName, nDiseases, weight, true, printer);
+            runSingleMaxodiffAnalysis(phenopacketPath, phenopacketName, nDiseases, nRepetitions, weight, true, printer);
         }
 
         return 0;
     }
 
-    protected void runSingleMaxodiffAnalysis(Path phenopacketPath, String phenopacketName, int nDiseases, double weight,
+    protected void runSingleMaxodiffAnalysis(Path phenopacketPath, String phenopacketName, int nDiseases, int nRepetitions, double weight,
                                              boolean writeOutputFile, CSVPrinter printer) throws Exception {
 
 
         if (writeOutputFile) {
             printer.printRecord("phenopacket", "disease_id", "maxo_id", "maxo_label",
-                    "n_diseases", "disease_ids", "weight", "score"); // header
+                    "n_diseases", "disease_ids", "n_repetitions", "weight", "score"); // header
         }
 
         Map<String, List<Object>> resultsMap = new HashMap<>();
@@ -139,12 +140,10 @@ public class DifferentialDiagnosisCommand extends BaseCommand {
         resultsMap.put("maxScoreTermLabel", new ArrayList<>());
         resultsMap.put("topNDiseases", new ArrayList<>());
         resultsMap.put("diseaseIds", new ArrayList<>());
+        resultsMap.put("nRepetitions", new ArrayList<>());
         resultsMap.put("weight", new ArrayList<>());
         resultsMap.put("maxScoreValue", new ArrayList<>());
 
-        double weight = weightsArg;
-        int nDiseases = nDiseasesArg;
-        int nRepetitions = nRepetitionsArg;
 
         System.out.println(weight);
         System.out.println(nDiseases);
@@ -256,7 +255,7 @@ public class DifferentialDiagnosisCommand extends BaseCommand {
 
             if (writeOutputFile) {
                 writeResults(phenopacketName, diseaseId, TermId.of(maxScoreMaxoTermId), maxScoreTermLabel,
-                        topNDiseases, diseaseIds.toString(), weight, maxScoreValue, printer);
+                        topNDiseases, diseaseIds.toString(), nRepetitions, weight, maxScoreValue, printer);
             }
 
             List<Object> phenopacketNames = resultsMap.get("phenopacketName");
@@ -271,6 +270,8 @@ public class DifferentialDiagnosisCommand extends BaseCommand {
             topNDiseasesList.add(topNDiseases);
             List<Object> diseaseIdsList = resultsMap.get("diseaseIds");
             diseaseIdsList.add(diseaseIds);
+            List<Object> nRepList = resultsMap.get("nRepetitions");
+            nRepList.add(nRepetitions);
             List<Object> weightList = resultsMap.get("weight");
             weightList.add(weight);
             List<Object> maxScoreValues = resultsMap.get("maxScoreValue");
@@ -281,6 +282,7 @@ public class DifferentialDiagnosisCommand extends BaseCommand {
             resultsMap.replace("maxScoreTermLabel", maxScoreTermLabels);
             resultsMap.replace("topNDiseases", topNDiseasesList);
             resultsMap.replace("diseaseIds", diseaseIdsList);
+            resultsMap.replace("nRepetitions", nRepList);
             resultsMap.replace("weight", weightList);
             resultsMap.replace("maxScoreValue", maxScoreValues);
 //                }
@@ -312,6 +314,7 @@ public class DifferentialDiagnosisCommand extends BaseCommand {
                                      String maxoLabel,
                                      int topNdiseases,
                                      String diseaseIds,
+                                     int nRepetitions,
                                      double weight,
                                      double score,
                                      CSVPrinter printer) {
@@ -323,6 +326,7 @@ public class DifferentialDiagnosisCommand extends BaseCommand {
             printer.print(maxoLabel);
             printer.print(topNdiseases);
             printer.print(diseaseIds);
+            printer.print(nRepetitions);
             printer.print(weight);
             printer.print(score);
             printer.println();
