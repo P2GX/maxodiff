@@ -72,18 +72,14 @@ public class BatchDiagnosisCommand extends DifferentialDiagnosisCommand {
             printer.printRecord("phenopacket", "disease_id", "maxo_id", "maxo_label",
                     "n_diseases", "disease_ids", "weight", "score"); // header
 
-            for (int i = 0; i < phenopacketPaths.size(); i++) {
+            for (Path phenopacketPath : phenopacketPaths) {
                 for (int nDiseases : nDiseasesList) {
                     for (double weight : weights) {
                         try {
-                            DifferentialDiagnosisCommand differentialDiagnosisCommand = new DifferentialDiagnosisCommand();
-                            CommandLine.call(differentialDiagnosisCommand,
-                                    "-m", maxoDataPath.toString(),
-                                    "-d", dataSection.liricalDataDirectory.toString(),
-                                    "-p", phenopacketPaths.get(i).toString(),
-                                    "-n", String.valueOf(nDiseases),
-                                    "-w", String.valueOf(weight),
-                                    "-O", outputDir.toString());
+
+                            String phenopacketFileName = phenopacketPath.toFile().getName();
+
+                            runSingleMaxodiffAnalysis(phenopacketPath, phenopacketFileName, nDiseases, weight, false, printer);
 
 
                             Map<String, List<Object>> resultsMap = getResultsMap();
@@ -113,7 +109,6 @@ public class BatchDiagnosisCommand extends DifferentialDiagnosisCommand {
                             }
                         } catch (Exception ex) {
                             System.out.println(ex.getMessage());
-                            continue;
                         }
                     }
                 }

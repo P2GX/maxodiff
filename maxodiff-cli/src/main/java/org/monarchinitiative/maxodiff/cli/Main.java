@@ -17,7 +17,7 @@ public class Main implements Callable<Integer> {
                 //.addSubcommand("maxodiff", new MaxodiffCommand())
                 .addSubcommand("download", new DownloadCommand())
                 .addSubcommand("diagnosis", new DifferentialDiagnosisCommand())
-                .addSubcommand("batchDiagnosis", new BatchDiagnosisCommand())
+                .addSubcommand("batch", new BatchDiagnosisCommand())
                 .addSubcommand("benchmark", new BenchmarkCommand())
                 ;
         cline.setToggleBooleanFlags(false);
