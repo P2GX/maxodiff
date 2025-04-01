@@ -55,10 +55,6 @@ public class DifferentialDiagnosisCommand extends BaseCommand {
             description = "Path(s) to phenopacket JSON file(s).")
     protected Path phenopacketPath;
 
-    @CommandLine.Option(names = {"--vcf"},
-            description = "Path to VCF with background variants.")
-    protected Path vcfPath; // nullable
-
     @CommandLine.Option(names = {"-O", "--outputDirectory"},
 //            required = true,
             description = "Where to write the results files.")
