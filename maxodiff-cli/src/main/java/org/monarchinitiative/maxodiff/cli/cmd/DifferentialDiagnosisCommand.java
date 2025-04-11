@@ -15,12 +15,17 @@ import org.monarchinitiative.maxodiff.core.analysis.refinement.DiffDiagRefiner;
 import org.monarchinitiative.maxodiff.core.analysis.refinement.MaxodiffResult;
 import org.monarchinitiative.maxodiff.core.analysis.refinement.RefinementOptions;
 import org.monarchinitiative.maxodiff.core.analysis.refinement.RefinementResults;
+import org.monarchinitiative.maxodiff.html.results.HtmlResults;
 import org.monarchinitiative.maxodiff.lirical.PhenopacketFileParser;
 import org.monarchinitiative.maxodiff.lirical.*;
 import org.monarchinitiative.maxodiff.core.model.*;
 import org.monarchinitiative.maxodiff.core.service.BiometadataService;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDisease;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
+import org.monarchinitiative.phenol.io.MinimalOntologyLoader;
+import org.monarchinitiative.phenol.io.OntologyLoader;
+import org.monarchinitiative.phenol.ontology.data.MinimalOntology;
+import org.monarchinitiative.phenol.ontology.data.Ontology;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -122,6 +127,9 @@ public class DifferentialDiagnosisCommand extends BaseCommand {
     protected void runSingleMaxodiffAnalysis(Path phenopacketPath, String phenopacketName, int nDiseases, int nRepetitions, double weight,
                                              boolean writeOutputFile, CSVPrinter printer) throws Exception {
 
+
+        Ontology ontology = OntologyLoader.loadOntology(MaxodiffDataResolver.of(maxoDataPath).hpoJson().toFile());
+        MinimalOntology minimalOntology = MinimalOntologyLoader.loadOntology(MaxodiffDataResolver.of(maxoDataPath).hpoJson().toFile());
 
         if (writeOutputFile) {
             printer.printRecord("phenopacket", "disease_id", "maxo_id", "maxo_label",
@@ -226,7 +234,8 @@ public class DifferentialDiagnosisCommand extends BaseCommand {
                     .build();
             LiricalDifferentialDiagnosisEngine diseaseSubsetEngine = liricalDifferentialDiagnosisEngineConfigurer.configure(diseaseSubsetOptions);
 
-            RankMaxo rankMaxo = new RankMaxo(hpoToMaxoTermMap, maxoToHpoTermIdMap, maxoHpoTermProbabilities, diseaseSubsetEngine);
+            RankMaxo rankMaxo = new RankMaxo(hpoToMaxoTermMap, maxoToHpoTermIdMap, maxoHpoTermProbabilities, diseaseSubsetEngine,
+                    minimalOntology, ontology);
 
             RefinementResults refinementResults = maxoDiffRefiner.run(sample,
                     orderedDiagnoses,
@@ -252,6 +261,17 @@ public class DifferentialDiagnosisCommand extends BaseCommand {
             if (writeOutputFile) {
                 writeResults(phenopacketName, diseaseId, TermId.of(maxScoreMaxoTermId), maxScoreTermLabel,
                         topNDiseases, diseaseIds.toString(), nRepetitions, weight, maxScoreValue, printer);
+
+                String nDiseasesAbbr = String.join("", "n", String.valueOf(nDiseases));
+                String nRepsAbbr = String.join("", "nr", String.valueOf(nRepetitions));
+                String outputFilename = String.join("_", phenopacketName,
+                        nDiseasesAbbr, nRepsAbbr, "maxodiff", "results.html");
+                Path maxodiffResultsHTMLPath = Path.of(String.join(File.separator, outputDir.toString(), outputFilename));
+
+                String htmlString = HtmlResults.writeHTMLResults(sample, nDiseases, nRepetitions, resultsList,
+                        biometadataService, hpoTermCounts);
+
+                Files.writeString(maxodiffResultsHTMLPath, htmlString);
             }
 
             List<Object> phenopacketNames = resultsMap.get("phenopacketName");
@@ -330,8 +350,6 @@ public class DifferentialDiagnosisCommand extends BaseCommand {
             LOGGER.error("Error writing results for {}: {}", diseaseId, e.getMessage(), e);
         }
     }
-
-
 
 
 }

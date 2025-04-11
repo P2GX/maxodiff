@@ -16,7 +16,9 @@ import org.monarchinitiative.phenol.annotations.io.hpo.HpoDiseaseLoader;
 import org.monarchinitiative.phenol.annotations.io.hpo.HpoDiseaseLoaderOptions;
 import org.monarchinitiative.phenol.annotations.io.hpo.HpoDiseaseLoaders;
 import org.monarchinitiative.phenol.io.MinimalOntologyLoader;
+import org.monarchinitiative.phenol.io.OntologyLoader;
 import org.monarchinitiative.phenol.ontology.data.MinimalOntology;
+import org.monarchinitiative.phenol.ontology.data.Ontology;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -55,15 +57,21 @@ public class MaxodiffAutoConfiguration {
     }
 
     @Bean
-    public MinimalOntology hpo(MaxodiffDataResolver maxodiffDataResolver) {
+    public MinimalOntology minHpo(MaxodiffDataResolver maxodiffDataResolver) {
         LOGGER.debug("Loading HPO JSON from {}", maxodiffDataResolver.hpoJson().toAbsolutePath());
         return MinimalOntologyLoader.loadOntology(maxodiffDataResolver.hpoJson().toFile());
     }
 
     @Bean
-    public HpoDiseases hpoDiseases(MinimalOntology hpo, MaxodiffDataResolver maxodiffDataResolver) throws IOException {
+    public Ontology hpo(MaxodiffDataResolver maxodiffDataResolver) {
+        LOGGER.debug("Loading HPO JSON from {}", maxodiffDataResolver.hpoJson().toAbsolutePath());
+        return OntologyLoader.loadOntology(maxodiffDataResolver.hpoJson().toFile());
+    }
+
+    @Bean
+    public HpoDiseases hpoDiseases(MinimalOntology minHpo, MaxodiffDataResolver maxodiffDataResolver) throws IOException {
         LOGGER.debug("Loading HPO annotations from {}", maxodiffDataResolver.phenotypeAnnotations().toAbsolutePath());
-        HpoDiseaseLoader loader = HpoDiseaseLoaders.defaultLoader(hpo, HpoDiseaseLoaderOptions.defaultOptions());
+        HpoDiseaseLoader loader = HpoDiseaseLoaders.defaultLoader(minHpo, HpoDiseaseLoaderOptions.defaultOptions());
         return loader.load(maxodiffDataResolver.phenotypeAnnotations());
     }
 
@@ -89,20 +97,21 @@ public class MaxodiffAutoConfiguration {
 
     @Bean
     public BiometadataService biometadataService(
-            MinimalOntology hpo,
+            MinimalOntology minHpo,
             HpoDiseases hpoDiseases,
             Map<SimpleTerm, Set<SimpleTerm>> maxoAnnotsMap) {
-        return BiometadataServiceImpl.of(hpo, hpoDiseases, maxoAnnotsMap);
+        return BiometadataServiceImpl.of(minHpo, hpoDiseases, maxoAnnotsMap);
     }
 
     @Bean
     public DiffDiagRefiner diffDiagRefiner(
-            MinimalOntology hpo,
+            MinimalOntology minHpo,
+            Ontology hpo,
             HpoDiseases hpoDiseases,
             Map<TermId, Set<TermId>> hpoToMaxoIdMap,
             Map<SimpleTerm, Set<SimpleTerm>> maxoAnnotsMap) {
 
-        return new MaxoDiffRefiner(hpoDiseases, hpoToMaxoIdMap, maxoAnnotsMap, hpo);
+        return new MaxoDiffRefiner(hpoDiseases, hpoToMaxoIdMap, maxoAnnotsMap, minHpo, hpo);
     }
 
     @Bean

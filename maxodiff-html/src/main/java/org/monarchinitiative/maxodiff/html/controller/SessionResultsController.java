@@ -7,6 +7,7 @@ import org.monarchinitiative.maxodiff.core.SimpleTerm;
 import org.monarchinitiative.maxodiff.core.analysis.*;
 import org.monarchinitiative.maxodiff.core.analysis.refinement.*;
 import org.monarchinitiative.maxodiff.core.diffdg.DifferentialDiagnosisEngine;
+import org.monarchinitiative.maxodiff.html.results.HtmlResults;
 import org.monarchinitiative.maxodiff.lirical.LiricalDifferentialDiagnosisEngine;
 import org.monarchinitiative.maxodiff.core.model.DifferentialDiagnosis;
 import org.monarchinitiative.maxodiff.core.model.RankMaxo;
@@ -16,11 +17,13 @@ import org.monarchinitiative.maxodiff.lirical.LiricalDifferentialDiagnosisEngine
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDisease;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
 import org.monarchinitiative.phenol.ontology.data.MinimalOntology;
+import org.monarchinitiative.phenol.ontology.data.Ontology;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 
+import java.io.File;
 import java.util.*;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -37,7 +40,9 @@ public class SessionResultsController {
 
     private DiffDiagRefiner diffDiagRefiner;
 
-    private final MinimalOntology hpo;
+    private final MinimalOntology minHpo;
+
+    private final Ontology hpo;
 
     private final HpoDiseases hpoDiseases;
 
@@ -48,13 +53,15 @@ public class SessionResultsController {
     public SessionResultsController(
             BiometadataService biometadataService,
             DiffDiagRefiner diffDiagRefiner,
-            MinimalOntology hpo,
+            MinimalOntology minHpo,
+            Ontology hpo,
             HpoDiseases hpoDiseases,
             Map<TermId, Set<TermId>> hpoToMaxoIdMap,
             Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxoTermMap
     ) {
         this.biometadataService = biometadataService;
         this.diffDiagRefiner = diffDiagRefiner;
+        this.minHpo = minHpo;
         this.hpo = hpo;
         this.hpoDiseases = hpoDiseases;
         this.hpoToMaxoIdMap = hpoToMaxoIdMap;
@@ -72,7 +79,7 @@ public class SessionResultsController {
                               @RequestParam(value = "weight", required = false) Double weight,
                               @RequestParam(value = "nMaxoResults", required = false) Integer nMaxoResults,
                               @RequestParam(value = "diseaseProbModel", required = false) String diseaseProbModel,
-                              Model model) throws LiricalException {
+                              Model model) throws Exception {
 
         String algorithm = "";
         if (refiner == null) {
@@ -81,13 +88,13 @@ public class SessionResultsController {
         }
 
         switch (refiner) {
-            case "score" -> {diffDiagRefiner = new MaxoDiffRefiner(hpoDiseases, hpoToMaxoIdMap, hpoToMaxoTermMap, hpo);
+            case "score" -> {diffDiagRefiner = new MaxoDiffRefiner(hpoDiseases, hpoToMaxoIdMap, hpoToMaxoTermMap, minHpo, hpo);
                             algorithm = "Score";}
-            case "rank" -> {diffDiagRefiner = new MaxoDiffRankRefiner(hpoDiseases, hpoToMaxoIdMap, hpoToMaxoTermMap, hpo);
+            case "rank" -> {diffDiagRefiner = new MaxoDiffRankRefiner(hpoDiseases, hpoToMaxoIdMap, hpoToMaxoTermMap, minHpo, hpo);
                             algorithm = "Rank";}
-            case "ddScore" -> {diffDiagRefiner = new MaxoDiffDDScoreRefiner(hpoDiseases, hpoToMaxoIdMap, hpoToMaxoTermMap, hpo);
+            case "ddScore" -> {diffDiagRefiner = new MaxoDiffDDScoreRefiner(hpoDiseases, hpoToMaxoIdMap, hpoToMaxoTermMap, minHpo, hpo);
                                 algorithm = "Differential Diagnosis Score";}
-            case "ksTest" -> {diffDiagRefiner = new MaxoDiffKolmogorovSmirnovRefiner(hpoDiseases, hpoToMaxoIdMap, hpoToMaxoTermMap, hpo);
+            case "ksTest" -> {diffDiagRefiner = new MaxoDiffKolmogorovSmirnovRefiner(hpoDiseases, hpoToMaxoIdMap, hpoToMaxoTermMap, minHpo, hpo);
                                 algorithm = "Kolomogorov-Smirnov Test";}
         }
 
@@ -230,6 +237,15 @@ public class SessionResultsController {
             model.addAttribute("allHpoTermsMap", hpoTermsMap);
             model.addAttribute("allMaxoTermsMap", maxoTermsMap);
             model.addAttribute("maxoTables", resultsList.subList(0, nDisplayed));
+
+            String htmlString = HtmlResults.writeHTMLResults(sample, nDiseases, nRepetitions, resultsList,
+                    biometadataService, hpoTermCounts);
+
+            File file = new File("maxodiff-html-results/src/main/resources/templates/maxodiffResults.html");
+            String htmlTemplatePath = file.getAbsolutePath();
+
+            model.addAttribute("htmlTemplatePath", htmlTemplatePath);
+            model.addAttribute("htmlTemplateString", htmlString);
         }
         return "sessionResults";
     }
