@@ -8,6 +8,8 @@ import org.monarchinitiative.maxodiff.core.TestResources;
 import org.monarchinitiative.maxodiff.core.diffdg.DifferentialDiagnosisEngine;
 import org.monarchinitiative.maxodiff.core.model.*;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
+import org.monarchinitiative.phenol.ontology.data.MinimalOntology;
+import org.monarchinitiative.phenol.ontology.data.Ontology;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 
 import java.util.*;
@@ -28,6 +30,8 @@ public class RankMaxoTest {
                                          DiseaseModelProbability.ranked(initialDiagnoses));
 
     private static DifferentialDiagnosisEngine ENGINE;
+    private static Ontology ontology = TestResources.hpo();
+    private static MinimalOntology minimalOntology = TestResources.minHpo();
 
     @BeforeAll
     public static void setUpBeforeClass() {
@@ -101,7 +105,8 @@ public class RankMaxoTest {
                 .map(DifferentialDiagnosis::diseaseId).collect(Collectors.toSet());
         Sample s1 = TestResources.getExampleSample();
         Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxoTermMap = TestResources.hpoToMaxo();
-        RankMaxo rankMaxo = new RankMaxo(hpoToMaxoTermMap, maxoToHpoTermIdMap, maxoHpoTermProbabilities, ENGINE);
+        RankMaxo rankMaxo = new RankMaxo(hpoToMaxoTermMap, maxoToHpoTermIdMap, maxoHpoTermProbabilities, ENGINE,
+                minimalOntology, ontology);
         Map<TermId, RankMaxoScore> maxoTermRanks = rankMaxo.rankMaxoTerms(s1, 2, diseaseIds);
         System.out.println(maxoTermRanks);
     }

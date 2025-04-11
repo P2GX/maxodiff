@@ -8,6 +8,7 @@ import org.monarchinitiative.maxodiff.core.model.Sample;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDisease;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
 import org.monarchinitiative.phenol.ontology.data.MinimalOntology;
+import org.monarchinitiative.phenol.ontology.data.Ontology;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 
 import java.util.*;
@@ -17,8 +18,8 @@ public class DummyDiffDiagRefiner extends BaseDiffDiagRefiner {
     public DummyDiffDiagRefiner(HpoDiseases hpoDiseases,
                                 Map<TermId, Set<TermId>> fullHpoToMaxoTermIdMap,
                                 Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxoTermMap,
-                                MinimalOntology hpo) {
-        super(hpoDiseases, fullHpoToMaxoTermIdMap, hpoToMaxoTermMap, hpo);
+                                MinimalOntology minHpo, Ontology hpo) {
+        super(hpoDiseases, fullHpoToMaxoTermIdMap, hpoToMaxoTermMap, minHpo, hpo);
     }
 
     public RefinementResults run(Sample sample,
