@@ -14,10 +14,8 @@ import java.io.File;
 import java.io.StringWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class HtmlResults {
 
@@ -30,11 +28,20 @@ public class HtmlResults {
         String htmlString = Files.readString(htmlTemplatePath);
 
         String sampleId = sample.id();
-        String presentHpoIds = sample.presentHpoTermIds().toString();
-        String excludedHpoIds = sample.excludedHpoTermIds().toString();
+        StringBuilder samplePresentTermsStringBuilder = new StringBuilder();
+        sample.presentHpoTermIds().forEach(tid -> samplePresentTermsStringBuilder
+                .append(biometadataService.hpoLabel(tid).orElse("unknown")).append(" (")
+                .append(tid).append("), "));
+        String samplePresentTermsString = samplePresentTermsStringBuilder.substring(0, samplePresentTermsStringBuilder.length() - 2);
+        StringBuilder sampleExcludedTermsStringBuilder = new StringBuilder();
+        sample.excludedHpoTermIds().forEach(tid -> sampleExcludedTermsStringBuilder
+                .append(biometadataService.hpoLabel(tid).orElse("unknown")).append(" (")
+                .append(tid).append("), "));
+        String sampleExcludedTermsString = sampleExcludedTermsStringBuilder.substring(0, sampleExcludedTermsStringBuilder.length() - 2);
+
         htmlString = htmlString.replace("$sampleResultsTitle", "Maxodiff Analysis Results for " + sampleId);
-        htmlString = htmlString.replace("$samplePresentHpoIds", presentHpoIds);
-        htmlString = htmlString.replace("$sampleExcludedHpoIds", excludedHpoIds);
+        htmlString = htmlString.replace("$samplePresentHpoIds", samplePresentTermsString);
+        htmlString = htmlString.replace("$sampleExcludedHpoIds", sampleExcludedTermsString);
         htmlString = htmlString.replace("$nDiseases", String.valueOf(nDiseases));
         htmlString = htmlString.replace("$nRepetitions", String.valueOf(nRepetitions));
 
@@ -54,7 +61,9 @@ public class HtmlResults {
         StringBuilder resultsString = new StringBuilder();
 
         for (MaxodiffResult result : resultList.subList(0, 10)) {
-            result.rankMaxoScore().discoverableHpoTermIds()
+            result.rankMaxoScore().discoverableObservedHpoTermIds()
+                    .forEach(id -> hpoTermsMap.put(id, biometadataService.hpoLabel(id).orElse("unknown")));
+            result.rankMaxoScore().discoverableExcludedHpoTermIds()
                     .forEach(id -> hpoTermsMap.put(id, biometadataService.hpoLabel(id).orElse("unknown")));
             result.rankMaxoScore().initialOmimTermIds()
                     .forEach(id -> omimTerms.put(id, biometadataService.diseaseLabel(id).orElse("unknown")));
@@ -74,16 +83,19 @@ public class HtmlResults {
                     .append(String.format("%.2f", result.rankMaxoScore().maxoScore()))
                     .append("</td>\n    </tr>\n    <tr><td style='font-weight:bold;'>N Diseases:</td><td>")
                     .append(result.rankMaxoScore().maxoOmimTermIds().size())
-                    .append("</td>\n    </tr>\n    <tr><td style='font-weight:bold;'>N HPO Terms:</td><td>")
-                    .append(result.rankMaxoScore().discoverableHpoTermIds().size())
+                    .append("</td>\n    </tr>\n    <tr><td style='font-weight:bold;'>N Observed HPO Terms:</td><td>")
+                    .append(result.rankMaxoScore().discoverableObservedHpoTermIds().size())
+                    .append("</td>\n    </tr>\n    <tr><td style='font-weight:bold;'>N Excluded HPO Terms:</td><td>")
+                    .append(result.rankMaxoScore().discoverableExcludedHpoTermIds().size())
                     .append("</td>\n    </tr>\n  </tbody>\n</table>\n<p></p>\n\n");
 
             resultsString.append("<table>\n  <tbody>\n    <tr>\n      <td><div id=nRepHeatmapChartContainer_").append(idx)
-                    .append(" style=\"height:600px; width:1000px; border: 1px solid black\"></div>" +
+                    .append(" style=\"height:600px; width:1600px; border: 1px solid black\"></div>" +
                             "</td>\n    </tr>\n  </tbody>\n</table>\n\n");
 
             resultsString.append("<script src=\"https://cdn.jsdelivr.net/npm/apexcharts\"></script>\n");
             String hpoTermIdRepCtsMap = convertToJson(result.rankMaxoScore().hpoTermIdRepCtsMap());
+            String hpoTermIdExcludedRepCtsMap = convertToJson(result.rankMaxoScore().hpoTermIdExcludedRepCtsMap());
             String maxoDiseaseAvgRankChangeMap = convertToJson(result.rankMaxoScore().maxoDiseaseAvgRankChangeMap());
             String allHpoTermsMap = convertToJson(hpoTermsMap);
             String omimTermsMap = convertToJson(omimTerms);
@@ -93,6 +105,7 @@ public class HtmlResults {
                     "    var nDiseases = ").append(nDiseases).append(";\n" +
                     "    var nRepetitions = ").append(nRepetitions).append(";\n" +
                     "    var hpoTermIdRepCtsMap = ").append(hpoTermIdRepCtsMap).append(";\n" +
+                    "    var hpoTermIdExcludedRepCtsMap = ").append(hpoTermIdExcludedRepCtsMap).append(";\n" +
                     "    var maxoDiseaseAvgRankChangeMap = ").append(maxoDiseaseAvgRankChangeMap).append(";\n" +
                     "    var allHpoTermsMap = ").append(allHpoTermsMap).append(";\n" +
                     "    var omimTerms = ").append(omimTermsMap).append(";\n" +

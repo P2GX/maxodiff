@@ -376,7 +376,7 @@ public class BenchmarkCommand extends DifferentialDiagnosisCommand {
 
 //                                            List<DifferentialDiagnosis> maxoTermDiagnoses = maxoDDResults.maxoDifferentialDiagnoses();
                                             LOGGER.info("Getting Top Maxo Ascertainable Phenotypes...");
-                                            Set<TermId> topMaxoAscertainablePhenotypes = topResult.rankMaxoScore().discoverableHpoTermIds();//maxoHpoTermProbabilities.getDiscoverableByMaxoHpoTerms(sample, topMaxoId, maxoToHpoTermIdMap);
+                                            Set<TermId> topMaxoAscertainablePhenotypes = topResult.rankMaxoScore().discoverableObservedHpoTermIds();//maxoHpoTermProbabilities.getDiscoverableByMaxoHpoTerms(sample, topMaxoId, maxoToHpoTermIdMap);
 
                                             double diff = topMaxoAscertainablePhenotypes.size() - meanNDiscoverablePhenotypesAllMaxoTerms;
 

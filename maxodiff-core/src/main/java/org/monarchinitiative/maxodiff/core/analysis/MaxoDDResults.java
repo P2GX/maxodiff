@@ -7,5 +7,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-public record MaxoDDResults(Set<TermId> maxoDiscoverableHpoIds, List<DifferentialDiagnosis> maxoDifferentialDiagnoses) {
+public record MaxoDDResults(Set<TermId> maxoDiscoverableHpoIds, Set<TermId> maxoDiscoverableExcludedHpoIds,
+                            List<DifferentialDiagnosis> maxoDifferentialDiagnoses) {
 }

@@ -95,10 +95,10 @@
     <tbody>
         <tr>
 <!--            <td style='font-weight:bold;'>Disease ID:</td><td th:text="${diseaseId}"></td>-->
-            <td style='font-weight:bold;'>Present HPO Term Ids:</td><td th:text="${sample == null ? '' : sample.presentHpoTermIds}"></td>
+            <td style='font-weight:bold;'>Sample Present HPO Terms:</td><td th:text="${sample == null ? '' : samplePresentTermsString}"></td>
         </tr>
         <tr>
-            <td style='font-weight:bold;'>Excluded HPO Term Ids:</td><td th:text="${sample == null ? '' : sample.excludedHpoTermIds}"></td>
+            <td style='font-weight:bold;'>Sample Excluded HPO Terms:</td><td th:text="${sample == null ? '' : sampleExcludedTermsString}"></td>
         </tr>
         <tr>
             <td style='font-weight:bold;'>N Diseases:</td><td th:text="${nDiseases}"></td>
@@ -137,7 +137,10 @@
             <td>N Diseases:</td><td th:text="${maxoTable.rankMaxoScore.maxoOmimTermIds.size}"></td>
         </tr>
         <tr th:if="${refiner == 'score'}">
-            <td>N HPO Terms:</td><td th:text="${maxoTable.rankMaxoScore.discoverableHpoTermIds.size}"></td>
+            <td>N Observed HPO Terms:</td><td th:text="${maxoTable.rankMaxoScore.discoverableObservedHpoTermIds.size}"></td>
+        </tr>
+        <tr th:if="${refiner == 'score'}">
+            <td>N Excluded HPO Terms:</td><td th:text="${maxoTable.rankMaxoScore.discoverableExcludedHpoTermIds.size}"></td>
         </tr>
         <tr th:if="${refiner != 'score'}">
             <td>N Diseases:</td><td th:text="${maxoTable.maxoTermScore.nOmimTerms}"></td>
@@ -257,13 +260,14 @@
     <table>
         <tbody>
         <tr th:if="${refiner == 'score'}">
-            <td><div th:id="'nRepHeatmapChartContainer_' + ${iter.index}" style="height:600px; width:1000px; border: 1px solid black"></div></td>
+            <td><div th:id="'nRepHeatmapChartContainer_' + ${iter.index}" style="height:600px; width:1600px; border: 1px solid black"></div></td>
         </tr>
         </tbody>
     </table>
     <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
     <script th:inline="javascript">
         var hpoTermIdRepCtsMap = [[${maxoTable.rankMaxoScore.hpoTermIdRepCtsMap}]];
+        var hpoTermIdExcludedRepCtsMap = [[${maxoTable.rankMaxoScore.hpoTermIdExcludedRepCtsMap}]];
         var nDiseases = [[${nDiseases}]];
         var nRepetitions = [[${nRepetitions}]];
         var maxoDiseaseAvgRankChangeMap = [[${maxoTable.rankMaxoScore.maxoDiseaseAvgRankChangeMap}]];

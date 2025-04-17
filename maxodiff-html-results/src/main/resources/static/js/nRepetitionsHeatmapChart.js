@@ -1,5 +1,6 @@
 
 var hpoTermIdRepCtsMap = hpoTermIdRepCtsMap
+var hpoTermIdExcludedRepCtsMap = hpoTermIdExcludedRepCtsMap
 var nDiseases = nDiseases
 var nRepetitions = nRepetitions
 var maxoDiseaseAvgRankChangeMap = maxoDiseaseAvgRankChangeMap
@@ -16,6 +17,7 @@ var repCtMultiplier = 100;
 var omimIdToLabelMap = htmlObjectToMap(omimTerms)
 var hpoIdToLabelMap = htmlObjectToMap(allHpoTermsMap)
 var repMap = htmlObjectToRepMap(hpoTermIdRepCtsMap);
+var excludedRepMap = htmlObjectToRepMap(hpoTermIdExcludedRepCtsMap);
 var diseaseIds = getDiseaseIds(repMap);
 
 var rankChangeMap = maxoDiseaseAvgRankChangeMap;
@@ -25,8 +27,8 @@ var maxRankChange = nDiseases - 1
 var hpoTermCountsMap = htmlObjectToHpoTermCountMap(hpoTermCounts)
 var hpoFrequencies = getHpoFrequencies(hpoTermCountsMap)
 
-var data = getDatasetValues(repMap, rankChangeMap)
-var xAxisLabelColors = getXAxisLabelColors(repMap)
+var data = getDatasetValues(repMap, excludedRepMap, rankChangeMap)
+var xAxisLabelColors = getXAxisLabelColors(repMap, excludedRepMap)
 
 
 function htmlObjectToMap(htmlObject) {
@@ -69,9 +71,10 @@ function htmlObjectToHpoTermCountMap(htmlObject) {
 }
 
 
-function getDatasetValues(repMap, rankChangeMap) {
+function getDatasetValues(repMap, excludedRepMap, rankChangeMap) {
     var datasetValues = [];
     var ctData = [{x: 'Average Rank Change', y: null}];
+    datasetValues.push({name: 'N Repetitions', data: ctData});
     for (let [diseaseIdKey, ctMapValue] of repMap) {
         var diseaseLabel = omimTerms[diseaseIdKey]
         var ctMapDataset = ctMapValue
@@ -81,22 +84,43 @@ function getDatasetValues(repMap, rankChangeMap) {
             var repCt = repCtValue * repCtMultiplier
             if (repCt != null && repCt != 0) {
                 var dataPt = {x: hpoLabel, y: repCt};
-                ctData.push(dataPt);
+                const exists = ctData.find(p => p.x === dataPt.x && p.y === dataPt.y) !== undefined;
+                if (!exists) {
+                    ctData.push(dataPt);
+                }
             }
-        }
-        for (var i = 1; i < ctData.length; i++) {
-            var ctDataPt = ctData[i];
-            rcData.push({x: ctDataPt.x, y: null})
         }
         datasetValues.push({name: diseaseLabel, data: rcData});
     }
-    datasetValues.push({name: 'N Repetitions', data: ctData});
+    for (let [diseaseIdKey, ctMapValue] of excludedRepMap) {
+        var diseaseLabel = omimTerms[diseaseIdKey]
+        var ctMapDataset = ctMapValue
+        for (let [hpoIdKey, repCtValue] of ctMapDataset) {
+            var hpoLabel = allHpoTermsMap[hpoIdKey]
+            var repCt = repCtValue * repCtMultiplier
+            if (repCt != null && repCt != 0) {
+                var dataPt = {x: hpoLabel, y: repCt};
+                const exists = ctData.find(p => p.x === dataPt.x && p.y === dataPt.y) !== undefined;
+                if (!exists) {
+                    ctData.push(dataPt);
+                }
+            }
+        }
+    }
+    console.log(datasetValues)
 
     return datasetValues;
 }
 
-function getXAxisLabelColors(repMap) {
+function getXAxisLabelColors(repMap, excludedRepMap) {
     var colors = ['black']
+    for (let [diseaseIdKey, ctMapValue] of excludedRepMap) {
+        var ctMapDataset = ctMapValue
+        for (let [hpoIdKey, repCtValue] of ctMapDataset) {
+            colors.push('blue');
+        }
+        break;
+    }
     for (let [diseaseIdKey, ctMapValue] of repMap) {
         var ctMapDataset = ctMapValue
         for (let [hpoIdKey, repCtValue] of ctMapDataset) {
@@ -169,6 +193,13 @@ var options = {
           enabled: false
       },
       colors: ["#ffffff"], //white default
+      grid: {
+        yaxis: {
+          lines: {
+            show: false
+          }
+        }
+      },
       title: {
           text: 'HPO Term Repetition Counts'
       },
@@ -208,10 +239,16 @@ var options = {
                     name: 'Rank Decline',
                   },
                   {
+                    from: -nRepetitions * repCtMultiplier,
+                    to: -repCtMultiplier,
+                    color: '#87CEEB', //sky blue
+                    name: 'Repetition Counts (Excluded)',
+                  },
+                  {
                     from: repCtMultiplier,
                     to: nRepetitions * repCtMultiplier,
                     color: '#FFB200', //gold
-                    name: 'Repetition Counts',
+                    name: 'Repetition Counts (Observed)',
                   }
                 ]
               }
@@ -235,8 +272,8 @@ var options = {
                        '<b>Disease Term</b>: ' + omimLabel + '</div>' +
                        '<div><p></p></div>' +
                        '<div style="font-family: Arial, Helvetica, sans-serif; white-space: pre-wrap;">' +
-                       '<b>Average Rank Improvement</b>: ' + y + '</div>';
-            } else if (y >= repCtMultiplier) {
+                       '<b>Average Rank Decline</b>: ' + y + '</div>';
+            } else if (y >= repCtMultiplier | y <= -repCtMultiplier) {
                 frequencyMap = new Map()
                 for (let [hpoIdKey, hpoLabelValue] of hpoIdToLabelMap) {
                     if (hpoLabelValue == hpoLabel) {
@@ -244,7 +281,8 @@ var options = {
                         for (let [omimIdKey, omimLabelValue] of omimIdToLabelMap) {
                             var omimId = omimIdKey
                             var hpoRepCt = hpoTermIdRepCtsMap[omimId][hpoId]
-                            if (hpoRepCt != null) {
+                            var hpoExclRepCt = hpoTermIdExcludedRepCtsMap[omimId][hpoId]
+                            if (hpoRepCt != null | hpoExclRepCt != null) {
                                 for (i = 0; i < hpoFrequencies.length; i++) {
                                     var freqRecord = hpoFrequencies[i]
                                     var freqRecordOmimId = freqRecord.omimId
@@ -277,11 +315,19 @@ var options = {
                 }
 
 //                return '<div style="background-color: lightgray; color: blue"><b>Disease Term</b>: ' + omimLabel + '</div>' +
-                return '<div style="font-family: Arial, Helvetica, sans-serif; white-space: pre-wrap; background-color: lightgray; color: red">' +
-                       '<b>HPO Term</b>: ' + hpoLabel + '</div>' +
-                       '<div><p></p></div>' + freqHTML +
-                       '<div style="font-family: Arial, Helvetica, sans-serif; white-space: pre-wrap; background-color: gold">' +
-                       '<b>Repetition Count</b>: ' + (y/repCtMultiplier) + '</div>';
+                if (y >= repCtMultiplier) {
+                    return '<div style="font-family: Arial, Helvetica, sans-serif; white-space: pre-wrap; background-color: lightgray; color: red"><b>HPO Term</b>: '
+                           + hpoLabel + '</div>' +
+                           '<div><p></p></div>' + freqHTML +
+                           '<div style="font-family: Arial, Helvetica, sans-serif; white-space: pre-wrap; background-color: gold"><b>Repetition Count</b>: '
+                           + (y/repCtMultiplier) + ' of ' + nRepetitions + '</div>';
+                } else if (y <= -repCtMultiplier) {
+                    return '<div style="font-family: Arial, Helvetica, sans-serif; white-space: pre-wrap; background-color: lightgray; color: red"><b>HPO Term</b>: '
+                           + hpoLabel + '</div>' +
+                           '<div><p></p></div>' + freqHTML +
+                           '<div style="font-family: Arial, Helvetica, sans-serif; white-space: pre-wrap; background-color: lightskyblue"><b>Repetition Count</b>: '
+                           + (-y/repCtMultiplier) + ' of ' + nRepetitions + '</div>';
+                }
             }
           }
       }

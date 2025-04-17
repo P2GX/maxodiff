@@ -213,6 +213,19 @@ public class SessionResultsController {
             int nDisplayed = Math.min(resultsList.size(), nMaxoResults);
             model.addAttribute("nDisplayed", nDisplayed);
 
+            StringBuilder samplePresentTermsStringBuilder = new StringBuilder();
+            sample.presentHpoTermIds().forEach(tid -> samplePresentTermsStringBuilder
+                    .append(biometadataService.hpoLabel(tid).orElse("unknown")).append(" (")
+                    .append(tid).append("), "));
+            String samplePresentTermsString = samplePresentTermsStringBuilder.substring(0, samplePresentTermsStringBuilder.length()-2);
+            StringBuilder sampleExcludedTermsStringBuilder = new StringBuilder();
+            sample.excludedHpoTermIds().forEach(tid -> sampleExcludedTermsStringBuilder
+                    .append(biometadataService.hpoLabel(tid).orElse("unknown")).append(" (")
+                    .append(tid).append("), "));
+            String sampleExcludedTermsString = sampleExcludedTermsStringBuilder.substring(0, sampleExcludedTermsStringBuilder.length()-2);
+            model.addAttribute("samplePresentTermsString", samplePresentTermsString);
+            model.addAttribute("sampleExcludedTermsString", sampleExcludedTermsString);
+
             Map<String, String> maxoTermsMap = new HashMap<>();
             Map<TermId, String> hpoTermsMap = new HashMap<>();
             Map<TermId, String> diseaseTermsMap = new LinkedHashMap<>();
@@ -221,7 +234,8 @@ public class SessionResultsController {
                 if (diffDiagRefiner instanceof MaxoDiffRefiner) {
                     RankMaxoScore rankMaxoScore = maxodiffResult.rankMaxoScore();
                     maxoTermsMap.put(rankMaxoScore.maxoId().toString(), biometadataService.maxoLabel(rankMaxoScore.maxoId().toString()).orElse("unknown"));
-                    rankMaxoScore.discoverableHpoTermIds().forEach(id -> hpoTermsMap.put(id, biometadataService.hpoLabel(id).orElse("unknown")));
+                    rankMaxoScore.discoverableObservedHpoTermIds().forEach(id -> hpoTermsMap.put(id, biometadataService.hpoLabel(id).orElse("unknown")));
+                    rankMaxoScore.discoverableExcludedHpoTermIds().forEach(id -> hpoTermsMap.put(id, biometadataService.hpoLabel(id).orElse("unknown")));
                     rankMaxoScore.initialOmimTermIds().forEach(id -> diseaseTermsMap.put(id, biometadataService.diseaseLabel(id).orElse("unknown")));
                     rankMaxoScore.maxoOmimTermIds().forEach(id -> diseaseTermsMap.put(id, biometadataService.diseaseLabel(id).orElse("unknown")));
                 } else {
