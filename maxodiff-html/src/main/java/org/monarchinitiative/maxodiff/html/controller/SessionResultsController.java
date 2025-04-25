@@ -230,6 +230,9 @@ public class SessionResultsController {
             Map<TermId, String> hpoTermsMap = new HashMap<>();
             Map<TermId, String> diseaseTermsMap = new LinkedHashMap<>();
 
+            List<HpoFrequency> hpoFrequencies = HTMLFrequencyMap.getHpoFrequencies(hpoTermCounts);
+            Map<String, Map<Float, List<String>>> frequencyMap = new HashMap<>();
+
             for (MaxodiffResult maxodiffResult : resultsList.subList(0, nDisplayed)) {
                 if (diffDiagRefiner instanceof MaxoDiffRefiner) {
                     RankMaxoScore rankMaxoScore = maxodiffResult.rankMaxoScore();
@@ -238,6 +241,10 @@ public class SessionResultsController {
                     rankMaxoScore.discoverableExcludedHpoTermIds().forEach(id -> hpoTermsMap.put(id, biometadataService.hpoLabel(id).orElse("unknown")));
                     rankMaxoScore.initialOmimTermIds().forEach(id -> diseaseTermsMap.put(id, biometadataService.diseaseLabel(id).orElse("unknown")));
                     rankMaxoScore.maxoOmimTermIds().forEach(id -> diseaseTermsMap.put(id, biometadataService.diseaseLabel(id).orElse("unknown")));
+                    var hpoTermIdRepCtsMap = rankMaxoScore.hpoTermIdRepCtsMap();
+                    var hpoTermIdExcludedRepCtsMap = rankMaxoScore.hpoTermIdExcludedRepCtsMap();
+                    Map<String, Map<Float, List<String>>> resultFrequencyMap = HTMLFrequencyMap.makeFrequencyDiseaseMap(hpoTermsMap, diseaseTermsMap, hpoTermIdRepCtsMap, hpoTermIdExcludedRepCtsMap, hpoFrequencies);
+                    frequencyMap.putAll(resultFrequencyMap);
                 } else {
                     MaxoTermScore maxoTermScore = maxodiffResult.maxoTermScore();
                     maxoTermsMap.put(maxoTermScore.maxoId(), biometadataService.maxoLabel(maxoTermScore.maxoId()).orElse("unknown"));
@@ -248,6 +255,7 @@ public class SessionResultsController {
 
             }
             model.addAttribute("omimTerms", diseaseTermsMap);
+            model.addAttribute("frequencyDiseaseMap", frequencyMap);
             model.addAttribute("allHpoTermsMap", hpoTermsMap);
             model.addAttribute("allMaxoTermsMap", maxoTermsMap);
             model.addAttribute("maxoTables", resultsList.subList(0, nDisplayed));

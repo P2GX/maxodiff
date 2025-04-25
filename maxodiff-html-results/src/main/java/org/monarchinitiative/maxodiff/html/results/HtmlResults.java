@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
+import org.monarchinitiative.maxodiff.core.analysis.HTMLFrequencyMap;
 import org.monarchinitiative.maxodiff.core.analysis.HpoFrequency;
 import org.monarchinitiative.maxodiff.core.analysis.refinement.MaxodiffResult;
 import org.monarchinitiative.maxodiff.core.model.Sample;
@@ -15,7 +16,6 @@ import java.io.StringWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class HtmlResults {
 
@@ -60,6 +60,9 @@ public class HtmlResults {
         Map<TermId, String> omimTerms = new LinkedHashMap<>();
         StringBuilder resultsString = new StringBuilder();
 
+        List<HpoFrequency> hpoFrequencies = HTMLFrequencyMap.getHpoFrequencies(hpoTermCounts);
+        Map<String, Map<Float, List<String>>> frequencyMap = new HashMap<>();
+
         for (MaxodiffResult result : resultList.subList(0, 10)) {
             result.rankMaxoScore().discoverableObservedHpoTermIds()
                     .forEach(id -> hpoTermsMap.put(id, biometadataService.hpoLabel(id).orElse("unknown")));
@@ -69,6 +72,11 @@ public class HtmlResults {
                     .forEach(id -> omimTerms.put(id, biometadataService.diseaseLabel(id).orElse("unknown")));
             result.rankMaxoScore().maxoOmimTermIds()
                     .forEach(id -> omimTerms.put(id, biometadataService.diseaseLabel(id).orElse("unknown")));
+
+            var hpoTermIdRepCtsMap = result.rankMaxoScore().hpoTermIdRepCtsMap();
+            var hpoTermIdExcludedRepCtsMap = result.rankMaxoScore().hpoTermIdExcludedRepCtsMap();
+            Map<String, Map<Float, List<String>>> resultFrequencyMap = HTMLFrequencyMap.makeFrequencyDiseaseMap(hpoTermsMap, omimTerms, hpoTermIdRepCtsMap, hpoTermIdExcludedRepCtsMap, hpoFrequencies);
+            frequencyMap.putAll(resultFrequencyMap);
 
             int idx = resultList.indexOf(result) + 1;
             String maxoId = result.maxoTermScore().maxoId();
@@ -94,22 +102,24 @@ public class HtmlResults {
                             "</td>\n    </tr>\n  </tbody>\n</table>\n\n");
 
             resultsString.append("<script src=\"https://cdn.jsdelivr.net/npm/apexcharts\"></script>\n");
-            String hpoTermIdRepCtsMap = convertToJson(result.rankMaxoScore().hpoTermIdRepCtsMap());
-            String hpoTermIdExcludedRepCtsMap = convertToJson(result.rankMaxoScore().hpoTermIdExcludedRepCtsMap());
+            String hpoTermIdRepCtsMapString = convertToJson(hpoTermIdRepCtsMap);
+            String hpoTermIdExcludedRepCtsMapString = convertToJson(hpoTermIdExcludedRepCtsMap);
             String maxoDiseaseAvgRankChangeMap = convertToJson(result.rankMaxoScore().maxoDiseaseAvgRankChangeMap());
             String allHpoTermsMap = convertToJson(hpoTermsMap);
             String omimTermsMap = convertToJson(omimTerms);
             String hpoTermCountsMap = convertToJson(hpoTermCounts);
+            String frequencyDiseaseMap = convertToJson(frequencyMap);
             resultsString.append("<script inline=\"javascript\">\n" +
                     "    var chartIdx = ").append(idx).append(";\n" +
                     "    var nDiseases = ").append(nDiseases).append(";\n" +
                     "    var nRepetitions = ").append(nRepetitions).append(";\n" +
-                    "    var hpoTermIdRepCtsMap = ").append(hpoTermIdRepCtsMap).append(";\n" +
-                    "    var hpoTermIdExcludedRepCtsMap = ").append(hpoTermIdExcludedRepCtsMap).append(";\n" +
+                    "    var hpoTermIdRepCtsMap = ").append(hpoTermIdRepCtsMapString).append(";\n" +
+                    "    var hpoTermIdExcludedRepCtsMap = ").append(hpoTermIdExcludedRepCtsMapString).append(";\n" +
                     "    var maxoDiseaseAvgRankChangeMap = ").append(maxoDiseaseAvgRankChangeMap).append(";\n" +
                     "    var allHpoTermsMap = ").append(allHpoTermsMap).append(";\n" +
                     "    var omimTerms = ").append(omimTermsMap).append(";\n" +
                     "    var hpoTermCounts = ").append(hpoTermCountsMap).append(";\n" +
+                    "    var frequencyDiseaseMap = ").append(frequencyDiseaseMap).append(";\n" +
                     "</script>\n");
 
             String jsChartName = "nRepetitionsHeatmapChart.js";
