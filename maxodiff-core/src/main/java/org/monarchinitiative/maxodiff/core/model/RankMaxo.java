@@ -54,10 +54,12 @@ public class RankMaxo {
             List<DifferentialDiagnosis> initialDiagnoses = maxoHpoTermProbabilities.getInitialDiagnoses();
             List<MaxoDDResults> maxoDDResultsList = new ArrayList<>();
             Map<TermId, Map<TermId, Integer>> maxoDiscoverableHpoIdCts = new HashMap<>();
+            Map<TermId, Map<TermId, Integer>> maxoDiscoverableExcludedHpoIdCts = new HashMap<>();
             for (int i = 0; i < nRepetitions; i++) {
                 MaxoDDResults maxoDDResults = candidateDiseaseScores.getScoresForMaxoTerm(ppkt, maxoId, engine, diseaseIds, hpoToMaxoTermMap);
                 maxoDDResultsList.add(maxoDDResults);
                 Set<TermId> discoverableHpoIds = maxoDDResults.maxoDiscoverableHpoIds();
+                Set<TermId> discoverableExcludedHpoIds = maxoDDResults.maxoDiscoverableExcludedHpoIds();
                 for (TermId diseaseId : diseaseIds) {
                     List<TermId> diseaseAssociatedHpoIds = List.of();
                     Optional<HpoDisease> opt = maxoHpoTermProbabilities.getHpoDiseases().diseaseById(diseaseId);
@@ -67,6 +69,9 @@ public class RankMaxo {
                     }
                     if (!maxoDiscoverableHpoIdCts.containsKey(diseaseId)) {
                         maxoDiscoverableHpoIdCts.put(diseaseId, new HashMap<>());
+                    }
+                    if (!maxoDiscoverableExcludedHpoIdCts.containsKey(diseaseId)) {
+                        maxoDiscoverableExcludedHpoIdCts.put(diseaseId, new HashMap<>());
                     }
                     Map<TermId, Integer> hpoIdCtsMap = maxoDiscoverableHpoIdCts.get(diseaseId);
                     for (TermId discoverableHpoId : discoverableHpoIds) {
@@ -84,6 +89,22 @@ public class RankMaxo {
                         }
                         maxoDiscoverableHpoIdCts.replace(diseaseId, hpoIdCtsMap);
                     }
+                    Map<TermId, Integer> hpoIdExcludedCtsMap = maxoDiscoverableExcludedHpoIdCts.get(diseaseId);
+                    for (TermId excludedHpoId : discoverableExcludedHpoIds) {
+                        if (!hpoIdExcludedCtsMap.containsKey(excludedHpoId)) {
+                            if (diseaseAssociatedHpoIds.contains(excludedHpoId)) {
+                                hpoIdExcludedCtsMap.put(excludedHpoId, -1);
+                            } else {
+                                hpoIdExcludedCtsMap.put(excludedHpoId, null);
+                            }
+                        } else {
+                            Integer ct = hpoIdExcludedCtsMap.get(excludedHpoId);
+                            if (ct != null) {
+                                hpoIdExcludedCtsMap.replace(excludedHpoId, ct - 1);
+                            }
+                        }
+                        maxoDiscoverableExcludedHpoIdCts.replace(diseaseId, hpoIdExcludedCtsMap);
+                    }
                 }
                 double finalScore = ValidationModel.weightedRankDiff(initialDiagnoses, maxoDDResults.maxoDifferentialDiagnoses()).validationScore();
                 scores.add(finalScore);
@@ -100,9 +121,13 @@ public class RankMaxo {
             Set<TermId> maxoDiagnosesDiseaseIds = maxoDDResultsList.getLast().maxoDifferentialDiagnoses().stream()
                     .map(DifferentialDiagnosis::diseaseId)
                     .collect(Collectors.toSet());
-            Set<TermId> maxoDiscoverableHpoIds;
-            maxoDiscoverableHpoIds = maxoDDResultsList.stream()
+
+            Set<TermId> maxoDiscoverableObservedHpoIds = maxoDDResultsList.stream()
                     .map(MaxoDDResults::maxoDiscoverableHpoIds)
+                    .flatMap(Collection::stream)
+                    .collect(Collectors.toSet());
+            Set<TermId> maxoDiscoverableExcludedHpoIds = maxoDDResultsList.stream()
+                    .map(MaxoDDResults::maxoDiscoverableExcludedHpoIds)
                     .flatMap(Collection::stream)
                     .collect(Collectors.toSet());
 
@@ -138,8 +163,8 @@ public class RankMaxo {
             }
 
             RankMaxoScore rankMaxoScore = new RankMaxoScore(maxoId, initialDiagnosesDiseaseIds, maxoDiagnosesDiseaseIds,
-                    maxoDiscoverableHpoIds, meanScore, maxoDDResultsList.getLast().maxoDifferentialDiagnoses(),
-                    maxoDiscoverableHpoIdCts, maxoDiseaseAvgRankChangeMap,
+                    maxoDiscoverableObservedHpoIds, maxoDiscoverableExcludedHpoIds, meanScore, maxoDDResultsList.getLast().maxoDifferentialDiagnoses(),
+                    maxoDiscoverableHpoIdCts, maxoDiscoverableExcludedHpoIdCts, maxoDiseaseAvgRankChangeMap,
                     Collections.min(maxoDiseaseAvgRankChangeMap.values()), Collections.max(maxoDiseaseAvgRankChangeMap.values()));
             maxoScores.put(maxoId, rankMaxoScore);
             p++;

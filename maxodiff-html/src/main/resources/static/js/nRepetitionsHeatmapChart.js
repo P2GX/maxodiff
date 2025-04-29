@@ -1,21 +1,24 @@
 
 var hpoTermIdRepCtsMap = hpoTermIdRepCtsMap
+var hpoTermIdExcludedRepCtsMap = hpoTermIdExcludedRepCtsMap
 var nDiseases = nDiseases
 var nRepetitions = nRepetitions
 var maxoDiseaseAvgRankChangeMap = maxoDiseaseAvgRankChangeMap
 var allHpoTermsMap = allHpoTermsMap
 var omimTerms = omimTerms
 var hpoTermCounts = hpoTermCounts
+var frequencyMap = frequencyDiseaseMap
 var idx = chartIdx;
 
 var heatmapChart = document.getElementById('nRepHeatmapChartContainer_' + idx);
 console.log("nRepHeatmapChart = " + heatmapChart);
 
 var repCtMultiplier = 100;
+var annotMultiplier = 100 * repCtMultiplier;
 
-var omimIdToLabelMap = htmlObjectToMap(omimTerms)
 var hpoIdToLabelMap = htmlObjectToMap(allHpoTermsMap)
 var repMap = htmlObjectToRepMap(hpoTermIdRepCtsMap);
+var excludedRepMap = htmlObjectToRepMap(hpoTermIdExcludedRepCtsMap);
 var diseaseIds = getDiseaseIds(repMap);
 
 var rankChangeMap = maxoDiseaseAvgRankChangeMap;
@@ -24,9 +27,10 @@ var maxRankChange = nDiseases - 1
 
 var hpoTermCountsMap = htmlObjectToHpoTermCountMap(hpoTermCounts)
 var hpoFrequencies = getHpoFrequencies(hpoTermCountsMap)
+var frequencyDiseaseMap = htmlObjectToRepMap(frequencyMap)
 
-var data = getDatasetValues(repMap, rankChangeMap)
-var xAxisLabelColors = getXAxisLabelColors(repMap)
+var data = getDatasetValues(repMap, excludedRepMap, rankChangeMap)
+var xAxisLabelColors = getXAxisLabelColors(repMap, excludedRepMap)
 
 
 function htmlObjectToMap(htmlObject) {
@@ -68,10 +72,25 @@ function htmlObjectToHpoTermCountMap(htmlObject) {
   return map;
 }
 
+function reorderArray(arrayToReorder, orderedArray) {
+  const order = orderedArray.map(point => point.x);
+  const reorderedPts = [];
+  const ptsMap = new Map(arrayToReorder.map(pt => [pt.x, pt]));
 
-function getDatasetValues(repMap, rankChangeMap) {
+  for (const x of order) {
+    if (ptsMap.has(x)) {
+      reorderedPts.push(ptsMap.get(x));
+    }
+  }
+
+  return reorderedPts;
+}
+
+
+function getDatasetValues(repMap, excludedRepMap, rankChangeMap) {
     var datasetValues = [];
     var ctData = [{x: 'Average Rank Change', y: null}];
+    datasetValues.push({name: 'N Repetitions', data: ctData});
     for (let [diseaseIdKey, ctMapValue] of repMap) {
         var diseaseLabel = omimTerms[diseaseIdKey]
         var ctMapDataset = ctMapValue
@@ -79,24 +98,71 @@ function getDatasetValues(repMap, rankChangeMap) {
         for (let [hpoIdKey, repCtValue] of ctMapDataset) {
             var hpoLabel = allHpoTermsMap[hpoIdKey]
             var repCt = repCtValue * repCtMultiplier
+            rcData.push({x: hpoLabel, y: null})
             if (repCt != null && repCt != 0) {
                 var dataPt = {x: hpoLabel, y: repCt};
-                ctData.push(dataPt);
+                const exists = ctData.find(p => p.x === dataPt.x && p.y === dataPt.y) !== undefined;
+                if (!exists) {
+                    ctData.push(dataPt);
+                }
+                for (i = 0; i < hpoFrequencies.length; i++) {
+                    var freqRecord = hpoFrequencies[i]
+                    var freqRecordOmimId = freqRecord.omimId
+                    var freqRecordHpoId = freqRecord.hpoId
+                    if (freqRecordOmimId == diseaseIdKey && freqRecordHpoId == hpoIdKey) {
+                        var newHpoAnnotPt = {x: hpoLabel, y: annotMultiplier}
+                        var idx = rcData.indexOf({x: hpoLabel, y: null});
+                        rcData.splice(idx, 1, newHpoAnnotPt);
+                        break;
+                    }
+                }
             }
         }
-        for (var i = 1; i < ctData.length; i++) {
-            var ctDataPt = ctData[i];
-            rcData.push({x: ctDataPt.x, y: null})
-        }
+        rcData = reorderArray(rcData, ctData)
         datasetValues.push({name: diseaseLabel, data: rcData});
     }
-    datasetValues.push({name: 'N Repetitions', data: ctData});
+    for (let [diseaseIdKey, ctMapValue] of excludedRepMap) {
+        var diseaseLabel = omimTerms[diseaseIdKey]
+        var ctMapDataset = ctMapValue
+        for (let [hpoIdKey, repCtValue] of ctMapDataset) {
+            var hpoLabel = allHpoTermsMap[hpoIdKey]
+            var repCt = repCtValue * repCtMultiplier
+            rcData.push({x: hpoLabel, y: null})
+            if (repCt != null && repCt != 0) {
+                var dataPt = {x: hpoLabel, y: repCt};
+                const exists = ctData.find(p => p.x === dataPt.x && p.y === dataPt.y) !== undefined;
+                if (!exists) {
+                    ctData.push(dataPt);
+                }
+                for (i = 0; i < hpoFrequencies.length; i++) {
+                    var freqRecord = hpoFrequencies[i]
+                    var freqRecordOmimId = freqRecord.omimId
+                    var freqRecordHpoId = freqRecord.hpoId
+                    if (freqRecordOmimId == diseaseIdKey && freqRecordHpoId == hpoIdKey) {
+                        var newHpoAnnotPt = {x: hpoLabel, y: annotMultiplier}
+                        var idx = rcData.indexOf({x: hpoLabel, y: null});
+                        rcData.splice(idx, 1, newHpoAnnotPt);
+                        break;
+                    }
+                }
+            }
+        }
+        rcData = reorderArray(rcData, ctData)
+    }
+    console.log(datasetValues)
 
     return datasetValues;
 }
 
-function getXAxisLabelColors(repMap) {
+function getXAxisLabelColors(repMap, excludedRepMap) {
     var colors = ['black']
+    for (let [diseaseIdKey, ctMapValue] of excludedRepMap) {
+            var ctMapDataset = ctMapValue
+            for (let [hpoIdKey, repCtValue] of ctMapDataset) {
+                colors.push('blue');
+            }
+            break;
+        }
     for (let [diseaseIdKey, ctMapValue] of repMap) {
         var ctMapDataset = ctMapValue
         for (let [hpoIdKey, repCtValue] of ctMapDataset) {
@@ -135,7 +201,10 @@ function getHpoFrequencies(hpoTermCountsMap) {
         var hpoId = hpoIdKey
         var freqRecordList = freqRecordListValue
         for (i = 0; i < freqRecordList.length; i++) {
-            freqRecords.push(freqRecordList[i])
+            var freqRecord = freqRecordList[i]
+            if (freqRecord.frequency != null) {
+                freqRecords.push(freqRecord)
+            }
         }
     }
 
@@ -169,6 +238,13 @@ var options = {
           enabled: false
       },
       colors: ["#ffffff"], //white default
+      grid: {
+          yaxis: {
+            lines: {
+              show: false
+            }
+          }
+      },
       title: {
           text: 'HPO Term Repetition Counts'
       },
@@ -208,10 +284,22 @@ var options = {
                     name: 'Rank Decline',
                   },
                   {
+                    from: -nRepetitions * repCtMultiplier,
+                    to: -repCtMultiplier,
+                    color: '#87CEFA', //light sky blue
+                    name: 'Repetition Counts (Excluded)',
+                  },
+                  {
                     from: repCtMultiplier,
                     to: nRepetitions * repCtMultiplier,
                     color: '#FFB200', //gold
-                    name: 'Repetition Counts',
+                    name: 'Repetition Counts (Observed)',
+                  },
+                  {
+                    from: annotMultiplier,
+                    to: annotMultiplier,
+                    color: '#800080', //purple
+                    name: 'Disease Annotation',
                   }
                 ]
               }
@@ -232,49 +320,30 @@ var options = {
                 return '<div style="background-color: lightgray; color: blue"><b>Disease Term</b>: ' + omimLabel + '</div>' +
                        '<div><p></p></div>' +
                        '<div><b>Average Rank Decline</b>: ' + y + '</div>';
-            } else if (y >= repCtMultiplier) {
-                frequencyMap = new Map()
-                for (let [hpoIdKey, hpoLabelValue] of hpoIdToLabelMap) {
-                    if (hpoLabelValue == hpoLabel) {
-                        var hpoId = hpoIdKey
-                        for (let [omimIdKey, omimLabelValue] of omimIdToLabelMap) {
-                            var omimId = omimIdKey
-                            var hpoRepCt = hpoTermIdRepCtsMap[omimId][hpoId]
-                            if (hpoRepCt != null) {
-                                for (i = 0; i < hpoFrequencies.length; i++) {
-                                    var freqRecord = hpoFrequencies[i]
-                                    var freqRecordOmimId = freqRecord.omimId
-                                    var freqRecordHpoId = freqRecord.hpoId
-                                    var frequency = freqRecord.frequency
-                                    if (freqRecordOmimId == omimId && freqRecordHpoId == hpoId && frequency != null) {
-                                        if (!frequencyMap.has(frequency)) {
-                                            frequencyMapDiseaseList = [omimLabelValue]
-                                            frequencyMap.set(frequency, frequencyMapDiseaseList)
-                                        } else {
-                                            frequencyMapDiseaseList = frequencyMap.get(frequency)
-                                            frequencyMapDiseaseList.push(omimLabelValue)
-                                            frequencyMap.set(frequency, frequencyMapDiseaseList)
-                                        }
-                                    }
-                                }
-                            }
+            } else if ((y >= repCtMultiplier && y < annotMultiplier) | y <= -repCtMultiplier) {
+                var freqHTML = ''
+                for (let [hpoLabelKey, frequencyMapValue] of frequencyDiseaseMap) {
+                    if (hpoLabelKey == hpoLabel) {
+                        for (let [frequency, omimLabels] of frequencyMapValue) {
+                          omimLabelString = omimLabels.join("; ")
+                          freqHTML += '<div><b>Frequency of ' + '<span style="color: red">' + hpoLabel + '</span>' +
+                                         ' in ' + '<span style="color: blue">' + omimLabelString + '</span>' +
+                                         '</b>: ' + frequency + '</div>' +
+                                      '<div><p></p></div>'
                         }
                     }
                 }
 
-                var freqHTML = ''
-                for (let [frequency, omimLabels] of frequencyMap) {
-                  omimLabelString = omimLabels.join("; ")
-                  freqHTML += '<div><b>Frequency of ' + '<span style="color: red">' + hpoLabel + '</span>' +
-                                 ' in ' + '<span style="color: blue">' + omimLabelString + '</span>' +
-                                 '</b>: ' + frequency + '</div>' +
-                              '<div><p></p></div>'
+                if (y >= repCtMultiplier) {
+                    return '<div style="background-color: lightgray; color: red"><b>HPO Term</b>: ' + hpoLabel + '</div>' +
+                           '<div><p></p></div>' + freqHTML +
+                           '<div style="background-color: gold"><b>Repetition Count</b>: ' + (y/repCtMultiplier) + ' of ' + nRepetitions + '</div>';
+                } else if (y <= -repCtMultiplier) {
+                    return '<div style="background-color: lightgray; color: red"><b>HPO Term</b>: ' + hpoLabel + '</div>' +
+                           '<div><p></p></div>' + freqHTML +
+                           '<div style="background-color: lightskyblue"><b>Repetition Count</b>: ' + (-y/repCtMultiplier) + ' of ' + nRepetitions + '</div>';
                 }
 
-//                return '<div style="background-color: lightgray; color: blue"><b>Disease Term</b>: ' + omimLabel + '</div>' +
-                return '<div style="background-color: lightgray; color: red"><b>HPO Term</b>: ' + hpoLabel + '</div>' +
-                       '<div><p></p></div>' + freqHTML +
-                       '<div style="background-color: gold"><b>Repetition Count</b>: ' + (y/repCtMultiplier) + '</div>';
             }
           }
       }

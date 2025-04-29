@@ -53,33 +53,36 @@ public class CandidateDiseaseScores {
         TermId selectedDiseaseId = getDiseaseId(diseaseRankProbabilityMap);
         Set<TermId> ascertainablePhenotypeIds = ascertainablePhenotypes.getAscertainablePhenotypeIds(ppkt, selectedDiseaseId);
         Set<TermId> maxoAddedObservedHpoIds = new HashSet<>();
-        //TODO: get descendants of ascertainable phenotype terms and loop through all of those in a second loop
+        Set<TermId> maxoAddedExcludedHpoIds = new HashSet<>();
         for (TermId hpoId : ascertainablePhenotypeIds) {
-//            double maxoTermBenefitProbability = maxoHpoTermProbabilities.calculateProbabilityOfMaxoTermRevealingPresenceOfHpoTerm(hpoId);
-//            boolean result = getTestResult(maxoTermBenefitProbability);
             if (maxoBenefitHpoIds.contains(hpoId)) {
-                observed.add(hpoId);
-                maxoAddedObservedHpoIds.add(hpoId);
-            } else {
-                excluded.add(hpoId);
-                maxoAddedObservedHpoIds.add(hpoId);
+                if (!excluded.contains(hpoId)) {
+                    observed.add(hpoId);
+                    maxoAddedObservedHpoIds.add(hpoId);
+                } else if (!observed.contains(hpoId)) {
+                    excluded.add(hpoId);
+                    maxoAddedExcludedHpoIds.add(hpoId);
+                }
             }
             Set<TermId> ascertainablePhenotypeDescendants = OntologyAlgorithm.getDescendents(ontology, hpoId);
             for (TermId descHpoId : ascertainablePhenotypeDescendants) {
                 if (maxoBenefitHpoIds.contains(descHpoId)) {
-                    observed.add(descHpoId);
-                    maxoAddedObservedHpoIds.add(descHpoId);
-                    //TODO: include MinimalOntology to use existsPath, or use termsRelated method
-                } else {
-                    for (TermId maxoHpoId : maxoBenefitHpoIds) {
-                        if (OntologyAlgorithm.termsAreRelated(ontology, descHpoId, maxoHpoId)) {
-                            observed.add(descHpoId);
-                            maxoAddedObservedHpoIds.add(hpoId);
-//                            System.out.println("Terms are related worked");
-//                            System.exit(0);
-                        } else {
-                            excluded.add(descHpoId);
-                            maxoAddedObservedHpoIds.add(hpoId);
+                    if (!excluded.contains(descHpoId)) {
+                        observed.add(descHpoId);
+                        maxoAddedObservedHpoIds.add(descHpoId);
+                    } else {
+                        for (TermId maxoHpoId : maxoBenefitHpoIds) {
+                            if (OntologyAlgorithm.termsAreRelated(ontology, descHpoId, maxoHpoId)) {
+                                if (!excluded.contains(descHpoId)) {
+                                    observed.add(descHpoId);
+                                    maxoAddedObservedHpoIds.add(descHpoId);
+                                }
+                            } else {
+                                if (!observed.contains(descHpoId)) {
+                                    excluded.add(descHpoId);
+                                    maxoAddedExcludedHpoIds.add(descHpoId);
+                                }
+                            }
                         }
                     }
                 }
@@ -91,7 +94,7 @@ public class CandidateDiseaseScores {
         Sample newSample = getNewSample(ppkt, observed, excluded);
         List<DifferentialDiagnosis> newMaxoDiagnoses = engine.run(newSample, diseaseIds);
 
-        return new MaxoDDResults(maxoAddedObservedHpoIds, newMaxoDiagnoses);
+        return new MaxoDDResults(maxoAddedObservedHpoIds, maxoAddedExcludedHpoIds, newMaxoDiagnoses);
     }
 
     private boolean getTestResult(double maxoTermBenefitProbability) {

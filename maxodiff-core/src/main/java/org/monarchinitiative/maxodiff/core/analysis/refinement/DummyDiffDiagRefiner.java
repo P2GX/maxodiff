@@ -58,7 +58,7 @@ public class DummyDiffDiagRefiner extends BaseDiffDiagRefiner {
 //            List<Frequencies> frequencies = getFrequencyRecords(maxoTermScore, hpoTermCounts);
         // Make dummy RankMaxoScore record
         RankMaxoScore rankMaxoScore = new RankMaxoScore(maxoId, maxoTermScore.omimTermIds(), maxoTermScore.maxoOmimTermIds(),
-                Set.of(), maxoTermScore.scoreDiff(), List.of(), Map.of(), Map.of(),0, 0);
+                Set.of(), Set.of(), maxoTermScore.scoreDiff(), List.of(), Map.of(), Map.of(), Map.of(),0, 0);
         // Make MaxodiffResult for the MAXO term
         MaxodiffResult maxodiffResult = new MaxodiffResultImpl(maxoTermScore, rankMaxoScore, List.of(), List.of());
         maxodiffResultsList.add(maxodiffResult);
