@@ -4,16 +4,11 @@ import ch.qos.logback.classic.Level;
 import ch.qos.logback.classic.LoggerContext;
 import org.monarchinitiative.lirical.configuration.LiricalBuilder;
 import org.monarchinitiative.lirical.core.Lirical;
-import org.monarchinitiative.lirical.core.exception.LiricalException;
-import org.monarchinitiative.lirical.io.LiricalDataException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import picocli.CommandLine;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStream;
-import java.io.InputStreamReader;
+import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Path;
 import java.util.*;
@@ -53,9 +48,8 @@ abstract class BaseCommand implements Callable<Integer> {
 
     public static class DataSection {
         @CommandLine.Option(names = {"-d", "--data"},
-                required = true,
                 description = "Path to Lirical data directory.")
-        public Path liricalDataDirectory;
+        public Path liricalDataDirectory = Path.of("data", "lirical");
 
     }
 

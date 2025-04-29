@@ -225,13 +225,17 @@ var options = {
             var y = data.y;
 
             if (y >= minRankChange && y <= -1) {
-                return '<div style="background-color: lightgray; color: blue"><b>Disease Term</b>: ' + omimLabel + '</div>' +
+                return '<div style="font-family: Arial, Helvetica, sans-serif; white-space: pre-wrap; background-color: lightgray; color: blue">' +
+                       '<b>Disease Term</b>: ' + omimLabel + '</div>' +
                        '<div><p></p></div>' +
-                       '<div><b>Average Rank Improvement</b>: ' + -y + '</div>';
+                       '<div style="font-family: Arial, Helvetica, sans-serif; white-space: pre-wrap;">' +
+                       '<b>Average Rank Improvement</b>: ' + -y + '</div>';
             } else if (y >= 1 && y <= maxRankChange) {
-                return '<div style="background-color: lightgray; color: blue"><b>Disease Term</b>: ' + omimLabel + '</div>' +
+                return '<div style="font-family: Arial, Helvetica, sans-serif; white-space: pre-wrap; background-color: lightgray; color: blue">' +
+                       '<b>Disease Term</b>: ' + omimLabel + '</div>' +
                        '<div><p></p></div>' +
-                       '<div><b>Average Rank Decline</b>: ' + y + '</div>';
+                       '<div style="font-family: Arial, Helvetica, sans-serif; white-space: pre-wrap;">' +
+                       '<b>Average Rank Improvement</b>: ' + y + '</div>';
             } else if (y >= repCtMultiplier) {
                 frequencyMap = new Map()
                 for (let [hpoIdKey, hpoLabelValue] of hpoIdToLabelMap) {
@@ -265,16 +269,19 @@ var options = {
                 var freqHTML = ''
                 for (let [frequency, omimLabels] of frequencyMap) {
                   omimLabelString = omimLabels.join("; ")
-                  freqHTML += '<div><b>Frequency of ' + '<span style="color: red">' + hpoLabel + '</span>' +
+                  freqHTML += '<div style="font-family: Arial, Helvetica, sans-serif; white-space: pre-wrap; ">' +
+                                 '<b>Frequency of ' + '<span style="color: red">' + hpoLabel + '</span>' +
                                  ' in ' + '<span style="color: blue">' + omimLabelString + '</span>' +
                                  '</b>: ' + frequency + '</div>' +
                               '<div><p></p></div>'
                 }
 
 //                return '<div style="background-color: lightgray; color: blue"><b>Disease Term</b>: ' + omimLabel + '</div>' +
-                return '<div style="background-color: lightgray; color: red"><b>HPO Term</b>: ' + hpoLabel + '</div>' +
+                return '<div style="font-family: Arial, Helvetica, sans-serif; white-space: pre-wrap; background-color: lightgray; color: red">' +
+                       '<b>HPO Term</b>: ' + hpoLabel + '</div>' +
                        '<div><p></p></div>' + freqHTML +
-                       '<div style="background-color: gold"><b>Repetition Count</b>: ' + (y/repCtMultiplier) + '</div>';
+                       '<div style="font-family: Arial, Helvetica, sans-serif; white-space: pre-wrap; background-color: gold">' +
+                       '<b>Repetition Count</b>: ' + (y/repCtMultiplier) + '</div>';
             }
           }
       }

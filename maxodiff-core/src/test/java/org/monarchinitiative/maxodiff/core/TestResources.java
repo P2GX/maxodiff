@@ -8,7 +8,9 @@ import org.monarchinitiative.phenol.annotations.io.hpo.DiseaseDatabase;
 import org.monarchinitiative.phenol.annotations.io.hpo.HpoDiseaseLoader;
 import org.monarchinitiative.phenol.annotations.io.hpo.HpoDiseaseLoaderOptions;
 import org.monarchinitiative.phenol.annotations.io.hpo.HpoDiseaseLoaders;
+import org.monarchinitiative.phenol.io.MinimalOntologyLoader;
 import org.monarchinitiative.phenol.io.OntologyLoader;
+import org.monarchinitiative.phenol.ontology.data.MinimalOntology;
 import org.monarchinitiative.phenol.ontology.data.Ontology;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 
@@ -32,6 +34,7 @@ public class TestResources {
     private static final Path MAXO_DIAGNOSTIC_ANNOTATIONS_PATH = TestResources.TEST_BASE.resolve("maxo_diagnostic_annotations.v2023-06-11.tsv.gz");
     // The HPO is in the default  curie map and only contains known relationships / HP terms
     private static volatile Ontology ONTOLOGY;
+    private static volatile MinimalOntology MINIMAL_ONTOLOGY;
     private static volatile HpoDiseases HPO_DISEASES;
     private static volatile Map<SimpleTerm, Set<SimpleTerm>> HPO_2_MAXO;
 
@@ -68,6 +71,21 @@ public class TestResources {
             }
         }
         return ONTOLOGY;
+    }
+
+    public static MinimalOntology minHpo() {
+        if (MINIMAL_ONTOLOGY == null) {
+            synchronized (TestResources.class) {
+                if (MINIMAL_ONTOLOGY == null) {
+                    try (InputStream reader = new GZIPInputStream(Files.newInputStream(HPO_PATH))) {
+                        MINIMAL_ONTOLOGY = MinimalOntologyLoader.loadOntology(reader);
+                    } catch (IOException e) {
+                        throw new RuntimeException(e);
+                    }
+                }
+            }
+        }
+        return MINIMAL_ONTOLOGY;
     }
 
     public static Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxo() {

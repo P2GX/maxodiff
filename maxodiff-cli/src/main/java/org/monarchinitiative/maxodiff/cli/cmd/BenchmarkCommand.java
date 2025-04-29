@@ -23,6 +23,10 @@ import org.monarchinitiative.maxodiff.lirical.*;
 import org.monarchinitiative.maxodiff.core.service.BiometadataService;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDisease;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
+import org.monarchinitiative.phenol.io.MinimalOntologyLoader;
+import org.monarchinitiative.phenol.io.OntologyLoader;
+import org.monarchinitiative.phenol.ontology.data.MinimalOntology;
+import org.monarchinitiative.phenol.ontology.data.Ontology;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -108,6 +112,9 @@ public class BenchmarkCommand extends DifferentialDiagnosisCommand {
         OBJECT_MAPPER.enable(SerializationFeature.INDENT_OUTPUT);
         OBJECT_MAPPER.registerModule(new Jdk8Module());
 
+        Ontology ontology = OntologyLoader.loadOntology(MaxodiffDataResolver.of(maxoDataPath).hpoJson().toFile());
+        MinimalOntology minimalOntology = MinimalOntologyLoader.loadOntology(MaxodiffDataResolver.of(maxoDataPath).hpoJson().toFile());
+
         List<Path> phenopacketPaths = new ArrayList<>();
         if (batchDir != null) {
             File folder = new File(batchDir);
@@ -164,7 +171,7 @@ public class BenchmarkCommand extends DifferentialDiagnosisCommand {
             BiometadataService biometadataService = maxodiffPropsConfiguration.biometadataService();
 
             try (BufferedWriter writer = openWriter(outputName); CSVPrinter printer = CSVFormat.DEFAULT.print(writer)) {
-                printer.printRecord("phenopacket", "all_sample_ids", "n_sample_ids", "n_diseases", "weight",
+                printer.printRecord("phenopacket", "all_sample_ids", "n_sample_ids", "n_diseases", "n_repetitions",
                         "maxo_id", "maxo_label", "maxo_final_score", "n_all_maxo_hpo_ids",
                         "top_maxo_hpo_ids", "n_top_maxo_hpo_ids", "mean_n_disc_phen", "diff",
                         "validation_rank", "validation_weightedRank",
@@ -318,7 +325,8 @@ public class BenchmarkCommand extends DifferentialDiagnosisCommand {
                                                     .build();
                                             LiricalDifferentialDiagnosisEngine diseaseSubsetEngine = liricalDifferentialDiagnosisEngineConfigurer.configure(diseaseSubsetOptions);
 
-                                            RankMaxo rankMaxo = new RankMaxo(hpoToMaxoTermMap, maxoToHpoTermIdMap, maxoHpoTermProbabilities, diseaseSubsetEngine);
+                                            RankMaxo rankMaxo = new RankMaxo(hpoToMaxoTermMap, maxoToHpoTermIdMap, maxoHpoTermProbabilities, diseaseSubsetEngine,
+                                                    minimalOntology, ontology);
 
                                             refinementResults = e.getValue().run(sample,
                                                     orderedDiagnoses,
@@ -335,13 +343,15 @@ public class BenchmarkCommand extends DifferentialDiagnosisCommand {
                                         List<MaxodiffResult> resultsList = new ArrayList<>(refinementResults.maxodiffResults().stream().toList());
                                         if (e.getValue() instanceof MaxoDiffKolmogorovSmirnovRefiner) {
                                             resultsList.sort(Comparator.<MaxodiffResult>comparingDouble(mr -> mr.maxoTermScore().scoreDiff()));
-                                        } else {
+                                        } else if (e.getValue() instanceof MaxoDiffRefiner) {
+                                            resultsList.sort(Comparator.<MaxodiffResult>comparingDouble(mr -> mr.rankMaxoScore().maxoScore()).reversed());
+                                        }else {
                                             resultsList.sort(Comparator.<MaxodiffResult>comparingDouble(mr -> mr.maxoTermScore().scoreDiff()).reversed());
                                         }
                                         String fileName = String.join("_",
                                                 phenopacketName.replace(".json", ""),
                                                 "n" + nDiseases,
-                                                "w" + weight,
+                                                "nr" + nRepetitions,
                                                 e.getKey() + ".json");
                                         Path maxodiffResultsFilePath = Path.of(String.join(File.separator, outputDir.toString(), fileName));
                                         writeToJsonFile(maxodiffResultsFilePath, refinementResults);
@@ -349,36 +359,37 @@ public class BenchmarkCommand extends DifferentialDiagnosisCommand {
                                         // Test new validation procedure
                                         if (e.getValue() instanceof MaxoDiffRefiner) {
                                             assert maxoHpoTermProbabilities != null;
-                                            CandidateDiseaseScores candidateDiseaseScores = new CandidateDiseaseScores(maxoHpoTermProbabilities);
+                                            CandidateDiseaseScores candidateDiseaseScores = new CandidateDiseaseScores(maxoHpoTermProbabilities, minimalOntology, ontology);
                                             // Get highest score MAxO term id
                                             MaxodiffResult topResult = resultsList.getFirst();
-                                            TermId topMaxoId = TermId.of(topResult.maxoTermScore().maxoId());
+                                            TermId topMaxoId = topResult.rankMaxoScore().maxoId();
 
                                             String maxScoreTermLabel = biometadataService.maxoLabel(topMaxoId.toString()).orElse("unknown");
-                                            double maxScoreValue = topResult.maxoTermScore().scoreDiff();
+                                            double maxScoreValue = topResult.rankMaxoScore().maxoScore(); //maxoTermScore().scoreDiff();
 
                                             LOGGER.info("{}: n Diseases = {}, n Repetitions = {}, Weight = {}", e.getKey(), nDiseases, nRepetitions, weight);
 
                                             LOGGER.info("Max Score: {} ({}) = {}", topMaxoId, maxScoreTermLabel, maxScoreValue);
 
-                                            MaxoDDResults maxoDDResults = candidateDiseaseScores
-                                                    .getScoresForMaxoTerm(sample, topMaxoId, engine, initialDiagnosesIds, hpoToMaxoTermMap);
+//                                            MaxoDDResults maxoDDResults = candidateDiseaseScores
+//                                                    .getScoresForMaxoTerm(sample, topMaxoId, engine, initialDiagnosesIds, hpoToMaxoTermMap);
 
-                                            List<DifferentialDiagnosis> maxoTermDiagnoses = maxoDDResults.maxoDifferentialDiagnoses();
+//                                            List<DifferentialDiagnosis> maxoTermDiagnoses = maxoDDResults.maxoDifferentialDiagnoses();
                                             LOGGER.info("Getting Top Maxo Ascertainable Phenotypes...");
-                                            Set<TermId> topMaxoAscertainablePhenotypes = maxoHpoTermProbabilities.getDiscoverableByMaxoHpoTerms(sample, topMaxoId, maxoToHpoTermIdMap);
+                                            Set<TermId> topMaxoAscertainablePhenotypes = topResult.rankMaxoScore().discoverableHpoTermIds();//maxoHpoTermProbabilities.getDiscoverableByMaxoHpoTerms(sample, topMaxoId, maxoToHpoTermIdMap);
 
                                             double diff = topMaxoAscertainablePhenotypes.size() - meanNDiscoverablePhenotypesAllMaxoTerms;
 
-                                            double validationScore_rank = ValidationModel.rankDiff(initialDiagnoses, maxoTermDiagnoses).validationScore();
-                                            double validationScore_weightedRank = ValidationModel.weightedRankDiff(initialDiagnoses, maxoTermDiagnoses).validationScore();
-                                            double validationScore_score = ValidationModel.scoreDiff(initialDiagnoses, maxoTermDiagnoses).validationScore();
+//                                            double validationScore_rank = ValidationModel.rankDiff(initialDiagnoses, maxoTermDiagnoses).validationScore();
+//                                            double validationScore_weightedRank = ValidationModel.weightedRankDiff(initialDiagnoses, maxoTermDiagnoses).validationScore();
+//                                            double validationScore_score = ValidationModel.scoreDiff(initialDiagnoses, maxoTermDiagnoses).validationScore();
 
-                                            writeResults(phenopacketName, allSampleHpoTerms, allSampleHpoTerms.size(), nDiseases, weight,
+                                            writeResults(phenopacketName, allSampleHpoTerms, allSampleHpoTerms.size(), nDiseases, nRepetitions,
                                                     topMaxoId.toString(), maxScoreTermLabel, maxScoreValue, nAllMaxoDiscoverablePhenotypes,
                                                     topMaxoAscertainablePhenotypes, topMaxoAscertainablePhenotypes.size(),
-                                                    meanNDiscoverablePhenotypesAllMaxoTerms, diff, validationScore_rank,
-                                                    validationScore_weightedRank, validationScore_score, e.getKey(), printer);
+                                                    meanNDiscoverablePhenotypesAllMaxoTerms, diff,
+//                                                    validationScore_rank, validationScore_weightedRank, validationScore_score,
+                                                    e.getKey(), printer);
 
                                         }
 
@@ -476,9 +487,9 @@ public class BenchmarkCommand extends DifferentialDiagnosisCommand {
                                      int nTopMaxoHpoTerms,
                                      double meanNDiscPhenotypes,
                                      double diff,
-                                     double validationScore_rank,
-                                     double validationScore_weightedRank,
-                                     double validationScore_score,
+//                                     double validationScore_rank,
+//                                     double validationScore_weightedRank,
+//                                     double validationScore_score,
                                      String refinerType,
                                      CSVPrinter printer) {
 
@@ -496,9 +507,9 @@ public class BenchmarkCommand extends DifferentialDiagnosisCommand {
             printer.print(nTopMaxoHpoTerms);
             printer.print(meanNDiscPhenotypes);
             printer.print(diff);
-            printer.print(validationScore_rank);
-            printer.print(validationScore_weightedRank);
-            printer.print(validationScore_score);
+//            printer.print(validationScore_rank);
+//            printer.print(validationScore_weightedRank);
+//            printer.print(validationScore_score);
             printer.print(refinerType);
             printer.println();
         } catch (IOException e) {

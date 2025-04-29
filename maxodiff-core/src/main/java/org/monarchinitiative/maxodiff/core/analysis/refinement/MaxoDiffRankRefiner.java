@@ -7,6 +7,7 @@ import org.monarchinitiative.maxodiff.core.model.DifferentialDiagnosis;
 import org.monarchinitiative.maxodiff.core.model.Sample;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
 import org.monarchinitiative.phenol.ontology.data.MinimalOntology;
+import org.monarchinitiative.phenol.ontology.data.Ontology;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 
 import java.util.*;
@@ -14,8 +15,8 @@ import java.util.*;
 public class MaxoDiffRankRefiner extends BaseDiffDiagRefiner {
 
     public MaxoDiffRankRefiner(HpoDiseases hpoDiseases, Map<TermId, Set<TermId>> fullHpoToMaxoIdTermMap,
-                               Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxoTermMap, MinimalOntology hpo) {
-        super(hpoDiseases, fullHpoToMaxoIdTermMap, hpoToMaxoTermMap, hpo);
+                               Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxoTermMap, MinimalOntology minHpo, Ontology hpo) {
+        super(hpoDiseases, fullHpoToMaxoIdTermMap, hpoToMaxoTermMap, minHpo, hpo);
     }
 
 

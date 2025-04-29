@@ -15,12 +15,17 @@ import org.monarchinitiative.maxodiff.core.analysis.refinement.DiffDiagRefiner;
 import org.monarchinitiative.maxodiff.core.analysis.refinement.MaxodiffResult;
 import org.monarchinitiative.maxodiff.core.analysis.refinement.RefinementOptions;
 import org.monarchinitiative.maxodiff.core.analysis.refinement.RefinementResults;
+import org.monarchinitiative.maxodiff.html.results.HtmlResults;
 import org.monarchinitiative.maxodiff.lirical.PhenopacketFileParser;
 import org.monarchinitiative.maxodiff.lirical.*;
 import org.monarchinitiative.maxodiff.core.model.*;
 import org.monarchinitiative.maxodiff.core.service.BiometadataService;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDisease;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
+import org.monarchinitiative.phenol.io.MinimalOntologyLoader;
+import org.monarchinitiative.phenol.io.OntologyLoader;
+import org.monarchinitiative.phenol.ontology.data.MinimalOntology;
+import org.monarchinitiative.phenol.ontology.data.Ontology;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -45,20 +50,17 @@ public class DifferentialDiagnosisCommand extends BaseCommand {
     private static final Logger LOGGER = LoggerFactory.getLogger(DifferentialDiagnosisCommand.class);
 
     @CommandLine.Option(names = {"-m", "--maxoData"},
-            required = true,
             description = "Path to MaXo data directory.")
-    protected Path maxoDataPath;
+    protected Path maxoDataPath = Path.of("data");
 
     @CommandLine.Option(names = {"-p", "--phenopacket"},
-//            required = true,
-//            arity = "1..*",
             description = "Path(s) to phenopacket JSON file(s).")
     protected Path phenopacketPath;
 
     @CommandLine.Option(names = {"-O", "--outputDirectory"},
 //            required = true,
             description = "Where to write the results files.")
-    protected Path outputDir;
+    protected Path outputDir = Path.of(".");
 
     @CommandLine.Option(names = {"--format"},
             paramLabel = "{tsv,html,json}",
@@ -70,24 +72,18 @@ public class DifferentialDiagnosisCommand extends BaseCommand {
     protected boolean compress = false;
 
     @CommandLine.Option(names = {"-w", "--weight"},
-//            split=",",
-//            arity = "1..*",
             description = "Comma-separated list of weight value to use in final score calculation (default: ${DEFAULT-VALUE}).")
-    public Double weightsArg;
+    public Double weightsArg = 0.5;
 
     @CommandLine.Option(names = {"-l", "--diseaseList"},
-//            required = true,
             split=",",
             arity = "1..*",
             description = "Comma-separated list of diseases to include in differential diagnosis.")
     protected List<String> diseaseIdsArg;
 
     @CommandLine.Option(names = {"-n", "--nDiseases"},
-//            required = true,
-//            split=",",
-//            arity = "1..*",
             description = "Comma-separated list of n diseases for filtering diseases to include in differential diagnosis.")
-    protected Integer nDiseasesArg;
+    protected Integer nDiseasesArg = 20;
 
     @CommandLine.Option(names = {"--diseaseProbModel"},
             paramLabel = "{ranked,softmax,expDecay}",
@@ -95,11 +91,8 @@ public class DifferentialDiagnosisCommand extends BaseCommand {
     protected String diseaseProbModel = "ranked";
 
     @CommandLine.Option(names = {"-nr", "--nRepetitions"},
-//            required = true,
-//            split=",",
-//            arity = "1..*",
             description = "Number of repetitions for running differential diagnosis.")
-    protected Integer nRepetitionsArg;
+    protected Integer nRepetitionsArg = 10;
 
     @Override
     public Integer execute() throws Exception {
@@ -122,6 +115,9 @@ public class DifferentialDiagnosisCommand extends BaseCommand {
     protected void runSingleMaxodiffAnalysis(Path phenopacketPath, String phenopacketName, int nDiseases, int nRepetitions, double weight,
                                              boolean writeOutputFile, CSVPrinter printer) throws Exception {
 
+
+        Ontology ontology = OntologyLoader.loadOntology(MaxodiffDataResolver.of(maxoDataPath).hpoJson().toFile());
+        MinimalOntology minimalOntology = MinimalOntologyLoader.loadOntology(MaxodiffDataResolver.of(maxoDataPath).hpoJson().toFile());
 
         if (writeOutputFile) {
             printer.printRecord("phenopacket", "disease_id", "maxo_id", "maxo_label",
@@ -226,7 +222,8 @@ public class DifferentialDiagnosisCommand extends BaseCommand {
                     .build();
             LiricalDifferentialDiagnosisEngine diseaseSubsetEngine = liricalDifferentialDiagnosisEngineConfigurer.configure(diseaseSubsetOptions);
 
-            RankMaxo rankMaxo = new RankMaxo(hpoToMaxoTermMap, maxoToHpoTermIdMap, maxoHpoTermProbabilities, diseaseSubsetEngine);
+            RankMaxo rankMaxo = new RankMaxo(hpoToMaxoTermMap, maxoToHpoTermIdMap, maxoHpoTermProbabilities, diseaseSubsetEngine,
+                    minimalOntology, ontology);
 
             RefinementResults refinementResults = maxoDiffRefiner.run(sample,
                     orderedDiagnoses,
@@ -252,6 +249,17 @@ public class DifferentialDiagnosisCommand extends BaseCommand {
             if (writeOutputFile) {
                 writeResults(phenopacketName, diseaseId, TermId.of(maxScoreMaxoTermId), maxScoreTermLabel,
                         topNDiseases, diseaseIds.toString(), nRepetitions, weight, maxScoreValue, printer);
+
+                String nDiseasesAbbr = String.join("", "n", String.valueOf(nDiseases));
+                String nRepsAbbr = String.join("", "nr", String.valueOf(nRepetitions));
+                String outputFilename = String.join("_", phenopacketName,
+                        nDiseasesAbbr, nRepsAbbr, "maxodiff", "results.html");
+                Path maxodiffResultsHTMLPath = Path.of(String.join(File.separator, outputDir.toString(), outputFilename));
+
+                String htmlString = HtmlResults.writeHTMLResults(sample, nDiseases, nRepetitions, resultsList,
+                        biometadataService, hpoTermCounts);
+
+                Files.writeString(maxodiffResultsHTMLPath, htmlString);
             }
 
             List<Object> phenopacketNames = resultsMap.get("phenopacketName");
@@ -330,8 +338,6 @@ public class DifferentialDiagnosisCommand extends BaseCommand {
             LOGGER.error("Error writing results for {}: {}", diseaseId, e.getMessage(), e);
         }
     }
-
-
 
 
 }

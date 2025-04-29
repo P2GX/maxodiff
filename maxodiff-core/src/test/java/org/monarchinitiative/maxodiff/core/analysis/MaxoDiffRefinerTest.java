@@ -38,7 +38,8 @@ public class MaxoDiffRefinerTest {
 
     @BeforeEach
     public void setUp() {
-        refiner = new MaxoDiffRefiner(TestResources.hpoDiseases(), HPO_TO_MAXO, TestResources.hpoToMaxo(), TestResources.hpo());
+        refiner = new MaxoDiffRefiner(TestResources.hpoDiseases(), HPO_TO_MAXO, TestResources.hpoToMaxo(),
+                TestResources.minHpo(), TestResources.hpo());
     }
 
     @Test

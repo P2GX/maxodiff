@@ -7,6 +7,8 @@ import org.monarchinitiative.maxodiff.core.analysis.ValidationModel;
 import org.monarchinitiative.maxodiff.core.diffdg.DifferentialDiagnosisEngine;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDisease;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
+import org.monarchinitiative.phenol.ontology.data.MinimalOntology;
+import org.monarchinitiative.phenol.ontology.data.Ontology;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 
 import java.util.*;
@@ -19,15 +21,21 @@ public class RankMaxo {
     private final MaxoHpoTermProbabilities maxoHpoTermProbabilities;
     private final DifferentialDiagnosisEngine engine;
     double p;
+    private final MinimalOntology minimalOntology;
+    private final Ontology ontology;
 
     public RankMaxo(Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxoTermMap,
                     Map<TermId, Set<TermId>> maxoToHpoTermIdMap,
                     MaxoHpoTermProbabilities maxoHpoTermProbabilities,
-                    DifferentialDiagnosisEngine engine) {
+                    DifferentialDiagnosisEngine engine,
+                    MinimalOntology minHpo,
+                    Ontology hpo) {
         this.hpoToMaxoTermMap = hpoToMaxoTermMap;
         this.maxoToHpoTermIdMap = maxoToHpoTermIdMap;
         this.maxoHpoTermProbabilities = maxoHpoTermProbabilities;
         this.engine = engine;
+        this.minimalOntology = minHpo;
+        this.ontology = hpo;
     }
 
     /**
@@ -39,7 +47,7 @@ public class RankMaxo {
      */
     public Map<TermId, RankMaxoScore> rankMaxoTerms(Sample ppkt, int nRepetitions, Set<TermId> diseaseIds) {
         Map<TermId, RankMaxoScore> maxoScores = new HashMap<>();
-        CandidateDiseaseScores candidateDiseaseScores = new CandidateDiseaseScores(maxoHpoTermProbabilities);
+        CandidateDiseaseScores candidateDiseaseScores = new CandidateDiseaseScores(maxoHpoTermProbabilities, minimalOntology, ontology);
         p = 0;
         for (TermId maxoId : maxoToHpoTermIdMap.keySet()) {
             List<Double> scores = new ArrayList<>();
