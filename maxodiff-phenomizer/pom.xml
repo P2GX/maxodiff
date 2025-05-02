@@ -17,6 +17,10 @@
             <artifactId>maxodiff-core</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-csv</artifactId>
+        </dependency>
     </dependencies>
 
 </project>
