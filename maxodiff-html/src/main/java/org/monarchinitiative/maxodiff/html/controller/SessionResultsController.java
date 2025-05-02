@@ -231,6 +231,7 @@ public class SessionResultsController {
             Map<TermId, String> diseaseTermsMap = new LinkedHashMap<>();
 
             List<HpoFrequency> hpoFrequencies = HTMLFrequencyMap.getHpoFrequencies(hpoTermCounts);
+            Map<TermId, Integer> nRepetitionsMap = new HashMap<>();
             Map<String, Map<Float, List<String>>> frequencyMap = new HashMap<>();
 
             for (MaxodiffResult maxodiffResult : resultsList.subList(0, nDisplayed)) {
@@ -243,6 +244,17 @@ public class SessionResultsController {
                     rankMaxoScore.maxoOmimTermIds().forEach(id -> diseaseTermsMap.put(id, biometadataService.diseaseLabel(id).orElse("unknown")));
                     var hpoTermIdRepCtsMap = rankMaxoScore.hpoTermIdRepCtsMap();
                     var hpoTermIdExcludedRepCtsMap = rankMaxoScore.hpoTermIdExcludedRepCtsMap();
+                    for (Map.Entry<TermId, Map<TermId, Integer>> diseaseHpoRepCtEntry : hpoTermIdRepCtsMap.entrySet()) {
+                        Map<TermId, Integer> hpoRetCtMap = diseaseHpoRepCtEntry.getValue();
+                        for (Map.Entry<TermId, Integer> hpoRepCtMapEntry : hpoRetCtMap.entrySet()) {
+                            TermId hpoId = hpoRepCtMapEntry.getKey();
+                            Integer repCt = hpoRepCtMapEntry.getValue();
+                            if (repCt != null && !nRepetitionsMap.containsKey(hpoId)) {
+                                nRepetitionsMap.put(hpoId, repCt);
+                                break;
+                            }
+                        }
+                    }
                     Map<String, Map<Float, List<String>>> resultFrequencyMap = HTMLFrequencyMap.makeFrequencyDiseaseMap(hpoTermsMap, diseaseTermsMap, hpoTermIdRepCtsMap, hpoTermIdExcludedRepCtsMap, hpoFrequencies);
                     frequencyMap.putAll(resultFrequencyMap);
                 } else {
@@ -255,6 +267,7 @@ public class SessionResultsController {
 
             }
             model.addAttribute("omimTerms", diseaseTermsMap);
+            model.addAttribute("nRepetitionsMap", nRepetitionsMap);
             model.addAttribute("frequencyDiseaseMap", frequencyMap);
             model.addAttribute("allHpoTermsMap", hpoTermsMap);
             model.addAttribute("allMaxoTermsMap", maxoTermsMap);

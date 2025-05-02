@@ -185,11 +185,10 @@ function getDiseaseIds(repMap) {
 }
 
 
-function getRankChanges(repMap, rankChangeMap) {
+function getRankChanges(rankChangeMap) {
     var rankChanges = [];
-    for (let [diseaseIdKey, ctMapValue] of repMap) {
-        var rankChange = rankChangeMap[diseaseIdKey]
-        rankChanges.push(rankChange);
+    for (let [diseaseIdKey, rankChangeValue] of rankChangeMap) {
+        rankChanges.push(rankChangeValue);
     }
 
     return rankChanges;

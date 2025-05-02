@@ -161,11 +161,33 @@ public class RankMaxo {
                 }
                 maxoDiseaseAvgRankChangeMap.put(omimId, meanRankDiff);
             }
+            //sort maps by disease average rank change
+            Map<TermId, Integer> maxoDiseaseAvgRankChangeMapSorted = maxoDiseaseAvgRankChangeMap.entrySet().stream()
+                .sorted(Comparator.comparing(Map.Entry::getValue))
+                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (a,b)->b, LinkedHashMap::new));
+
+            Map<TermId, Map<TermId, Integer>> maxoDiscoverableHpoIdCtsSorted = maxoDiseaseAvgRankChangeMapSorted.keySet().stream()
+                .filter(maxoDiscoverableHpoIdCts::containsKey)
+                .collect(Collectors.toMap(
+                    key -> key,
+                    maxoDiscoverableHpoIdCts::get,
+                    (oldValue, newValue) -> newValue,
+                    LinkedHashMap::new
+                ));
+
+            Map<TermId, Map<TermId, Integer>> maxoDiscoverableExcludedHpoIdCtsSorted = maxoDiseaseAvgRankChangeMapSorted.keySet().stream()
+                .filter(maxoDiscoverableExcludedHpoIdCts::containsKey)
+                .collect(Collectors.toMap(
+                    key -> key,
+                    maxoDiscoverableExcludedHpoIdCts::get,
+                    (oldValue, newValue) -> newValue,
+                    LinkedHashMap::new
+                ));
 
             RankMaxoScore rankMaxoScore = new RankMaxoScore(maxoId, initialDiagnosesDiseaseIds, maxoDiagnosesDiseaseIds,
                     maxoDiscoverableObservedHpoIds, maxoDiscoverableExcludedHpoIds, meanScore, maxoDDResultsList.getLast().maxoDifferentialDiagnoses(),
-                    maxoDiscoverableHpoIdCts, maxoDiscoverableExcludedHpoIdCts, maxoDiseaseAvgRankChangeMap,
-                    Collections.min(maxoDiseaseAvgRankChangeMap.values()), Collections.max(maxoDiseaseAvgRankChangeMap.values()));
+                    maxoDiscoverableHpoIdCtsSorted, maxoDiscoverableExcludedHpoIdCtsSorted, maxoDiseaseAvgRankChangeMapSorted,
+                    Collections.min(maxoDiseaseAvgRankChangeMapSorted.values()), Collections.max(maxoDiseaseAvgRankChangeMapSorted.values()));
             maxoScores.put(maxoId, rankMaxoScore);
             p++;
             updateProgress();
