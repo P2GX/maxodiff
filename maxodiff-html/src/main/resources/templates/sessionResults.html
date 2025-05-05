@@ -286,7 +286,10 @@
             <th></th>
             <th>Average Rank Change</th>
             <th:block th:each="hpoId : ${maxoTable.rankMaxoScore.discoverableObservedHpoTermIds}">
-                <th th:text="${hpoId} + ' (' + ${allHpoTermsMap.get(hpoId)} + ')'"></th>
+                <th th:onclick="|window.open('@{|https://hpo.jax.org/browse/term/${hpoId}|}')|"
+                    th:text="${#strings.length(allHpoTermsMap.get(hpoId)) > 30} ?
+                    ${#strings.substring(allHpoTermsMap.get(hpoId), 0, 30) + '...'} : ${allHpoTermsMap.get(hpoId)}"
+                    style="color: blue"></th>
             </th:block>
         </tr>
         </thead>
@@ -305,12 +308,12 @@
         </tr>
         <th:block th:each= "omimId, omimIter : ${maxoTable.rankMaxoScore.maxoDiseaseAvgRankChangeMap.keySet()}">
             <tr th:if="${refiner == 'score'}">
-                <td th:text="${omimId} + ' (' + ${omimTerms.get(omimId)} + ')'"></td>
+                <td th:text="${omimTerms.get(omimId)}"></td>
                 <th:block th:with="rankChange=${maxoTable.rankMaxoScore.maxoDiseaseAvgRankChangeMap.get(omimId)}">
                     <td th:text="${rankChange} == null ? ${rankChange} :
                     (${rankChange} % 1 == 0 ? ${rankChange} : ${#numbers.formatDecimal(rankChange, 1, 4)})"
                         th:style="${rankChange} < 0 ?
-                        |background: rgba(1, 50, 32, ${#numbers.formatDecimal((-1.0 * rankChange)/(nDiseases - 1), 1, 4)})| :
+                        |background: rgba(0, 128, 0, ${#numbers.formatDecimal((-1.0 * rankChange)/(nDiseases - 1), 1, 4)})| :
                         |background: rgba(255, 0, 0, ${#numbers.formatDecimal((1.0 * rankChange)/(nDiseases - 1), 1, 4)})|"></td>
                 </th:block>
                 <th:block th:each= "hpoId : ${maxoTable.rankMaxoScore.discoverableObservedHpoTermIds}">

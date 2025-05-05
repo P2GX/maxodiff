@@ -129,12 +129,21 @@
     white-space: pre-wrap !important;
 }
 
+.countsTable {
+  table-layout: fixed;
+}
+
 .countsTable td {
     padding: 0px 10px 0px 10px;
+    /*height: 50px;*/
 }
 
 .countsTable td:first-child {
-    font-weight: bold
+    font-weight: bold;
+    white-space: nowrap;
+    max-width: 400px;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .countsTable td:nth-child(2) {
@@ -143,12 +152,17 @@
 
 .countsTable th {
     text-align: center;
-    transform-origin: 50% 50%;
+    vertical-align: bottom;
+    horizontal-align: right;
+    transform-origin: bottom left;
     transform: rotate(315deg);
     padding: 0;
     margin: 0;
     height: 200px;
-    white-space: no-wrap;
+    white-space: nowrap;
+    max-width: 50px;
+    overflow: visible;
+    text-overflow: ellipsis;
 }
 
 .maxoResultsTable td:first-child {
