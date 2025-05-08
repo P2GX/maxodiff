@@ -239,11 +239,9 @@ public class SessionResultsController {
                     RankMaxoScore rankMaxoScore = maxodiffResult.rankMaxoScore();
                     maxoTermsMap.put(rankMaxoScore.maxoId().toString(), biometadataService.maxoLabel(rankMaxoScore.maxoId().toString()).orElse("unknown"));
                     rankMaxoScore.discoverableObservedHpoTermIds().forEach(id -> hpoTermsMap.put(id, biometadataService.hpoLabel(id).orElse("unknown")));
-                    rankMaxoScore.discoverableExcludedHpoTermIds().forEach(id -> hpoTermsMap.put(id, biometadataService.hpoLabel(id).orElse("unknown")));
                     rankMaxoScore.initialOmimTermIds().forEach(id -> diseaseTermsMap.put(id, biometadataService.diseaseLabel(id).orElse("unknown")));
                     rankMaxoScore.maxoOmimTermIds().forEach(id -> diseaseTermsMap.put(id, biometadataService.diseaseLabel(id).orElse("unknown")));
                     var hpoTermIdRepCtsMap = rankMaxoScore.hpoTermIdRepCtsMap();
-                    var hpoTermIdExcludedRepCtsMap = rankMaxoScore.hpoTermIdExcludedRepCtsMap();
                     for (Map.Entry<TermId, Map<TermId, Integer>> diseaseHpoRepCtEntry : hpoTermIdRepCtsMap.entrySet()) {
                         Map<TermId, Integer> hpoRetCtMap = diseaseHpoRepCtEntry.getValue();
                         for (Map.Entry<TermId, Integer> hpoRepCtMapEntry : hpoRetCtMap.entrySet()) {
@@ -255,7 +253,7 @@ public class SessionResultsController {
                             }
                         }
                     }
-                    Map<String, Map<Float, List<String>>> resultFrequencyMap = HTMLFrequencyMap.makeFrequencyDiseaseMap(hpoTermsMap, diseaseTermsMap, hpoTermIdRepCtsMap, hpoTermIdExcludedRepCtsMap, hpoFrequencies);
+                    Map<String, Map<Float, List<String>>> resultFrequencyMap = HTMLFrequencyMap.makeFrequencyDiseaseMap(hpoTermsMap, diseaseTermsMap, hpoTermIdRepCtsMap, hpoFrequencies);
                     frequencyMap.putAll(resultFrequencyMap);
                 } else {
                     MaxoTermScore maxoTermScore = maxodiffResult.maxoTermScore();

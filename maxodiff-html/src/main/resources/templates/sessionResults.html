@@ -139,9 +139,6 @@
         <tr th:if="${refiner == 'score'}">
             <td>N Observed HPO Terms:</td><td th:text="${maxoTable.rankMaxoScore.discoverableObservedHpoTermIds.size}"></td>
         </tr>
-        <tr th:if="${refiner == 'score'}">
-            <td>N Excluded HPO Terms:</td><td th:text="${maxoTable.rankMaxoScore.discoverableExcludedHpoTermIds.size}"></td>
-        </tr>
         <tr th:if="${refiner != 'score'}">
             <td>N Diseases:</td><td th:text="${maxoTable.maxoTermScore.nOmimTerms}"></td>
         </tr>
@@ -257,27 +254,6 @@
     </script>
     <script type="text/javascript" th:src="@{/js/maxoKolmogorovSmirnovChart.js}"></script>
 
-    <table>
-        <tbody>
-        <tr th:if="${refiner == 'score'}">
-            <td><div th:id="'nRepHeatmapChartContainer_' + ${iter.index}" style="height:600px; width:1600px; border: 1px solid black"></div></td>
-        </tr>
-        </tbody>
-    </table>
-    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
-    <script th:inline="javascript">
-        var hpoTermIdRepCtsMap = [[${maxoTable.rankMaxoScore.hpoTermIdRepCtsMap}]];
-        var hpoTermIdExcludedRepCtsMap = [[${maxoTable.rankMaxoScore.hpoTermIdExcludedRepCtsMap}]];
-        var nDiseases = [[${nDiseases}]];
-        var nRepetitions = [[${nRepetitions}]];
-        var maxoDiseaseAvgRankChangeMap = [[${maxoTable.rankMaxoScore.maxoDiseaseAvgRankChangeMap}]];
-        var allHpoTermsMap = [[${allHpoTermsMap}]];
-        var omimTerms = [[${omimTerms}]];
-        var hpoTermCounts = [[${hpoTermCounts}]]
-        var frequencyDiseaseMap = [[${frequencyDiseaseMap}]]
-        var chartIdx = [[${iter.index}]]
-    </script>
-    <script type="text/javascript" th:src="@{/js/nRepetitionsHeatmapChart.js}"></script>
 
     <h3 th:if="${refiner == 'score'}">Table of HPO Term Repetition Counts</h3>
     <table class='countsTable'>
@@ -285,6 +261,7 @@
         <tr th:if="${refiner == 'score'}">
             <th></th>
             <th>Average Rank Change</th>
+            <th></th>
             <th:block th:each="hpoId : ${maxoTable.rankMaxoScore.discoverableObservedHpoTermIds}">
                 <th th:onclick="|window.open('@{|https://hpo.jax.org/browse/term/${hpoId}|}')|"
                     th:text="${#strings.length(allHpoTermsMap.get(hpoId)) > 30} ?
@@ -297,6 +274,7 @@
         <tbody>
         <tr th:if="${refiner == 'score'}">
             <td>N Repetitions</td>
+            <td></td>
             <td></td>
             <th:block th:each= "hpoId : ${maxoTable.rankMaxoScore.discoverableObservedHpoTermIds}">
                 <th:block th:with="ct=${nRepetitionsMap.get(hpoId)}">
@@ -316,6 +294,7 @@
                         |background: rgba(0, 128, 0, ${#numbers.formatDecimal((-1.0 * rankChange)/(nDiseases - 1), 1, 4)})| :
                         |background: rgba(255, 0, 0, ${#numbers.formatDecimal((1.0 * rankChange)/(nDiseases - 1), 1, 4)})|"></td>
                 </th:block>
+                <td></td>
                 <th:block th:each= "hpoId : ${maxoTable.rankMaxoScore.discoverableObservedHpoTermIds}">
                     <th:block th:with="ct=${maxoTable.rankMaxoScore.hpoTermIdRepCtsMap.get(omimId).get(hpoId)}">
                         <td th:style="|background: rgba(160, 32, 240, ${ct})|"></td>

@@ -135,7 +135,9 @@
 
 .countsTable td {
     padding: 0px 10px 0px 10px;
-    /*height: 50px;*/
+    height: 30px;
+    width: 30px;
+    max-width: 30px;
 }
 
 .countsTable td:first-child {
