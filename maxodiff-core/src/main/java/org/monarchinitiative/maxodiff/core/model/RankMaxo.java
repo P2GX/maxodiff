@@ -7,6 +7,7 @@ import org.monarchinitiative.maxodiff.core.analysis.ValidationModel;
 import org.monarchinitiative.maxodiff.core.diffdg.DifferentialDiagnosisEngine;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDisease;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
+import org.monarchinitiative.phenol.ontology.algo.OntologyAlgorithm;
 import org.monarchinitiative.phenol.ontology.data.MinimalOntology;
 import org.monarchinitiative.phenol.ontology.data.Ontology;
 import org.monarchinitiative.phenol.ontology.data.TermId;
@@ -49,17 +50,31 @@ public class RankMaxo {
         Map<TermId, RankMaxoScore> maxoScores = new HashMap<>();
         CandidateDiseaseScores candidateDiseaseScores = new CandidateDiseaseScores(maxoHpoTermProbabilities, minimalOntology, ontology);
         p = 0;
+        Set<TermId> sampleHpoIds = new HashSet<>();
+        sampleHpoIds.addAll(ppkt.presentHpoTermIds());
+        sampleHpoIds.addAll(ppkt.excludedHpoTermIds());
+
         for (TermId maxoId : maxoToHpoTermIdMap.keySet()) {
+            Set<TermId> maxoBenefitHpoIds = maxoHpoTermProbabilities.getDiscoverableByMaxoHpoTerms(ppkt, maxoId, maxoToHpoTermIdMap);
+            for (TermId maxoHpoId : maxoBenefitHpoIds) {
+                if (sampleHpoIds.contains(maxoHpoId)) {
+                    continue;
+                }
+                Set<TermId> maxoHpoDescendants = ontology.graph().getDescendantSet(maxoHpoId);
+                for (TermId maxoHpoDescId : maxoHpoDescendants) {
+                    if (sampleHpoIds.contains(maxoHpoDescId)) {
+                        continue;
+                    }
+                }
+            }
             List<Double> scores = new ArrayList<>();
             List<DifferentialDiagnosis> initialDiagnoses = maxoHpoTermProbabilities.getInitialDiagnoses();
             List<MaxoDDResults> maxoDDResultsList = new ArrayList<>();
             Map<TermId, Map<TermId, Integer>> maxoDiscoverableHpoIdCts = new HashMap<>();
-            Map<TermId, Map<TermId, Integer>> maxoDiscoverableExcludedHpoIdCts = new HashMap<>();
             for (int i = 0; i < nRepetitions; i++) {
                 MaxoDDResults maxoDDResults = candidateDiseaseScores.getScoresForMaxoTerm(ppkt, maxoId, engine, diseaseIds, hpoToMaxoTermMap);
                 maxoDDResultsList.add(maxoDDResults);
                 Set<TermId> discoverableHpoIds = maxoDDResults.maxoDiscoverableHpoIds();
-                Set<TermId> discoverableExcludedHpoIds = maxoDDResults.maxoDiscoverableExcludedHpoIds();
                 for (TermId diseaseId : diseaseIds) {
                     List<TermId> diseaseAssociatedHpoIds = List.of();
                     Optional<HpoDisease> opt = maxoHpoTermProbabilities.getHpoDiseases().diseaseById(diseaseId);
@@ -69,9 +84,6 @@ public class RankMaxo {
                     }
                     if (!maxoDiscoverableHpoIdCts.containsKey(diseaseId)) {
                         maxoDiscoverableHpoIdCts.put(diseaseId, new HashMap<>());
-                    }
-                    if (!maxoDiscoverableExcludedHpoIdCts.containsKey(diseaseId)) {
-                        maxoDiscoverableExcludedHpoIdCts.put(diseaseId, new HashMap<>());
                     }
                     Map<TermId, Integer> hpoIdCtsMap = maxoDiscoverableHpoIdCts.get(diseaseId);
                     for (TermId discoverableHpoId : discoverableHpoIds) {
@@ -88,22 +100,6 @@ public class RankMaxo {
                             }
                         }
                         maxoDiscoverableHpoIdCts.replace(diseaseId, hpoIdCtsMap);
-                    }
-                    Map<TermId, Integer> hpoIdExcludedCtsMap = maxoDiscoverableExcludedHpoIdCts.get(diseaseId);
-                    for (TermId excludedHpoId : discoverableExcludedHpoIds) {
-                        if (!hpoIdExcludedCtsMap.containsKey(excludedHpoId)) {
-                            if (diseaseAssociatedHpoIds.contains(excludedHpoId)) {
-                                hpoIdExcludedCtsMap.put(excludedHpoId, -1);
-                            } else {
-                                hpoIdExcludedCtsMap.put(excludedHpoId, null);
-                            }
-                        } else {
-                            Integer ct = hpoIdExcludedCtsMap.get(excludedHpoId);
-                            if (ct != null) {
-                                hpoIdExcludedCtsMap.replace(excludedHpoId, ct - 1);
-                            }
-                        }
-                        maxoDiscoverableExcludedHpoIdCts.replace(diseaseId, hpoIdExcludedCtsMap);
                     }
                 }
                 double finalScore = ValidationModel.weightedRankDiff(initialDiagnoses, maxoDDResults.maxoDifferentialDiagnoses()).validationScore();
@@ -124,10 +120,6 @@ public class RankMaxo {
 
             Set<TermId> maxoDiscoverableObservedHpoIds = maxoDDResultsList.stream()
                     .map(MaxoDDResults::maxoDiscoverableHpoIds)
-                    .flatMap(Collection::stream)
-                    .collect(Collectors.toSet());
-            Set<TermId> maxoDiscoverableExcludedHpoIds = maxoDDResultsList.stream()
-                    .map(MaxoDDResults::maxoDiscoverableExcludedHpoIds)
                     .flatMap(Collection::stream)
                     .collect(Collectors.toSet());
 
@@ -163,7 +155,7 @@ public class RankMaxo {
             }
             //sort maps by disease average rank change
             Map<TermId, Integer> maxoDiseaseAvgRankChangeMapSorted = maxoDiseaseAvgRankChangeMap.entrySet().stream()
-                .sorted(Comparator.comparing(Map.Entry::getValue))
+                .sorted(Map.Entry.comparingByValue())
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (a,b)->b, LinkedHashMap::new));
 
             Map<TermId, Map<TermId, Integer>> maxoDiscoverableHpoIdCtsSorted = maxoDiseaseAvgRankChangeMapSorted.keySet().stream()
@@ -175,18 +167,10 @@ public class RankMaxo {
                     LinkedHashMap::new
                 ));
 
-            Map<TermId, Map<TermId, Integer>> maxoDiscoverableExcludedHpoIdCtsSorted = maxoDiseaseAvgRankChangeMapSorted.keySet().stream()
-                .filter(maxoDiscoverableExcludedHpoIdCts::containsKey)
-                .collect(Collectors.toMap(
-                    key -> key,
-                    maxoDiscoverableExcludedHpoIdCts::get,
-                    (oldValue, newValue) -> newValue,
-                    LinkedHashMap::new
-                ));
 
             RankMaxoScore rankMaxoScore = new RankMaxoScore(maxoId, initialDiagnosesDiseaseIds, maxoDiagnosesDiseaseIds,
-                    maxoDiscoverableObservedHpoIds, maxoDiscoverableExcludedHpoIds, meanScore, maxoDDResultsList.getLast().maxoDifferentialDiagnoses(),
-                    maxoDiscoverableHpoIdCtsSorted, maxoDiscoverableExcludedHpoIdCtsSorted, maxoDiseaseAvgRankChangeMapSorted,
+                    maxoDiscoverableObservedHpoIds, meanScore, maxoDDResultsList.getLast().maxoDifferentialDiagnoses(),
+                    maxoDiscoverableHpoIdCtsSorted, maxoDiseaseAvgRankChangeMapSorted,
                     Collections.min(maxoDiseaseAvgRankChangeMapSorted.values()), Collections.max(maxoDiseaseAvgRankChangeMapSorted.values()));
             maxoScores.put(maxoId, rankMaxoScore);
             p++;
