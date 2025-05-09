@@ -297,7 +297,11 @@
                 <td></td>
                 <th:block th:each= "hpoId : ${maxoTable.rankMaxoScore.discoverableObservedHpoTermIds}">
                     <th:block th:with="ct=${maxoTable.rankMaxoScore.hpoTermIdRepCtsMap.get(omimId).get(hpoId)}">
-                        <td th:style="|background: rgba(160, 32, 240, ${ct})|"></td>
+                        <td>
+                            <div th:style="${ct} == null ?
+                            |width: 80%; height: 80%; margin: auto; background: rgba(160, 32, 240, 0)| :
+                            |width: 80%; height: 80%; margin: auto; background: rgba(160, 32, 240, 1)|"></div>
+                        </td>
                     </th:block>
                 </th:block>
             </tr>

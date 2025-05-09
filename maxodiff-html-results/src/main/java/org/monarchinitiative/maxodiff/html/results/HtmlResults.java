@@ -109,7 +109,7 @@ public class HtmlResults {
             String thStyleString = "text-align: center; vertical-align: bottom; horizontal-align: right;" +
                     " transform-origin: bottom left; transform: rotate(315deg); padding: 0; margin: 0;" +
                     " height: 200px; white-space: nowrap; max-width: 50px; overflow: visible; text-overflow: ellipsis;";
-            String tdStyleString = "padding: 0px 10px 0px 10px; height: 30px; width: 30px; max-width: 30px;";
+            String tdStyleString = "padding: 10px 10px 10px 10px; height: 30px; width: 10px;";
             String tdStyleString1 = "font-weight: bold; white-space: nowrap; max-width: 400px; overflow: hidden; text-overflow: ellipsis;";
 
             resultsString.append("<table class='countsTable'>\n" +
@@ -144,6 +144,7 @@ public class HtmlResults {
 
             resultsString.append("        </tr>\n");
 
+            String divStyleString = "width: 80%; height: 80%; margin: auto;";
             for (TermId omimId : result.rankMaxoScore().maxoDiseaseAvgRankChangeMap().keySet()) {
                 resultsString.append("            <tr>\n" +
                         "                <td style=\"" + tdStyleString + tdStyleString1 + "\">" + omimTerms.get(omimId) + "</td>\n");
@@ -153,12 +154,14 @@ public class HtmlResults {
                 String styleString = (rankChange < 0) ? "background: rgba(0, 128, 0, " + (-1.0*opacity) + ")" :
                         "background: rgba(255, 0, 0, " + opacity + ")";
 
-                resultsString.append("                    <td style=\"" + tdStyleString + styleString + "\">" + rankChange + "</td>\n" +
+                resultsString.append("                    <td title=\"tooltip test\" style=\"" + tdStyleString + styleString + "\">" + rankChange + "</td>\n" +
                         "                <td></td>\n");
                 for (TermId hpoId : result.rankMaxoScore().discoverableObservedHpoTermIds()) {
                     Integer ct1 = hpoTermIdRepCtsMap.get(omimId).get(hpoId);
-                    String hpoTdStyleString = tdStyleString + "background: rgba(160, 32, 240, " + ct1 + ")";
-                            resultsString.append("                        <td style=\"" + hpoTdStyleString + "\"></td>\n");
+                    int opacity1 = (ct1 == null) ? 0 : 1;
+                    String hpoDivStyleString = divStyleString + "background: rgba(160, 32, 240, " + opacity1 + ")";
+                            resultsString.append("                        <td style=\"" + tdStyleString + "\">" +
+                                    "                       <div style=\"" + hpoDivStyleString + "\"></div></td>\n");
                 }
 
                 resultsString.append("            </tr>\n");
