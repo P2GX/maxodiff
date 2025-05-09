@@ -4,6 +4,8 @@ import org.monarchinitiative.maxodiff.core.SimpleTerm;
 import org.monarchinitiative.maxodiff.core.analysis.MaxoDDResults;
 import org.monarchinitiative.maxodiff.core.analysis.MaxoHpoTermIdMaps;
 import org.monarchinitiative.maxodiff.core.diffdg.DifferentialDiagnosisEngine;
+import org.monarchinitiative.maxodiff.core.service.DfsHpoTermArranger;
+import org.monarchinitiative.maxodiff.core.service.HpoTermArranger;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
 import org.monarchinitiative.phenol.ontology.algo.OntologyAlgorithm;
 import org.monarchinitiative.phenol.ontology.data.MinimalOntology;
@@ -89,12 +91,14 @@ public class CandidateDiseaseScores {
             }
         }
 
-//        if ()
-
         Sample newSample = getNewSample(ppkt, observed, excluded);
         List<DifferentialDiagnosis> newMaxoDiagnoses = engine.run(newSample, diseaseIds);
 
-        return new MaxoDDResults(maxoAddedObservedHpoIds, maxoAddedExcludedHpoIds, newMaxoDiagnoses);
+        HpoTermArranger hpoTermArranger = new DfsHpoTermArranger(ontology);
+        Set<TermId> maxoAddedObservedHpoIdsOrdered = new HashSet<>(hpoTermArranger.arrangeTerms(maxoAddedObservedHpoIds.stream().toList()));
+        Set<TermId> maxoAddedExcludedHpoIdsOrdered = new HashSet<>(hpoTermArranger.arrangeTerms(maxoAddedExcludedHpoIds.stream().toList()));
+
+        return new MaxoDDResults(maxoAddedObservedHpoIdsOrdered, maxoAddedExcludedHpoIdsOrdered, newMaxoDiagnoses);
     }
 
     private boolean getTestResult(double maxoTermBenefitProbability) {

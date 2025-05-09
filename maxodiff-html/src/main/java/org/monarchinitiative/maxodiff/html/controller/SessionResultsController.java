@@ -231,6 +231,7 @@ public class SessionResultsController {
             Map<TermId, String> diseaseTermsMap = new LinkedHashMap<>();
 
             List<HpoFrequency> hpoFrequencies = HTMLFrequencyMap.getHpoFrequencies(hpoTermCounts);
+            Map<TermId, Integer> nRepetitionsMap = new HashMap<>();
             Map<String, Map<Float, List<String>>> frequencyMap = new HashMap<>();
 
             for (MaxodiffResult maxodiffResult : resultsList.subList(0, nDisplayed)) {
@@ -238,12 +239,21 @@ public class SessionResultsController {
                     RankMaxoScore rankMaxoScore = maxodiffResult.rankMaxoScore();
                     maxoTermsMap.put(rankMaxoScore.maxoId().toString(), biometadataService.maxoLabel(rankMaxoScore.maxoId().toString()).orElse("unknown"));
                     rankMaxoScore.discoverableObservedHpoTermIds().forEach(id -> hpoTermsMap.put(id, biometadataService.hpoLabel(id).orElse("unknown")));
-                    rankMaxoScore.discoverableExcludedHpoTermIds().forEach(id -> hpoTermsMap.put(id, biometadataService.hpoLabel(id).orElse("unknown")));
                     rankMaxoScore.initialOmimTermIds().forEach(id -> diseaseTermsMap.put(id, biometadataService.diseaseLabel(id).orElse("unknown")));
                     rankMaxoScore.maxoOmimTermIds().forEach(id -> diseaseTermsMap.put(id, biometadataService.diseaseLabel(id).orElse("unknown")));
                     var hpoTermIdRepCtsMap = rankMaxoScore.hpoTermIdRepCtsMap();
-                    var hpoTermIdExcludedRepCtsMap = rankMaxoScore.hpoTermIdExcludedRepCtsMap();
-                    Map<String, Map<Float, List<String>>> resultFrequencyMap = HTMLFrequencyMap.makeFrequencyDiseaseMap(hpoTermsMap, diseaseTermsMap, hpoTermIdRepCtsMap, hpoTermIdExcludedRepCtsMap, hpoFrequencies);
+                    for (Map.Entry<TermId, Map<TermId, Integer>> diseaseHpoRepCtEntry : hpoTermIdRepCtsMap.entrySet()) {
+                        Map<TermId, Integer> hpoRetCtMap = diseaseHpoRepCtEntry.getValue();
+                        for (Map.Entry<TermId, Integer> hpoRepCtMapEntry : hpoRetCtMap.entrySet()) {
+                            TermId hpoId = hpoRepCtMapEntry.getKey();
+                            Integer repCt = hpoRepCtMapEntry.getValue();
+                            if (repCt != null && !nRepetitionsMap.containsKey(hpoId)) {
+                                nRepetitionsMap.put(hpoId, repCt);
+                                break;
+                            }
+                        }
+                    }
+                    Map<String, Map<Float, List<String>>> resultFrequencyMap = HTMLFrequencyMap.makeFrequencyDiseaseMap(hpoTermsMap, diseaseTermsMap, hpoTermIdRepCtsMap, hpoFrequencies);
                     frequencyMap.putAll(resultFrequencyMap);
                 } else {
                     MaxoTermScore maxoTermScore = maxodiffResult.maxoTermScore();
@@ -255,6 +265,7 @@ public class SessionResultsController {
 
             }
             model.addAttribute("omimTerms", diseaseTermsMap);
+            model.addAttribute("nRepetitionsMap", nRepetitionsMap);
             model.addAttribute("frequencyDiseaseMap", frequencyMap);
             model.addAttribute("allHpoTermsMap", hpoTermsMap);
             model.addAttribute("allMaxoTermsMap", maxoTermsMap);

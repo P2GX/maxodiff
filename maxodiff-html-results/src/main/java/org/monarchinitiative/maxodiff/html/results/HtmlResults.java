@@ -63,19 +63,29 @@ public class HtmlResults {
         List<HpoFrequency> hpoFrequencies = HTMLFrequencyMap.getHpoFrequencies(hpoTermCounts);
         Map<String, Map<Float, List<String>>> frequencyMap = new HashMap<>();
 
+        Map<TermId, Integer> nRepetitionsMap = new HashMap<>();
+
         for (MaxodiffResult result : resultList.subList(0, 10)) {
             result.rankMaxoScore().discoverableObservedHpoTermIds()
-                    .forEach(id -> hpoTermsMap.put(id, biometadataService.hpoLabel(id).orElse("unknown")));
-            result.rankMaxoScore().discoverableExcludedHpoTermIds()
                     .forEach(id -> hpoTermsMap.put(id, biometadataService.hpoLabel(id).orElse("unknown")));
             result.rankMaxoScore().initialOmimTermIds()
                     .forEach(id -> omimTerms.put(id, biometadataService.diseaseLabel(id).orElse("unknown")));
             result.rankMaxoScore().maxoOmimTermIds()
                     .forEach(id -> omimTerms.put(id, biometadataService.diseaseLabel(id).orElse("unknown")));
-
             var hpoTermIdRepCtsMap = result.rankMaxoScore().hpoTermIdRepCtsMap();
-            var hpoTermIdExcludedRepCtsMap = result.rankMaxoScore().hpoTermIdExcludedRepCtsMap();
-            Map<String, Map<Float, List<String>>> resultFrequencyMap = HTMLFrequencyMap.makeFrequencyDiseaseMap(hpoTermsMap, omimTerms, hpoTermIdRepCtsMap, hpoTermIdExcludedRepCtsMap, hpoFrequencies);
+            for (Map.Entry<TermId, Map<TermId, Integer>> diseaseHpoRepCtEntry : hpoTermIdRepCtsMap.entrySet()) {
+                Map<TermId, Integer> hpoRetCtMap = diseaseHpoRepCtEntry.getValue();
+                for (Map.Entry<TermId, Integer> hpoRepCtMapEntry : hpoRetCtMap.entrySet()) {
+                    TermId hpoId = hpoRepCtMapEntry.getKey();
+                    Integer repCt = hpoRepCtMapEntry.getValue();
+                    if (repCt != null && !nRepetitionsMap.containsKey(hpoId)) {
+                        nRepetitionsMap.put(hpoId, repCt);
+                        break;
+                    }
+                }
+            }
+
+            Map<String, Map<Float, List<String>>> resultFrequencyMap = HTMLFrequencyMap.makeFrequencyDiseaseMap(hpoTermsMap, omimTerms, hpoTermIdRepCtsMap, hpoFrequencies);
             frequencyMap.putAll(resultFrequencyMap);
 
             int idx = resultList.indexOf(result) + 1;
@@ -93,42 +103,103 @@ public class HtmlResults {
                     .append(result.rankMaxoScore().maxoOmimTermIds().size())
                     .append("</td>\n    </tr>\n    <tr><td style='font-weight:bold;'>N Observed HPO Terms:</td><td>")
                     .append(result.rankMaxoScore().discoverableObservedHpoTermIds().size())
-                    .append("</td>\n    </tr>\n    <tr><td style='font-weight:bold;'>N Excluded HPO Terms:</td><td>")
-                    .append(result.rankMaxoScore().discoverableExcludedHpoTermIds().size())
                     .append("</td>\n    </tr>\n  </tbody>\n</table>\n<p></p>\n\n");
 
-            resultsString.append("<table>\n  <tbody>\n    <tr>\n      <td><div id=nRepHeatmapChartContainer_").append(idx)
-                    .append(" style=\"height:600px; width:1600px; border: 1px solid black\"></div>" +
-                            "</td>\n    </tr>\n  </tbody>\n</table>\n\n");
 
-            resultsString.append("<script src=\"https://cdn.jsdelivr.net/npm/apexcharts\"></script>\n");
-            String hpoTermIdRepCtsMapString = convertToJson(hpoTermIdRepCtsMap);
-            String hpoTermIdExcludedRepCtsMapString = convertToJson(hpoTermIdExcludedRepCtsMap);
-            String maxoDiseaseAvgRankChangeMap = convertToJson(result.rankMaxoScore().maxoDiseaseAvgRankChangeMap());
-            String allHpoTermsMap = convertToJson(hpoTermsMap);
-            String omimTermsMap = convertToJson(omimTerms);
-            String hpoTermCountsMap = convertToJson(hpoTermCounts);
-            String frequencyDiseaseMap = convertToJson(frequencyMap);
-            resultsString.append("<script inline=\"javascript\">\n" +
-                    "    var chartIdx = ").append(idx).append(";\n" +
-                    "    var nDiseases = ").append(nDiseases).append(";\n" +
-                    "    var nRepetitions = ").append(nRepetitions).append(";\n" +
-                    "    var hpoTermIdRepCtsMap = ").append(hpoTermIdRepCtsMapString).append(";\n" +
-                    "    var hpoTermIdExcludedRepCtsMap = ").append(hpoTermIdExcludedRepCtsMapString).append(";\n" +
-                    "    var maxoDiseaseAvgRankChangeMap = ").append(maxoDiseaseAvgRankChangeMap).append(";\n" +
-                    "    var allHpoTermsMap = ").append(allHpoTermsMap).append(";\n" +
-                    "    var omimTerms = ").append(omimTermsMap).append(";\n" +
-                    "    var hpoTermCounts = ").append(hpoTermCountsMap).append(";\n" +
-                    "    var frequencyDiseaseMap = ").append(frequencyDiseaseMap).append(";\n" +
-                    "</script>\n");
+            String thStyleString = "text-align: center; vertical-align: bottom; horizontal-align: right;" +
+                    " transform-origin: bottom left; transform: rotate(315deg); padding: 0; margin: 0;" +
+                    " height: 200px; white-space: nowrap; max-width: 50px; overflow: visible; text-overflow: ellipsis;";
+            String tdStyleString = "padding: 10px 10px 10px 10px; height: 30px; width: 10px;";
+            String tdStyleString1 = "font-weight: bold; white-space: nowrap; max-width: 400px; overflow: hidden; text-overflow: ellipsis;";
 
-            String jsChartName = "nRepetitionsHeatmapChart.js";
-            File chartFile = new File(jsChartName);
-            File chartPath = new File(chartFile.getAbsolutePath());
-            String parentPath = chartPath.getParent();
-            String path = String.join(File.separator, parentPath,
-                    "maxodiff-html-results", "src", "main", "resources", "static", "js", jsChartName);
-            resultsString.append("<script type=\"text/javascript\" src=\"").append(path).append("\"></script>\n\n");
+            resultsString.append("<table class='countsTable'>\n" +
+                    "        <thead>\n" +
+                    "            <th></th>\n" +
+                    "            <th style = \"" + thStyleString + "\">Average Rank Change</th>\n" +
+                    "            <th></th>\n");
+
+            for (TermId hpoId : result.rankMaxoScore().discoverableObservedHpoTermIds()) {
+                String hpoLabelString = hpoTermsMap.get(hpoId);
+                String hpoLabel = hpoLabelString.length() > 30 ? hpoLabelString.substring(0,30) + "..." : hpoLabelString;
+                resultsString.append("                <th onclick=\"window.open('https://hpo.jax.org/browse/term/" + hpoId + "')\"\n" +
+                        "                    style=\"color: blue; " + thStyleString + "\">" + hpoLabel + "</th>\n");
+            }
+
+            resultsString.append("        </thead>\n" +
+                    "\n");
+
+            resultsString.append("        <tbody>\n" +
+                    "        <tr>\n" +
+                    "            <td style=\"" + tdStyleString + tdStyleString1 + "\">N Repetitions</td>\n" +
+                    "            <td></td>\n" +
+                    "            <td></td>\n");
+
+            for (TermId hpoId : result.rankMaxoScore().discoverableObservedHpoTermIds()) {
+                Integer ct = nRepetitionsMap.get(hpoId);
+                String ctString = (ct == null) ? "" : ct.toString();
+                double opacity = (ct == null) ? 0 : (ct*1.0)/nRepetitions;
+                String styleString = "background: rgba(255, 215, 0, " + opacity + ")";
+                String hpoLabel = hpoTermsMap.get(hpoId);
+                var freqHTML = "";
+                for (Map.Entry<String, Map<Float, List<String>>> freqDiseaseMapEntry : frequencyMap.entrySet()) {
+                    String hpoLabelKey = freqDiseaseMapEntry.getKey();
+                    Map<Float, List<String>> freqMapValue = freqDiseaseMapEntry.getValue();
+                    if (Objects.equals(hpoLabelKey, hpoLabel)) {
+                        for (Map.Entry<Float, List<String>> freqDiseaseMapValue : freqMapValue.entrySet()) {
+                            Float frequency = freqDiseaseMapValue.getKey();
+                            List<String> omimLabels = freqDiseaseMapValue.getValue();
+                            String omimLabelString = String.join("; ", omimLabels);
+                            freqHTML += "<div><b>Frequency of " + "<span style=\"color: red\">" + hpoLabel + "</span>" +
+                                    " in " + "<span style=\"color: blue\">" + omimLabelString + "</span>" +
+                                    "</b>: " + frequency + "</div>" +
+                                    "<div><p></p></div>";
+                        }
+                    }
+                }
+                String toolTipString = "<div style=\"background-color: lightgray; color: red\"><b>HPO Term</b>: " + hpoLabel + "</div>" +
+                        "<div><p></p></div>" + freqHTML +
+                        "<div style=\"background-color: gold\"><b>Repetition Count</b>: " + ct + " of " + nRepetitions + "</div>";
+
+                resultsString.append("                    <td class=\"parentCell\" style=\"" + styleString + "\">" + ctString +
+                        "<span class=\"tooltip\">" + toolTipString + "</span></td>\n");
+            }
+
+            resultsString.append("        </tr>\n");
+
+            String divStyleString = "width: 80%; height: 80%; margin: auto;";
+            for (TermId omimId : result.rankMaxoScore().maxoDiseaseAvgRankChangeMap().keySet()) {
+                resultsString.append("            <tr>\n" +
+                        "                <td style=\"" + tdStyleString + tdStyleString1 + "\">" + omimTerms.get(omimId) + "</td>\n");
+
+                var rankChange = result.rankMaxoScore().maxoDiseaseAvgRankChangeMap().get(omimId);
+                double opacity = (rankChange != null) ? (rankChange*1.0)/nDiseases : 0;
+                String styleString = (rankChange < 0) ? "background: rgba(0, 128, 0, " + (-1.0*opacity) + ")" :
+                        "background: rgba(255, 0, 0, " + opacity + ")";
+                String tooltipString = (rankChange < 0) ? "<div style=\"background-color: lightgray; color: blue\">" +
+                        "<b>Disease Term</b>: " + omimTerms.get(omimId) + "</div>" +
+                        "<div><p></p></div>" +
+                        "<div><b>Average Rank Improvement</b>: " + -rankChange + "</div>" :
+                        "<div style=\"background-color: lightgray; color: blue\">" +
+                                "<b>Disease Term</b>: " + omimTerms.get(omimId) + "</div>" +
+                                "<div><p></p></div>" +
+                                "<div><b>Average Rank Decline</b>: " + rankChange + "</div>";
+
+                resultsString.append("                    <td class=\"parentCell\" style=\"" + tdStyleString + styleString + "\">" + rankChange +
+                        "<span class=\"tooltip\">" + tooltipString + "</span></td>\n" +
+                        "                <td></td>\n");
+                for (TermId hpoId : result.rankMaxoScore().discoverableObservedHpoTermIds()) {
+                    Integer ct1 = hpoTermIdRepCtsMap.get(omimId).get(hpoId);
+                    int opacity1 = (ct1 == null) ? 0 : 1;
+                    String hpoDivStyleString = divStyleString + "background: rgba(160, 32, 240, " + opacity1 + ")";
+                            resultsString.append("                        <td style=\"" + tdStyleString + "\">" +
+                                    "                       <div style=\"" + hpoDivStyleString + "\"></div></td>\n");
+                }
+
+                resultsString.append("            </tr>\n");
+            }
+
+            resultsString.append("        </tbody>\n" +
+                    "    </table>");
 
         }
 
