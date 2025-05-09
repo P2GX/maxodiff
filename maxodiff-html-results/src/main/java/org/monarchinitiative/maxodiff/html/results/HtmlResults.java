@@ -139,7 +139,29 @@ public class HtmlResults {
                 String ctString = (ct == null) ? "" : ct.toString();
                 double opacity = (ct == null) ? 0 : (ct*1.0)/nRepetitions;
                 String styleString = "background: rgba(255, 215, 0, " + opacity + ")";
-                resultsString.append("                    <td style=\"" + styleString + "\">" + ctString + "</td>\n");
+                String hpoLabel = hpoTermsMap.get(hpoId);
+                var freqHTML = "";
+                for (Map.Entry<String, Map<Float, List<String>>> freqDiseaseMapEntry : frequencyMap.entrySet()) {
+                    String hpoLabelKey = freqDiseaseMapEntry.getKey();
+                    Map<Float, List<String>> freqMapValue = freqDiseaseMapEntry.getValue();
+                    if (Objects.equals(hpoLabelKey, hpoLabel)) {
+                        for (Map.Entry<Float, List<String>> freqDiseaseMapValue : freqMapValue.entrySet()) {
+                            Float frequency = freqDiseaseMapValue.getKey();
+                            List<String> omimLabels = freqDiseaseMapValue.getValue();
+                            String omimLabelString = String.join("; ", omimLabels);
+                            freqHTML += "<div><b>Frequency of " + "<span style=\"color: red\">" + hpoLabel + "</span>" +
+                                    " in " + "<span style=\"color: blue\">" + omimLabelString + "</span>" +
+                                    "</b>: " + frequency + "</div>" +
+                                    "<div><p></p></div>";
+                        }
+                    }
+                }
+                String toolTipString = "<div style=\"background-color: lightgray; color: red\"><b>HPO Term</b>: " + hpoLabel + "</div>" +
+                        "<div><p></p></div>" + freqHTML +
+                        "<div style=\"background-color: gold\"><b>Repetition Count</b>: " + ct + " of " + nRepetitions + "</div>";
+
+                resultsString.append("                    <td class=\"parentCell\" style=\"" + styleString + "\">" + ctString +
+                        "<span class=\"tooltip\">" + toolTipString + "</span></td>\n");
             }
 
             resultsString.append("        </tr>\n");
@@ -153,8 +175,17 @@ public class HtmlResults {
                 double opacity = (rankChange != null) ? (rankChange*1.0)/nDiseases : 0;
                 String styleString = (rankChange < 0) ? "background: rgba(0, 128, 0, " + (-1.0*opacity) + ")" :
                         "background: rgba(255, 0, 0, " + opacity + ")";
+                String tooltipString = (rankChange < 0) ? "<div style=\"background-color: lightgray; color: blue\">" +
+                        "<b>Disease Term</b>: " + omimTerms.get(omimId) + "</div>" +
+                        "<div><p></p></div>" +
+                        "<div><b>Average Rank Improvement</b>: " + -rankChange + "</div>" :
+                        "<div style=\"background-color: lightgray; color: blue\">" +
+                                "<b>Disease Term</b>: " + omimTerms.get(omimId) + "</div>" +
+                                "<div><p></p></div>" +
+                                "<div><b>Average Rank Decline</b>: " + rankChange + "</div>";
 
-                resultsString.append("                    <td title=\"tooltip test\" style=\"" + tdStyleString + styleString + "\">" + rankChange + "</td>\n" +
+                resultsString.append("                    <td class=\"parentCell\" style=\"" + tdStyleString + styleString + "\">" + rankChange +
+                        "<span class=\"tooltip\">" + tooltipString + "</span></td>\n" +
                         "                <td></td>\n");
                 for (TermId hpoId : result.rankMaxoScore().discoverableObservedHpoTermIds()) {
                     Integer ct1 = hpoTermIdRepCtsMap.get(omimId).get(hpoId);
