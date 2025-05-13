@@ -23,16 +23,6 @@ import java.util.Set;
  */
 public interface DiffDiagRefiner {
 
-    RefinementResults run(
-            Sample sample,
-            Collection<DifferentialDiagnosis> differentialDiagnoses,
-            RefinementOptions options,
-            DifferentialDiagnosisEngine engine,
-            Map<TermId, Set<TermId>> maxoToHpoTermIdMap,
-            Map<TermId, List<HpoFrequency>> hpoTermCounts,
-            Map<TermId, List<DifferentialDiagnosis>> maxoTermToDDEngineDiagnosesMap
-    );
-
 
     RefinementResults run(Sample sample,
                           Collection<DifferentialDiagnosis> differentialDiagnoses,

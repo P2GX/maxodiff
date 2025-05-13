@@ -38,44 +38,6 @@ public class BaseDiffDiagRefiner implements DiffDiagRefiner {
     public RefinementResults run(Sample sample,
                                  Collection<DifferentialDiagnosis> differentialDiagnoses,
                                  RefinementOptions options,
-                                 DifferentialDiagnosisEngine engine,
-                                 Map<TermId, Set<TermId>> maxoToHpoTermIdMap,
-                                 Map<TermId, List<HpoFrequency>> hpoTermCounts,
-                                 Map<TermId, List<DifferentialDiagnosis>> maxoTermToDDEngineDiagnosesMap) {
-        // Get list of Hpo diseases
-        List<HpoDisease> diseases = getDiseases(differentialDiagnoses.stream().toList());
-        // Calculate final scores and make list of MaxodiffResult objects.
-        List<MaxodiffResult> maxodiffResultsList = new ArrayList<>();
-        for (TermId maxoId : maxoToHpoTermIdMap.keySet()) {
-            // Get the set of HPO terms that can be ascertained by the MAXO term
-            Set<TermId> hpoTermIds = maxoToHpoTermIdMap.get(maxoId);
-            // Get HPO term combinations
-            List<List<TermId>> hpoCombos = AnalysisUtils.getHpoTermCombos(maxoToHpoTermIdMap, maxoId);
-            // Calculate final score and make score record
-            MaxoTermScore maxoTermScore = AnalysisUtils.getMaxoTermScoreRecord(hpoTermIds,
-                    hpoCombos,
-                    maxoId,
-                    differentialDiagnoses.stream().toList(),
-                    diseases,
-                    options);
-            // Get HPO frequency records
-            List<Frequencies> frequencies = getFrequencyRecords(maxoTermScore.omimTermIds(),
-                    maxoTermScore.hpoTermIds(), hpoTermCounts);
-            // Make dummy RankMaxoScore record
-            RankMaxoScore rankMaxoScore = new RankMaxoScore(maxoId, maxoTermScore.omimTermIds(), maxoTermScore.maxoOmimTermIds(),
-                    Set.of(), maxoTermScore.scoreDiff(), List.of(), Map.of(), Map.of(), 0, 0);
-            // Make MaxodiffResult for the MAXO term
-            MaxodiffResult maxodiffResult = new MaxodiffResultImpl(maxoTermScore, rankMaxoScore, frequencies, List.of());
-            maxodiffResultsList.add(maxodiffResult);
-        }
-        maxodiffResultsList.sort(Comparator.<MaxodiffResult>comparingDouble(mr -> mr.maxoTermScore().scoreDiff()).reversed());
-        return new RefinementResultsImpl(maxodiffResultsList);
-    }
-
-    @Override
-    public RefinementResults run(Sample sample,
-                                 Collection<DifferentialDiagnosis> differentialDiagnoses,
-                                 RefinementOptions options,
                                  RankMaxo rankMaxo,
                                  Map<TermId, List<HpoFrequency>> hpoTermCounts,
                                  Map<TermId, Set<TermId>> maxoToHpoTermIdMap) {

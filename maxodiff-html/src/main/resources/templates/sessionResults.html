@@ -13,41 +13,9 @@
 
 <form th:action="@{/sessionResults}">
 
-<!--    TODO: make this table more general-->
-<!--    <table class="liricalResultsTable">-->
-<!--        <thead>-->
-<!--        <tr>-->
-<!--            <th colspan="4" th:text="'Top ' + ${nOrigDiffDiagnosesShown} + ' ' + ${engineName} + ' Initial Results'"></th>-->
-<!--        </tr>-->
-<!--        <tr>-->
-<!--            <th>Rank</th><th>Disease ID</th><th>Posttest Probability</th><th>LR</th>-->
-<!--        </tr>-->
-<!--        </thead>-->
-<!--        <tbody>-->
-<!--        <th:block th:each= "diagnosis, iter : ${differentialDiagnoses}" th:if="${iter.index < nOrigDiffDiagnosesShown}">-->
-<!--            <tr>-->
-<!--                <td th:text="${iter.index+1}"></td>-->
-<!--                <td th:text="${diagnosis.diseaseId}"></td>-->
-<!--                <td th:text="${diagnosis.score} % 1 == 0 ?-->
-<!--                ${diagnosis.score} : ${#numbers.formatDecimal(diagnosis.score, 1, 4)}"></td>-->
-<!--                <td th:text="${diagnosis.lr}"></td>-->
-<!--            </tr>-->
-<!--        </th:block>-->
-<!--        </tbody>-->
-<!--    </table>-->
-
     <h1>Differential Diagnosis Calculation:</h1>
     <table class="diffDiagInputTable">
         <tbody>
-        <tr>
-            <td>Algorithm:</td>
-            <td><select style="width:100%" th:value="${refiner} ?: 'score'" name="refiner" id="refiner">
-                <option th:selected="${refiner} == 'score' ? selected" value="score">SCORE</option>
-                <option th:selected="${refiner} == 'rank' ? selected" value="rank">RANK</option>
-                <option th:selected="${refiner} == 'ddScore' ? selected" value="ddScore">DD SCORE</option>
-                <option th:selected="${refiner} == 'ksTest' ? selected" value="ksTest">KOLMOGOROV-SMIRNOV TEST</option>
-            </select></td>
-        </tr>
         <tr>
             <td>  Disease Probability Model:</td>
             <td><select style="width:100%" th:value="${diseaseProbModel} ?: 'ranked'" name="diseaseProbModel" id="diseaseProbModel">
@@ -63,10 +31,6 @@
         <tr>
             <td>N Repetitions:</td>
             <td><input style="width:90%" type="number" min="0" th:max="100" th:value="${nRepetitions} ?: 10" name="nRepetitions" id="nRepetitions"/></td>
-        </tr>
-        <tr>
-            <td>Weight: </td>
-            <td><input style="width:90%" type="number" step="0.01" min="0" max="1" th:value="${weight} ?: 0.5" name="weight" id="weight"/></td><!--th:disabled="${refiner != 'score'}"-->
         </tr>
         <tr>
             <td>Maximum # MAxO Results to Display:</td>
@@ -88,7 +52,7 @@
 <hr class="line">
 
 <!--<h1 th:text="'maxodiff Analysis Results for ' + ${phenopacket}"></h1>-->
-<h1 th:text="${algorithm} + ' Algorithm'" style="color: orangered"></h1>
+<!--<h1 th:text="${algorithm} + ' Algorithm'" style="color: orangered"></h1>-->
 
 <h1 th:text="'maxodiff Analysis Results for ' + ${sample == null ? '' : sample.id}"></h1>
 <table>
@@ -121,138 +85,17 @@
         <tr th:if="${refiner != 'ksTest'}">
             <td>&Delta;Score:</td><td th:text="${#numbers.formatDecimal(maxoTable.maxoTermScore.scoreDiff, 0, 2)}"></td>
         </tr>
-        <tr th:if="${refiner == 'ksTest'}">
-            <td>p-value:</td><td th:text="${maxoTable.maxoTermScore.scoreDiff}"></td>
-        </tr>
-        <tr th:if="${refiner != 'score' && refiner != 'ksTest'}">
-            <td>Disease Id:</td><td th:text="${maxoTable.maxoTermScore.changedDiseaseId}"></td>
-        </tr>
-        <tr th:if="${refiner != 'score' && refiner != 'ksTest'}">
-            <td>Initial Rank/Score:</td><td th:text="${#numbers.formatDecimal(maxoTable.maxoTermScore.initialScore, 0, 2)}"></td>
-        </tr>
-        <tr th:if="${refiner != 'score' && refiner != 'ksTest'}">
-            <td>Final Rank/Score:</td><td th:text="${#numbers.formatDecimal(maxoTable.maxoTermScore.score, 0, 2)}"></td>
-        </tr>
         <tr th:if="${refiner == 'score'}">
             <td>N Diseases:</td><td th:text="${maxoTable.rankMaxoScore.maxoOmimTermIds.size}"></td>
         </tr>
         <tr th:if="${refiner == 'score'}">
             <td>N Observed HPO Terms:</td><td th:text="${maxoTable.rankMaxoScore.discoverableObservedHpoTermIds.size}"></td>
         </tr>
-        <tr th:if="${refiner != 'score'}">
-            <td>N Diseases:</td><td th:text="${maxoTable.maxoTermScore.nOmimTerms}"></td>
-        </tr>
-        <tr th:if="${refiner != 'score'}">
-            <td>N HPO Terms:</td><td th:text="${maxoTable.maxoTermScore.nHpoTerms}"></td>
-        </tr>
         </tbody>
     </table>
     <p></p>
 
-    <table>
-        <tbody>
-        <tr th:if="${refiner != 'score'}">
-            <td>
-                <table class="initialLiricalResultsTable" style="font-size: 12px; border: 1px solid black; border-collapse: collapse">
-                    <thead>
-                    <tr style="background-color: lightblue; font-size: 14px; font-weight: bold; border: 1px solid black;
-                                    padding: 0px 10px 0px 10px">
-                        <th colspan="4" th:text="'Top ' + ${nDiseases} + ' ' + ${engineName} + ' Initial Results'"></th>
-                    </tr>
-                    <tr style="background-color: lightblue; font-size: 14px; font-weight: bold;">
-                        <th style="border: 1px solid black; padding: 0px 10px 0px 10px">Rank</th>
-                        <th style="border: 1px solid black; padding: 0px 10px 0px 10px">Disease ID</th>
-                        <th style="border: 1px solid black; padding: 0px 10px 0px 10px">Posttest Probability</th>
-                        <th style="border: 1px solid black; padding: 0px 10px 0px 10px">LR</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    <th:block th:each= "diagnosis, iter : ${differentialDiagnoses}" th:if="${iter.index < nDiseases}">
-                        <tr th:if="${refiner != 'score'}"
-                            th:style="${diagnosis.diseaseId == maxoTable.maxoTermScore.changedDiseaseId} ? 'font-weight: bold;
-                                        background-color: rgba(255, 215, 0, 0.5)'">
-                            <td th:text="${iter.count}" style="border: 1px solid black; padding: 0px 10px 0px 10px"></td>
-                            <td th:text="${diagnosis.diseaseId}" style="border: 1px solid black; padding: 0px 10px 0px 10px"></td>
-                            <td th:text="${diagnosis.score} % 1 == 0 ?
-                                ${diagnosis.score} : ${#numbers.formatDecimal(diagnosis.score, 1, 4)}"
-                                style="border: 1px solid black; padding: 0px 10px 0px 10px"></td>
-                            <td th:text="${diagnosis.lr} % 1 == 0 ?
-                                ${diagnosis.lr} : ${#numbers.formatDecimal(diagnosis.lr, 1, 4)}"
-                                style="border: 1px solid black; padding: 0px 10px 0px 10px"></td>
-                        </tr>
-                    </th:block>
-                    </tbody>
-                </table>
-            </td>
-            <td></td>
-            <td>
-                <table class="maxoLiricalResultsTable" style="font-size: 12px; border: 1px solid black; border-collapse: collapse">
-                    <thead>
-                    <tr th:if="${refiner != 'score'}" style="background-color: lightpink; font-size: 14px; font-weight: bold; border: 1px solid black;
-                                    padding: 0px 10px 0px 10px">
-                        <th colspan="7" th:text="'Top ' + ${nDiseases} + ' ' + ${engineName} + ' Results for ' + ${maxoTable.maxoTermScore.maxoId}"></th>
-                    </tr>
-                    <tr th:if="${refiner != 'score'}" style="background-color: lightpink; font-size: 14px; font-weight: bold;">
-                        <th style="border: 1px solid black; padding: 0px 10px 0px 10px">Rank</th>
-                        <th th:if="${refiner != 'score' && refiner != 'ksTest'}" style="border: 1px solid black; padding: 0px 10px 0px 10px">Initial Rank</th>
-                        <th style="border: 1px solid black; padding: 0px 10px 0px 10px">Disease ID</th>
-                        <th style="border: 1px solid black; padding: 0px 10px 0px 10px">Posttest Probability</th>
-                        <th th:if="${refiner != 'score' && refiner != 'ksTest'}" style="border: 1px solid black; padding: 0px 10px 0px 10px">Initial Posttest Probability</th>
-                        <th style="border: 1px solid black; padding: 0px 10px 0px 10px">LR</th>
-                        <th th:if="${refiner != 'score' && refiner != 'ksTest'}" style="border: 1px solid black; padding: 0px 10px 0px 10px">Initial LR</th>
-                    </tr>
-                    </thead>
-                    <tbody>
-                    <th:block th:each= "diagnosis, iter : ${maxoTable.maxoTermScore.maxoDiagnoses}" th:if="${iter.index < nDiseases}">
-                        <tr th:if="${refiner != 'score'}"
-                            th:style="${diagnosis.diseaseId == maxoTable.maxoTermScore.changedDiseaseId} ? 'font-weight: bold;
-                                        background-color: rgba(255, 215, 0, 0.5)'">
-                            <td th:text="${iter.count}" style="border: 1px solid black; padding: 0px 10px 0px 10px"></td>
-                            <td th:if="${refiner != 'score' && refiner != 'ksTest'}"
-                                th:text="${maxoTable.maxoTermScore.initialDiagnosesMaxoOrdered[iter.index].score} == 0 ? '-' :
-                                ${differentialDiagnoses.indexOf(maxoTable.maxoTermScore.initialDiagnosesMaxoOrdered[iter.index])+1}"
-                                style="border: 1px solid black; padding: 0px 10px 0px 10px"></td>
-                            <td th:text="${diagnosis.diseaseId}" style="border: 1px solid black; padding: 0px 10px 0px 10px"></td>
-                            <td th:text="${diagnosis.score} % 1 == 0 ?
-                                ${diagnosis.score} : ${#numbers.formatDecimal(diagnosis.score, 1, 4)}"
-                                style="border: 1px solid black; padding: 0px 10px 0px 10px"></td>
-                            <td th:if="${refiner != 'score' && refiner != 'ksTest'}"
-                                th:text="${maxoTable.maxoTermScore.initialDiagnosesMaxoOrdered[iter.index].score} == 0 ? '-' :
-                                ${maxoTable.maxoTermScore.initialDiagnosesMaxoOrdered[iter.index].score}"
-                                style="border: 1px solid black; padding: 0px 10px 0px 10px"></td>
-                            <td th:text="${diagnosis.lr} % 1 == 0 ?
-                                ${diagnosis.lr} : ${#numbers.formatDecimal(diagnosis.lr, 1, 4)}"
-                                style="border: 1px solid black; padding: 0px 10px 0px 10px"></td>
-                            <td th:if="${refiner != 'score' && refiner != 'ksTest'}"
-                                th:text="${maxoTable.maxoTermScore.initialDiagnosesMaxoOrdered[iter.index].lr} == 0 ? '-' :
-                                ${maxoTable.maxoTermScore.initialDiagnosesMaxoOrdered[iter.index].lr}"
-                                style="border: 1px solid black; padding: 0px 10px 0px 10px"></td>
-                        </tr>
-                    </th:block>
-                    </tbody>
-                </table>
-            </td>
-        </tr>
-        </tbody>
-    </table>
     <p></p>
-
-    <table>
-        <tbody>
-        <tr th:if="${refiner == 'ksTest'}">
-            <td><div th:id="'maxoKolmogorovSmirnovChartContainer_' + ${iter.index}" style="height:400px; width:700px; border: 1px solid black">
-                </canvas><canvas th:id="'maxoKolmogorovSmirnovChart_' + ${iter.index}"></canvas></div></td>
-        </tr>
-        </tbody>
-    </table>
-    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    <script th:inline="javascript">
-        var initialCDF = [[${maxoTable.maxoTermScore.originalCDF}]];
-        var maxoCDF = [[${maxoTable.maxoTermScore.maxoTermCDF}]];
-        var maxoId = [[${maxoTable.maxoTermScore.maxoId}]];
-        var chartIdx = [[${iter.index}]]
-    </script>
-    <script type="text/javascript" th:src="@{/js/maxoKolmogorovSmirnovChart.js}"></script>
 
 
     <h3 th:if="${refiner == 'score'}">Table of HPO Term Repetition Counts</h3>
@@ -316,64 +159,6 @@
         </tbody>
     </table>
 
-
-
-
-    <h3 th:if="${refiner != 'score'}">Table of HPO Term Frequencies</h3>
-    <table class='resultsTable'>
-        <thead>
-        <tr th:if="${refiner != 'score'}">
-            <th></th>
-<!--            <th></th>-->
-            <th:block th:each="freqRecord : ${maxoTable.frequencies}">
-                <th th:text="${freqRecord.hpoId} + ' (' + ${allHpoTermsMap.get(freqRecord.hpoId)} + ')'"></th>
-            </th:block>
-        </tr>
-        </thead>
-
-        <tbody>
-        <th:block th:each= "omimId, omimIter : ${maxoTable.maxoTermScore.omimTermIds}">
-            <tr th:if="${refiner != 'score'}">
-                <td th:text="${omimId} + ' (' + ${omimTerms.get(omimId)} + ')'"></td>
-                <th:block th:each= "freqRecord : ${maxoTable.frequencies}">
-                    <th:block th:with="frequency=${freqRecord.frequencies[omimIter.index]}">
-                        <td th:text="${frequency} == null ? ${frequency} :
-                    (${frequency} % 1 == 0 ? ${frequency} : ${#numbers.formatDecimal(frequency, 1, 4)})"
-                            th:style="|background: rgba(255, 215, 0, ${frequency})|"></td>
-                    </th:block>
-                </th:block>
-            </tr>
-        </th:block>
-        </tbody>
-    </table>
-
-    <h3 th:if="${refiner != 'score'}">Table of MAxO Term HPO Term Frequencies</h3>
-    <table class='maxoResultsTable' style="border-collapse: collapse;">
-        <thead>
-        <tr style="background-color: palevioletred; color: white;">
-            <th style="border: 1px solid black; padding: 0px 10px 0px 10px"></th>
-            <!--            <th></th>-->
-            <th:block th:each="freqRecord : ${maxoTable.maxoFrequencies}">
-                <th th:text="${freqRecord.hpoId} + ' (' + ${allHpoTermsMap.get(freqRecord.hpoId)} + ')'"></th>
-            </th:block>
-        </tr>
-        </thead>
-
-        <tbody>
-        <th:block th:each= "omimId, maxoOmimIter : ${maxoTable.maxoTermScore.maxoOmimTermIds}">
-            <tr>
-                <td th:text="${omimId} + ' (' + ${omimTerms.get(omimId)} + ')'"></td>
-                <th:block th:each= "freqRecord : ${maxoTable.maxoFrequencies}">
-                    <th:block th:with="frequency=${freqRecord.frequencies[maxoOmimIter.index]}">
-                        <td th:text="${frequency} == null ? ${frequency} :
-                    (${frequency} % 1 == 0 ? ${frequency} : ${#numbers.formatDecimal(frequency, 1, 4)})"
-                            th:style="|background: rgba(255, 215, 0, ${frequency})|"></td>
-                    </th:block>
-                </th:block>
-            </tr>
-        </th:block>
-        </tbody>
-    </table>
 </th:block>
 
 
