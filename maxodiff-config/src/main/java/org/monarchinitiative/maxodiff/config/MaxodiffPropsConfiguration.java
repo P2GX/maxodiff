@@ -51,12 +51,8 @@ public record MaxodiffPropsConfiguration(MinimalOntology minHpo, Ontology hpo, H
 //            return new MaxoDiffRefiner(hpoDiseases, hpoToMaxoIdMap, hpo);
 //        }
         DiffDiagRefiner diffDiagRefiner = null;
-        switch (refiner) {
-            case "score" -> diffDiagRefiner = new MaxoDiffRefiner(hpoDiseases, hpoToMaxoIdMap, maxoAnnotsMap, minHpo, hpo);
-            case "dummy" -> diffDiagRefiner = new DummyDiffDiagRefiner(hpoDiseases, hpoToMaxoIdMap, maxoAnnotsMap, minHpo, hpo);
-            case "rank" -> diffDiagRefiner = new MaxoDiffRankRefiner(hpoDiseases, hpoToMaxoIdMap, maxoAnnotsMap, minHpo, hpo);
-            case "ddScore" -> diffDiagRefiner = new MaxoDiffDDScoreRefiner(hpoDiseases, hpoToMaxoIdMap, maxoAnnotsMap, minHpo, hpo);
-            case "ksTest" -> diffDiagRefiner = new MaxoDiffKolmogorovSmirnovRefiner(hpoDiseases, hpoToMaxoIdMap, maxoAnnotsMap, minHpo, hpo);
+        if (refiner.equals("score")) {
+            diffDiagRefiner = new MaxoDiffRefiner(hpoDiseases, hpoToMaxoIdMap, maxoAnnotsMap, minHpo, hpo);
         }
         return diffDiagRefiner;
     }
