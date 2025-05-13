@@ -5,7 +5,7 @@ import org.monarchinitiative.maxodiff.config.MaxodiffDataResolver;
 import org.monarchinitiative.maxodiff.core.service.BiometadataService;
 import org.monarchinitiative.maxodiff.html.config.MaxodiffAutoConfiguration;
 import org.monarchinitiative.maxodiff.html.config.MaxodiffProperties;
-import org.monarchinitiative.maxodiff.html.controller.DifferentialDiagnosisController;
+import org.monarchinitiative.maxodiff.html.controller.SessionResultsController;
 import org.monarchinitiative.maxodiff.html.service.DifferentialDiagnosisEngineService;
 import org.springframework.beans.factory.BeanCreationException;
 
@@ -63,6 +63,6 @@ public class MaxodiffAutoConfigurationTest extends AbstractAutoConfigurationTest
         // Test that few beans are available.
         assertThat(context.getBean(BiometadataService.class), is(notNullValue()));
         assertThat(context.getBean(DifferentialDiagnosisEngineService.class), is(notNullValue()));
-        assertThat(context.getBean(DifferentialDiagnosisController.class), is(notNullValue()));
+        assertThat(context.getBean(SessionResultsController.class), is(notNullValue()));
     }
 }
