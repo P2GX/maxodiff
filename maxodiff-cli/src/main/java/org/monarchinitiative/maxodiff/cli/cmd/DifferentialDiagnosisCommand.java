@@ -27,6 +27,9 @@ import org.monarchinitiative.maxodiff.phenomizer.PhenomizerDifferentialDiagnosis
 import org.monarchinitiative.maxodiff.phenomizer.ScoringMode;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDisease;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
+import org.monarchinitiative.phenol.annotations.io.hpo.HpoDiseaseLoader;
+import org.monarchinitiative.phenol.annotations.io.hpo.HpoDiseaseLoaderOptions;
+import org.monarchinitiative.phenol.annotations.io.hpo.HpoDiseaseLoaders;
 import org.monarchinitiative.phenol.io.MinimalOntologyLoader;
 import org.monarchinitiative.phenol.io.OntologyLoader;
 import org.monarchinitiative.phenol.ontology.data.MinimalOntology;
@@ -101,7 +104,7 @@ public class DifferentialDiagnosisCommand extends BaseCommand {
     protected Integer nRepetitionsArg = 10;
 
     @CommandLine.Option(names = {"-e", "--engine"},
-            paramLabel = "{lirical, phenomiser}",
+            paramLabel = "{lirical, phenomizer}",
             description = "Differential diagnosis engine (default: ${DEFAULT-VALUE}).")
     protected String engineArg = "lirical";
 
@@ -129,11 +132,19 @@ public class DifferentialDiagnosisCommand extends BaseCommand {
                                              boolean writeOutputFile, CSVPrinter printer) throws Exception {
 
 
-        Ontology ontology = OntologyLoader.loadOntology(MaxodiffDataResolver.of(maxoDataPath).hpoJson().toFile());
-        MinimalOntology minimalOntology = MinimalOntologyLoader.loadOntology(MaxodiffDataResolver.of(maxoDataPath).hpoJson().toFile());
+        Path hpoPath = MaxodiffDataResolver.of(maxoDataPath).hpoJson();
+        Ontology ontology = OntologyLoader.loadOntology(hpoPath.toFile());
+        MinimalOntology minimalOntology = MinimalOntologyLoader.loadOntology(hpoPath.toFile());
+        HpoDiseaseLoader loader = HpoDiseaseLoaders.defaultLoader(minimalOntology, HpoDiseaseLoaderOptions.defaultOptions());
 
-        LOGGER.info("Loading icMicaDict...");
-        IcMicaData icMicaData = IcMicaDictLoader.loadIcMicaDict(MaxodiffDataResolver.of(maxoDataPath).icMicaDict());
+        Path hpoaPath = MaxodiffDataResolver.of(maxoDataPath).phenotypeAnnotations();
+        HpoDiseases hpoDiseases = loader.load(hpoaPath);
+
+        IcMicaData icMicaData = null;
+        if (ddEngine.equals("phenomizer")) {
+            LOGGER.info("Loading icMicaDict...");
+            icMicaData = IcMicaDictLoader.loadIcMicaDict(MaxodiffDataResolver.of(maxoDataPath).icMicaDict());
+        }
 
         if (writeOutputFile) {
             printer.printRecord("phenopacket", "disease_id", "maxo_id", "maxo_label",
@@ -166,12 +177,10 @@ public class DifferentialDiagnosisCommand extends BaseCommand {
             BiometadataService biometadataService = maxodiffPropsConfiguration.biometadataService();
 
             DifferentialDiagnosisEngine engine = null;
-            HpoDiseases hpoDiseases = null;
             LiricalDifferentialDiagnosisEngineConfigurer liricalDifferentialDiagnosisEngineConfigurer = null;
             if (ddEngine.equals("lirical")) {
                 Lirical lirical = prepareLirical();
                 PhenotypeService phenotypeService = lirical.phenotypeService();
-                hpoDiseases = phenotypeService.diseases();
                 Set<TermId> liricalDiseaseIds = lirical.phenotypeService().diseases().diseaseIds();
                 MaxodiffLiricalAnalysisRunner maxodiffLiricalAnalysisRunner = MaxodiffLiricalAnalysisRunnerImpl.of(phenotypeService, 4);
                 liricalDifferentialDiagnosisEngineConfigurer = LiricalDifferentialDiagnosisEngineConfigurer.of(maxodiffLiricalAnalysisRunner);
@@ -181,7 +190,7 @@ public class DifferentialDiagnosisCommand extends BaseCommand {
                         .pretestProbability(PretestDiseaseProbabilities.uniform(liricalDiseaseIds))
                         .build();
                 engine = liricalDifferentialDiagnosisEngineConfigurer.configure(analysisOptions);
-            } else if (ddEngine.equals("phenomiser")) {
+            } else if (ddEngine.equals("phenomizer")) {
                 Map<TermPair, Double> icMicaDict = icMicaData.icMicaDict();
                 ScoringMode scoringMode = ScoringMode.ONE_SIDED;
                 engine = new PhenomizerDifferentialDiagnosisEngine(hpoDiseases, icMicaDict, scoringMode);
@@ -198,7 +207,6 @@ public class DifferentialDiagnosisCommand extends BaseCommand {
             List<DifferentialDiagnosis> differentialDiagnoses = engine.run(sample);
 
             System.out.println("n Diseases = " + nDiseases);
-            System.out.println("Weight = " + weight);
             // Get List of Refinement results: maxo term scores and frequencies
             RefinementOptions options = RefinementOptions.of(nDiseases, nRepetitions, weight);
             List<DifferentialDiagnosis> orderedDiagnoses = maxoDiffRefiner.getOrderedDiagnoses(differentialDiagnoses, options);
@@ -236,7 +244,7 @@ public class DifferentialDiagnosisCommand extends BaseCommand {
                         .addTargetDiseases(initialDiagnosesIds)
                         .build();
                 diseaseSubsetEngine = liricalDifferentialDiagnosisEngineConfigurer.configure(diseaseSubsetOptions);
-            } else if (ddEngine.equals("phenomiser")) {
+            } else if (ddEngine.equals("phenomizer")) {
                 diseaseSubsetEngine = engine;
             }
 
