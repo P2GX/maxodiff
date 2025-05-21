@@ -64,6 +64,10 @@ public class MaxodiffDataResolver {
         return dataDirectory.resolve("phenotype.hpoa");
     }
 
+    public Path icMicaDict() {
+        return dataDirectory.resolve("term-pair-similarity.csv.gz");
+    }
+
     @Override
     public String toString() {
         return "MaxodiffDataResolver{" +
