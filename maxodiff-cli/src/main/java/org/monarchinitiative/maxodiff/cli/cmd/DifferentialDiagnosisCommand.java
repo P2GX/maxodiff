@@ -108,6 +108,11 @@ public class DifferentialDiagnosisCommand extends BaseCommand {
             description = "Differential diagnosis engine (default: ${DEFAULT-VALUE}).")
     protected String engineArg = "lirical";
 
+    @CommandLine.Option(names = {"-s", "--scoringMode"},
+            paramLabel = "{one-sided, two-sided}",
+            description = "Phenomizer scoring mode (default: ${DEFAULT-VALUE}).")
+    protected String scoringModeArg = "one-sided";
+
     @Override
     public Integer execute() throws Exception {
 
@@ -119,16 +124,17 @@ public class DifferentialDiagnosisCommand extends BaseCommand {
         int nDiseases = nDiseasesArg;
         int nRepetitions = nRepetitionsArg;
         String ddEngine = engineArg;
+        ScoringMode scoringMode = scoringModeArg.equals("one-sided") ? ScoringMode.ONE_SIDED : ScoringMode.TWO_SIDED;
 
         try (BufferedWriter writer = openOutputFileWriter(maxodiffResultsFilePath); CSVPrinter printer = CSVFormat.DEFAULT.print(writer)) {
-            runSingleMaxodiffAnalysis(phenopacketPath, phenopacketName, nDiseases, nRepetitions, ddEngine, weight, true, printer);
+            runSingleMaxodiffAnalysis(phenopacketPath, phenopacketName, nDiseases, nRepetitions, ddEngine, scoringMode, weight, true, printer);
         }
 
         return 0;
     }
 
     protected void runSingleMaxodiffAnalysis(Path phenopacketPath, String phenopacketName, int nDiseases, int nRepetitions,
-                                             String ddEngine, double weight,
+                                             String ddEngine, ScoringMode scoringMode, double weight,
                                              boolean writeOutputFile, CSVPrinter printer) throws Exception {
 
 
@@ -192,7 +198,6 @@ public class DifferentialDiagnosisCommand extends BaseCommand {
                 engine = liricalDifferentialDiagnosisEngineConfigurer.configure(analysisOptions);
             } else if (ddEngine.equals("phenomizer")) {
                 Map<TermPair, Double> icMicaDict = icMicaData.icMicaDict();
-                ScoringMode scoringMode = ScoringMode.ONE_SIDED;
                 engine = new PhenomizerDifferentialDiagnosisEngine(hpoDiseases, icMicaDict, scoringMode);
             }
 
