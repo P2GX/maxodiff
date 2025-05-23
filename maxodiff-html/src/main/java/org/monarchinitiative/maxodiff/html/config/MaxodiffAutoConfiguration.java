@@ -11,6 +11,8 @@ import org.monarchinitiative.maxodiff.core.service.BiometadataService;
 import org.monarchinitiative.maxodiff.core.service.BiometadataServiceImpl;
 import org.monarchinitiative.maxodiff.html.service.DifferentialDiagnosisEngineService;
 import org.monarchinitiative.maxodiff.html.service.DifferentialDiagnosisEngineServiceImpl;
+import org.monarchinitiative.maxodiff.phenomizer.IcMicaData;
+import org.monarchinitiative.maxodiff.phenomizer.IcMicaDictLoader;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
 import org.monarchinitiative.phenol.annotations.io.hpo.HpoDiseaseLoader;
 import org.monarchinitiative.phenol.annotations.io.hpo.HpoDiseaseLoaderOptions;
@@ -81,6 +83,12 @@ public class MaxodiffAutoConfiguration {
         try (BufferedReader reader = Files.newBufferedReader(maxodiffDataResolver.maxoDxAnnots())) {
             return MaxoDxAnnots.parseHpoToMaxo(reader);
         }
+    }
+
+    @Bean
+    public IcMicaData icMicaData(MaxodiffDataResolver maxodiffDataResolver) throws IOException {
+        LOGGER.debug("Loading IcMicaData from {}", maxodiffDataResolver.icMicaDict().toAbsolutePath());
+        return IcMicaDictLoader.loadIcMicaDict(maxodiffDataResolver.icMicaDict());
     }
 
     @Bean

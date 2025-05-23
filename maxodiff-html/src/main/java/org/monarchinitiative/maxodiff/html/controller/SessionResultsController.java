@@ -14,6 +14,7 @@ import org.monarchinitiative.maxodiff.core.model.RankMaxo;
 import org.monarchinitiative.maxodiff.core.model.Sample;
 import org.monarchinitiative.maxodiff.core.service.BiometadataService;
 import org.monarchinitiative.maxodiff.lirical.LiricalDifferentialDiagnosisEngineConfigurer;
+import org.monarchinitiative.maxodiff.phenomizer.PhenomizerDifferentialDiagnosisEngine;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDisease;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
 import org.monarchinitiative.phenol.ontology.data.MinimalOntology;
@@ -150,27 +151,32 @@ public class SessionResultsController {
             Map<TermId, List<DifferentialDiagnosis>> maxoTermToDDEngineDiagnosesMap = (Map<TermId, List<DifferentialDiagnosis>>) model.getAttribute("maxoTermToDifferentialDiagnosesMap");
 
             RefinementResults refinementResults;
-            if (engine instanceof LiricalDifferentialDiagnosisEngine && diffDiagRefiner instanceof MaxoDiffRefiner) {
+            DifferentialDiagnosisEngine diseaseSubsetEngine = null;
+            if (diffDiagRefiner instanceof MaxoDiffRefiner) {
                 assert orderedDiagnoses != null;
                 List<DifferentialDiagnosis> initialDiagnoses = orderedDiagnoses.stream().toList()
                         .subList(0, options.nDiseases());
 
-                Set<TermId> initialDiagnosesIds = initialDiagnoses.stream()
-                        .map(DifferentialDiagnosis::diseaseId)
-                        .collect(Collectors.toSet());
+                if (engine instanceof LiricalDifferentialDiagnosisEngine) {
+                    Set<TermId> initialDiagnosesIds = initialDiagnoses.stream()
+                            .map(DifferentialDiagnosis::diseaseId)
+                            .collect(Collectors.toSet());
 
-                AnalysisOptions originalOptions = ((LiricalDifferentialDiagnosisEngine) engine).getAnalysisOptions();
+                    AnalysisOptions originalOptions = ((LiricalDifferentialDiagnosisEngine) engine).getAnalysisOptions();
 
-                var diseaseSubsetOptions = AnalysisOptions.builder()
+                    var diseaseSubsetOptions = AnalysisOptions.builder()
 //                    .setDiseaseDatabases(List.of(DiseaseDatabase.OMIM))
-                        .useStrictPenalties(originalOptions.useStrictPenalties())
-                        .useGlobal(originalOptions.useGlobal())
-                        .pretestProbability(PretestDiseaseProbabilities.uniform(initialDiagnosesIds))
-                        .addTargetDiseases(initialDiagnosesIds)
+                            .useStrictPenalties(originalOptions.useStrictPenalties())
+                            .useGlobal(originalOptions.useGlobal())
+                            .pretestProbability(PretestDiseaseProbabilities.uniform(initialDiagnosesIds))
+                            .addTargetDiseases(initialDiagnosesIds)
 //                .includeDiseasesWithNoDeleteriousVariants(true)
-                        .build();
-                DifferentialDiagnosisEngine diseaseSubsetEngine = liricalDifferentialDiagnosisEngineConfigurer.configure(diseaseSubsetOptions);
+                            .build();
+                    diseaseSubsetEngine = liricalDifferentialDiagnosisEngineConfigurer.configure(diseaseSubsetOptions);
 
+                } else if (engine instanceof PhenomizerDifferentialDiagnosisEngine) {
+                    diseaseSubsetEngine = engine;
+                }
                 assert maxoToHpoTermIdMap != null;
                 RankMaxo rankMaxo = ((MaxoDiffRefiner) diffDiagRefiner).getRankMaxo(initialDiagnoses,
                         diseaseSubsetEngine,
