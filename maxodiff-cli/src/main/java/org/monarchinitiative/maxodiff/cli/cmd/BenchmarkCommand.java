@@ -59,11 +59,6 @@ public class BenchmarkCommand extends DifferentialDiagnosisCommand {
             description = "Path to directory containing phenopackets.")
     protected String batchDir;
 
-    @CommandLine.Option(names = {"-W", "--weights"},
-            split=",",
-            arity = "1..*",
-            description = "Comma-separated list of weight values to use in final score calculation.")
-    public List<Double> weightsArg;
 
     @CommandLine.Option(names = {"-N", "--nDiseasesList"},
 //            required = true,
@@ -80,10 +75,6 @@ public class BenchmarkCommand extends DifferentialDiagnosisCommand {
     protected List<Integer> nRepetitionsArg;
 
 
-    @CommandLine.Option(names = {"--dummy"},
-            description = "Whether to do dummy refinement (default: ${DEFAULT-VALUE}).")
-    protected boolean dummy = false;
-
     @CommandLine.Option(names = {"--removeSampleTerms"},
             description = "Whether to remove Sample HPO terms before analysis (default: ${DEFAULT-VALUE}).")
     protected boolean removeSampleTerms = false;
@@ -91,13 +82,6 @@ public class BenchmarkCommand extends DifferentialDiagnosisCommand {
     @CommandLine.Option(names = {"-o", "--outputFilename"},
             description = "Filename of the benchmark results CSV file. The CSV is compressed if the path has the '.gz' suffix")
     protected Path outputName;
-
-    @CommandLine.Option(names = {"--refinerTypes"},
-//            required = true,
-            split=",",
-            arity = "1..*",
-            description = "Comma-separated list of differential diagnosis refiners.")
-    protected List<String> refinerTypes;
 
 
     @CommandLine.Option(names = {"-R", "--removeIdsFile"},
@@ -131,15 +115,11 @@ public class BenchmarkCommand extends DifferentialDiagnosisCommand {
         }
         Collections.sort(phenopacketPaths);
 
-        List<Double> weights = new ArrayList<>();
-        weightsArg.forEach(weights::add);
         List<Integer> nDiseasesList = new ArrayList<>();
         nDiseasesArg.forEach(nDiseasesList::add);
         List<Integer> nRepetitionsList = new ArrayList<>();
         nRepetitionsArg.forEach(nRepetitionsList::add);
         List<String> refinersList = new ArrayList<>();
-        if (refinerTypes != null)
-            refinerTypes.forEach(refinersList::add);
 
         Lirical lirical = prepareLirical();
         PhenotypeService phenotypeService = lirical.phenotypeService();
@@ -197,7 +177,6 @@ public class BenchmarkCommand extends DifferentialDiagnosisCommand {
                                 phenopacketData.excludedHpoTermIds().toList());
 
                         LOGGER.info(String.valueOf(phenopacketPath));
-                        LOGGER.info("weights = {}", weights);
                         LOGGER.info("nDiseases = {}", nDiseasesList);
                         LOGGER.info("refiners = {}", refinersList);
                         String phenopacketName = pPath.toFile().getName();
@@ -291,6 +270,7 @@ public class BenchmarkCommand extends DifferentialDiagnosisCommand {
                                 }
 
                                 Map<Double, Integer> weightToTopMaxoNAscertainablePhenotypesMap = new HashMap<>();
+
                                 for (int nRepetitions : nRepetitionsList) {
                                     RefinementOptions options = RefinementOptions.of(nDiseases, nRepetitions);
                                     LOGGER.info("{}: {}", e.getKey(), e.getValue());
@@ -372,7 +352,6 @@ public class BenchmarkCommand extends DifferentialDiagnosisCommand {
                                                 topMaxoAscertainablePhenotypes, topMaxoAscertainablePhenotypes.size(),
                                                 meanNDiscoverablePhenotypesAllMaxoTerms, diff,
                                                 e.getKey(), printer);
-
                                     }
 
                                     if (e.getKey().equals("rank") | e.getKey().equals("ddScore") | e.getKey().equals("ksTest")) {
@@ -526,5 +505,4 @@ public class BenchmarkCommand extends DifferentialDiagnosisCommand {
             LOGGER.error("Error writing all MAxO ascertainable phenotype results: {}", e.getMessage(), e);
         }
     }
-
 }

@@ -43,7 +43,7 @@ public class DfsHpoTermArranger implements HpoTermArranger{
             return;
         }
         visited.add(tid);
-        if (! tid.equals(PHENOTYPIC_ABNORMALITY) && this.ontology.graph().existsPath(tid, PHENOTYPIC_ABNORMALITY)) {
+        if (! tid.equals(PHENOTYPIC_ABNORMALITY) && !this.ontology.graph().existsPath(tid, PHENOTYPIC_ABNORMALITY)) {
             // do not consider terms that are outside of the Phenotype subontology
             return;
         }

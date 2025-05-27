@@ -22,7 +22,6 @@ public class HTMLFrequencyMap {
     public static Map<String, Map<Float, List<String>>> makeFrequencyDiseaseMap(Map<TermId, String> hpoIdToLabelMap,
                                                                                 Map<TermId, String> omimIdToLabelMap,
                                                                                 Map<TermId, Map<TermId, Integer>> hpoTermIdRepCtsMap,
-                                                                                Map<TermId, Map<TermId, Integer>> hpoTermIdExcludedRepCtsMap,
                                                                                 List<HpoFrequency> hpoFrequencies) {
 
         Map<String, Map<Float, List<String>>> frequencyMap = new HashMap<>();
@@ -34,8 +33,7 @@ public class HTMLFrequencyMap {
                 var omimId = omimMapEntry.getKey();
                 var omimLabel = omimMapEntry.getValue();
                 var hpoRepCt = hpoTermIdRepCtsMap.get(omimId).get(hpoId);
-                var hpoExclRepCt = hpoTermIdExcludedRepCtsMap.get(omimId).get(hpoId);
-                if (hpoRepCt != null | hpoExclRepCt != null) {
+                if (hpoRepCt != null) {
                     for (HpoFrequency freqRecord : hpoFrequencies) {
                         var freqRecordOmimId = freqRecord.omimId();
                         var freqRecordHpoId = freqRecord.hpoId();

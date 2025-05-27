@@ -148,7 +148,7 @@ public class DifferentialDiagnosisCommand extends BaseCommand {
 
         if (writeOutputFile) {
             printer.printRecord("phenopacket", "disease_id", "maxo_id", "maxo_label",
-                    "n_diseases", "disease_ids", "n_repetitions", "weight", "score"); // header
+                    "n_diseases", "disease_ids", "n_repetitions", "score"); // header
         }
 
         Map<String, List<Object>> resultsMap = new HashMap<>();
@@ -204,6 +204,7 @@ public class DifferentialDiagnosisCommand extends BaseCommand {
             List<DifferentialDiagnosis> differentialDiagnoses = engine.run(sample);
 
             System.out.println("n Diseases = " + nDiseases);
+
             // Get List of Refinement results: maxo term scores and frequencies
             RefinementOptions options = RefinementOptions.of(nDiseases, nRepetitions);
             List<DifferentialDiagnosis> orderedDiagnoses = maxoDiffRefiner.getOrderedDiagnoses(differentialDiagnoses, options);
@@ -302,6 +303,7 @@ public class DifferentialDiagnosisCommand extends BaseCommand {
             nRepList.add(nRepetitions);
             List<Object> maxScoreValues = resultsMap.get("maxScoreValue");
             maxScoreValues.add(maxScoreValue);
+
             resultsMap.replace("phenopacketName", phenopacketNames);
             resultsMap.replace("diseaseId", diseaseIdList);
             resultsMap.replace("maxScoreMaxoTermId", maxScoreMaxoTermIds);
@@ -310,8 +312,7 @@ public class DifferentialDiagnosisCommand extends BaseCommand {
             resultsMap.replace("diseaseIds", diseaseIdsList);
             resultsMap.replace("nRepetitions", nRepList);
             resultsMap.replace("maxScoreValue", maxScoreValues);
-//                }
-//            }
+
             BatchDiagnosisCommand.setResultsMap(resultsMap);
         } catch (Exception ex) {
             System.out.println(ex.getMessage());
