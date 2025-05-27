@@ -77,7 +77,6 @@ public class SessionResultsController {
                               @RequestParam(value = "refiner", required = false) String refiner,
                               @RequestParam(value = "nDiseases", required = false) Integer nDiseases,
                               @RequestParam(value = "nRepetitions", required = false) Integer nRepetitions,
-                              @RequestParam(value = "weight", required = false) Double weight,
                               @RequestParam(value = "nMaxoResults", required = false) Integer nMaxoResults,
                               @RequestParam(value = "diseaseProbModel", required = false) String diseaseProbModel,
                               Model model) throws Exception {
@@ -91,12 +90,6 @@ public class SessionResultsController {
         switch (refiner) {
             case "score" -> {diffDiagRefiner = new MaxoDiffRefiner(hpoDiseases, hpoToMaxoIdMap, hpoToMaxoTermMap, minHpo, hpo);
                             algorithm = "Score";}
-            case "rank" -> {diffDiagRefiner = new MaxoDiffRankRefiner(hpoDiseases, hpoToMaxoIdMap, hpoToMaxoTermMap, minHpo, hpo);
-                            algorithm = "Rank";}
-            case "ddScore" -> {diffDiagRefiner = new MaxoDiffDDScoreRefiner(hpoDiseases, hpoToMaxoIdMap, hpoToMaxoTermMap, minHpo, hpo);
-                                algorithm = "Differential Diagnosis Score";}
-            case "ksTest" -> {diffDiagRefiner = new MaxoDiffKolmogorovSmirnovRefiner(hpoDiseases, hpoToMaxoIdMap, hpoToMaxoTermMap, minHpo, hpo);
-                                algorithm = "Kolomogorov-Smirnov Test";}
         }
 
         model.addAttribute("refiner", refiner);
@@ -104,7 +97,6 @@ public class SessionResultsController {
         Integer prevNDiseases = (Integer) model.getAttribute("nDiseases");
         model.addAttribute("nDiseases", nDiseases);
         model.addAttribute("nRepetitions", nRepetitions);
-        model.addAttribute("weight", weight);
         model.addAttribute("nMaxoResults", nMaxoResults);
         model.addAttribute("diseaseProbModel", diseaseProbModel);
 
@@ -114,26 +106,23 @@ public class SessionResultsController {
             model.addAttribute("totalNDiseases", differentialDiagnoses.size());
         }
 
-        if (sample != null && nDiseases != null && nRepetitions != null && weight != null && nMaxoResults != null) {
-            RefinementOptions options = RefinementOptions.of(nDiseases, nRepetitions, weight);
+        if (sample != null && nDiseases != null && nRepetitions != null && nMaxoResults != null) {
+            RefinementOptions options = RefinementOptions.of(nDiseases, nRepetitions);
 
-            if (model.getAttribute("orderedDiagnoses") == null || !nDiseases.equals(prevNDiseases)
-                    || diffDiagRefiner instanceof MaxoDiffKolmogorovSmirnovRefiner) {
+            if (model.getAttribute("orderedDiagnoses") == null || !nDiseases.equals(prevNDiseases)) {
                 List<DifferentialDiagnosis> orderedDiagnoses = diffDiagRefiner.getOrderedDiagnoses(differentialDiagnoses, options);
                 model.addAttribute("orderedDiagnoses", orderedDiagnoses);
             }
             List<DifferentialDiagnosis> orderedDiagnoses = (List<DifferentialDiagnosis>) model.getAttribute("orderedDiagnoses");
 
-            if (model.getAttribute("hpoTermCounts") == null || !nDiseases.equals(prevNDiseases)
-                    || diffDiagRefiner instanceof MaxoDiffKolmogorovSmirnovRefiner) {
+            if (model.getAttribute("hpoTermCounts") == null || !nDiseases.equals(prevNDiseases)) {
                 List<HpoDisease> diseases = diffDiagRefiner.getDiseases(orderedDiagnoses);
                 Map<TermId, List<HpoFrequency>> hpoTermCounts = diffDiagRefiner.getHpoTermCounts(diseases);
                 model.addAttribute("hpoTermCounts", hpoTermCounts);
             }
             Map<TermId, List<HpoFrequency>> hpoTermCounts = (Map<TermId, List<HpoFrequency>>) model.getAttribute("hpoTermCounts");
 
-            if (model.getAttribute("maxoToHpoTermIdMap") == null || !nDiseases.equals(prevNDiseases)
-                    || diffDiagRefiner instanceof MaxoDiffKolmogorovSmirnovRefiner) {
+            if (model.getAttribute("maxoToHpoTermIdMap") == null || !nDiseases.equals(prevNDiseases)) {
                 List<TermId> termIdsToRemove = Stream.of(sample.presentHpoTermIds(), sample.excludedHpoTermIds())
                         .flatMap(Collection::stream).toList();
                 Map<TermId, Set<TermId>> maxoToHpoTermIdMap = diffDiagRefiner.getMaxoToHpoTermIdMap(termIdsToRemove, hpoTermCounts);
@@ -141,16 +130,7 @@ public class SessionResultsController {
             }
             Map<TermId, Set<TermId>> maxoToHpoTermIdMap = (Map<TermId, Set<TermId>>) model.getAttribute("maxoToHpoTermIdMap");
 
-            if ((model.getAttribute("maxoTermToDifferentialDiagnosesMap") == null || !nDiseases.equals(prevNDiseases)
-                    || diffDiagRefiner instanceof MaxoDiffKolmogorovSmirnovRefiner) && !(diffDiagRefiner instanceof MaxoDiffRefiner)) {
-                Integer nMapDiseases = diffDiagRefiner instanceof MaxoDiffKolmogorovSmirnovRefiner ? 100 : options.nDiseases();
-                Map<TermId, List<DifferentialDiagnosis>> maxoTermToDifferentialDiagnosesMap = diffDiagRefiner.getMaxoTermToDifferentialDiagnosesMap(sample,
-                        engine, maxoToHpoTermIdMap, nMapDiseases);
-                model.addAttribute("maxoTermToDifferentialDiagnosesMap", maxoTermToDifferentialDiagnosesMap);
-            }
-            Map<TermId, List<DifferentialDiagnosis>> maxoTermToDDEngineDiagnosesMap = (Map<TermId, List<DifferentialDiagnosis>>) model.getAttribute("maxoTermToDifferentialDiagnosesMap");
-
-            RefinementResults refinementResults;
+            RefinementResults refinementResults = null;
             DifferentialDiagnosisEngine diseaseSubsetEngine = null;
             if (diffDiagRefiner instanceof MaxoDiffRefiner) {
                 assert orderedDiagnoses != null;
@@ -165,12 +145,10 @@ public class SessionResultsController {
                     AnalysisOptions originalOptions = ((LiricalDifferentialDiagnosisEngine) engine).getAnalysisOptions();
 
                     var diseaseSubsetOptions = AnalysisOptions.builder()
-//                    .setDiseaseDatabases(List.of(DiseaseDatabase.OMIM))
                             .useStrictPenalties(originalOptions.useStrictPenalties())
                             .useGlobal(originalOptions.useGlobal())
                             .pretestProbability(PretestDiseaseProbabilities.uniform(initialDiagnosesIds))
                             .addTargetDiseases(initialDiagnosesIds)
-//                .includeDiseasesWithNoDeleteriousVariants(true)
                             .build();
                     diseaseSubsetEngine = liricalDifferentialDiagnosisEngineConfigurer.configure(diseaseSubsetOptions);
 
@@ -189,32 +167,15 @@ public class SessionResultsController {
                         rankMaxo,
                         hpoTermCounts,
                         maxoToHpoTermIdMap);
-            } else {
-                refinementResults = diffDiagRefiner.run(sample,
-                        orderedDiagnoses,
-                        options,
-                        engine,
-                        maxoToHpoTermIdMap,
-                        hpoTermCounts,
-                        maxoTermToDDEngineDiagnosesMap);
             }
 
 
             List<MaxodiffResult> resultsList = new ArrayList<>(refinementResults.maxodiffResults());
-            if (diffDiagRefiner instanceof MaxoDiffKolmogorovSmirnovRefiner) {
-                resultsList.sort(Comparator.<MaxodiffResult>comparingDouble(mr -> mr.maxoTermScore().scoreDiff()));
-            } else if (diffDiagRefiner instanceof MaxoDiffRefiner) {
+            if (diffDiagRefiner instanceof MaxoDiffRefiner) {
                 resultsList.sort(Comparator.<MaxodiffResult>comparingDouble(mr -> mr.rankMaxoScore().maxoScore()).reversed());
-            } else {
-                resultsList.sort(Comparator.<MaxodiffResult>comparingDouble(mr -> mr.maxoTermScore().scoreDiff()).reversed());
             }
 
             model.addAttribute("maxodiffResults", resultsList);
-
-//            Set<TermId> omimIds = resultsList.get(0).maxoTermScore().omimTermIds();
-//            model.addAttribute("omimIds", omimIds);
-//            Set<TermId> maxoOmimIds = resultsList.get(0).maxoTermScore().maxoOmimTermIds();
-//            model.addAttribute("maxoOmimIds", maxoOmimIds);
 
             int nDisplayed = Math.min(resultsList.size(), nMaxoResults);
             model.addAttribute("nDisplayed", nDisplayed);

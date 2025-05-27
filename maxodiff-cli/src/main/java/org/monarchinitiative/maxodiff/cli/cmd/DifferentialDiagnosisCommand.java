@@ -80,10 +80,6 @@ public class DifferentialDiagnosisCommand extends BaseCommand {
             description = "Whether to output LIRICAL results file as a compressed file (default: ${DEFAULT-VALUE}).")
     protected boolean compress = false;
 
-    @CommandLine.Option(names = {"-w", "--weight"},
-            description = "Comma-separated list of weight value to use in final score calculation (default: ${DEFAULT-VALUE}).")
-    public Double weightsArg = 0.5;
-
     @CommandLine.Option(names = {"-l", "--diseaseList"},
             split=",",
             arity = "1..*",
@@ -120,22 +116,20 @@ public class DifferentialDiagnosisCommand extends BaseCommand {
         String outputFilename = String.join("_", phenopacketName, "maxodiff", "results.csv");
         Path maxodiffResultsFilePath = Path.of(String.join(File.separator, outputDir.toString(), outputFilename));
 
-        double weight = weightsArg;
         int nDiseases = nDiseasesArg;
         int nRepetitions = nRepetitionsArg;
         String ddEngine = engineArg;
         ScoringMode scoringMode = scoringModeArg.equals("one-sided") ? ScoringMode.ONE_SIDED : ScoringMode.TWO_SIDED;
 
         try (BufferedWriter writer = openOutputFileWriter(maxodiffResultsFilePath); CSVPrinter printer = CSVFormat.DEFAULT.print(writer)) {
-            runSingleMaxodiffAnalysis(phenopacketPath, phenopacketName, nDiseases, nRepetitions, ddEngine, scoringMode, weight, true, printer);
+            runSingleMaxodiffAnalysis(phenopacketPath, phenopacketName, nDiseases, nRepetitions, ddEngine, scoringMode, true, printer);
         }
 
         return 0;
     }
 
     protected void runSingleMaxodiffAnalysis(Path phenopacketPath, String phenopacketName, int nDiseases, int nRepetitions,
-                                             String ddEngine, ScoringMode scoringMode, double weight,
-                                             boolean writeOutputFile, CSVPrinter printer) throws Exception {
+                                             String ddEngine, ScoringMode scoringMode, boolean writeOutputFile, CSVPrinter printer) throws Exception {
 
 
         Path hpoPath = MaxodiffDataResolver.of(maxoDataPath).hpoJson();
@@ -166,11 +160,9 @@ public class DifferentialDiagnosisCommand extends BaseCommand {
         resultsMap.put("topNDiseases", new ArrayList<>());
         resultsMap.put("diseaseIds", new ArrayList<>());
         resultsMap.put("nRepetitions", new ArrayList<>());
-        resultsMap.put("weight", new ArrayList<>());
         resultsMap.put("maxScoreValue", new ArrayList<>());
 
 
-        System.out.println(weight);
         System.out.println(nDiseases);
         System.out.println(nRepetitions);
 
@@ -213,7 +205,7 @@ public class DifferentialDiagnosisCommand extends BaseCommand {
 
             System.out.println("n Diseases = " + nDiseases);
             // Get List of Refinement results: maxo term scores and frequencies
-            RefinementOptions options = RefinementOptions.of(nDiseases, nRepetitions, weight);
+            RefinementOptions options = RefinementOptions.of(nDiseases, nRepetitions);
             List<DifferentialDiagnosis> orderedDiagnoses = maxoDiffRefiner.getOrderedDiagnoses(differentialDiagnoses, options);
             List<HpoDisease> diseases = maxoDiffRefiner.getDiseases(orderedDiagnoses);
             Map<TermId, List<HpoFrequency>> hpoTermCounts = maxoDiffRefiner.getHpoTermCounts(diseases);
@@ -280,7 +272,7 @@ public class DifferentialDiagnosisCommand extends BaseCommand {
 
             if (writeOutputFile) {
                 writeResults(phenopacketName, diseaseId, TermId.of(maxScoreMaxoTermId), maxScoreTermLabel,
-                        topNDiseases, diseaseIds.toString(), nRepetitions, weight, maxScoreValue, printer);
+                        topNDiseases, diseaseIds.toString(), nRepetitions, maxScoreValue, printer);
 
                 String nDiseasesAbbr = String.join("", "n", String.valueOf(nDiseases));
                 String nRepsAbbr = String.join("", "nr", String.valueOf(nRepetitions));
@@ -308,8 +300,6 @@ public class DifferentialDiagnosisCommand extends BaseCommand {
             diseaseIdsList.add(diseaseIds);
             List<Object> nRepList = resultsMap.get("nRepetitions");
             nRepList.add(nRepetitions);
-            List<Object> weightList = resultsMap.get("weight");
-            weightList.add(weight);
             List<Object> maxScoreValues = resultsMap.get("maxScoreValue");
             maxScoreValues.add(maxScoreValue);
             resultsMap.replace("phenopacketName", phenopacketNames);
@@ -319,7 +309,6 @@ public class DifferentialDiagnosisCommand extends BaseCommand {
             resultsMap.replace("topNDiseases", topNDiseasesList);
             resultsMap.replace("diseaseIds", diseaseIdsList);
             resultsMap.replace("nRepetitions", nRepList);
-            resultsMap.replace("weight", weightList);
             resultsMap.replace("maxScoreValue", maxScoreValues);
 //                }
 //            }
@@ -351,7 +340,6 @@ public class DifferentialDiagnosisCommand extends BaseCommand {
                                      int topNdiseases,
                                      String diseaseIds,
                                      int nRepetitions,
-                                     double weight,
                                      double score,
                                      CSVPrinter printer) {
 
@@ -363,7 +351,6 @@ public class DifferentialDiagnosisCommand extends BaseCommand {
             printer.print(topNdiseases);
             printer.print(diseaseIds);
             printer.print(nRepetitions);
-            printer.print(weight);
             printer.print(score);
             printer.println();
         } catch (IOException e) {

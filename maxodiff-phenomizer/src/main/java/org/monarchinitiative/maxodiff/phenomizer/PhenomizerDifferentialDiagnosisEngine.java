@@ -114,9 +114,9 @@ public class PhenomizerDifferentialDiagnosisEngine implements DifferentialDiagno
         double[] queryToDisease = new double[query.size()];
         double[] diseaseToQuery = new double[presentAnnotationCount];
         int q = 0;
-        int d = 0;
         for (TermId feature : query) {
             double q2d = 0;
+            int d = 0;
             for (HpoDiseaseAnnotation anno : disease.presentAnnotations()) {
                 TermPair pair = TermPair.symmetric(feature, anno.id());
                 double icMica = termPairToIc.getOrDefault(pair, 0.);

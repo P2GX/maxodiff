@@ -216,45 +216,6 @@ class AnalysisUtils {
 
     /**
      *
-     * @param hpoTermIds Set of HPO terms that can be ascertained by the MAXO term.
-     * @param hpoCombos Combinations of HPO terms in hpoTermIds set.
-     * @param maxoId TermId of MAXO Term.
-     * @param differentialDiagnoses List of DifferentialDiagnosis objects sorted in order of descending score.
-     * @param diseases List of HPODisease objects for the target m diseases.
-     * @param options Refinement options.
-     * @return MaxoTermScore record.
-     */
-    static MaxoTermScore getMaxoTermScoreRecord(Set<TermId> hpoTermIds,
-                                                List<List<TermId>> hpoCombos,
-                                                TermId maxoId,
-                                                List<DifferentialDiagnosis> differentialDiagnoses,
-                                                List<HpoDisease> diseases,
-                                                RefinementOptions options) {
-
-        double maxoTermInitialScore = calculateMaxoTermFinalScore(differentialDiagnoses,
-                diseases,
-                hpoCombos,
-                1.0);
-        double maxoTermFinalScore = calculateMaxoTermFinalScore(differentialDiagnoses,
-                diseases,
-                hpoCombos,
-                options.weight());
-        double scoreDiff = maxoTermFinalScore - maxoTermInitialScore;
-
-        Set<TermId> diseaseIds = new LinkedHashSet<>();
-        List<DifferentialDiagnosis> differentialDiagnosisModels = new ArrayList<>(differentialDiagnoses);
-        differentialDiagnosisModels.sort(Comparator.comparingDouble(DifferentialDiagnosis::score).reversed());
-        differentialDiagnosisModels.forEach(d -> diseaseIds.add(d.diseaseId()));
-        int nHpoTerms = hpoTermIds.size();
-
-        return new MaxoTermScore(maxoId.toString(), options.nDiseases(),
-                diseaseIds, Set.of(), nHpoTerms, hpoTermIds,
-                maxoTermInitialScore, maxoTermFinalScore, scoreDiff, TermId.of("HP:000000"),
-                List.of(), List.of(),null,null);
-    }
-
-    /**
-     *
      * @param sample Sample info, may or may not be from a phenopacket.
      * @param hpoTermIds The target m disease Ids.
      * @param engine The engine used for the original differential diagnosis calculation (e.g. LIRICAL).
