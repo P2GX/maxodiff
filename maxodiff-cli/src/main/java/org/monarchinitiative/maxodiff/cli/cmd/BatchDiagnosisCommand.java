@@ -29,12 +29,6 @@ public class BatchDiagnosisCommand extends DifferentialDiagnosisCommand {
             description = "Path to directory containing phenopackets.")
     protected String batchDir;
 
-    @CommandLine.Option(names = {"-W", "--weights"},
-            split=",",
-            arity = "1..*",
-            description = "Comma-separated list of weight values to use in final score calculation.")
-    public List<Double> weightsArg;
-
     @CommandLine.Option(names = {"-N", "--nDiseasesList"},
 //            required = true,
             split=",",
