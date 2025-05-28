@@ -211,7 +211,7 @@ public class DifferentialDiagnosisCommand extends BaseCommand {
             List<HpoDisease> diseases = maxoDiffRefiner.getDiseases(orderedDiagnoses);
             Map<TermId, List<HpoFrequency>> hpoTermCounts = maxoDiffRefiner.getHpoTermCounts(diseases);
 
-            List<DifferentialDiagnosis> initialDiagnoses = differentialDiagnoses.subList(0, nDiseases);
+            List<DifferentialDiagnosis> initialDiagnoses = orderedDiagnoses.subList(0, nDiseases);
             Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxoTermMap = maxodiffPropsConfiguration.maxoAnnotsMap();
             Map<TermId, Set<TermId>> maxoToHpoTermIdMap = maxoDiffRefiner.getMaxoToHpoTermIdMap(List.of(), hpoTermCounts);
 

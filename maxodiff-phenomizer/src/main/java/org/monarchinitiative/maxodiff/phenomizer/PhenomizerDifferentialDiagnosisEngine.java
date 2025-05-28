@@ -9,10 +9,7 @@ import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 import org.monarchinitiative.phenol.ontology.similarity.TermPair;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class PhenomizerDifferentialDiagnosisEngine implements DifferentialDiagnosisEngine {
@@ -78,7 +75,9 @@ public class PhenomizerDifferentialDiagnosisEngine implements DifferentialDiagno
             ));
         }
 
-        return diagnoses;
+        return diagnoses.stream()
+                .sorted(Comparator.comparingDouble(DifferentialDiagnosis::score).reversed())
+                .toList();
     }
 
     private double oneSided(
