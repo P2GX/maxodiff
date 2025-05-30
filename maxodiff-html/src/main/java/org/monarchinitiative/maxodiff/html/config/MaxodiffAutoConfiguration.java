@@ -11,6 +11,9 @@ import org.monarchinitiative.maxodiff.core.service.BiometadataService;
 import org.monarchinitiative.maxodiff.core.service.BiometadataServiceImpl;
 import org.monarchinitiative.maxodiff.html.service.DifferentialDiagnosisEngineService;
 import org.monarchinitiative.maxodiff.html.service.DifferentialDiagnosisEngineServiceImpl;
+import org.monarchinitiative.maxodiff.phenomizer.IcMicaData;
+import org.monarchinitiative.maxodiff.phenomizer.IcMicaDictLoader;
+import org.monarchinitiative.maxodiff.phenomizer.IcMicaDictMetadata;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
 import org.monarchinitiative.phenol.annotations.io.hpo.HpoDiseaseLoader;
 import org.monarchinitiative.phenol.annotations.io.hpo.HpoDiseaseLoaderOptions;
@@ -20,16 +23,19 @@ import org.monarchinitiative.phenol.io.OntologyLoader;
 import org.monarchinitiative.phenol.ontology.data.MinimalOntology;
 import org.monarchinitiative.phenol.ontology.data.Ontology;
 import org.monarchinitiative.phenol.ontology.data.TermId;
+import org.monarchinitiative.phenol.ontology.similarity.TermPair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.context.annotation.Profile;
 
 import java.io.BufferedReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.LocalDate;
 import java.util.*;
 
 @Configuration
@@ -80,6 +86,20 @@ public class MaxodiffAutoConfiguration {
         LOGGER.debug("Loading MAxO annotations from {}", maxodiffDataResolver.maxoDxAnnots().toAbsolutePath());
         try (BufferedReader reader = Files.newBufferedReader(maxodiffDataResolver.maxoDxAnnots())) {
             return MaxoDxAnnots.parseHpoToMaxo(reader);
+        }
+    }
+
+    @Bean
+    public IcMicaData icMicaData(MaxodiffDataResolver maxodiffDataResolver) throws IOException {
+        Path icMicaDataPath = maxodiffDataResolver.icMicaDict().toAbsolutePath();
+        if (Files.exists(icMicaDataPath)) {
+            LOGGER.debug("Loading IcMicaData from {}", icMicaDataPath);
+            return IcMicaDictLoader.loadIcMicaDict(maxodiffDataResolver.icMicaDict());
+        } else {
+            MinimalOntology hpo = minHpo(maxodiffDataResolver);
+            IcMicaDictMetadata testMetadata = new IcMicaDictMetadata(hpo.version().get(), hpo.version().get(), LocalDate.now());
+            Map<TermPair, Double> testIcMicaDict = new HashMap<>();
+            return new IcMicaData(testIcMicaDict, testMetadata);
         }
     }
 

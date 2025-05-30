@@ -14,6 +14,7 @@ import org.monarchinitiative.maxodiff.core.model.RankMaxo;
 import org.monarchinitiative.maxodiff.core.model.Sample;
 import org.monarchinitiative.maxodiff.core.service.BiometadataService;
 import org.monarchinitiative.maxodiff.lirical.LiricalDifferentialDiagnosisEngineConfigurer;
+import org.monarchinitiative.maxodiff.phenomizer.PhenomizerDifferentialDiagnosisEngine;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDisease;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
 import org.monarchinitiative.phenol.ontology.data.MinimalOntology;
@@ -76,7 +77,6 @@ public class SessionResultsController {
                               @RequestParam(value = "refiner", required = false) String refiner,
                               @RequestParam(value = "nDiseases", required = false) Integer nDiseases,
                               @RequestParam(value = "nRepetitions", required = false) Integer nRepetitions,
-                              @RequestParam(value = "weight", required = false) Double weight,
                               @RequestParam(value = "nMaxoResults", required = false) Integer nMaxoResults,
                               @RequestParam(value = "diseaseProbModel", required = false) String diseaseProbModel,
                               Model model) throws Exception {
@@ -97,7 +97,6 @@ public class SessionResultsController {
         Integer prevNDiseases = (Integer) model.getAttribute("nDiseases");
         model.addAttribute("nDiseases", nDiseases);
         model.addAttribute("nRepetitions", nRepetitions);
-        model.addAttribute("weight", weight);
         model.addAttribute("nMaxoResults", nMaxoResults);
         model.addAttribute("diseaseProbModel", diseaseProbModel);
 
@@ -132,25 +131,29 @@ public class SessionResultsController {
             Map<TermId, Set<TermId>> maxoToHpoTermIdMap = (Map<TermId, Set<TermId>>) model.getAttribute("maxoToHpoTermIdMap");
 
             RefinementResults refinementResults = null;
-            if (engine instanceof LiricalDifferentialDiagnosisEngine && diffDiagRefiner instanceof MaxoDiffRefiner) {
+            DifferentialDiagnosisEngine diseaseSubsetEngine = null;
+            if (diffDiagRefiner instanceof MaxoDiffRefiner) {
                 assert orderedDiagnoses != null;
                 List<DifferentialDiagnosis> initialDiagnoses = orderedDiagnoses.stream().toList()
                         .subList(0, options.nDiseases());
 
-                Set<TermId> initialDiagnosesIds = initialDiagnoses.stream()
-                        .map(DifferentialDiagnosis::diseaseId)
-                        .collect(Collectors.toSet());
+                if (engine instanceof LiricalDifferentialDiagnosisEngine) {
+                    Set<TermId> initialDiagnosesIds = initialDiagnoses.stream()
+                            .map(DifferentialDiagnosis::diseaseId)
+                            .collect(Collectors.toSet());
 
-                AnalysisOptions originalOptions = ((LiricalDifferentialDiagnosisEngine) engine).getAnalysisOptions();
+                    AnalysisOptions originalOptions = ((LiricalDifferentialDiagnosisEngine) engine).getAnalysisOptions();
 
-                var diseaseSubsetOptions = AnalysisOptions.builder()
-                        .useStrictPenalties(originalOptions.useStrictPenalties())
-                        .useGlobal(originalOptions.useGlobal())
-                        .pretestProbability(PretestDiseaseProbabilities.uniform(initialDiagnosesIds))
-                        .addTargetDiseases(initialDiagnosesIds)
-                        .build();
-                DifferentialDiagnosisEngine diseaseSubsetEngine = liricalDifferentialDiagnosisEngineConfigurer.configure(diseaseSubsetOptions);
-
+                    var diseaseSubsetOptions = AnalysisOptions.builder()
+                            .useStrictPenalties(originalOptions.useStrictPenalties())
+                            .useGlobal(originalOptions.useGlobal())
+                            .pretestProbability(PretestDiseaseProbabilities.uniform(initialDiagnosesIds))
+                            .addTargetDiseases(initialDiagnosesIds)
+                            .build();
+                    diseaseSubsetEngine = liricalDifferentialDiagnosisEngineConfigurer.configure(diseaseSubsetOptions);
+                } else if (engine instanceof PhenomizerDifferentialDiagnosisEngine) {
+                    diseaseSubsetEngine = engine;
+                }
                 assert maxoToHpoTermIdMap != null;
                 RankMaxo rankMaxo = ((MaxoDiffRefiner) diffDiagRefiner).getRankMaxo(initialDiagnoses,
                         diseaseSubsetEngine,

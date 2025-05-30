@@ -34,6 +34,11 @@
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
+            <groupId>org.monarchinitiative.maxodiff</groupId>
+            <artifactId>maxodiff-phenomizer</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
             <groupId>org.monarchinitiative.phenol</groupId>
             <artifactId>phenol-core</artifactId>
         </dependency>

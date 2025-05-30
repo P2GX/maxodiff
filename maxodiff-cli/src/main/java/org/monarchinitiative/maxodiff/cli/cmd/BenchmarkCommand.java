@@ -347,17 +347,11 @@ public class BenchmarkCommand extends DifferentialDiagnosisCommand {
 
                                         double diff = topMaxoAscertainablePhenotypes.size() - meanNDiscoverablePhenotypesAllMaxoTerms;
 
-//                                            double validationScore_rank = ValidationModel.rankDiff(initialDiagnoses, maxoTermDiagnoses).validationScore();
-//                                            double validationScore_weightedRank = ValidationModel.weightedRankDiff(initialDiagnoses, maxoTermDiagnoses).validationScore();
-//                                            double validationScore_score = ValidationModel.scoreDiff(initialDiagnoses, maxoTermDiagnoses).validationScore();
-
                                         writeResults(phenopacketName, allSampleHpoTerms, allSampleHpoTerms.size(), nDiseases, nRepetitions,
                                                 topMaxoId.toString(), maxScoreTermLabel, maxScoreValue, nAllMaxoDiscoverablePhenotypes,
                                                 topMaxoAscertainablePhenotypes, topMaxoAscertainablePhenotypes.size(),
                                                 meanNDiscoverablePhenotypesAllMaxoTerms, diff,
-//                                                    validationScore_rank, validationScore_weightedRank, validationScore_score,
                                                 e.getKey(), printer);
-
                                     }
 
                                     if (e.getKey().equals("rank") | e.getKey().equals("ddScore") | e.getKey().equals("ksTest")) {
@@ -444,7 +438,7 @@ public class BenchmarkCommand extends DifferentialDiagnosisCommand {
                                      List<TermId> sampleIds,
                                      int nSampleIds,
                                      int nDiseases,
-                                     double weight,
+                                     int nRepetitions,
                                      String maxoId,
                                      String maxoLabel,
                                      double maxoFinalScore,
@@ -453,9 +447,6 @@ public class BenchmarkCommand extends DifferentialDiagnosisCommand {
                                      int nTopMaxoHpoTerms,
                                      double meanNDiscPhenotypes,
                                      double diff,
-//                                     double validationScore_rank,
-//                                     double validationScore_weightedRank,
-//                                     double validationScore_score,
                                      String refinerType,
                                      CSVPrinter printer) {
 
@@ -464,7 +455,7 @@ public class BenchmarkCommand extends DifferentialDiagnosisCommand {
             printer.print(sampleIds);
             printer.print(nSampleIds);
             printer.print(nDiseases);
-            printer.print(weight);
+            printer.print(nRepetitions);
             printer.print(maxoId);
             printer.print(maxoLabel);
             printer.print(maxoFinalScore);
@@ -473,9 +464,6 @@ public class BenchmarkCommand extends DifferentialDiagnosisCommand {
             printer.print(nTopMaxoHpoTerms);
             printer.print(meanNDiscPhenotypes);
             printer.print(diff);
-//            printer.print(validationScore_rank);
-//            printer.print(validationScore_weightedRank);
-//            printer.print(validationScore_score);
             printer.print(refinerType);
             printer.println();
         } catch (IOException e) {
@@ -517,23 +505,4 @@ public class BenchmarkCommand extends DifferentialDiagnosisCommand {
             LOGGER.error("Error writing all MAxO ascertainable phenotype results: {}", e.getMessage(), e);
         }
     }
-
-    protected Map<TermId, List<DifferentialDiagnosis>> getMaxoTermDifferentialDiagnosesMap(DiffDiagRefiner refiner, RefinementOptions options,
-                                                                                           Sample sample, LiricalDifferentialDiagnosisEngine engine,
-                                                                                           Map<Integer, Map<TermId, List<DifferentialDiagnosis>>> nDiseaseMaxoTermToDifferentialDiagnosesMap,
-                                                                                           Map<TermId, Set<TermId>> maxoToHpoTermIdMap) {
-        Map<TermId, List<DifferentialDiagnosis>> maxoTermToDifferentialDiagnosesMap = null;
-        if (refiner instanceof MaxoDiffRefiner) {
-            Integer nMapDiseases = options.nDiseases();
-            if (!nDiseaseMaxoTermToDifferentialDiagnosesMap.containsKey(nMapDiseases)) {
-                maxoTermToDifferentialDiagnosesMap = refiner
-                        .getMaxoTermToDifferentialDiagnosesMap(sample, engine, maxoToHpoTermIdMap, nMapDiseases);
-                nDiseaseMaxoTermToDifferentialDiagnosesMap.put(nMapDiseases, maxoTermToDifferentialDiagnosesMap);
-            }
-            maxoTermToDifferentialDiagnosesMap = nDiseaseMaxoTermToDifferentialDiagnosesMap.get(nMapDiseases);
-        }
-
-        return maxoTermToDifferentialDiagnosesMap;
-    }
-
 }

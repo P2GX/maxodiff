@@ -23,7 +23,6 @@ import java.util.Set;
  */
 public interface DiffDiagRefiner {
 
-
     RefinementResults run(Sample sample,
                           Collection<DifferentialDiagnosis> differentialDiagnoses,
                           RefinementOptions options,

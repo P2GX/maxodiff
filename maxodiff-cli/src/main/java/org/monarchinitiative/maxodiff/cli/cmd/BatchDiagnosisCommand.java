@@ -2,6 +2,7 @@ package org.monarchinitiative.maxodiff.cli.cmd;
 
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
+import org.monarchinitiative.maxodiff.phenomizer.ScoringMode;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -70,7 +71,7 @@ public class BatchDiagnosisCommand extends DifferentialDiagnosisCommand {
 
         try (BufferedWriter writer = openOutputFileWriter(maxodiffResultsFilePath); CSVPrinter printer = CSVFormat.DEFAULT.print(writer)) {
             printer.printRecord("phenopacket", "disease_id", "maxo_id", "maxo_label",
-                    "n_diseases", "disease_ids", "n_repetitions", "weight", "score"); // header
+                    "n_diseases", "disease_ids", "n_repetitions", "score"); // header
 
             for (Path phenopacketPath : phenopacketPaths) {
                 for (int nDiseases : nDiseasesList) {
@@ -78,8 +79,9 @@ public class BatchDiagnosisCommand extends DifferentialDiagnosisCommand {
                         try {
 
                             String phenopacketFileName = phenopacketPath.toFile().getName();
+                            ScoringMode scoringMode = ScoringMode.ONE_SIDED;
 
-                            runSingleMaxodiffAnalysis(phenopacketPath, phenopacketFileName, nDiseases, nRepetitions, false, printer);
+                            runSingleMaxodiffAnalysis(phenopacketPath, phenopacketFileName, nDiseases, nRepetitions, engineArg, scoringMode, false, printer);
 
 
                             Map<String, List<Object>> resultsMap = getResultsMap();

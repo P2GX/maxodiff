@@ -66,7 +66,7 @@ public class CandidateDiseaseScores {
                     maxoAddedExcludedHpoIds.add(hpoId);
                 }
             }
-            Set<TermId> ascertainablePhenotypeDescendants = OntologyAlgorithm.getDescendents(ontology, hpoId);
+            Set<TermId> ascertainablePhenotypeDescendants = ontology.graph().getDescendantSet(hpoId);
             for (TermId descHpoId : ascertainablePhenotypeDescendants) {
                 if (maxoBenefitHpoIds.contains(descHpoId)) {
                     if (!excluded.contains(descHpoId)) {
