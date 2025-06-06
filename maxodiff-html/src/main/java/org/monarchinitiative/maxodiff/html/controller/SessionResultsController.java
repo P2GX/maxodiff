@@ -2,12 +2,12 @@ package org.monarchinitiative.maxodiff.html.controller;
 
 import org.monarchinitiative.lirical.core.analysis.AnalysisOptions;
 import org.monarchinitiative.lirical.core.analysis.probability.PretestDiseaseProbabilities;
-import org.monarchinitiative.lirical.core.exception.LiricalException;
 import org.monarchinitiative.maxodiff.core.SimpleTerm;
 import org.monarchinitiative.maxodiff.core.analysis.*;
 import org.monarchinitiative.maxodiff.core.analysis.refinement.*;
 import org.monarchinitiative.maxodiff.core.diffdg.DifferentialDiagnosisEngine;
 import org.monarchinitiative.maxodiff.html.results.HtmlResults;
+import org.monarchinitiative.maxodiff.html.service.RankMaxoService;
 import org.monarchinitiative.maxodiff.lirical.LiricalDifferentialDiagnosisEngine;
 import org.monarchinitiative.maxodiff.core.model.DifferentialDiagnosis;
 import org.monarchinitiative.maxodiff.core.model.RankMaxo;
@@ -20,6 +20,7 @@ import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
 import org.monarchinitiative.phenol.ontology.data.MinimalOntology;
 import org.monarchinitiative.phenol.ontology.data.Ontology;
 import org.monarchinitiative.phenol.ontology.data.TermId;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
@@ -34,8 +35,8 @@ import java.util.stream.Stream;
         "hpoTermCounts", "maxoToHpoTermIdMap", "maxoTermToDifferentialDiagnosesMap"})
 public class SessionResultsController {
 
-//    @Autowired
-//    SessionResultsService sessionResultsService;
+    @Autowired
+    RankMaxoService rankMaxoService;
 
     private final BiometadataService biometadataService;
 
@@ -51,6 +52,10 @@ public class SessionResultsController {
 
     private final Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxoTermMap;
 
+    private volatile double progress = 0.;
+
+    private RankMaxo rankMaxo;
+
     public SessionResultsController(
             BiometadataService biometadataService,
             DiffDiagRefiner diffDiagRefiner,
@@ -58,7 +63,7 @@ public class SessionResultsController {
             Ontology hpo,
             HpoDiseases hpoDiseases,
             Map<TermId, Set<TermId>> hpoToMaxoIdMap,
-            Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxoTermMap
+            Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxoTermMap, RankMaxoService rankMaxoService
     ) {
         this.biometadataService = biometadataService;
         this.diffDiagRefiner = diffDiagRefiner;
@@ -67,6 +72,7 @@ public class SessionResultsController {
         this.hpoDiseases = hpoDiseases;
         this.hpoToMaxoIdMap = hpoToMaxoIdMap;
         this.hpoToMaxoTermMap = hpoToMaxoTermMap;
+        this.rankMaxoService = rankMaxoService;
     }
 
     @RequestMapping("/sessionResults")
@@ -155,11 +161,11 @@ public class SessionResultsController {
                     diseaseSubsetEngine = engine;
                 }
                 assert maxoToHpoTermIdMap != null;
-                RankMaxo rankMaxo = ((MaxoDiffRefiner) diffDiagRefiner).getRankMaxo(initialDiagnoses,
+                rankMaxo = ((MaxoDiffRefiner) diffDiagRefiner).getRankMaxo(initialDiagnoses,
                         diseaseSubsetEngine,
                         maxoToHpoTermIdMap,
                         diseaseProbModel);
-                model.addAttribute("progress", rankMaxo.updateProgress());
+                model.addAttribute("progress", rankMaxo.getProgress());
                 refinementResults = diffDiagRefiner.run(sample,
                         orderedDiagnoses,
                         options,
@@ -241,6 +247,23 @@ public class SessionResultsController {
             model.addAttribute("htmlTemplateString", htmlString);
         }
         return "sessionResults";
+    }
+
+    @GetMapping("/progress")
+    public int getProgress() {
+        return rankMaxoService.getProgressPercentage();
+    }
+
+    @GetMapping("/start-task")
+    @ResponseBody
+    public void startTask() {
+        progress = rankMaxo.getProgress();
+        System.out.println(progress);
+    }
+
+    @GetMapping("/progress-bar")
+    public String showProgressPage() {
+        return "progress";
     }
 
 

@@ -40,7 +40,7 @@ public class BaseDiffDiagRefiner implements DiffDiagRefiner {
                                  RefinementOptions options,
                                  RankMaxo rankMaxo,
                                  Map<TermId, List<HpoFrequency>> hpoTermCounts,
-                                 Map<TermId, Set<TermId>> maxoToHpoTermIdMap) {
+                                 Map<TermId, Set<TermId>> maxoToHpoTermIdMap) throws Exception {
 
         List<MaxodiffResult> maxodiffResultsList = new ArrayList<>();
         List<DifferentialDiagnosis> initialDiagnoses = differentialDiagnoses.stream()
@@ -50,10 +50,9 @@ public class BaseDiffDiagRefiner implements DiffDiagRefiner {
                 .map(DifferentialDiagnosis::diseaseId)
                 .collect(Collectors.toCollection(LinkedHashSet::new));
 
-        Map<TermId, RankMaxoScore> maxoTermRanks = rankMaxo.rankMaxoTerms(sample, options.nRepetitions(), initialDiagnosesIds);
-        for (Map.Entry<TermId, RankMaxoScore> entry : maxoTermRanks.entrySet()) {
-            TermId maxoId = entry.getKey();
-            RankMaxoScore rankMaxoScore = entry.getValue();
+        List<RankMaxoScore> maxoTermRanks = rankMaxo.rankMaxoTerms(sample, options.nRepetitions(), initialDiagnosesIds);
+        for (RankMaxoScore rankMaxoScore : maxoTermRanks) {
+            TermId maxoId = rankMaxoScore.maxoId();
             double scoreDiff = rankMaxoScore.maxoScore();
             Set<TermId> diseaseIds = new LinkedHashSet<>();
             List<DifferentialDiagnosis> differentialDiagnosisModels = new ArrayList<>(differentialDiagnoses);
