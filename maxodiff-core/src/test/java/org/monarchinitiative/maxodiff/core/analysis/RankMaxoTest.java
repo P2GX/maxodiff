@@ -100,7 +100,7 @@ public class RankMaxoTest {
     // Skip this test because it doesn't compile on push
     @Test
     @Disabled
-    public void testRankMaxoTerms() {
+    public void testRankMaxoTerms() throws Exception {
         Set<TermId> diseaseIds = initialDiagnoses.stream()
                 .map(DifferentialDiagnosis::diseaseId).collect(Collectors.toSet());
         Sample s1 = TestResources.getExampleSample();
