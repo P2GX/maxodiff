@@ -61,14 +61,6 @@
     <p><input type="submit" value="Run Differential Diagnosis Calculation"
               th:disabled="${differentialDiagnoses == null or differentialDiagnoses.isEmpty()}"
               onclick="startTask()"/></p>
-<!--    <div-->
-<!--            role="progressbar"-->
-<!--            th:style="'width:' + ( ${progress} == 0  ? '0' : ${progress} ) + '%;'"-->
-<!--            aria-valuemin="0"-->
-<!--            aria-valuemax="100"-->
-<!--            th:attr="aria-valuenow=${progress}"-->
-<!--            th:text="${progress}">-->
-<!--    </div>-->
 
     <div id="progressBarContainer">
         <div id="progressBar">0%</div>
@@ -76,7 +68,6 @@
 
     <script>
         function startTask() {
-            fetch('/start-task');
             updateProgress();
         }
 
@@ -85,10 +76,11 @@
                 fetch('/progress')
                     .then(response => response.json())
                     .then(data => {
-                        let progress = data.progress;
+                        let progress = data * 100;
+                        let roundedProgress = Math.round(progress * 100) / 100;
                         const bar = document.getElementById('progressBar');
                         bar.style.width = progress + '%';
-                        bar.innerText = progress + '%';
+                        bar.innerText = roundedProgress + '%';
 
                         if (progress >= 100) {
                             clearInterval(interval);

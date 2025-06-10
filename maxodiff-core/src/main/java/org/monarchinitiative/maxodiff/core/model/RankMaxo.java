@@ -1,10 +1,7 @@
 package org.monarchinitiative.maxodiff.core.model;
 
 import org.monarchinitiative.maxodiff.core.SimpleTerm;
-import org.monarchinitiative.maxodiff.core.analysis.EvaluateMaxoTerm;
-import org.monarchinitiative.maxodiff.core.analysis.MaxoDDResults;
-import org.monarchinitiative.maxodiff.core.analysis.RankMaxoScore;
-import org.monarchinitiative.maxodiff.core.analysis.ValidationModel;
+import org.monarchinitiative.maxodiff.core.analysis.*;
 import org.monarchinitiative.maxodiff.core.diffdg.DifferentialDiagnosisEngine;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDisease;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
@@ -25,6 +22,7 @@ public class RankMaxo {
     private final MaxoHpoTermProbabilities maxoHpoTermProbabilities;
     private final DifferentialDiagnosisEngine engine;
     double progress;
+    RankMaxoProgress rankMaxoProgress;
     private final MinimalOntology minimalOntology;
     private final Ontology ontology;
 
@@ -60,16 +58,13 @@ public class RankMaxo {
         AtomicInteger completedTasks = new AtomicInteger(0);
         List<Callable<RankMaxoScore>> tasks = new ArrayList<>();
         for (TermId maxoId : maxoToHpoTermIdMap.keySet()) {
+            rankMaxoProgress = new RankMaxoProgress(maxoToHpoTermIdMap.size());
             tasks.add(() -> {
-                try {
-                    EvaluateMaxoTerm evaluateMaxoTerm = new EvaluateMaxoTerm(hpoToMaxoTermMap, maxoToHpoTermIdMap, maxoHpoTermProbabilities,
-                            engine,  minimalOntology, ontology,  sampleHpoIds,  ppkt, nRepetitions, diseaseIds, maxoId);
-                    int done = completedTasks.incrementAndGet();
-                    System.out.println(done);
-                    return evaluateMaxoTerm.call();
-                } finally {
-//                    rankMaxoService.taskCompleted(); // update progress
-                }
+                EvaluateMaxoTerm evaluateMaxoTerm = new EvaluateMaxoTerm(hpoToMaxoTermMap, maxoToHpoTermIdMap, maxoHpoTermProbabilities,
+                        engine,  minimalOntology, ontology,  sampleHpoIds,  ppkt, nRepetitions, diseaseIds, maxoId);
+                double done = completedTasks.incrementAndGet();
+                rankMaxoProgress.updateProgress(maxoId, done);
+                return evaluateMaxoTerm.call();
             });
         }
 
@@ -106,6 +101,10 @@ public class RankMaxo {
 
     public double getProgress() {
         return progress;
+    }
+
+    public RankMaxoProgress getRankMaxoProgress() {
+        return rankMaxoProgress;
     }
 
 }
