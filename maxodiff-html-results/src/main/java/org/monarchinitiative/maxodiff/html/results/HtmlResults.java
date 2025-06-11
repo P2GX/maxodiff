@@ -93,15 +93,15 @@ public class HtmlResults {
             String maxoLabel = biometadataService.maxoLabel(maxoId).orElse("unknown");
             String maxoTermHeader = idx + ") " + maxoId + ": " + maxoLabel;
 
+            resultsString.append("<div class=\"section-box\">");
             resultsString.append("<h2>").append(maxoTermHeader).append("</h2>\n\n");
 
-            resultsString.append("<table style='border: 1px solid black;\n" +
-                            "    background-color: peachpuff;'>\n  <tbody>\n    <tr>\n      " +
-                            "<td style='font-weight:bold;'>&Delta;Score:</td><td>")
+            resultsString.append("<table class=\"scoreTable\">\n  <tbody>\n    <tr>\n      " +
+                            "<td>&Delta;Score:</td><td>")
                     .append(String.format("%.2f", result.rankMaxoScore().maxoScore()))
-                    .append("</td>\n    </tr>\n    <tr><td style='font-weight:bold;'>N Diseases:</td><td>")
+                    .append("</td>\n    </tr>\n    <tr><td>N Diseases:</td><td>")
                     .append(result.rankMaxoScore().maxoOmimTermIds().size())
-                    .append("</td>\n    </tr>\n    <tr><td style='font-weight:bold;'>N Observed HPO Terms:</td><td>")
+                    .append("</td>\n    </tr>\n    <tr><td>N Observed HPO Terms:</td><td>")
                     .append(result.rankMaxoScore().discoverableObservedHpoTermIds().size())
                     .append("</td>\n    </tr>\n  </tbody>\n</table>\n<p></p>\n\n");
 
@@ -115,14 +115,16 @@ public class HtmlResults {
             resultsString.append("<table class='countsTable'>\n" +
                     "        <thead>\n" +
                     "            <th></th>\n" +
-                    "            <th style = \"" + thStyleString + "\">Average Rank Change</th>\n" +
+                    "            <th><span style=\"text-decoration: overline;\">\n" +
+                    "                <span style=\"font-weight: bold; color: blue; font-size: 1.0em;\">&#916;&thinsp;R</span>\n" +
+                    "            </span></th>\n" +
                     "            <th></th>\n");
 
             for (TermId hpoId : result.rankMaxoScore().discoverableObservedHpoTermIds()) {
                 String hpoLabelString = hpoTermsMap.get(hpoId);
                 String hpoLabel = hpoLabelString.length() > 30 ? hpoLabelString.substring(0,30) + "..." : hpoLabelString;
                 resultsString.append("                <th onclick=\"window.open('https://hpo.jax.org/browse/term/" + hpoId + "')\"\n" +
-                        "                    style=\"color: blue; " + thStyleString + "\">" + hpoLabel + "</th>\n");
+                        "                    style=\"color: blue; " + thStyleString + "\"><div>" + hpoLabel + "</div></th>\n");
             }
 
             resultsString.append("        </thead>\n" +
@@ -200,6 +202,7 @@ public class HtmlResults {
 
             resultsString.append("        </tbody>\n" +
                     "    </table>");
+            resultsString.append("</div>");
 
         }
 
