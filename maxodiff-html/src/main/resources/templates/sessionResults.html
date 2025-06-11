@@ -38,18 +38,25 @@
         }
 
         .countsTable th {
-            text-align: center;
-            vertical-align: bottom;
-            horizontal-align: right;
-            transform-origin: bottom left;
-            transform: rotate(315deg);
+            position: relative;
+            height: 200px;
+            width: 50px; /* needed for layout */
             padding: 0;
             margin: 0;
-            height: 200px;
-            white-space: nowrap;
-            max-width: 50px;
             overflow: visible;
-            text-overflow: ellipsis;
+            white-space: nowrap;
+            vertical-align: bottom;
+            text-align: center;
+        }
+
+        .countsTable th > div {
+           /*  transform: rotate(315deg); or -45deg */
+            transform-origin: bottom left;
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(+0%) rotate(315deg); /* better centering */
+            white-space: nowrap;
         }
 
         .diffDiagInputTable, .fileInputTable {
@@ -138,6 +145,15 @@
             text-align: center;
             line-height: 30px;
             color: white;
+        }
+
+        .scoreTable {
+            border: 1px solid black;
+            background-color: peachpuff;
+        }
+
+        .scoreTable td:first-child {
+            font-weight: bold;
         }
     </style>
 </head>
@@ -260,9 +276,10 @@
             <th></th>
             <th:block th:each="hpoId : ${maxoTable.rankMaxoScore.discoverableObservedHpoTermIds}">
                 <th th:onclick="|window.open('@{|https://hpo.jax.org/browse/term/${hpoId}|}')|"
-                    th:text="${#strings.length(allHpoTermsMap.get(hpoId)) > 30} ?
-                    ${#strings.substring(allHpoTermsMap.get(hpoId), 0, 30) + '...'} : ${allHpoTermsMap.get(hpoId)}"
-                    style="color: blue"></th>
+                    style="color: blue">
+                    <div th:text="${#strings.length(allHpoTermsMap.get(hpoId)) > 30} ?
+                    ${#strings.substring(allHpoTermsMap.get(hpoId), 0, 30) + '...'} : ${allHpoTermsMap.get(hpoId)}"></div>
+                </th>
             </th:block>
         </tr>
         </thead>
