@@ -272,7 +272,9 @@
         <thead>
         <tr th:if="${refiner == 'score'}">
             <th></th>
-            <th>Average Rank Change</th>
+            <th><span style="text-decoration: overline;">
+                <span style="font-weight: bold; color: blue; font-size: 1.0em;">&#916;&thinsp;R</span>
+            </span></th>
             <th></th>
             <th:block th:each="hpoId : ${maxoTable.rankMaxoScore.discoverableObservedHpoTermIds}">
                 <th th:onclick="|window.open('@{|https://hpo.jax.org/browse/term/${hpoId}|}')|"
