@@ -2,7 +2,6 @@ package org.monarchinitiative.maxodiff.html.controller;
 
 import org.monarchinitiative.lirical.core.analysis.AnalysisOptions;
 import org.monarchinitiative.lirical.core.analysis.probability.PretestDiseaseProbabilities;
-import org.monarchinitiative.lirical.core.exception.LiricalException;
 import org.monarchinitiative.maxodiff.core.SimpleTerm;
 import org.monarchinitiative.maxodiff.core.analysis.*;
 import org.monarchinitiative.maxodiff.core.analysis.refinement.*;
@@ -34,9 +33,6 @@ import java.util.stream.Stream;
         "hpoTermCounts", "maxoToHpoTermIdMap", "maxoTermToDifferentialDiagnosesMap"})
 public class SessionResultsController {
 
-//    @Autowired
-//    SessionResultsService sessionResultsService;
-
     private final BiometadataService biometadataService;
 
     private DiffDiagRefiner diffDiagRefiner;
@@ -50,6 +46,10 @@ public class SessionResultsController {
     private final Map<TermId, Set<TermId>> hpoToMaxoIdMap;
 
     private final Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxoTermMap;
+
+    private volatile double progress = 0.;
+
+    private RankMaxo rankMaxo;
 
     public SessionResultsController(
             BiometadataService biometadataService,
@@ -155,11 +155,10 @@ public class SessionResultsController {
                     diseaseSubsetEngine = engine;
                 }
                 assert maxoToHpoTermIdMap != null;
-                RankMaxo rankMaxo = ((MaxoDiffRefiner) diffDiagRefiner).getRankMaxo(initialDiagnoses,
+                rankMaxo = ((MaxoDiffRefiner) diffDiagRefiner).getRankMaxo(initialDiagnoses,
                         diseaseSubsetEngine,
                         maxoToHpoTermIdMap,
                         diseaseProbModel);
-                model.addAttribute("progress", rankMaxo.updateProgress());
                 refinementResults = diffDiagRefiner.run(sample,
                         orderedDiagnoses,
                         options,
@@ -241,6 +240,17 @@ public class SessionResultsController {
             model.addAttribute("htmlTemplateString", htmlString);
         }
         return "sessionResults";
+    }
+
+    @GetMapping("/progress")
+    @ResponseBody
+    public double getProgress() {
+        return rankMaxo.getRankMaxoProgress().getTotalProgress();
+    }
+
+    @GetMapping("/progress-bar")
+    public String showProgressPage() {
+        return "progress";
     }
 
 

@@ -49,9 +49,9 @@ public class DownloadCommand implements Callable<Integer>{
         LOGGER.info("Downloading maxodiff data files to {}", datadir.toAbsolutePath());
         downloadMaxodiffData(datadir, overwrite);
         
-        Path liricalDataPath = datadir.resolve("lirical");
-        LOGGER.info("Downloading LIRICAL data files to {}", liricalDataPath.toAbsolutePath());
-        downloadLiricalData(liricalDataPath, overwrite);
+//        Path liricalDataPath = datadir.resolve("lirical");
+//        LOGGER.info("Downloading LIRICAL data files to {}", liricalDataPath.toAbsolutePath());
+//        downloadLiricalData(liricalDataPath, overwrite);
         
         LOGGER.info("Download is complete!");
         LOGGER.info("Bye! 😎");

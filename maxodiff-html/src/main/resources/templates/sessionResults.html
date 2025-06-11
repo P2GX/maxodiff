@@ -4,6 +4,25 @@
 <head>
     <meta charset="UTF-8">
     <title>maxodiff analysis</title>
+
+    <style>
+        #progressBarContainer {
+            width: 20%;
+            background-color: #f3f3f3;
+            border: 1px solid #ccc;
+            height: 30px;
+            margin: 20px 0;
+        }
+
+        #progressBar {
+            height: 100%;
+            width: 0%;
+            background-color: #4caf50;
+            text-align: center;
+            line-height: 30px;
+            color: white;
+        }
+    </style>
 </head>
 <body>
 
@@ -39,14 +58,37 @@
         </tbody>
     </table>
 
-    <p><input type="submit" value="Run Differential Diagnosis Calculation" th:disabled="${differentialDiagnoses == null or differentialDiagnoses.isEmpty()}"/></p>
-    <div
-            role="progressbar"
-            th:style="'width:' + ( ${progress} == 0  ? '0' : ${progress} ) + '%;'"
-            aria-valuemin="0"
-            aria-valuemax="100"
-            th:text="${progress}">
+    <p><input type="submit" value="Run Differential Diagnosis Calculation"
+              th:disabled="${differentialDiagnoses == null or differentialDiagnoses.isEmpty()}"
+              onclick="startTask()"/></p>
+
+    <div id="progressBarContainer">
+        <div id="progressBar">0%</div>
     </div>
+
+    <script>
+        function startTask() {
+            updateProgress();
+        }
+
+        function updateProgress() {
+            const interval = setInterval(() => {
+                fetch('/progress')
+                    .then(response => response.json())
+                    .then(data => {
+                        let progress = data * 100;
+                        let roundedProgress = Math.round(progress * 100) / 100;
+                        const bar = document.getElementById('progressBar');
+                        bar.style.width = progress + '%';
+                        bar.innerText = roundedProgress + '%';
+
+                        if (progress >= 100) {
+                            clearInterval(interval);
+                        }
+                    });
+            }, 1000);
+        }
+    </script>
 </form>
 
 <hr class="line">

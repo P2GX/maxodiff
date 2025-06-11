@@ -29,7 +29,7 @@ public interface DiffDiagRefiner {
                           RankMaxo rankMaxo,
                           Map<TermId, List<HpoFrequency>> hpoTermCounts,
                           Map<TermId, Set<TermId>> maxoToHpoTermIdMap
-    );
+    ) throws Exception;
 
 
     List<DifferentialDiagnosis> getOrderedDiagnoses(Collection<DifferentialDiagnosis> originalDifferentialDiagnoses,

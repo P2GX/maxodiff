@@ -100,14 +100,14 @@ public class RankMaxoTest {
     // Skip this test because it doesn't compile on push
     @Test
     @Disabled
-    public void testRankMaxoTerms() {
+    public void testRankMaxoTerms() throws Exception {
         Set<TermId> diseaseIds = initialDiagnoses.stream()
                 .map(DifferentialDiagnosis::diseaseId).collect(Collectors.toSet());
         Sample s1 = TestResources.getExampleSample();
         Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxoTermMap = TestResources.hpoToMaxo();
         RankMaxo rankMaxo = new RankMaxo(hpoToMaxoTermMap, maxoToHpoTermIdMap, maxoHpoTermProbabilities, ENGINE,
                 minimalOntology, ontology);
-        Map<TermId, RankMaxoScore> maxoTermRanks = rankMaxo.rankMaxoTerms(s1, 2, diseaseIds);
+        List<RankMaxoScore> maxoTermRanks = rankMaxo.rankMaxoTerms(s1, 2, diseaseIds);
         System.out.println(maxoTermRanks);
     }
 
