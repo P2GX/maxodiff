@@ -150,6 +150,12 @@
                     ${#strings.substring(allHpoTermsMap.get(hpoId), 0, 30) + '...'} : ${allHpoTermsMap.get(hpoId)}"
                     style="color: blue"></th>
             </th:block>
+            <th:block th:each="hpoId : ${maxoTable.rankMaxoScore.remainingHpoTermIds}">
+                <th th:onclick="|window.open('@{|https://hpo.jax.org/browse/term/${hpoId}|}')|"
+                    th:text="${#strings.length(allHpoTermsMap.get(hpoId)) > 30} ?
+                    ${#strings.substring(allHpoTermsMap.get(hpoId), 0, 30) + '...'} : ${allHpoTermsMap.get(hpoId)}"
+                    style="color: blue"></th>
+            </th:block>
         </tr>
         </thead>
 
@@ -186,6 +192,15 @@
                 <td></td>
                 <th:block th:each= "hpoId : ${maxoTable.rankMaxoScore.discoverableObservedHpoTermIds}">
                     <th:block th:with="ct=${maxoTable.rankMaxoScore.hpoTermIdRepCtsMap.get(omimId).get(hpoId)}">
+                        <td>
+                            <div th:style="${ct} == null ?
+                            |width: 80%; height: 80%; margin: auto; background: rgba(160, 32, 240, 0)| :
+                            |width: 80%; height: 80%; margin: auto; background: rgba(160, 32, 240, 1)|"></div>
+                        </td>
+                    </th:block>
+                </th:block>
+                <th:block th:each= "hpoId : ${maxoTable.rankMaxoScore.remainingHpoTermIds}">
+                    <th:block th:with="ct=${maxoTable.rankMaxoScore.remainingHpoTermIdRepCtsMap.get(omimId).get(hpoId)}">
                         <td>
                             <div th:style="${ct} == null ?
                             |width: 80%; height: 80%; margin: auto; background: rgba(160, 32, 240, 0)| :

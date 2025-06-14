@@ -54,6 +54,16 @@ public class CandidateDiseaseScores {
         AscertainablePhenotypes ascertainablePhenotypes = new AscertainablePhenotypes(hpoDiseases);
         TermId selectedDiseaseId = getDiseaseId(diseaseRankProbabilityMap);
         Set<TermId> ascertainablePhenotypeIds = ascertainablePhenotypes.getAscertainablePhenotypeIds(ppkt, selectedDiseaseId);
+        Set<TermId> remainingAscertainablePhenotypeIds = new HashSet<>();
+        for (TermId diseaseId : diseaseRankProbabilityMap.keySet()) {
+            if (!diseaseId.equals(selectedDiseaseId)) {
+                Set<TermId> idAscertainablePhenotypes = ascertainablePhenotypes.getAscertainablePhenotypeIds(ppkt, diseaseId);
+                idAscertainablePhenotypes.stream()
+                        .filter(ascertainableId ->
+                                !ascertainablePhenotypeIds.contains(ascertainableId))
+                                                          .forEach(remainingAscertainablePhenotypeIds::add);
+            }
+        }
         Set<TermId> maxoAddedObservedHpoIds = new HashSet<>();
         Set<TermId> maxoAddedExcludedHpoIds = new HashSet<>();
         for (TermId hpoId : ascertainablePhenotypeIds) {
@@ -97,8 +107,9 @@ public class CandidateDiseaseScores {
         HpoTermArranger hpoTermArranger = new DfsHpoTermArranger(ontology);
         Set<TermId> maxoAddedObservedHpoIdsOrdered = new HashSet<>(hpoTermArranger.arrangeTerms(maxoAddedObservedHpoIds.stream().toList()));
         Set<TermId> maxoAddedExcludedHpoIdsOrdered = new HashSet<>(hpoTermArranger.arrangeTerms(maxoAddedExcludedHpoIds.stream().toList()));
+        Set<TermId> remainingHpoIdsOrdered = new HashSet<>(hpoTermArranger.arrangeTerms(remainingAscertainablePhenotypeIds.stream().toList()));
 
-        return new MaxoDDResults(maxoAddedObservedHpoIdsOrdered, maxoAddedExcludedHpoIdsOrdered, newMaxoDiagnoses);
+        return new MaxoDDResults(maxoAddedObservedHpoIdsOrdered, maxoAddedExcludedHpoIdsOrdered, newMaxoDiagnoses, remainingHpoIdsOrdered);
     }
 
     private boolean getTestResult(double maxoTermBenefitProbability) {
