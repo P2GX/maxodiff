@@ -1,11 +1,135 @@
 <!DOCTYPE html SYSTEM "http://www.thymeleaf.org/dtd/xhtml1-strict-thymeleaf-spring4-4.dtd">
 <html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
-<link rel="stylesheet" type="text/css" th:href="@{/css/style.css}"/>
+<!--<link rel="stylesheet" type="text/css" th:href="@{/css/style.css}"/>-->
 <head>
     <meta charset="UTF-8">
     <title>maxodiff analysis</title>
 
     <style>
+        * {
+          font-family: Arial, Helvetica, sans-serif;
+        }
+
+        .apexcharts-tooltip {
+            font-family: Arial, Helvetica, sans-serif !important;
+            white-space: pre-wrap !important;
+        }
+
+        .countsTable {
+          table-layout: fixed;
+        }
+
+        .countsTable td {
+            padding: 10px 10px 10px 10px;
+            height: 30px;
+            width: 10px;
+        }
+
+        .countsTable td:first-child {
+            font-weight: bold;
+            white-space: nowrap;
+            max-width: 400px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .countsTable td:nth-child(2) {
+            border-right: thick double;
+        }
+
+        .countsTable th {
+            position: relative;
+            height: 200px;
+            width: 50px; /* needed for layout */
+            padding: 0;
+            margin: 0;
+            overflow: visible;
+            white-space: nowrap;
+            vertical-align: bottom;
+            text-align: center;
+        }
+
+        .countsTable th > div {
+           /*  transform: rotate(315deg); or -45deg */
+            transform-origin: bottom left;
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(+0%) rotate(315deg); /* better centering */
+            white-space: nowrap;
+        }
+
+        .diffDiagInputTable, .fileInputTable {
+          border: 1px solid black;
+          background-color: lemonchiffon;
+          table-layout: fixed;
+        }
+
+        .diffDiagInputTable {
+          width: 400px;
+        }
+
+        .diffDiagInputTable tr td:first-child {
+          font-weight: bold;
+          width: 30px;
+        }
+
+        .diffDiagInputTable tr td:last-child {
+          width: 10px;
+        }
+
+        .nav, .navbar-header {
+           list-style-type: none;
+           margin: 0;
+           padding: 0;
+           overflow: hidden;
+           background-color: black;
+           position: sticky;
+        }
+
+        .navbar-brand {
+           display: block;
+           color: lightblue;
+           text-align: center;
+           padding: 14px 16px;
+           text-decoration: none;
+           font-weight: bold;
+        }
+
+        .nav-link {
+           float: left;
+        }
+
+        .nav-item {
+           display: block;
+           color: white;
+           text-align: center;
+           padding: 14px 16px;
+           text-decoration: none;
+        }
+
+        .nav-item:hover:not(.active) {
+           background-color: orange;
+        }
+
+        .active {
+           background-color: darkorange;
+        }
+
+        .parentCell {
+            position: relative;
+        }
+
+        .tooltip {
+            display: none;
+            position: absolute;
+            background-color: white;
+        }
+
+        .parentCell:hover span.tooltip {
+            display:block;
+        }
+
         #progressBarContainer {
             width: 20%;
             background-color: #f3f3f3;
@@ -21,6 +145,34 @@
             text-align: center;
             line-height: 30px;
             color: white;
+        }
+
+        .scoreTable {
+          width: auto;
+          border-collapse: collapse;
+          margin-bottom: 1em;
+        }
+
+        .scoreTable td {
+          padding: 0.3em 0.6em;
+          border: none;
+          font-size: 0.95em;
+        }
+
+        .section-box {
+          border: 1px solid #ccc;
+          border-left: 6px solid #007acc;
+          border-radius: 8px;
+          padding: 1em;
+          margin: 2em 0;
+          background: #f9f9f9;
+          box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .section-box h2 {
+          font-size: 1.4em;
+          color: #003366;
+          margin-bottom: 0.5em;
         }
     </style>
 </head>
@@ -93,14 +245,11 @@
 
 <hr class="line">
 
-<!--<h1 th:text="'maxodiff Analysis Results for ' + ${phenopacket}"></h1>-->
-<!--<h1 th:text="${algorithm} + ' Algorithm'" style="color: orangered"></h1>-->
 
 <h1 th:text="'maxodiff Analysis Results for ' + ${sample == null ? '' : sample.id}"></h1>
 <table>
     <tbody>
         <tr>
-<!--            <td style='font-weight:bold;'>Disease ID:</td><td th:text="${diseaseId}"></td>-->
             <td style='font-weight:bold;'>Sample Present HPO Terms:</td><td th:text="${sample == null ? '' : samplePresentTermsString}"></td>
         </tr>
         <tr>
@@ -118,6 +267,7 @@
 <h1 th:text="'Top ' + ${nDisplayed} + ' Recommended MAxO Terms'"></h1>
 
 <th:block th:each= "maxoTable, iter : ${maxoTables}">
+    <div class="section-box">
     <h2 th:text="${iter.index+1} + ') ' + ${maxoTable.maxoTermScore.maxoId} + ': ' + ${allMaxoTermsMap.get(maxoTable.maxoTermScore.maxoId)}"></h2>
     <table class="scoreTable">
         <tbody>
@@ -137,18 +287,20 @@
     <p></p>
 
 
-    <h3 th:if="${refiner == 'score'}">Table of HPO Term Repetition Counts</h3>
     <table class='countsTable'>
         <thead>
         <tr th:if="${refiner == 'score'}">
             <th></th>
-            <th>Average Rank Change</th>
+            <th><span style="text-decoration: overline;">
+                <span style="font-weight: bold; color: blue; font-size: 1.0em;">&#916;&thinsp;R</span>
+            </span></th>
             <th></th>
             <th:block th:each="hpoId : ${maxoTable.rankMaxoScore.discoverableObservedHpoTermIds}">
                 <th th:onclick="|window.open('@{|https://hpo.jax.org/browse/term/${hpoId}|}')|"
-                    th:text="${#strings.length(allHpoTermsMap.get(hpoId)) > 30} ?
-                    ${#strings.substring(allHpoTermsMap.get(hpoId), 0, 30) + '...'} : ${allHpoTermsMap.get(hpoId)}"
-                    style="color: blue"></th>
+                    style="color: blue">
+                    <div th:text="${#strings.length(allHpoTermsMap.get(hpoId)) > 30} ?
+                    ${#strings.substring(allHpoTermsMap.get(hpoId), 0, 30) + '...'} : ${allHpoTermsMap.get(hpoId)}"></div>
+                </th>
             </th:block>
             <th:block th:each="hpoId : ${maxoTable.rankMaxoScore.remainingHpoTermIds}">
                 <th th:onclick="|window.open('@{|https://hpo.jax.org/browse/term/${hpoId}|}')|"
@@ -212,7 +364,7 @@
         </th:block>
         </tbody>
     </table>
-
+    </div>
 </th:block>
 
 
