@@ -100,7 +100,7 @@ public class MaxodiffController {
                               Model model) throws Exception {
 
         if (engineName == null) {
-            engineName = "lirical";
+            engineName = "phenomizer";
         }
 
         model.addAttribute("engineName", engineName);
@@ -259,6 +259,9 @@ public class MaxodiffController {
                     diseaseSubsetEngine = engine;
                 }
                 assert maxoToHpoTermIdMap != null;
+                if (diseaseProbModel == null) {
+                    diseaseProbModel = "ranked";
+                }
                 rankMaxo = ((MaxoDiffRefiner) diffDiagRefiner).getRankMaxo(initialDiagnoses,
                         diseaseSubsetEngine,
                         maxoToHpoTermIdMap,
@@ -337,8 +340,8 @@ public class MaxodiffController {
             String htmlString = HtmlResults.writeHTMLResults(sample, nDiseases, nRepetitions, resultsList,
                     biometadataService, hpoTermCounts);
 
-            File file = new File("maxodiff-html-results/src/main/resources/templates/maxodiffResults.html");
-            String htmlTemplatePath = file.getAbsolutePath();
+            File resultsFile = new File("maxodiff-html-results/src/main/resources/templates/maxodiffResults.html");
+            String htmlTemplatePath = resultsFile.getAbsolutePath();
 
             model.addAttribute("htmlTemplatePath", htmlTemplatePath);
             model.addAttribute("htmlTemplateString", htmlString);
@@ -359,18 +362,12 @@ public class MaxodiffController {
 
 
     @GetMapping("/updateSample")
-    public String updateSample(@RequestParam(value = "engineName", required = false) String engineName,
-                               @RequestParam(value = "phenopacketPath", required = false) Path phenopacketPath,
+    public String updateSample(@RequestParam(value = "phenopacketPath", required = false) Path phenopacketPath,
                                @RequestParam(value = "id", required = false) String sampleId,
                                @RequestParam(value = "presentHpoTermIds", required = false) String presentHpoTermIds,
                                @RequestParam(value = "excludedHpoTermIds", required = false) String excludedHpoTermIds,
                                Model model) throws Exception {
 
-        if (engineName == null) {
-            engineName = "lirical";
-        }
-
-        model.addAttribute("engineName", engineName);
 
         model.addAttribute("phenopacketPath", phenopacketPath);
         model.addAttribute("sampleId", sampleId);
@@ -410,163 +407,6 @@ public class MaxodiffController {
 
         System.out.println("updateSample sample = " + sample);
         System.out.println("updateSample model sample = " + model.getAttribute("sample"));
-        System.out.println("updateSample engine = " + engineName);
-
-        return "maxodiff";
-    }
-
-    @GetMapping("/updateEngine")
-    public String updateEngine(@RequestParam(value = "engineName", required = false) String engineName,
-                               @RequestParam(value = "phenopacketPath", required = false) Path phenopacketPath,
-                               @RequestParam(value = "id", required = false) String sampleId,
-                               @RequestParam(value = "presentHpoTermIds", required = false) String presentHpoTermIds,
-                               @RequestParam(value = "excludedHpoTermIds", required = false) String excludedHpoTermIds,
-                               Model model) throws Exception {
-
-        if (engineName == null) {
-            engineName = "lirical";
-        }
-
-        model.addAttribute("engineName", engineName);
-
-        model.addAttribute("phenopacketPath", phenopacketPath);
-        model.addAttribute("sampleId", sampleId);
-        model.addAttribute("presentHpoTermIds", presentHpoTermIds);
-        model.addAttribute("excludedHpoTermIds", excludedHpoTermIds);
-
-        if (phenopacketPath != null) {
-            PhenopacketData phenopacketData = PhenopacketFileParser.readPhenopacketData(phenopacketPath);
-            if (sampleId == null | (sampleId != null && sampleId.isEmpty())) {
-                sampleId = phenopacketData.sampleId();
-            }
-            if (presentHpoTermIds == null | (presentHpoTermIds != null && presentHpoTermIds.isEmpty())) {
-                presentHpoTermIds = phenopacketData.presentHpoTermIds().map(Object::toString).collect(Collectors.joining(","));
-            }
-            if (excludedHpoTermIds == null | (excludedHpoTermIds != null && excludedHpoTermIds.isEmpty())) {
-                excludedHpoTermIds = phenopacketData.excludedHpoTermIds().map(Object::toString).collect(Collectors.joining(","));
-            }
-        }
-
-        //TODO: add other possible separators to regex
-        //TODO: only add valid termIDs to list
-        List<TermId> presentHpoTermIdsList = (presentHpoTermIds == null | (presentHpoTermIds != null && presentHpoTermIds.isEmpty())) ?
-                List.of() : Arrays.stream(presentHpoTermIds.split("[\\s,;]+"))
-                .map(String::strip)
-                .map(TermId::of)
-                .toList();
-        List<TermId> excludedHpoTermIdsList = (excludedHpoTermIds == null | (excludedHpoTermIds != null && excludedHpoTermIds.isEmpty())) ?
-                List.of() : Arrays.stream(excludedHpoTermIds.split("[\\s,;]+"))
-                .map(String::strip)
-                .map(TermId::of)
-                .toList();
-
-        Sample sample = Sample.of(sampleId,
-                presentHpoTermIdsList,
-                excludedHpoTermIdsList);
-        model.addAttribute("sample", sample);
-
-        System.out.println("updateEngine sample = " + sample);
-        System.out.println("updateEngine engine = " + engineName);
-
-        return "maxodiff";
-    }
-
-    @GetMapping("/initialDiagnoses")
-    public String initialDiagnoses(@RequestParam(value = "engineName", required = false) String engineName,
-                                   @RequestParam(value = "phenopacketPath", required = false) Path phenopacketPath,
-                                   @RequestParam(value = "id", required = false) String sampleId,
-                                   @RequestParam(value = "presentHpoTermIds", required = false) String presentHpoTermIds,
-                                   @RequestParam(value = "excludedHpoTermIds", required = false) String excludedHpoTermIds,
-                                   @RequestParam(value = "strict", required = false) boolean strict,
-                                   @RequestParam(value = "globalAnalysisMode", required = false) boolean globalAnalysisMode,
-                                   @RequestParam(value = "scoringMode", required = false) ScoringMode scoringMode,
-                                   Model model) throws Exception {
-
-        if (engineName == null) {
-            engineName = "lirical";
-        }
-
-        model.addAttribute("engineName", engineName);
-
-        model.addAttribute("phenopacketPath", phenopacketPath);
-        model.addAttribute("sampleId", sampleId);
-        model.addAttribute("presentHpoTermIds", presentHpoTermIds);
-        model.addAttribute("excludedHpoTermIds", excludedHpoTermIds);
-
-        if (phenopacketPath != null) {
-            PhenopacketData phenopacketData = PhenopacketFileParser.readPhenopacketData(phenopacketPath);
-            if (sampleId == null | (sampleId != null && sampleId.isEmpty())) {
-                sampleId = phenopacketData.sampleId();
-            }
-            if (presentHpoTermIds == null | (presentHpoTermIds != null && presentHpoTermIds.isEmpty())) {
-                presentHpoTermIds = phenopacketData.presentHpoTermIds().map(Object::toString).collect(Collectors.joining(","));
-            }
-            if (excludedHpoTermIds == null | (excludedHpoTermIds != null && excludedHpoTermIds.isEmpty())) {
-                excludedHpoTermIds = phenopacketData.excludedHpoTermIds().map(Object::toString).collect(Collectors.joining(","));
-            }
-        }
-
-        //TODO: add other possible separators to regex
-        //TODO: only add valid termIDs to list
-        List<TermId> presentHpoTermIdsList = (presentHpoTermIds == null | (presentHpoTermIds != null && presentHpoTermIds.isEmpty())) ?
-                List.of() : Arrays.stream(presentHpoTermIds.split("[\\s,;]+"))
-                .map(String::strip)
-                .map(TermId::of)
-                .toList();
-        List<TermId> excludedHpoTermIdsList = (excludedHpoTermIds == null | (excludedHpoTermIds != null && excludedHpoTermIds.isEmpty())) ?
-                List.of() : Arrays.stream(excludedHpoTermIds.split("[\\s,;]+"))
-                .map(String::strip)
-                .map(TermId::of)
-                .toList();
-
-        Sample sample = Sample.of(sampleId,
-                presentHpoTermIdsList,
-                excludedHpoTermIdsList);
-        model.addAttribute("sample", sample);
-
-        System.out.println("updateEngine sample = " + sample);
-        System.out.println("updateEngine engine = " + engineName);
-
-        DifferentialDiagnosisEngine engine = null;
-        List<DifferentialDiagnosis> differentialDiagnoses = List.of();
-
-        if (engineName.equals("lirical")) {
-            model.addAttribute("strict", strict);
-            model.addAttribute("globalAnalysisMode", globalAnalysisMode);
-
-            AnalysisOptions options = AnalysisOptions.builder()
-                    .useStrictPenalties(strict)
-                    .useGlobal(globalAnalysisMode)
-                    .pretestProbability(PretestDiseaseProbabilities.uniform(hpoDiseases.diseaseIds()))
-                    .build();
-
-            System.out.println(options);
-
-            engine = liricalDifferentialDiagnosisEngineConfigurer.configure(options);
-            model.addAttribute("options", options);
-
-            if (sample != null && sample.id() != null && options != null) {
-                // Get initial differential diagnoses from running LIRICAL
-                differentialDiagnoses = engine.run(sample);
-            }
-        } else if (engineName.equals("phenomizer")) {
-            if (scoringMode == null) {
-                scoringMode = ScoringMode.ONE_SIDED;
-            }
-            model.addAttribute("scoringMode", scoringMode);
-
-            Map<TermPair, Double> icMicaDict = icMicaData.icMicaDict();
-            engine = new PhenomizerDifferentialDiagnosisEngine(hpoDiseases, icMicaDict, scoringMode);
-
-            model.addAttribute("icMicaDict", icMicaDict);
-
-            if (sample != null && sample.id() != null) {
-                // Get initial differential diagnoses from running Phenomizer
-                differentialDiagnoses = engine.run(sample);
-            }
-        }
-        model.addAttribute("engine", engine);
-        model.addAttribute("differentialDiagnoses", differentialDiagnoses);
 
         return "maxodiff";
     }
