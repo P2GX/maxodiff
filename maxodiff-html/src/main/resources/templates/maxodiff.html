@@ -1,0 +1,509 @@
+<!DOCTYPE html SYSTEM "http://www.thymeleaf.org/dtd/xhtml1-strict-thymeleaf-spring4-4.dtd">
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<!--<link rel="stylesheet" type="text/css" th:href="@{/css/style.css}"/>-->
+<head>
+    <meta charset="UTF-8">
+    <title>maxodiff analysis</title>
+
+    <style>
+        * {
+          font-family: Arial, Helvetica, sans-serif;
+        }
+
+        .apexcharts-tooltip {
+            font-family: Arial, Helvetica, sans-serif !important;
+            white-space: pre-wrap !important;
+        }
+
+        .countsTable {
+          table-layout: fixed;
+        }
+
+        .countsTable td {
+            padding: 10px 10px 10px 10px;
+            height: 30px;
+            width: 10px;
+        }
+
+        .countsTable td:first-child {
+            font-weight: bold;
+            white-space: nowrap;
+            max-width: 400px;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .countsTable td:nth-child(2) {
+            border-right: thick double;
+        }
+
+        .countsTable th {
+            position: relative;
+            height: 200px;
+            width: 50px; /* needed for layout */
+            padding: 0;
+            margin: 0;
+            overflow: visible;
+            white-space: nowrap;
+            vertical-align: bottom;
+            text-align: center;
+        }
+
+        .countsTable th > div {
+           /*  transform: rotate(315deg); or -45deg */
+            transform-origin: bottom left;
+            position: absolute;
+            bottom: 0;
+            left: 50%;
+            transform: translateX(+0%) rotate(315deg); /* better centering */
+            white-space: nowrap;
+        }
+
+        .diffDiagInputTable, .fileInputTable {
+          border: 1px solid black;
+          background-color: lemonchiffon;
+          table-layout: fixed;
+        }
+
+        .diffDiagInputTable {
+          width: 400px;
+        }
+
+        .diffDiagInputTable tr td:first-child {
+          font-weight: bold;
+          width: 30px;
+        }
+
+        .diffDiagInputTable tr td:last-child {
+          width: 10px;
+        }
+
+        .parentCell {
+            position: relative;
+        }
+
+        .tooltip {
+            display: none;
+            position: absolute;
+            background-color: white;
+        }
+
+        .parentCell:hover span.tooltip {
+            display:block;
+        }
+
+        #progressBarContainer1 {
+            width: 80%;
+            background-color: #f3f3f3;
+            border: 1px solid #ccc;
+            height: 30px;
+            margin: 20px 0;
+        }
+
+        #progressBar1 {
+            height: 100%;
+            width: 0%;
+            background-color: #4caf50;
+            text-align: center;
+            line-height: 30px;
+            color: white;
+        }
+
+        .scoreTable {
+          width: auto;
+          border-collapse: collapse;
+          margin-bottom: 1em;
+        }
+
+        .scoreTable td {
+          padding: 0.3em 0.6em;
+          border: none;
+          font-size: 0.95em;
+        }
+
+        .section-box {
+          border: 1px solid #ccc;
+          border-left: 6px solid #007acc;
+          border-radius: 8px;
+          padding: 1em;
+          margin: 2em 0;
+          background: #f9f9f9;
+          box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+
+        .section-box h2 {
+          font-size: 1.4em;
+          color: #003366;
+          margin-bottom: 0.5em;
+        }
+
+        .grid {
+          display: grid;
+          grid-template-areas:
+          'engine sample'
+          'initialDD sample'
+          'maxodiff maxodiff';
+          grid-gap: 10px;
+        }
+
+        .section-box-engine-input {
+          border: 1px solid #ccc;
+          border-left: 6px solid #B22222;
+          border-radius: 8px;
+          padding: 1em;
+          margin: 2em 0;
+          background: #f9f9f9;
+          box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+          width: 500px;
+          grid-area: engine;
+        }
+
+        .section-box-engine-input h1 {
+          font-size: 1.4em;
+          color: #DC143C;
+          margin-bottom: 0.5em;
+        }
+
+        .section-box-sample {
+          border: 1px solid #ccc;
+          border-left: 6px solid #4B0082;
+          border-radius: 8px;
+          padding: 1em;
+          margin: 2em 0;
+          background: #f9f9f9;
+          box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+          width: 800px;
+          grid-area: sample;
+        }
+
+        .section-box-sample h1 {
+          font-size: 1.4em;
+          color: #663399;
+          margin-bottom: 0.5em;
+        }
+
+        .section-box-initial-dd {
+          border: 1px solid #ccc;
+          border-left: 6px solid #000080;
+          border-radius: 8px;
+          padding: 1em;
+          margin: 2em 0;
+          background: #f9f9f9;
+          box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+          width: 500px;
+          grid-area: initialDD;
+        }
+
+        .section-box-initial-dd h1 {
+          font-size: 1.4em;
+          color: #0000CD;
+          margin-bottom: 0.5em;
+        }
+
+        .section-box-maxodiff {
+          border: 1px solid #ccc;
+          border-left: 6px solid #FF8C00;
+          border-radius: 8px;
+          padding: 1em;
+          margin: 2em 0;
+          background: #f9f9f9;
+          box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+          width: 500px;
+          grid-area: maxodiff;
+        }
+
+        .section-box-maxodiff h1 {
+          font-size: 1.4em;
+          color: #FFA500;
+          margin-bottom: 0.5em;
+        }
+    </style>
+</head>
+<body>
+
+<!--<div th:replace="~{sampleInput :: sample}">...</div>-->
+
+<h1>Maxodiff Differential Diagnosis</h1>
+
+<form th:action="@{/maxodiff}">
+
+    <div class="grid">
+        <div class="section-box-engine-input">
+            <h1>Select Differential Diagnosis Engine:</h1>
+
+            <select th:value="${engineName} ?: lirical" name="engineName" id="engineName">
+                <option th:selected="${engineName} == exomiser ? selected" value="exomiser">EXOMISER</option>
+                <option th:selected="${engineName} == lirical ? selected" value="lirical">LIRICAL</option>
+                <option th:selected="${engineName} == phenomizer ? selected" value="phenomizer">PHENOMIZER</option>
+            </select>
+            <p></p>
+
+            <div method="post">
+                <input type="submit" value="Confirm Engine" th:formaction="@{/updateEngine}"/>
+            </div>
+        </div>
+
+        <div th:fragment="sample" th:object="${sample}" class="section-box-sample">
+            <h1>Differential Diagnosis Sample Input</h1>
+
+            <p>Phenopacket Path: <input style='width:80%' type="text" th:value="${phenopacketPath}" name="phenopacketPath" id="phenopacketPath"/></p>
+
+            <h2>Sample parameters:</h2>
+            <table>
+                <tbody>
+                <tr>
+                    <td>ID:</td><td><input type="text" th:field="*{id}" name="id" id="id"/></td>
+                </tr>
+                <tr>
+                    <td>Present HPO Term IDs:</td>
+                    <td><textarea rows="1" th:field="*{presentHpoTermIds}"></textarea></td>
+                </tr>
+                <tr>
+                    <td>Excluded HPO Term IDs:</td>
+                    <td><textarea rows="1" th:field="*{excludedHpoTermIds}"></textarea></td>
+                </tr>
+                </tbody>
+            </table>
+
+            <div method="post">
+                <input type="submit" value="Update Sample" th:formaction="@{/updateSample}"/>
+            </div>
+        </div>
+
+        <div class="section-box-initial-dd">
+            <h1>Initial Differential Diagnosis</h1>
+            <h2 th:text="${engineName} + ' parameters:'"></h2>
+            <div th:if="${engineName == 'lirical'}">
+                <table>
+                    <tbody>
+                    <tr>
+                        <td>Strict:</td>
+                        <td><select th:value="${strict}" name="strict" id="strict">
+                            <option th:selected="${strict} == true ? selected" value="true">True</option>
+                            <option th:selected="${strict} == false ? selected" value="false">False</option></select></td>
+                        <td>Global Mode:</td>
+                        <td><select th:value="${globalAnalysisMode}" name="globalAnalysisMode" id="globalAnalysisMode">
+                            <option th:selected="${globalAnalysisMode} == true ? selected" value="true">True</option>
+                            <option th:selected="${globalAnalysisMode} == false ? selected" value="false">False</option></select></td>
+                    </tr>
+                    </tbody>
+                </table>
+                <div method="post">
+                    <!--th:disabled="${sample == null or options == null}-->
+                    <input type="submit" value="Run Initial LIRICAL Calculation" th:disabled="${sample == null}"
+                           th:formaction="@{/initialDiagnoses}"/>
+                </div>
+            </div>
+            <div th:if="${engineName == 'phenomizer'}">
+                <table>
+                    <tbody>
+                    <tr>
+                        <td>Scoring Mode:</td>
+                        <td><select th:value="${scoringMode}" name="scoringMode" id="scoringMode">
+                            <option th:selected="${scoringMode} == ONE_SIDED ? selected" value="ONE_SIDED">One-sided</option>
+                            <option th:selected="${scoringMode} == TWO_SIDED ? selected" value="TWO_SIDED">Two-sided</option></select></td>
+                    </tr>
+                    </tbody>
+                </table>
+                <div method="post">
+                    <!--th:disabled="${sample == null or scoringMode == null}-->
+                    <input type="submit" value="Run Initial Phenomizer Calculation" th:disabled="${sample == null}"
+                           th:formaction="@{/initialDiagnoses}"/>
+                </div>
+            </div>
+        </div>
+
+        <div class="section-box-maxodiff">
+            <h1>Differential Diagnosis Calculation:</h1>
+            <table class="diffDiagInputTable">
+                <tbody>
+                <tr>
+                    <td>  Disease Probability Model:</td>
+                    <td><select style="width:100%" th:value="${diseaseProbModel} ?: 'ranked'" name="diseaseProbModel" id="diseaseProbModel">
+                        <option th:selected="${diseaseProbModel} == 'ranked' ? selected" value="ranked">RANKED</option>
+                        <option th:selected="${diseaseProbModel} == 'softmax' ? selected" value="softmax">SOFTMAX</option>
+                        <option th:selected="${diseaseProbModel} == 'expDecay' ? selected" value="expDecay">EXP DECAY</option>
+                    </select></td>
+                </tr>
+                <tr>
+                    <td>N Diseases:</td>
+                    <td><input style="width:90%" type="number" min="0" th:max="${totalNDiseases}" th:value="${nDiseases} ?: 20" name="nDiseases" id="nDiseases"/></td>
+                </tr>
+                <tr>
+                    <td>N Repetitions:</td>
+                    <td><input style="width:90%" type="number" min="0" th:max="100" th:value="${nRepetitions} ?: 10" name="nRepetitions" id="nRepetitions"/></td>
+                </tr>
+                <tr>
+                    <td>Maximum # MAxO Results to Display:</td>
+                    <td><input style="width:90%" type="number" min="1" th:value="${nMaxoResults} ?: 10" name="nMaxoResults" id="nMaxoResults"/></td>
+                </tr>
+                </tbody>
+            </table>
+
+            <p><input type="submit" value="Run Differential Diagnosis Calculation"
+                      th:disabled="${differentialDiagnoses == null or differentialDiagnoses.isEmpty()}"
+                      onclick="startTask()"/></p>
+
+            <div id="progressBarContainer1">
+                <div id="progressBar1">0%</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function startTask() {
+            updateProgress();
+        }
+
+        function updateProgress() {
+            const interval = setInterval(() => {
+                fetch('/progress1')
+                    .then(response => response.json())
+                    .then(data => {
+                        let progress = data * 100;
+                        let roundedProgress = Math.round(progress * 100) / 100;
+                        const bar = document.getElementById('progressBar1');
+                        bar.style.width = progress + '%';
+                        bar.innerText = roundedProgress + '%';
+
+                        if (progress >= 100) {
+                            clearInterval(interval);
+                        }
+                    });
+            }, 1000);
+        }
+    </script>
+</form>
+
+<hr class="line">
+
+<!--<h1 th:text="'maxodiff Analysis Results for ' + ${phenopacket}"></h1>-->
+<!--<h1 th:text="${algorithm} + ' Algorithm'" style="color: orangered"></h1>-->
+
+<h1 th:text="'maxodiff Analysis Results for ' + ${sample == null ? '' : sample.id}"></h1>
+<table>
+    <tbody>
+        <tr>
+<!--            <td style='font-weight:bold;'>Disease ID:</td><td th:text="${diseaseId}"></td>-->
+            <td style='font-weight:bold;'>Sample Present HPO Terms:</td><td th:text="${sample == null ? '' : samplePresentTermsString}"></td>
+        </tr>
+        <tr>
+            <td style='font-weight:bold;'>Sample Excluded HPO Terms:</td><td th:text="${sample == null ? '' : sampleExcludedTermsString}"></td>
+        </tr>
+        <tr>
+            <td style='font-weight:bold;'>N Diseases:</td><td th:text="${nDiseases}"></td>
+        </tr>
+        <tr>
+            <td style='font-weight:bold;'>N Repetitions:</td><td th:text="${nRepetitions}"></td>
+        </tr>
+    </tbody>
+</table>
+
+<h1 th:text="'Top ' + ${nDisplayed} + ' Recommended MAxO Terms'"></h1>
+
+<th:block th:each= "maxoTable, iter : ${maxoTables}">
+    <div class="section-box">
+    <h2 th:text="${iter.index+1} + ') ' + ${maxoTable.maxoTermScore.maxoId} + ': ' + ${allMaxoTermsMap.get(maxoTable.maxoTermScore.maxoId)}"></h2>
+    <table class="scoreTable">
+        <tbody>
+        <tr th:if="${refiner != 'ksTest'}">
+            <td>&Delta;Score:</td><td th:text="${#numbers.formatDecimal(maxoTable.maxoTermScore.scoreDiff, 0, 2)}"></td>
+        </tr>
+        <tr th:if="${refiner == 'score'}">
+            <td>N Diseases:</td><td th:text="${maxoTable.rankMaxoScore.maxoOmimTermIds.size}"></td>
+        </tr>
+        <tr th:if="${refiner == 'score'}">
+            <td>N Observed HPO Terms:</td><td th:text="${maxoTable.rankMaxoScore.discoverableObservedHpoTermIds.size}"></td>
+        </tr>
+        </tbody>
+    </table>
+    <p></p>
+
+    <p></p>
+
+
+    <h3 th:if="${refiner == 'score'}">Table of HPO Term Repetition Counts</h3>
+    <table class='countsTable'>
+        <thead>
+        <tr th:if="${refiner == 'score'}">
+            <th></th>
+            <th><span style="text-decoration: overline;">
+                <span style="font-weight: bold; color: blue; font-size: 1.0em;">&#916;&thinsp;R</span>
+            </span></th>
+            <th></th>
+            <th:block th:each="hpoId : ${maxoTable.rankMaxoScore.discoverableObservedHpoTermIds}">
+                <th th:onclick="|window.open('@{|https://hpo.jax.org/browse/term/${hpoId}|}')|"
+                    th:text="${#strings.length(allHpoTermsMap.get(hpoId)) > 30} ?
+                    ${#strings.substring(allHpoTermsMap.get(hpoId), 0, 30) + '...'} : ${allHpoTermsMap.get(hpoId)}"
+                    style="color: blue"></th>
+            </th:block>
+            <th:block th:each="hpoId : ${maxoTable.rankMaxoScore.remainingHpoTermIds}">
+                <th th:onclick="|window.open('@{|https://hpo.jax.org/browse/term/${hpoId}|}')|"
+                    th:text="${#strings.length(allHpoTermsMap.get(hpoId)) > 30} ?
+                    ${#strings.substring(allHpoTermsMap.get(hpoId), 0, 30) + '...'} : ${allHpoTermsMap.get(hpoId)}"
+                    style="color: blue"></th>
+            </th:block>
+        </tr>
+        </thead>
+
+        <tbody>
+        <tr th:if="${refiner == 'score'}">
+            <td>N Repetitions</td>
+            <td></td>
+            <td></td>
+            <th:block th:each= "hpoId : ${maxoTable.rankMaxoScore.discoverableObservedHpoTermIds}">
+                <th:block th:with="ct=${nRepetitionsMap.get(hpoId)}">
+                    <td th:text="${ct}"
+                        th:style="${ct} == null ? |background: rgba(0, 0, 0, 0)| :
+                        |background: rgba(255, 215, 0, ${#numbers.formatDecimal((1.0 * ct)/nRepetitions, 1, 4)})|"></td>
+                </th:block>
+            </th:block>
+        </tr>
+        <th:block th:each= "omimId, omimIter : ${maxoTable.rankMaxoScore.maxoDiseaseAvgRankChangeMap.keySet()}">
+            <tr th:if="${refiner == 'score'}">
+                <td th:text="${omimTerms.get(omimId)}"></td>
+                <th:block th:with="rankChange=${maxoTable.rankMaxoScore.maxoDiseaseAvgRankChangeMap.get(omimId)}">
+                    <td class='parentCell' th:text="${rankChange} == null ? ${rankChange} :
+                    (${rankChange} % 1 == 0 ? ${rankChange} : ${#numbers.formatDecimal(rankChange, 1, 4)})"
+                        th:style="${rankChange} < 0 ?
+                        |background: rgba(0, 128, 0, ${#numbers.formatDecimal((-1.0 * rankChange)/(nDiseases - 1), 1, 4)})| :
+                        |background: rgba(255, 0, 0, ${#numbers.formatDecimal((1.0 * rankChange)/(nDiseases - 1), 1, 4)})|">
+                        <span class="tooltip" th:text="${rankChange} < 0 ? <div style=background-color: lightgray; color: blue>
+                        <b>Disease Term</b>: ${omimTerms.get(omimId)} </div><div><p></p></div>
+                        <div><b>Average Rank Improvement</b>: -${rankChange} </div> :
+                        <div style='background-color: lightgray; color: blue'>
+                        <b>Disease Term</b>: ${omimTerms.get(omimId)} </div><div><p></p></div>
+                        <div><b>Average Rank Decline</b>: ${rankChange} </div>"></span>
+                    </td>
+                </th:block>
+                <td></td>
+                <th:block th:each= "hpoId : ${maxoTable.rankMaxoScore.discoverableObservedHpoTermIds}">
+                    <th:block th:with="ct=${maxoTable.rankMaxoScore.hpoTermIdRepCtsMap.get(omimId).get(hpoId)}">
+                        <td>
+                            <div th:style="${ct} == null ?
+                            |width: 80%; height: 80%; margin: auto; background: rgba(160, 32, 240, 0)| :
+                            |width: 80%; height: 80%; margin: auto; background: rgba(160, 32, 240, 1)|"></div>
+                        </td>
+                    </th:block>
+                </th:block>
+                <th:block th:each= "hpoId : ${maxoTable.rankMaxoScore.remainingHpoTermIds}">
+                    <th:block th:with="ct=${maxoTable.rankMaxoScore.remainingHpoTermIdRepCtsMap.get(omimId).get(hpoId)}">
+                        <td>
+                            <div th:style="${ct} == null ?
+                            |width: 80%; height: 80%; margin: auto; background: rgba(160, 32, 240, 0)| :
+                            |width: 80%; height: 80%; margin: auto; background: rgba(160, 32, 240, 1)|"></div>
+                        </td>
+                    </th:block>
+                </th:block>
+            </tr>
+        </th:block>
+        </tbody>
+    </table>
+    </div>
+
+</th:block>
+
+
+</body>
+</html>
+
