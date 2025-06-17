@@ -68,8 +68,6 @@ public class HtmlResults {
         for (MaxodiffResult result : resultList.subList(0, 10)) {
             result.rankMaxoScore().discoverableObservedHpoTermIds()
                     .forEach(id -> hpoTermsMap.put(id, biometadataService.hpoLabel(id).orElse("unknown")));
-            result.rankMaxoScore().remainingHpoTermIds()
-                    .forEach(id -> hpoTermsMap.put(id, biometadataService.hpoLabel(id).orElse("unknown")));
             result.rankMaxoScore().initialOmimTermIds()
                     .forEach(id -> omimTerms.put(id, biometadataService.diseaseLabel(id).orElse("unknown")));
             result.rankMaxoScore().maxoOmimTermIds()
@@ -127,12 +125,6 @@ public class HtmlResults {
                 String hpoLabel = hpoLabelString.length() > 30 ? hpoLabelString.substring(0,30) + "..." : hpoLabelString;
                 resultsString.append("                <th onclick=\"window.open('https://hpo.jax.org/browse/term/" + hpoId + "')\"\n" +
                         "                    style=\"color: blue; " + thStyleString + "\"><div>" + hpoLabel + "</div></th>\n");
-            }
-            for (TermId hpoId : result.rankMaxoScore().remainingHpoTermIds()) {
-                String hpoLabelString = hpoTermsMap.get(hpoId);
-                String hpoLabel = hpoLabelString.length() > 30 ? hpoLabelString.substring(0,30) + "..." : hpoLabelString;
-                resultsString.append("                <th onclick=\"window.open('https://hpo.jax.org/browse/term/" + hpoId + "')\"\n" +
-                        "                    style=\"color: blue; " + thStyleString + "\">" + hpoLabel + "</th>\n");
             }
 
             resultsString.append("        </thead>\n" +
@@ -203,14 +195,6 @@ public class HtmlResults {
                     String hpoDivStyleString = divStyleString + "background: rgba(160, 32, 240, " + opacity1 + ")";
                             resultsString.append("                        <td style=\"" + tdStyleString + "\">" +
                                     "                       <div style=\"" + hpoDivStyleString + "\"></div></td>\n");
-                }
-                var remainingHpoTermIdRepCtsMap = result.rankMaxoScore().remainingHpoTermIdRepCtsMap();
-                for (TermId hpoId : result.rankMaxoScore().remainingHpoTermIds()) {
-                    Integer ct1 = remainingHpoTermIdRepCtsMap.get(omimId).get(hpoId);
-                    int opacity1 = (ct1 == null) ? 0 : 1;
-                    String hpoDivStyleString = divStyleString + "background: rgba(160, 32, 240, " + opacity1 + ")";
-                    resultsString.append("                        <td style=\"" + tdStyleString + "\">" +
-                            "                       <div style=\"" + hpoDivStyleString + "\"></div></td>\n");
                 }
 
                 resultsString.append("            </tr>\n");

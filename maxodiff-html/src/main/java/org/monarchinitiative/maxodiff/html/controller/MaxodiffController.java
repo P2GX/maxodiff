@@ -308,7 +308,6 @@ public class MaxodiffController {
                     RankMaxoScore rankMaxoScore = maxodiffResult.rankMaxoScore();
                     maxoTermsMap.put(rankMaxoScore.maxoId().toString(), biometadataService.maxoLabel(rankMaxoScore.maxoId().toString()).orElse("unknown"));
                     rankMaxoScore.discoverableObservedHpoTermIds().forEach(id -> hpoTermsMap.put(id, biometadataService.hpoLabel(id).orElse("unknown")));
-                    rankMaxoScore.remainingHpoTermIds().forEach(id -> hpoTermsMap.put(id, biometadataService.hpoLabel(id).orElse("unknown")));
                     rankMaxoScore.initialOmimTermIds().forEach(id -> diseaseTermsMap.put(id, biometadataService.diseaseLabel(id).orElse("unknown")));
                     rankMaxoScore.maxoOmimTermIds().forEach(id -> diseaseTermsMap.put(id, biometadataService.diseaseLabel(id).orElse("unknown")));
                     var hpoTermIdRepCtsMap = rankMaxoScore.hpoTermIdRepCtsMap();

@@ -74,7 +74,6 @@ public class EvaluateMaxoTerm implements Callable<RankMaxoScore> {
             MaxoDDResults maxoDDResults = candidateDiseaseScores.getScoresForMaxoTerm(ppkt, maxoId, engine, diseaseIds, hpoToMaxoTermMap);
             maxoDDResultsList.add(maxoDDResults);
             Set<TermId> discoverableHpoIds = maxoDDResults.maxoDiscoverableHpoIds();
-            Set<TermId> remainingHpoIds = maxoDDResults.remainingAscertainableHpoIds();
             for (TermId diseaseId : diseaseIds) {
                 List<TermId> diseaseAssociatedHpoIds = List.of();
                 Optional<HpoDisease> opt = maxoHpoTermProbabilities.getHpoDiseases().diseaseById(diseaseId);
@@ -104,22 +103,6 @@ public class EvaluateMaxoTerm implements Callable<RankMaxoScore> {
                     }
                     maxoDiscoverableHpoIdCts.replace(diseaseId, hpoIdCtsMap);
                 }
-                Map<TermId, Integer> remainingHpoIdCtsMap = remainingHpoIdCts.get(diseaseId);
-                for (TermId remainingHpoId : remainingHpoIds) {
-                    if (!remainingHpoIdCtsMap.containsKey(remainingHpoId)) {
-                        if (diseaseAssociatedHpoIds.contains(remainingHpoId)) {
-                            remainingHpoIdCtsMap.put(remainingHpoId, 1);
-                        } else {
-                            remainingHpoIdCtsMap.put(remainingHpoId, null);
-                        }
-                    } else {
-                        Integer ct = remainingHpoIdCtsMap.get(remainingHpoId);
-                        if (ct != null) {
-                            remainingHpoIdCtsMap.replace(remainingHpoId, ct + 1);
-                        }
-                    }
-                    remainingHpoIdCts.replace(diseaseId, hpoIdCtsMap);
-                }
             }
             double finalScore = ValidationModel.weightedRankDiff(initialDiagnoses, maxoDDResults.maxoDifferentialDiagnoses()).validationScore();
             scores.add(finalScore);
@@ -139,11 +122,6 @@ public class EvaluateMaxoTerm implements Callable<RankMaxoScore> {
 
         Set<TermId> maxoDiscoverableObservedHpoIds = maxoDDResultsList.stream()
                 .map(MaxoDDResults::maxoDiscoverableHpoIds)
-                .flatMap(Collection::stream)
-                .collect(Collectors.toSet());
-
-        Set<TermId> remainingAscertainableHpoIds = maxoDDResultsList.stream()
-                .map(MaxoDDResults::remainingAscertainableHpoIds)
                 .flatMap(Collection::stream)
                 .collect(Collectors.toSet());
 
@@ -202,7 +180,7 @@ public class EvaluateMaxoTerm implements Callable<RankMaxoScore> {
 
 
         return new RankMaxoScore(maxoId, initialDiagnosesDiseaseIds, maxoDiagnosesDiseaseIds,
-                maxoDiscoverableObservedHpoIds, remainingAscertainableHpoIds, meanScore,
+                maxoDiscoverableObservedHpoIds, meanScore,
                 maxoDDResultsList.getLast().maxoDifferentialDiagnoses(),
                 maxoDiscoverableHpoIdCtsSorted, remainingHpoIdCtsSorted, maxoDiseaseAvgRankChangeMapSorted,
                 Collections.min(maxoDiseaseAvgRankChangeMapSorted.values()), Collections.max(maxoDiseaseAvgRankChangeMapSorted.values()));
