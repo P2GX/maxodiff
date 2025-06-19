@@ -9,12 +9,17 @@
 
 <div th:replace="~{index :: header}">...</div>
 
-<form th:action="@{/sampleInput}" th:object="${sample}">
+<form th:action="@{/sampleInput}" th:object="${sample}" enctype="multipart/form-data">
 
     <div th:fragment="sample">
         <h1>Differential Diagnosis Sample Input</h1>
 
-        <p>Phenopacket Path: <input style='width:20%' type="text" th:value="${phenopacketPath}" name="phenopacketPath" id="phenopacketPath"/></p>
+        <label for="file">Upload Phenopacket File: </label>
+        <input type="file" id="fileInput" name="file"/>
+        <button type="button" onclick="uploadFile()">Upload File</button>
+        <p></p>
+        <!--        <label>Phenopacket: </label>-->
+        <!--        <input type="text" th:value="${phenopacketName}" th:readonly="true"/>-->
 
         <h2>Sample parameters:</h2>
         <table>
@@ -24,11 +29,11 @@
             </tr>
             <tr>
                 <td>Present HPO Term IDs:</td>
-                <td><textarea rows="1" th:field="*{presentHpoTermIds}" /></td>
+                <td><textarea rows="1" th:field="*{presentHpoTermIds}"></textarea></td>
             </tr>
             <tr>
                 <td>Excluded HPO Term IDs:</td>
-                <td><textarea rows="1" th:field="*{excludedHpoTermIds}" /></td>
+                <td><textarea rows="1" th:field="*{excludedHpoTermIds}"></textarea></td>
             </tr>
             </tbody>
         </table>
@@ -39,6 +44,28 @@
 <!--                   th:data-url="@{/__${engineName}__Input}"-->
 <!--                   onclick="window.open(this.getAttribute('data-url'))"/>-->
         </div>
+
+        <script>
+            function uploadFile() {
+                const fileInput = document.getElementById('fileInput');
+                const file = fileInput.files[0];
+                const formData = new FormData();
+                formData.append("file", file);
+
+                fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+    <!--                document.querySelector('[name="phenopacketName"]').value = data.phenopacket || '';-->
+                    document.querySelector('[name="id"]').value = data.id || '';
+                    document.querySelector('[name="presentHpoTermIds"]').value = data.presentHpoTermIds || '';
+                    document.querySelector('[name="excludedHpoTermIds"]').value = data.excludedHpoTermIds || '';
+                })
+                .catch(error => console.error("Upload error:", error));
+            }
+        </script>
     </div>
 
 </form>

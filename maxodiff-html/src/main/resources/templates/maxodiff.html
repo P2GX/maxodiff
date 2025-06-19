@@ -156,7 +156,7 @@
 
         .section-box-maxodiff {
           border: 1px solid #ccc;
-          border-left: 6px solid #0000FF;
+          border-left: 6px solid #0000CD;
           border-radius: 8px;
           padding: 1em;
           margin: 2em 0;
@@ -181,16 +181,21 @@
 <form th:action="@{/maxodiff}">
 
 
-    <div th:fragment="sample" th:object="${sample}" class="section-box-sample">
-        <h1>Differential Diagnosis Sample Input</h1>
+    <div th:fragment="sample" th:object="${sample}" class="section-box-sample" enctype="multipart/form-data">
+        <h1>Sample Input</h1>
 
-        <p>Phenopacket Path: <input style='width:80%' type="text" th:value="${phenopacketPath}" name="phenopacketPath" id="phenopacketPath"/></p>
+        <label for="file">Upload Phenopacket File: </label>
+        <input type="file" id="fileInput" name="file"/>
+        <button type="button" onclick="uploadFile()">Upload File</button>
+        <p></p>
+<!--        <label>Phenopacket: </label>-->
+<!--        <input type="text" th:value="${phenopacketName}" th:readonly="true"/>-->
 
         <h2>Sample parameters:</h2>
         <table>
             <tbody>
             <tr>
-                <td>ID:</td><td><input type="text" th:field="*{id}" name="id" id="id"/></td>
+                <td>ID:</td><td><input type="text" th:field="*{id}"/></td>
             </tr>
             <tr>
                 <td>Present HPO Term IDs:</td>
@@ -208,9 +213,30 @@
         </div>
     </div>
 
+    <script>
+        function uploadFile() {
+            const fileInput = document.getElementById('fileInput');
+            const file = fileInput.files[0];
+            const formData = new FormData();
+            formData.append("file", file);
+
+            fetch('/upload', {
+                method: 'POST',
+                body: formData
+            })
+            .then(response => response.json())
+            .then(data => {
+<!--                document.querySelector('[name="phenopacketName"]').value = data.phenopacket || '';-->
+                document.querySelector('[name="id"]').value = data.id || '';
+                document.querySelector('[name="presentHpoTermIds"]').value = data.presentHpoTermIds || '';
+                document.querySelector('[name="excludedHpoTermIds"]').value = data.excludedHpoTermIds || '';
+            })
+            .catch(error => console.error("Upload error:", error));
+        }
+    </script>
 
     <div class="section-box-maxodiff">
-        <h1>Differential Diagnosis Calculation:</h1>
+        <h1>Maxodiff Calculation:</h1>
         <table class="diffDiagInputTable">
             <tbody>
             <tr>
