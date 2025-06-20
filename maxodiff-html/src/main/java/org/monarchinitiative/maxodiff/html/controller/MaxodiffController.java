@@ -86,7 +86,6 @@ public class MaxodiffController {
                               @RequestParam(value = "refiner", required = false) String refiner,
                               @RequestParam(value = "nDiseases", required = false) Integer nDiseases,
                               @RequestParam(value = "nRepetitions", required = false) Integer nRepetitions,
-                              @RequestParam(value = "nMaxoResults", required = false) Integer nMaxoResults,
                               Model model) throws Exception {
 
         String engineName = "phenomizer";
@@ -150,7 +149,6 @@ public class MaxodiffController {
         Integer prevNDiseases = (Integer) model.getAttribute("nDiseases");
         model.addAttribute("nDiseases", nDiseases);
         model.addAttribute("nRepetitions", nRepetitions);
-        model.addAttribute("nMaxoResults", nMaxoResults);
 
         if (differentialDiagnoses != null && !differentialDiagnoses.isEmpty()) {
             int nOrigDiffDiagnosesShown = Math.min(differentialDiagnoses.size(), 10);  // TODO: this should not be hard-coded
@@ -158,7 +156,7 @@ public class MaxodiffController {
             model.addAttribute("totalNDiseases", differentialDiagnoses.size());
         }
 
-        if (sample != null && differentialDiagnoses != null && nDiseases != null && nRepetitions != null && nMaxoResults != null) {
+        if (sample != null && differentialDiagnoses != null && nDiseases != null && nRepetitions != null) {
             RefinementOptions options = RefinementOptions.of(nDiseases, nRepetitions);
 
             if (model.getAttribute("orderedDiagnoses") == null || !nDiseases.equals(prevNDiseases)) {
@@ -213,7 +211,10 @@ public class MaxodiffController {
 
             model.addAttribute("maxodiffResults", resultsList);
 
-            int nDisplayed = Math.min(resultsList.size(), nMaxoResults);
+            int zeroIdx = resultsList.stream()
+                    .filter(result -> result.rankMaxoScore().maxoScore().equals(0.))
+                    .findFirst().map(resultsList::indexOf).orElse(0);
+            int nDisplayed = Math.min(resultsList.size(), zeroIdx);
             model.addAttribute("nDisplayed", nDisplayed);
 
             StringBuilder samplePresentTermsStringBuilder = new StringBuilder();
@@ -292,11 +293,11 @@ public class MaxodiffController {
     }
 
 
-    @GetMapping("/updateSample")
-    public String updateSample(@RequestParam(value = "id", required = false) String sampleId,
-                               @RequestParam(value = "presentHpoTermIds", required = false) String presentHpoTermIds,
-                               @RequestParam(value = "excludedHpoTermIds", required = false) String excludedHpoTermIds,
-                               Model model) {
+//    @GetMapping("/updateSample")
+    public Sample updateSample(@RequestParam(value = "id", required = false) String sampleId,
+                             @RequestParam(value = "presentHpoTermIds", required = false) String presentHpoTermIds,
+                             @RequestParam(value = "excludedHpoTermIds", required = false) String excludedHpoTermIds,
+                             Model model) {
 
             model.addAttribute("sampleId", sampleId);
             model.addAttribute("presentHpoTermIds", presentHpoTermIds);
@@ -323,11 +324,11 @@ public class MaxodiffController {
             System.out.println("updateSample sample = " + sample);
             System.out.println("updateSample model sample = " + model.getAttribute("sample"));
 
-            return "maxodiff";
+            return sample;
     }
 
-    @PostMapping("/upload")
-    public ResponseEntity<Map<String, String>> uploadFile(@RequestParam("file") MultipartFile file) {
+    @RequestMapping("/upload")
+    public ResponseEntity<Map<String, String>> uploadFile(@RequestParam("file") MultipartFile file, Model model) {
 
         Map<String, String> result = new HashMap<>();
         try {
@@ -355,6 +356,10 @@ public class MaxodiffController {
             result.put("id", sampleId);
             result.put("presentHpoTermIds", presentHpoTermIds);
             result.put("excludedHpoTermIds", excludedHpoTermIds);
+
+            Sample sample = updateSample(sampleId, presentHpoTermIds, excludedHpoTermIds, model);
+
+            model.addAttribute("sample", sample);
 
             return ResponseEntity.ok(result);
         } catch (Exception e) {

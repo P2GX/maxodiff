@@ -74,6 +74,40 @@
           width: 10px;
         }
 
+        .nav, .navbar-header {
+           list-style-type: none;
+           margin: 0;
+           padding: 0;
+           overflow: hidden;
+           background-color: darkblue;
+           position: sticky;
+        }
+
+        .navbar-brand {
+           display: block;
+           color: lightblue;
+           text-align: center;
+           padding: 14px 16px;
+           text-decoration: none;
+           font-weight: bold;
+        }
+
+        .nav-link {
+           float: left;
+        }
+
+        .nav-item {
+           display: block;
+           color: white;
+           text-align: center;
+           padding: 14px 16px;
+           text-decoration: none;
+        }
+
+        .nav-item:hover:not(.active) {
+           background-color: cornflowerblue;
+        }
+
         .parentCell {
             position: relative;
         }
@@ -175,6 +209,7 @@
 </head>
 <body>
 
+<div th:replace="~{maxodiffNavBar :: header}">...</div>
 
 <h1>Maxodiff Differential Diagnosis</h1>
 
@@ -195,22 +230,22 @@
         <table>
             <tbody>
             <tr>
-                <td>ID:</td><td><input type="text" th:field="*{id}"/></td>
+                <td>ID:</td><td><input type="text" th:field="*{id}" readonly="readonly"/></td>
             </tr>
             <tr>
                 <td>Present HPO Term IDs:</td>
-                <td><textarea rows="1" th:field="*{presentHpoTermIds}"></textarea></td>
+                <td><textarea rows="1" th:field="*{presentHpoTermIds}" readonly="readonly"></textarea></td>
             </tr>
             <tr>
                 <td>Excluded HPO Term IDs:</td>
-                <td><textarea rows="1" th:field="*{excludedHpoTermIds}"></textarea></td>
+                <td><textarea rows="1" th:field="*{excludedHpoTermIds}" readonly="readonly"></textarea></td>
             </tr>
             </tbody>
         </table>
 
-        <div method="post">
-            <input type="submit" value="Update Sample" th:formaction="@{/updateSample}"/>
-        </div>
+<!--        <div method="post">-->
+<!--            <input type="submit" value="Update Sample" th:formaction="@{/updateSample}"/>-->
+<!--        </div>-->
     </div>
 
     <script>
@@ -232,6 +267,9 @@
                 document.querySelector('[name="excludedHpoTermIds"]').value = data.excludedHpoTermIds || '';
             })
             .catch(error => console.error("Upload error:", error));
+
+            const submitButton = document.getElementById('submitButton');
+            submitButton.disabled = false;
         }
     </script>
 
@@ -247,14 +285,10 @@
                 <td>N Repetitions:</td>
                 <td><input style="width:90%" type="number" min="0" th:max="100" th:value="${nRepetitions} ?: 10" name="nRepetitions" id="nRepetitions"/></td>
             </tr>
-            <tr>
-                <td>Maximum # MAxO Results to Display:</td>
-                <td><input style="width:90%" type="number" min="1" th:value="${nMaxoResults} ?: 10" name="nMaxoResults" id="nMaxoResults"/></td>
-            </tr>
             </tbody>
         </table>
 
-        <p><input type="submit" value="Run Differential Diagnosis Calculation"
+        <p><input type="submit" value="Run Differential Diagnosis Calculation" id="submitButton"
                   th:disabled="${sample.id() == null}"
                   onclick="startTask()"/></p>
 
@@ -294,26 +328,6 @@
 <!--<h1 th:text="${algorithm} + ' Algorithm'" style="color: orangered"></h1>-->
 
 <div th:if="${maxoTables != null and #lists.size(maxoTables) > 0}">
-    <h1 th:text="'maxodiff Analysis Results for ' + ${sample == null ? '' : sample.id}"></h1>
-    <table>
-        <tbody>
-            <tr>
-    <!--            <td style='font-weight:bold;'>Disease ID:</td><td th:text="${diseaseId}"></td>-->
-                <td style='font-weight:bold;'>Sample Present HPO Terms:</td><td th:text="${sample == null ? '' : samplePresentTermsString}"></td>
-            </tr>
-            <tr>
-                <td style='font-weight:bold;'>Sample Excluded HPO Terms:</td><td th:text="${sample == null ? '' : sampleExcludedTermsString}"></td>
-            </tr>
-            <tr>
-                <td style='font-weight:bold;'>N Diseases:</td><td th:text="${nDiseases}"></td>
-            </tr>
-            <tr>
-                <td style='font-weight:bold;'>N Repetitions:</td><td th:text="${nRepetitions}"></td>
-            </tr>
-        </tbody>
-    </table>
-
-    <h1 th:text="'Top ' + ${nDisplayed} + ' Recommended MAxO Terms'"></h1>
 
     <th:block th:each= "maxoTable, iter : ${maxoTables}">
         <div class="section-box">
