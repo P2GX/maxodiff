@@ -56,6 +56,7 @@ public class CandidateDiseaseScores {
         TermId selectedDiseaseId = getDiseaseId(diseaseRankProbabilityMap);
         Set<TermId> ascertainablePhenotypeIds = ascertainablePhenotypes.getAscertainablePhenotypeIds(ppkt, selectedDiseaseId);
         Set<TermId> maxoAddedObservedHpoIds = new HashSet<>();
+        Set<TermId> maxoAddedObservedDescendantHpoIds = new HashSet<>();
         Set<TermId> maxoAddedExcludedHpoIds = new HashSet<>();
         for (TermId hpoId : ascertainablePhenotypeIds) {
             if (maxoBenefitHpoIds.contains(hpoId)) {
@@ -73,12 +74,14 @@ public class CandidateDiseaseScores {
                     if (!excluded.contains(descHpoId)) {
                         observed.add(descHpoId);
                         maxoAddedObservedHpoIds.add(descHpoId);
+                        maxoAddedObservedDescendantHpoIds.add(descHpoId);
                     } else {
                         for (TermId maxoHpoId : maxoBenefitHpoIds) {
                             if (OntologyAlgorithm.termsAreRelated(ontology, descHpoId, maxoHpoId)) {
                                 if (!excluded.contains(descHpoId)) {
                                     observed.add(descHpoId);
                                     maxoAddedObservedHpoIds.add(descHpoId);
+                                    maxoAddedObservedDescendantHpoIds.add(descHpoId);
                                 }
                             } else {
                                 if (!observed.contains(descHpoId)) {
@@ -99,7 +102,8 @@ public class CandidateDiseaseScores {
         Set<TermId> maxoAddedObservedHpoIdsOrdered = new HashSet<>(hpoTermArranger.arrangeTerms(maxoAddedObservedHpoIds.stream().toList()));
         Set<TermId> maxoAddedExcludedHpoIdsOrdered = new HashSet<>(hpoTermArranger.arrangeTerms(maxoAddedExcludedHpoIds.stream().toList()));
 
-        return new MaxoDDResults(maxoAddedObservedHpoIdsOrdered, maxoAddedExcludedHpoIdsOrdered, newMaxoDiagnoses);
+        return new MaxoDDResults(maxoAddedObservedHpoIdsOrdered, maxoAddedExcludedHpoIdsOrdered,
+                maxoAddedObservedDescendantHpoIds, newMaxoDiagnoses);
     }
 
     private boolean getTestResult(double maxoTermBenefitProbability) {

@@ -189,7 +189,7 @@
         <button type="button" onclick="uploadFile()">Upload File</button>
         <p></p>
 <!--        <label>Phenopacket: </label>-->
-<!--        <input type="text" th:value="${phenopacketName}" th:readonly="true"/>-->
+<!--        <p id="phenopacketName"/>-->
 
         <h2>Sample parameters:</h2>
         <table>
@@ -226,7 +226,7 @@
             })
             .then(response => response.json())
             .then(data => {
-<!--                document.querySelector('[name="phenopacketName"]').value = data.phenopacket || '';-->
+<!--                document.getElementById('phenopacketName').textContent = data.phenopacketName;-->
                 document.querySelector('[name="id"]').value = data.id || '';
                 document.querySelector('[name="presentHpoTermIds"]').value = data.presentHpoTermIds || '';
                 document.querySelector('[name="excludedHpoTermIds"]').value = data.excludedHpoTermIds || '';
@@ -385,7 +385,9 @@
                             <td>
                                 <div th:style="${ct} == null ?
                                 |width: 80%; height: 80%; margin: auto; background: rgba(160, 32, 240, 0)| :
-                                |width: 80%; height: 80%; margin: auto; background: rgba(160, 32, 240, 1)|"></div>
+                                (${maxoTable.rankMaxoScore.discoverableObservedDescendantHpoTermIds.contains(hpoId)} ?
+                                |width: 80%; height: 80%; margin: auto; background: rgba(160, 32, 240, 0.5)| :
+                                |width: 80%; height: 80%; margin: auto; background: rgba(160, 32, 240, 1)|)"></div>
                             </td>
                         </th:block>
                     </th:block>

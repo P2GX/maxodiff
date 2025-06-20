@@ -191,7 +191,8 @@ public class HtmlResults {
                         "                <td></td>\n");
                 for (TermId hpoId : result.rankMaxoScore().discoverableObservedHpoTermIds()) {
                     Integer ct1 = hpoTermIdRepCtsMap.get(omimId).get(hpoId);
-                    int opacity1 = (ct1 == null) ? 0 : 1;
+                    double opacity1 = (ct1 == null) ? 0 :
+                            (result.rankMaxoScore().discoverableObservedDescendantHpoTermIds().contains(hpoId) ? 0.5 : 1);
                     String hpoDivStyleString = divStyleString + "background: rgba(160, 32, 240, " + opacity1 + ")";
                             resultsString.append("                        <td style=\"" + tdStyleString + "\">" +
                                     "                       <div style=\"" + hpoDivStyleString + "\"></div></td>\n");

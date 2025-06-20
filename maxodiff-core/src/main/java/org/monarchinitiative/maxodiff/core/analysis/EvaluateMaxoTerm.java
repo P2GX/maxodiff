@@ -69,7 +69,6 @@ public class EvaluateMaxoTerm implements Callable<RankMaxoScore> {
         List<DifferentialDiagnosis> initialDiagnoses = maxoHpoTermProbabilities.getInitialDiagnoses();
         List<MaxoDDResults> maxoDDResultsList = new ArrayList<>();
         Map<TermId, Map<TermId, Integer>> maxoDiscoverableHpoIdCts = new HashMap<>();
-        Map<TermId, Map<TermId, Integer>> remainingHpoIdCts = new HashMap<>();
         for (int i = 0; i < nRepetitions; i++) {
             MaxoDDResults maxoDDResults = candidateDiseaseScores.getScoresForMaxoTerm(ppkt, maxoId, engine, diseaseIds, hpoToMaxoTermMap);
             maxoDDResultsList.add(maxoDDResults);
@@ -83,9 +82,6 @@ public class EvaluateMaxoTerm implements Callable<RankMaxoScore> {
                 }
                 if (!maxoDiscoverableHpoIdCts.containsKey(diseaseId)) {
                     maxoDiscoverableHpoIdCts.put(diseaseId, new HashMap<>());
-                }
-                if (!remainingHpoIdCts.containsKey(diseaseId)) {
-                    remainingHpoIdCts.put(diseaseId, new HashMap<>());
                 }
                 Map<TermId, Integer> hpoIdCtsMap = maxoDiscoverableHpoIdCts.get(diseaseId);
                 for (TermId discoverableHpoId : discoverableHpoIds) {
@@ -122,6 +118,11 @@ public class EvaluateMaxoTerm implements Callable<RankMaxoScore> {
 
         Set<TermId> maxoDiscoverableObservedHpoIds = maxoDDResultsList.stream()
                 .map(MaxoDDResults::maxoDiscoverableHpoIds)
+                .flatMap(Collection::stream)
+                .collect(Collectors.toSet());
+
+        Set<TermId> maxoObservedDescendantHpoIds = maxoDDResultsList.stream()
+                .map(MaxoDDResults::maxoObservedDescendantHpoIds)
                 .flatMap(Collection::stream)
                 .collect(Collectors.toSet());
 
@@ -169,20 +170,11 @@ public class EvaluateMaxoTerm implements Callable<RankMaxoScore> {
                         LinkedHashMap::new
                 ));
 
-        Map<TermId, Map<TermId, Integer>> remainingHpoIdCtsSorted = maxoDiseaseAvgRankChangeMapSorted.keySet().stream()
-                .filter(remainingHpoIdCts::containsKey)
-                .collect(Collectors.toMap(
-                        key -> key,
-                        remainingHpoIdCts::get,
-                        (oldValue, newValue) -> newValue,
-                        LinkedHashMap::new
-                ));
-
 
         return new RankMaxoScore(maxoId, initialDiagnosesDiseaseIds, maxoDiagnosesDiseaseIds,
-                maxoDiscoverableObservedHpoIds, meanScore,
+                maxoDiscoverableObservedHpoIds, maxoObservedDescendantHpoIds, meanScore,
                 maxoDDResultsList.getLast().maxoDifferentialDiagnoses(),
-                maxoDiscoverableHpoIdCtsSorted, remainingHpoIdCtsSorted, maxoDiseaseAvgRankChangeMapSorted,
+                maxoDiscoverableHpoIdCtsSorted, maxoDiseaseAvgRankChangeMapSorted,
                 Collections.min(maxoDiseaseAvgRankChangeMapSorted.values()), Collections.max(maxoDiseaseAvgRankChangeMapSorted.values()));
     }
 }

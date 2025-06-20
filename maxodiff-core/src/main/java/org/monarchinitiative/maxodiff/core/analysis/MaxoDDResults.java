@@ -8,5 +8,5 @@ import java.util.Map;
 import java.util.Set;
 
 public record MaxoDDResults(Set<TermId> maxoDiscoverableHpoIds, Set<TermId> maxoDiscoverableExcludedHpoIds,
-                            List<DifferentialDiagnosis> maxoDifferentialDiagnoses) {
+                            Set<TermId> maxoObservedDescendantHpoIds, List<DifferentialDiagnosis> maxoDifferentialDiagnoses) {
 }
