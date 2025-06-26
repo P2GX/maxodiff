@@ -19,6 +19,7 @@ import org.monarchinitiative.maxodiff.core.analysis.*;
 import org.monarchinitiative.maxodiff.core.analysis.refinement.*;
 import org.monarchinitiative.maxodiff.core.diffdg.DifferentialDiagnosisEngine;
 import org.monarchinitiative.maxodiff.core.model.*;
+import org.monarchinitiative.maxodiff.html.results.HtmlResults;
 import org.monarchinitiative.maxodiff.lirical.PhenopacketFileParser;
 import org.monarchinitiative.maxodiff.lirical.*;
 import org.monarchinitiative.maxodiff.core.service.BiometadataService;
@@ -232,7 +233,7 @@ public class BenchmarkCommand extends DifferentialDiagnosisCommand {
                                 phenopacketName.replace(".json", ""),
                                 "initial",
 //                                "removedTerms",
-                                "lirical",
+                                ddEngine,
                                 "results");
                         String ddOutputPath = String.join(File.separator, outputDir.toString(), outFilename + ".csv");
                         writeDifferentialDiagnosisResults(phenopacketName, differentialDiagnoses, Path.of(ddOutputPath));
@@ -377,6 +378,17 @@ public class BenchmarkCommand extends DifferentialDiagnosisCommand {
                                                 topMaxoAscertainablePhenotypes, topMaxoAscertainablePhenotypes.size(),
                                                 meanNDiscoverablePhenotypesAllMaxoTerms, diff,
                                                 e.getKey(), printer);
+
+                                        String nDiseasesAbbr = String.join("", "n", String.valueOf(nDiseases));
+                                        String nRepsAbbr = String.join("", "nr", String.valueOf(nRepetitions));
+                                        String outputFilename = String.join("_", phenopacketName, ddEngine,
+                                                nDiseasesAbbr, nRepsAbbr, "maxodiff", "results.html");
+                                        Path maxodiffResultsHTMLPath = Path.of(String.join(File.separator, outputDir.toString(), outputFilename));
+
+                                        String htmlString = HtmlResults.writeHTMLResults(sample, nDiseases, nRepetitions, resultsList,
+                                                biometadataService, hpoTermCounts);
+
+                                        Files.writeString(maxodiffResultsHTMLPath, htmlString);
                                     }
 
                                     if (e.getKey().equals("rank") | e.getKey().equals("ddScore") | e.getKey().equals("ksTest")) {

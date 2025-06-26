@@ -65,7 +65,11 @@ public class HtmlResults {
 
         Map<TermId, Integer> nRepetitionsMap = new HashMap<>();
 
-        for (MaxodiffResult result : resultList.subList(0, 10)) {
+        int zeroIdx = resultList.stream()
+                .filter(result -> result.rankMaxoScore().maxoScore().equals(0.))
+                .findFirst().map(resultList::indexOf).orElse(0);
+        int nDisplayed = Math.min(resultList.size(), zeroIdx);
+        for (MaxodiffResult result : resultList.subList(0, nDisplayed)) {
             result.rankMaxoScore().discoverableObservedHpoTermIds()
                     .forEach(id -> hpoTermsMap.put(id, biometadataService.hpoLabel(id).orElse("unknown")));
             result.rankMaxoScore().initialOmimTermIds()
