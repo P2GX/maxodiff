@@ -321,8 +321,7 @@ public class MaxodiffController {
                     excludedHpoTermIdsList);
             model.addAttribute("sample", sample);
 
-            System.out.println("updateSample sample = " + sample);
-            System.out.println("updateSample model sample = " + model.getAttribute("sample"));
+//            System.out.println("updateSample sample = " + sample);
 
             return sample;
     }
@@ -360,6 +359,23 @@ public class MaxodiffController {
             Sample sample = updateSample(sampleId, presentHpoTermIds, excludedHpoTermIds, model);
 
             model.addAttribute("sample", sample);
+
+            StringBuilder samplePresentTermsStringBuilder = new StringBuilder();
+            sample.presentHpoTermIds().forEach(tid -> samplePresentTermsStringBuilder
+                    .append(biometadataService.hpoLabel(tid).orElse("unknown"))
+                    .append(", "));
+            String samplePresentTermsString = samplePresentTermsStringBuilder.substring(0, samplePresentTermsStringBuilder.length()-2);
+            StringBuilder sampleExcludedTermsStringBuilder = new StringBuilder();
+            sample.excludedHpoTermIds().forEach(tid -> sampleExcludedTermsStringBuilder
+                    .append(biometadataService.hpoLabel(tid).orElse("unknown"))
+                    .append(", "));
+            String sampleExcludedTermsString = sampleExcludedTermsStringBuilder.substring(0, sampleExcludedTermsStringBuilder.length()-2);
+
+            result.put("presentHpoTerms", samplePresentTermsString);
+            result.put("excludedHpoTerms", sampleExcludedTermsString);
+
+            model.addAttribute("presentHpoTerms", samplePresentTermsString);
+            model.addAttribute("excludedHpoTerms", sampleExcludedTermsString);
 
             return ResponseEntity.ok(result);
         } catch (Exception e) {
