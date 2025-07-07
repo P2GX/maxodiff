@@ -188,9 +188,9 @@ public class BenchmarkCommand extends DifferentialDiagnosisCommand {
                 Set<TermId> allMaxoTerms = MaxoHpoTermIdMaps.getMaxoToHpoTermIdMap(hpoToMaxoTermMap).keySet();
                 Set<TermId> allMaxoAscertainablePhenotypes = new HashSet<>();
                 long allMaxoAscertainablePhenoypesCalcTime = 0;
-                //6170 phenotypes discoverable by 257 MAxO terms
+                //7036 phenotypes discoverable by 257 MAxO terms
                 double nAllMaxoTerms = 257;
-                int nAllMaxoDiscoverablePhenotypes = 6170;//5302;
+                int nAllMaxoDiscoverablePhenotypes = 7036;//6170;//5302;
                 double meanNDiscoverablePhenotypesAllMaxoTerms = nAllMaxoTerms / nAllMaxoDiscoverablePhenotypes;
                 int p = 1;
                 int nPhenopackets = phenopacketPaths.size();
@@ -411,7 +411,7 @@ public class BenchmarkCommand extends DifferentialDiagnosisCommand {
 //                long HH =  allMaxoAscertainablePhenoypesCalcTime / 3600;
 //                long MM = (allMaxoAscertainablePhenoypesCalcTime % 3600) / 60;
 //                long SS = allMaxoAscertainablePhenoypesCalcTime % 60;
-//                String timeInHHMMSS = String.format("%02d:%02d:%02d", 2, 44, 40);
+//                String timeInHHMMSS = String.format("%02d:%02d:%02d", HH, MM, SS);
 //                LOGGER.info("All MAxO Ascertainable Phenotypes Calculated in " + timeInHHMMSS);
 
             }
