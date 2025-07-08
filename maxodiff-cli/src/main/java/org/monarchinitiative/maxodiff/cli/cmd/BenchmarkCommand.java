@@ -191,7 +191,7 @@ public class BenchmarkCommand extends DifferentialDiagnosisCommand {
                 //7036 phenotypes discoverable by 257 MAxO terms
                 double nAllMaxoTerms = 257;
                 int nAllMaxoDiscoverablePhenotypes = 7036;//6170;//5302;
-                double meanNDiscoverablePhenotypesAllMaxoTerms =  nAllMaxoDiscoverablePhenotypes / nAllMaxoTerms;
+                double meanNDiscoverablePhenotypesAllMaxoTerms =  nAllMaxoTerms / nAllMaxoDiscoverablePhenotypes;
                 int p = 1;
                 int nPhenopackets = phenopacketPaths.size();
                 for (int i = 0; i < nPhenopackets; i++) {
@@ -288,7 +288,7 @@ public class BenchmarkCommand extends DifferentialDiagnosisCommand {
                                         long end = System.currentTimeMillis();
                                         allMaxoAscertainablePhenoypesCalcTime = (end - start) / 1000;
 
-                                        meanNDiscoverablePhenotypesAllMaxoTerms = (double) allMaxoAscertainablePhenotypes.size() / allMaxoTerms.size();
+                                        meanNDiscoverablePhenotypesAllMaxoTerms = (double) allMaxoTerms.size() / allMaxoAscertainablePhenotypes.size();
 
                                         Path allMaxoAscPhenPath = getAllMaxoAscPhenPath("allMaxoAscPhenotypes");
 
