@@ -42,7 +42,9 @@ public class ExcludedPhenotypes {
         Set<TermId> excluded;
         Set<TermId> associatedMaxoTermIds = hpoToMaxoTermIdMap.get(hpoId);
         List<Set<TermId>> maxoIdHpoIds = new ArrayList<>();
-        if (associatedMaxoTermIds.size() == 1) {
+        if (associatedMaxoTermIds == null) {
+            excluded = Set.of();
+        } else if (associatedMaxoTermIds.size() == 1) {
             TermId maxoId = associatedMaxoTermIds.iterator().next();
             excluded = maxoToHpoTermIdMap.get(maxoId);
         } else if (associatedMaxoTermIds.isEmpty()) {
