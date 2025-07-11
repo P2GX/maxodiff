@@ -230,18 +230,19 @@ public class MaxodiffController {
             model.addAttribute("samplePresentTermsString", samplePresentTermsString);
             model.addAttribute("sampleExcludedTermsString", sampleExcludedTermsString);
 
-            Map<String, String> maxoTermsMap = new HashMap<>();
+            Map<TermId, String> maxoTermsMap = new HashMap<>();
             Map<TermId, String> hpoTermsMap = new HashMap<>();
             Map<TermId, String> diseaseTermsMap = new LinkedHashMap<>();
 
             List<HpoFrequency> hpoFrequencies = HTMLFrequencyMap.getHpoFrequencies(hpoTermCounts);
-            Map<TermId, Integer> nRepetitionsMap = new HashMap<>();
             Map<String, Map<Float, List<String>>> frequencyMap = new HashMap<>();
+            Map<TermId, Integer> nRepetitionsMap = new HashMap<>();
+            Map<TermId, Map<TermId, Double>> diseaseMaxoScoresMap = new HashMap<>();
 
             for (MaxodiffResult maxodiffResult : resultsList.subList(0, nDisplayed)) {
                 if (diffDiagRefiner instanceof MaxoDiffRefiner) {
                     RankMaxoScore rankMaxoScore = maxodiffResult.rankMaxoScore();
-                    maxoTermsMap.put(rankMaxoScore.maxoId().toString(), biometadataService.maxoLabel(rankMaxoScore.maxoId().toString()).orElse("unknown"));
+                    maxoTermsMap.put(rankMaxoScore.maxoId(), biometadataService.maxoLabel(rankMaxoScore.maxoId().toString()).orElse("unknown"));
                     rankMaxoScore.discoverableObservedHpoTermIds().forEach(id -> hpoTermsMap.put(id, biometadataService.hpoLabel(id).orElse("unknown")));
                     rankMaxoScore.initialOmimTermIds().forEach(id -> diseaseTermsMap.put(id, biometadataService.diseaseLabel(id).orElse("unknown")));
                     rankMaxoScore.maxoOmimTermIds().forEach(id -> diseaseTermsMap.put(id, biometadataService.diseaseLabel(id).orElse("unknown")));
@@ -259,6 +260,24 @@ public class MaxodiffController {
                     }
                     Map<String, Map<Float, List<String>>> resultFrequencyMap = HTMLFrequencyMap.makeFrequencyDiseaseMap(hpoTermsMap, diseaseTermsMap, hpoTermIdRepCtsMap, hpoFrequencies);
                     frequencyMap.putAll(resultFrequencyMap);
+                    assert orderedDiagnoses != null;
+                    Map<TermId, Double> maxoScoreMap = new HashMap<>();
+                    for (DifferentialDiagnosis originalDiagnosis : orderedDiagnoses) {
+                        TermId originalDiseaseId = originalDiagnosis.diseaseId();
+                        TermId maxoId = maxodiffResult.rankMaxoScore().maxoId();
+                        maxoScoreMap.put(originalDiseaseId, 0.);
+                        diseaseMaxoScoresMap.put(maxoId, maxoScoreMap);
+                        Optional<TermId> firstMaxoDiseaseIdOpt = maxodiffResult.rankMaxoScore().maxoDiseaseAvgRankChangeMap().keySet().stream().findFirst();
+                        if (firstMaxoDiseaseIdOpt.isPresent()) {
+                            TermId firstMaxoDiseaseId = firstMaxoDiseaseIdOpt.get();
+                            if (firstMaxoDiseaseId == originalDiseaseId) {
+                                Double score = maxodiffResult.rankMaxoScore().maxoScore();
+                                maxoScoreMap = diseaseMaxoScoresMap.get(maxoId);
+                                maxoScoreMap.replace(originalDiseaseId, score);
+                                diseaseMaxoScoresMap.replace(maxoId, maxoScoreMap);
+                            }
+                        }
+                    }
                 }
 
             }
@@ -268,6 +287,7 @@ public class MaxodiffController {
             model.addAttribute("allHpoTermsMap", hpoTermsMap);
             model.addAttribute("allMaxoTermsMap", maxoTermsMap);
             model.addAttribute("maxoTables", resultsList.subList(0, nDisplayed));
+            model.addAttribute("diseaseMaxoScoresMap", diseaseMaxoScoresMap);
 
             String htmlString = HtmlResults.writeHTMLResults(sample, nDiseases, nRepetitions, resultsList,
                     biometadataService, hpoTermCounts);

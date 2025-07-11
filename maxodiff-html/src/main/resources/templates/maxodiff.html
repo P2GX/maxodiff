@@ -339,9 +339,49 @@
 
 <div th:if="${maxoTables != null and #lists.size(maxoTables) > 0}">
 
+    <th:block>
+        <div class="section-box">
+
+            <table class='countsTable'>
+                <thead>
+                <tr th:if="${refiner == 'score'}">
+                    <th></th>
+                    <th:block th:each= "maxoTable : ${maxoTables}">
+                        <th:block th:with="maxoLabel=${allMaxoTermsMap.get(maxoTable.rankMaxoScore.maxoId)}">
+                            <th>
+                                <div th:text="${#strings.length(maxoLabel) > 30} ?
+                        ${#strings.substring(maxoLabel, 0, 30) + '...'} : ${maxoLabel}"></div>
+                            </th>
+                        </th:block>
+                    </th:block>
+                </tr>
+                </thead>
+
+                <tbody>
+                <tr></tr>
+                <th:block th:each= "diagnosis : ${orderedDiagnoses}">
+                    <tr th:if="${refiner == 'score'}">
+                        <td th:text="${omimTerms.get(diagnosis.diseaseId)}"></td>
+                        <th:block th:each= "maxoTable : ${maxoTables}">
+                            <th:block th:with="score=${diseaseMaxoScoresMap.get(maxoTable.rankMaxoScore.maxoId).get(diagnosis.diseaseId)}">
+                                <td>
+                                    <div th:style="|width: 80%; height: 80%; margin: auto;
+                        background: rgba(160, 32, 240, ${#numbers.formatDecimal(score, 1, 4)})|">
+                                    </div>
+                                </td>
+                            </th:block>
+                        </th:block>
+                    </tr>
+                </th:block>
+                </tbody>
+            </table>
+        </div>
+
+    </th:block>
+
     <th:block th:each= "maxoTable, iter : ${maxoTables}">
         <div class="section-box">
-        <h2 th:text="${iter.index+1} + ') ' + ${maxoTable.maxoTermScore.maxoId} + ': ' + ${allMaxoTermsMap.get(maxoTable.maxoTermScore.maxoId)} + ' (&Delta;Score: ' + ${#numbers.formatDecimal(maxoTable.maxoTermScore.scoreDiff, 0, 2)} + ')'"></h2>
+        <h2 th:text="${iter.index+1} + ') ' + ${maxoTable.rankMaxoScore.maxoId} + ': ' + ${allMaxoTermsMap.get(maxoTable.rankMaxoScore.maxoId)} + ' (&Delta;Score: ' + ${#numbers.formatDecimal(maxoTable.rankMaxoScore.maxoScore, 0, 2)} + ')'"></h2>
         <table class="scoreTable">
             <tbody>
             <tr th:if="${refiner == 'score'}">
