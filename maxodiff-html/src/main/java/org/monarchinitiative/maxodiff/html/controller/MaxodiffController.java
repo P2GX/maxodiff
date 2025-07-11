@@ -86,6 +86,7 @@ public class MaxodiffController {
                               @RequestParam(value = "refiner", required = false) String refiner,
                               @RequestParam(value = "nDiseases", required = false) Integer nDiseases,
                               @RequestParam(value = "nRepetitions", required = false) Integer nRepetitions,
+                              @RequestParam(value = "view", required = false) String view,
                               Model model) throws Exception {
 
         String engineName = "phenomizer";
@@ -93,6 +94,7 @@ public class MaxodiffController {
         model.addAttribute("sampleId", sampleId);
         model.addAttribute("presentHpoTermIds", presentHpoTermIds);
         model.addAttribute("excludedHpoTermIds", excludedHpoTermIds);
+        model.addAttribute("view", view);
 
         //TODO: add other possible separators to regex
         //TODO: only add valid termIDs to list

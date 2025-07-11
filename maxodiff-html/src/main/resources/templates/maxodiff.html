@@ -170,6 +170,24 @@
           margin-bottom: 0.5em;
         }
 
+        .section-box-view {
+          border: 1px solid #ccc;
+          border-left: 6px solid #000000;
+          border-radius: 8px;
+          padding: 1em;
+          margin: 2em 0;
+          background: #F5F5F5;
+          box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+          width: 600px;
+          grid-area: view;
+        }
+
+        .section-box-view h1 {
+          font-size: 1.4em;
+          color: #000000;
+          margin-bottom: 0.5em;
+        }
+
         .section-box-sample {
           border: 1px solid #ccc;
           border-left: 6px solid #663399;
@@ -178,7 +196,7 @@
           margin: 2em 0;
           background: #E6E6FA;
           box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-          width: 800px;
+          width: 600px;
           grid-area: sample;
         }
 
@@ -215,6 +233,14 @@
 
 <form th:action="@{/maxodiff}">
 
+    <div class="section-box-view">
+        <h1>View Results As:</h1>
+
+        <select th:value="${view} ?: clinician" name="view" id="view">
+            <option th:selected="${view} == clinician ? selected" value="clinician">Clinician</option>
+            <option th:selected="${view} == researcher ? selected" value="researcher">Researcher</option>
+        </select>
+    </div>
 
     <div th:fragment="sample" th:object="${sample}" class="section-box-sample" enctype="multipart/form-data">
         <h1>Sample Input</h1>
@@ -339,100 +365,103 @@
 
 <div th:if="${maxoTables != null and #lists.size(maxoTables) > 0}">
 
-    <th:block>
-        <div class="section-box">
+    <div th:if="${view == 'clinician'}">
+        <th:block>
+            <div class="section-box">
 
-            <table class='countsTable'>
-                <thead>
-                <tr th:if="${refiner == 'score'}">
-                    <th></th>
-                    <th:block th:each= "maxoTable : ${maxoTables}">
-                        <th:block th:with="maxoLabel=${allMaxoTermsMap.get(maxoTable.rankMaxoScore.maxoId)}">
-                            <th>
-                                <div th:text="${#strings.length(maxoLabel) > 30} ?
-                        ${#strings.substring(maxoLabel, 0, 30) + '...'} : ${maxoLabel}"></div>
-                            </th>
-                        </th:block>
-                    </th:block>
-                </tr>
-                </thead>
-
-                <tbody>
-                <tr></tr>
-                <th:block th:each= "diagnosis : ${orderedDiagnoses}">
+                <table class='countsTable'>
+                    <thead>
                     <tr th:if="${refiner == 'score'}">
-                        <td th:text="${omimTerms.get(diagnosis.diseaseId)}"></td>
+                        <th></th>
                         <th:block th:each= "maxoTable : ${maxoTables}">
-                            <th:block th:with="score=${diseaseMaxoScoresMap.get(maxoTable.rankMaxoScore.maxoId).get(diagnosis.diseaseId)}">
-                                <td>
-                                    <div th:style="|width: 80%; height: 80%; margin: auto;
-                        background: rgba(160, 32, 240, ${#numbers.formatDecimal(score, 1, 4)})|">
-                                    </div>
-                                </td>
+                            <th:block th:with="maxoLabel=${allMaxoTermsMap.get(maxoTable.rankMaxoScore.maxoId)}">
+                                <th>
+                                    <div th:text="${#strings.length(maxoLabel) > 30} ?
+                        ${#strings.substring(maxoLabel, 0, 30) + '...'} : ${maxoLabel}"></div>
+                                </th>
                             </th:block>
                         </th:block>
                     </tr>
-                </th:block>
-                </tbody>
-            </table>
-        </div>
+                    </thead>
 
-    </th:block>
+                    <tbody>
+                    <tr></tr>
+                    <th:block th:each= "diagnosis : ${orderedDiagnoses}">
+                        <tr th:if="${refiner == 'score'}">
+                            <td th:text="${omimTerms.get(diagnosis.diseaseId)}"></td>
+                            <th:block th:each= "maxoTable : ${maxoTables}">
+                                <th:block th:with="score=${diseaseMaxoScoresMap.get(maxoTable.rankMaxoScore.maxoId).get(diagnosis.diseaseId)}">
+                                    <td>
+                                        <div th:style="|width: 80%; height: 80%; margin: auto;
+                        background: rgba(160, 32, 240, ${#numbers.formatDecimal(score, 1, 4)})|">
+                                        </div>
+                                    </td>
+                                </th:block>
+                            </th:block>
+                        </tr>
+                    </th:block>
+                    </tbody>
+                </table>
+            </div>
 
-    <th:block th:each= "maxoTable, iter : ${maxoTables}">
-        <div class="section-box">
-        <h2 th:text="${iter.index+1} + ') ' + ${maxoTable.rankMaxoScore.maxoId} + ': ' + ${allMaxoTermsMap.get(maxoTable.rankMaxoScore.maxoId)} + ' (&Delta;Score: ' + ${#numbers.formatDecimal(maxoTable.rankMaxoScore.maxoScore, 0, 2)} + ')'"></h2>
-        <table class="scoreTable">
-            <tbody>
-            <tr th:if="${refiner == 'score'}">
-                <td>N Observed HPO Terms:</td><td th:text="${maxoTable.rankMaxoScore.discoverableObservedHpoTermIds.size}"></td>
-            </tr>
-            </tbody>
-        </table>
-        <p></p>
+        </th:block>
+    </div>
 
-        <p></p>
+    <div th:if="${view == 'researcher'}">
+        <th:block th:each= "maxoTable, iter : ${maxoTables}">
+            <div class="section-box">
+                <h2 th:text="${iter.index+1} + ') ' + ${maxoTable.rankMaxoScore.maxoId} + ': ' + ${allMaxoTermsMap.get(maxoTable.rankMaxoScore.maxoId)} + ' (&Delta;Score: ' + ${#numbers.formatDecimal(maxoTable.rankMaxoScore.maxoScore, 0, 2)} + ')'"></h2>
+                <table class="scoreTable">
+                    <tbody>
+                    <tr th:if="${refiner == 'score'}">
+                        <td>N Observed HPO Terms:</td><td th:text="${maxoTable.rankMaxoScore.discoverableObservedHpoTermIds.size}"></td>
+                    </tr>
+                    </tbody>
+                </table>
+                <p></p>
+
+                <p></p>
 
 
-        <table class='countsTable'>
-            <thead>
-            <tr th:if="${refiner == 'score'}">
-                <th></th>
-                <th><span style="text-decoration: overline;">
+                <table class='countsTable'>
+                    <thead>
+                    <tr th:if="${refiner == 'score'}">
+                        <th></th>
+                        <th><span style="text-decoration: overline;">
                     <span style="font-weight: bold; color: blue; font-size: 1.0em;">&#916;&thinsp;R</span>
                 </span></th>
-                <th></th>
-                <th:block th:each="hpoId : ${maxoTable.rankMaxoScore.discoverableObservedHpoTermIds}">
-                    <th th:onclick="|window.open('@{|https://hpo.jax.org/browse/term/${hpoId}|}')|"
-                        style="color: blue">
-                        <div th:text="${#strings.length(allHpoTermsMap.get(hpoId)) > 30} ?
+                        <th></th>
+                        <th:block th:each="hpoId : ${maxoTable.rankMaxoScore.discoverableObservedHpoTermIds}">
+                            <th th:onclick="|window.open('@{|https://hpo.jax.org/browse/term/${hpoId}|}')|"
+                                style="color: blue">
+                                <div th:text="${#strings.length(allHpoTermsMap.get(hpoId)) > 30} ?
                         ${#strings.substring(allHpoTermsMap.get(hpoId), 0, 30) + '...'} : ${allHpoTermsMap.get(hpoId)}"></div>
-                    </th>
-                </th:block>
-            </tr>
-            </thead>
+                            </th>
+                        </th:block>
+                    </tr>
+                    </thead>
 
-            <tbody>
-            <tr th:if="${refiner == 'score'}">
-                <td th:text="'Observed in N/' + ${nRepetitions} + ' Simulations:'"></td>
-                <td></td>
-                <td></td>
-                <th:block th:each= "hpoId : ${maxoTable.rankMaxoScore.discoverableObservedHpoTermIds}">
-                    <th:block th:with="ct=${nRepetitionsMap.get(hpoId)}">
-                        <td th:text="${ct}"
-                            th:style="${ct} == null ? |background: rgba(0, 0, 0, 0)| :
+                    <tbody>
+                    <tr th:if="${refiner == 'score'}">
+                        <td th:text="'Observed in N/' + ${nRepetitions} + ' Simulations:'"></td>
+                        <td></td>
+                        <td></td>
+                        <th:block th:each= "hpoId : ${maxoTable.rankMaxoScore.discoverableObservedHpoTermIds}">
+                            <th:block th:with="ct=${nRepetitionsMap.get(hpoId)}">
+                                <td th:text="${ct}"
+                                    th:style="${ct} == null ? |background: rgba(0, 0, 0, 0)| :
                             |background: rgba(255, 215, 0, ${#numbers.formatDecimal((1.0 * ct)/nRepetitions, 1, 4)})|"></td>
-                    </th:block>
-                </th:block>
-            </tr>
-            <tr></tr>
-            <th:block th:each= "omimId, omimIter : ${maxoTable.rankMaxoScore.maxoDiseaseAvgRankChangeMap.keySet()}">
-                <tr th:if="${refiner == 'score'}">
-                    <td th:text="${omimTerms.get(omimId)}"></td>
-                    <th:block th:with="rankChange=${maxoTable.rankMaxoScore.maxoDiseaseAvgRankChangeMap.get(omimId)}">
-                        <td class='parentCell' th:text="${rankChange} == null ? ${rankChange} :
+                            </th:block>
+                        </th:block>
+                    </tr>
+                    <tr></tr>
+                    <th:block th:each= "omimId, omimIter : ${maxoTable.rankMaxoScore.maxoDiseaseAvgRankChangeMap.keySet()}">
+                        <tr th:if="${refiner == 'score'}">
+                            <td th:text="${omimTerms.get(omimId)}"></td>
+                            <th:block th:with="rankChange=${maxoTable.rankMaxoScore.maxoDiseaseAvgRankChangeMap.get(omimId)}">
+                                <td class='parentCell' th:text="${rankChange} == null ? ${rankChange} :
                         (${rankChange} % 1 == 0 ? ${rankChange} : ${#numbers.formatDecimal(rankChange, 1, 4)})"
-                            th:style="${rankChange} < 0 ?
+                                    th:style="${rankChange} < 0 ?
                             |background: rgba(0, 128, 0, ${#numbers.formatDecimal((-1.0 * rankChange)/(nDiseases - 1), 1, 4)})| :
                             |background: rgba(255, 0, 0, ${#numbers.formatDecimal((1.0 * rankChange)/(nDiseases - 1), 1, 4)})|">
                             <span class="tooltip" th:text="${rankChange} < 0 ? <div style=background-color: lightgray; color: blue>
@@ -441,27 +470,28 @@
                             <div style='background-color: lightgray; color: blue'>
                             <b>Disease Term</b>: ${omimTerms.get(omimId)} </div><div><p></p></div>
                             <div><b>Average Rank Decline</b>: ${rankChange} </div>"></span>
-                        </td>
-                    </th:block>
-                    <td></td>
-                    <th:block th:each= "hpoId : ${maxoTable.rankMaxoScore.discoverableObservedHpoTermIds}">
-                        <th:block th:with="ct=${maxoTable.rankMaxoScore.hpoTermIdRepCtsMap.get(omimId).get(hpoId)}">
-                            <td>
-                                <div th:style="${ct} == null ?
+                                </td>
+                            </th:block>
+                            <td></td>
+                            <th:block th:each= "hpoId : ${maxoTable.rankMaxoScore.discoverableObservedHpoTermIds}">
+                                <th:block th:with="ct=${maxoTable.rankMaxoScore.hpoTermIdRepCtsMap.get(omimId).get(hpoId)}">
+                                    <td>
+                                        <div th:style="${ct} == null ?
                                 |width: 80%; height: 80%; margin: auto; background: rgba(160, 32, 240, 0)| :
                                 (${maxoTable.rankMaxoScore.discoverableObservedDescendantHpoTermIds.contains(hpoId)} ?
                                 |width: 80%; height: 80%; margin: auto; background: rgba(160, 32, 240, 0.5)| :
                                 |width: 80%; height: 80%; margin: auto; background: rgba(160, 32, 240, 1)|)"></div>
-                            </td>
-                        </th:block>
+                                    </td>
+                                </th:block>
+                            </th:block>
+                        </tr>
                     </th:block>
-                </tr>
-            </th:block>
-            </tbody>
-        </table>
-        </div>
+                    </tbody>
+                </table>
+            </div>
 
-    </th:block>
+        </th:block>
+    </div>
 </div>
 
 </body>
