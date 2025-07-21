@@ -214,7 +214,7 @@
           margin: 2em 0;
           background: #F0F8FF;
           box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-          width: 500px;
+          width: 600px;
           grid-area: maxodiff;
         }
 
@@ -256,7 +256,8 @@
         <table>
             <tbody>
             <tr>
-                <td>ID:</td><td><input type="text" th:field="*{id}" readonly="readonly"/></td>
+<!--                <td>ID:</td>-->
+                <td><input type="hidden" th:field="*{id}" readonly="readonly"/></td>
             </tr>
             <tr>
 <!--                <td>Present HPO Term IDs:</td>-->

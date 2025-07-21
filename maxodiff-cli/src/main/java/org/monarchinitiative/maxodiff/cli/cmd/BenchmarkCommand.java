@@ -20,7 +20,6 @@ import org.monarchinitiative.maxodiff.core.analysis.refinement.*;
 import org.monarchinitiative.maxodiff.core.diffdg.DifferentialDiagnosisEngine;
 import org.monarchinitiative.maxodiff.core.model.*;
 import org.monarchinitiative.maxodiff.html.results.HtmlResults;
-import org.monarchinitiative.maxodiff.lirical.PhenopacketFileParser;
 import org.monarchinitiative.maxodiff.lirical.*;
 import org.monarchinitiative.maxodiff.core.service.BiometadataService;
 import org.monarchinitiative.maxodiff.phenomizer.IcMicaData;
@@ -45,6 +44,7 @@ import picocli.CommandLine;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.*;
@@ -195,6 +195,16 @@ public class BenchmarkCommand extends DifferentialDiagnosisCommand {
                 int p = 1;
                 int nPhenopackets = phenopacketPaths.size();
                 for (int i = 0; i < nPhenopackets; i++) {
+                    Path pPath0 = phenopacketPaths.get(i);
+                    String phenopacketName0 = pPath0.toFile().getName();
+                    String outputFilename0 = String.join("_", phenopacketName0, ddEngine,
+                                                "n20", "nr30", "maxodiff", "results.html");
+                    Path maxodiffResultsHTMLPath0 = Path.of(String.join(File.separator, outputDir.toString(), outputFilename0));
+
+                    if (Files.exists(maxodiffResultsHTMLPath0)) {
+                        System.out.println("File " + outputFilename0 + " exists.");
+                        continue;
+                    }
                     try {
 
                         Path pPath = phenopacketPaths.get(i);
