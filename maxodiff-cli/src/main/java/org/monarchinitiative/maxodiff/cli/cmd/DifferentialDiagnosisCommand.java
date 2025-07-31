@@ -262,13 +262,13 @@ public class DifferentialDiagnosisCommand extends BaseCommand {
             TermId diseaseId = phenopacketData.diseaseIds().getFirst();
             // Take the MaXo term that has the highest score
             MaxodiffResult topResult = resultsList.getFirst();
-            String maxScoreMaxoTermId = topResult.maxoTermScore().maxoId();
+            String maxScoreMaxoTermId = topResult.rankMaxoScore().maxoId().toString();
             String maxScoreTermLabel = biometadataService.maxoLabel(maxScoreMaxoTermId).orElse("unknown");
-            double maxScoreValue = topResult.maxoTermScore().scoreDiff();
+            double maxScoreValue = topResult.rankMaxoScore().maxoScore();
 
             System.out.println("Max Score: " + maxScoreMaxoTermId + " (" + maxScoreTermLabel + ")" + " = " + maxScoreValue);
 
-            Set<TermId> diseaseIds = topResult.maxoTermScore().omimTermIds();
+            Set<TermId> diseaseIds = topResult.rankMaxoScore().maxoOmimTermIds();
             int topNDiseases = diseaseIds.size();
 
             if (writeOutputFile) {

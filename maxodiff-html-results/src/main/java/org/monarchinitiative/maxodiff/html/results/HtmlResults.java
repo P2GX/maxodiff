@@ -32,12 +32,14 @@ public class HtmlResults {
         sample.presentHpoTermIds().forEach(tid -> samplePresentTermsStringBuilder
                 .append(biometadataService.hpoLabel(tid).orElse("unknown")).append(" (")
                 .append(tid).append("), "));
-        String samplePresentTermsString = samplePresentTermsStringBuilder.substring(0, samplePresentTermsStringBuilder.length() - 2);
+        String samplePresentTermsString = sample.presentHpoTermIds().isEmpty() ? "" :
+                samplePresentTermsStringBuilder.substring(0, samplePresentTermsStringBuilder.length() - 2);
         StringBuilder sampleExcludedTermsStringBuilder = new StringBuilder();
         sample.excludedHpoTermIds().forEach(tid -> sampleExcludedTermsStringBuilder
                 .append(biometadataService.hpoLabel(tid).orElse("unknown")).append(" (")
                 .append(tid).append("), "));
-        String sampleExcludedTermsString = sampleExcludedTermsStringBuilder.substring(0, sampleExcludedTermsStringBuilder.length() - 2);
+        String sampleExcludedTermsString = sample.excludedHpoTermIds().isEmpty() ? "" :
+                sampleExcludedTermsStringBuilder.substring(0, sampleExcludedTermsStringBuilder.length() - 2);
 
         htmlString = htmlString.replace("$sampleResultsTitle", "Maxodiff Analysis Results for " + sampleId);
         htmlString = htmlString.replace("$samplePresentHpoIds", samplePresentTermsString);
