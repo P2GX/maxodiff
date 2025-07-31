@@ -257,7 +257,7 @@ public class DifferentialDiagnosisCommand extends BaseCommand {
                     hpoTermCounts,
                     maxoToHpoTermIdMap);
             List<MaxodiffResult> resultsList = new ArrayList<>(refinementResults.maxodiffResults().stream().toList());
-            resultsList.sort(Comparator.<MaxodiffResult>comparingDouble(mr -> mr.maxoTermScore().scoreDiff()).reversed());
+            resultsList.sort(Comparator.<MaxodiffResult>comparingDouble(mr -> mr.rankMaxoScore().maxoScore()).reversed());
 
             TermId diseaseId = phenopacketData.diseaseIds().getFirst();
             // Take the MaXo term that has the highest score
