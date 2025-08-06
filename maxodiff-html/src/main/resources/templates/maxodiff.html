@@ -159,9 +159,12 @@
           margin: 2em 0;
           background: #f9f9f9;
           box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-          width: fit-content;
-          overflow-x: auto;
-          max-width: 100%;
+          width: calc(1.5 * fit-content);
+          overflow-x: visible;
+          max-width: 50%;
+          left: 50%;
+          margin-right: -50%;
+          transform: translate(50%);
         }
 
         .section-box h2 {
