@@ -14,7 +14,6 @@
 <form th:action="@{/engineInput}">
 
     <select th:value="${engineName} ?: lirical" name="engineName" id="engineName">
-        <option th:selected="${engineName} == exomiser ? selected" value="exomiser">EXOMISER</option>
         <option th:selected="${engineName} == lirical ? selected" value="lirical">LIRICAL</option>
         <option th:selected="${engineName} == phenomizer ? selected" value="phenomizer">PHENOMIZER</option>
     </select>
