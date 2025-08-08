@@ -1,21 +1,23 @@
 # Setting up maxodiff
 
+MaxoDiff can be run from the command-line or as a Web application.
+
 ## Prerequisites
 
 maxodiff is a Java application. If you want to build maxodiff from source, 
 then the build process described below requires
-[Git](https://git-scm.com/book/en/v2) and [Java Development Kit (JDK)](https://openjdk.org/) 17 or better.
+[Git](https://git-scm.com/book/en/v2) and [Java Development Kit (JDK)](https://openjdk.org/) 21 or newer.
 
 
 ## Installing maxodiff
 
 ### Building from sources
 
-To build maxodiff from sources, go the GitHub page of [maxodiff](https://github.com/monarch-initiative/maxodiff),
+To build maxodiff from sources, go the GitHub page of [maxodiff](https://github.com/P2GX/maxodiff),
 and clone or download the project, then build the executable JAR files from sources with Maven:
 
 ```
-  git clone https://github.com/monarch-initiative/maxodiff.git
+  git clone https://github.com/P2GX/maxodiff.git
   cd maxodiff
   ./mvnw clean package
 ```
