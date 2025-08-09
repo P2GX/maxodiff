@@ -39,31 +39,16 @@
             </tr>
             </thead>
             <tbody>
-<!--            <tr>-->
-<!--                <td>Genome Build:</td><td th:text="${options == null} ? '' : *{genomeBuild}"></td>-->
-<!--                <td>Transcript Database:</td><td th:text="${options == null} ? '' : *{transcriptDatabase}"></td>-->
-<!--            </tr>-->
-<!--            <tr>-->
-<!--                <td>Pathogenicity Threshold:</td><td th:text="${options == null} ? '' : *{variantDeleteriousnessThreshold}"></td>-->
-<!--                <td>Default Variant Background Frequency:</td><td th:text="${options == null} ? '' : *{defaultVariantBackgroundFrequency}"></td>-->
-<!--            </tr>-->
             <tr>
                 <td>Scoring Mode:</td><td th:text="${scoringMode == null} ? '' : ${scoringMode}"></td>
             </tr>
-    <!--        <tr>-->
-    <!--            <td>Exomiser Database File:</td><td th:text="*{exomiserPath}"></td>-->
-    <!--            <td>VCF File:</td><td th:text="*{vcfPath}"></td>-->
-    <!--        </tr>-->
             </tbody>
         </table>
     </div>
     <p></p>
 
     <div method="post">
-        <input type="submit" value="Run Phenomizer Calculation" th:disabled="${sample == null or scoringMode == null}"/><!-- th:onclick="runLirical([[${inputRecord}]], [[${liricalRecord}]]);"/>-->
-<!--        <input type="submit" value="Launch Differential Diagnosis Calculation Page"-->
-<!--               th:data-url="@{/sessionResults}"-->
-<!--               onclick="window.open(this.getAttribute('data-url'))"/>-->
+        <input type="submit" value="Run Phenomizer Calculation" th:disabled="${sample == null or scoringMode == null}"/>
     </div>
 
 </form>
