@@ -223,12 +223,14 @@ public class MaxodiffController {
             sample.presentHpoTermIds().forEach(tid -> samplePresentTermsStringBuilder
                     .append(biometadataService.hpoLabel(tid).orElse("unknown")).append(" (")
                     .append(tid).append("), "));
-            String samplePresentTermsString = samplePresentTermsStringBuilder.substring(0, samplePresentTermsStringBuilder.length()-2);
+            String samplePresentTermsString = sample.presentHpoTermIds().isEmpty() ? "" :
+                    samplePresentTermsStringBuilder.substring(0, samplePresentTermsStringBuilder.length() - 2);
             StringBuilder sampleExcludedTermsStringBuilder = new StringBuilder();
             sample.excludedHpoTermIds().forEach(tid -> sampleExcludedTermsStringBuilder
                     .append(biometadataService.hpoLabel(tid).orElse("unknown")).append(" (")
                     .append(tid).append("), "));
-            String sampleExcludedTermsString = sampleExcludedTermsStringBuilder.substring(0, sampleExcludedTermsStringBuilder.length()-2);
+            String sampleExcludedTermsString = sample.excludedHpoTermIds().isEmpty() ? "" :
+                    sampleExcludedTermsStringBuilder.substring(0, sampleExcludedTermsStringBuilder.length() - 2);
             model.addAttribute("samplePresentTermsString", samplePresentTermsString);
             model.addAttribute("sampleExcludedTermsString", sampleExcludedTermsString);
 
@@ -349,9 +351,9 @@ public class MaxodiffController {
     }
 
     @RequestMapping("/upload")
-    public ResponseEntity<Map<String, String>> uploadFile(@RequestParam("file") MultipartFile file, Model model) {
+    public ResponseEntity<Map<String, Object>> uploadFile(@RequestParam("file") MultipartFile file, Model model) {
 
-        Map<String, String> result = new HashMap<>();
+        Map<String, Object> result = new HashMap<>();
         try {
 
             if (!Files.exists(UPLOAD_DIR)) {
@@ -382,22 +384,18 @@ public class MaxodiffController {
 
             model.addAttribute("sample", sample);
 
-            StringBuilder samplePresentTermsStringBuilder = new StringBuilder();
-            sample.presentHpoTermIds().forEach(tid -> samplePresentTermsStringBuilder
-                    .append(biometadataService.hpoLabel(tid).orElse("unknown"))
-                    .append(", "));
-            String samplePresentTermsString = samplePresentTermsStringBuilder.substring(0, samplePresentTermsStringBuilder.length()-2);
-            StringBuilder sampleExcludedTermsStringBuilder = new StringBuilder();
-            sample.excludedHpoTermIds().forEach(tid -> sampleExcludedTermsStringBuilder
-                    .append(biometadataService.hpoLabel(tid).orElse("unknown"))
-                    .append(", "));
-            String sampleExcludedTermsString = sampleExcludedTermsStringBuilder.substring(0, sampleExcludedTermsStringBuilder.length()-2);
+            Map<TermId, String> samplePresentTermsMap = new HashMap<>();
+            sample.presentHpoTermIds().forEach(tid ->
+                    samplePresentTermsMap.put(tid, biometadataService.hpoLabel(tid).orElse("unknown")));
+            Map<TermId, String> sampleExcludedTermsMap = new HashMap<>();
+            sample.excludedHpoTermIds().forEach(tid ->
+                    sampleExcludedTermsMap.put(tid, biometadataService.hpoLabel(tid).orElse("unknown")));
 
-            result.put("presentHpoTerms", samplePresentTermsString);
-            result.put("excludedHpoTerms", sampleExcludedTermsString);
+            result.put("presentHpoTerms", samplePresentTermsMap);
+            result.put("excludedHpoTerms", sampleExcludedTermsMap);
 
-            model.addAttribute("presentHpoTerms", samplePresentTermsString);
-            model.addAttribute("excludedHpoTerms", sampleExcludedTermsString);
+            model.addAttribute("presentHpoTerms", samplePresentTermsMap);
+            model.addAttribute("excludedHpoTerms", sampleExcludedTermsMap);
 
             return ResponseEntity.ok(result);
         } catch (Exception e) {

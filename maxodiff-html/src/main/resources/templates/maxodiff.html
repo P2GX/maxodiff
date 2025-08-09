@@ -272,11 +272,11 @@
             </tr>
             <tr>
                 <td>Present HPO Terms:</td>
-                <td><textarea rows="1" th:value="${presentHpoTerms}" name="presentHpoTerms" readonly="readonly"></textarea></td>
+                <td><ul id="presentHpoTermsList"></ul></td>
             </tr>
             <tr>
                 <td>Excluded HPO Terms:</td>
-                <td><textarea rows="1" th:value="${excludedHpoTerms}" name="excludedHpoTerms"readonly="readonly"></textarea></td>
+                <td><ul id="excludedHpoTermsList"></ul></td>
             </tr>
             </tbody>
         </table>
@@ -287,6 +287,23 @@
     </div>
 
     <script>
+        function addHpoTermToList(listContainer, termMap) {
+            for (const item of termMap) {
+                    console.log(item);
+                    console.log(item.key);
+                    const newItem = document.createElement('li');
+                    const newLink = document.createElement('a');
+                    const hpoId = item[0];
+                    const hpoLabel = item[1];
+                    newLink.href = 'https://hpo.jax.org/browse/term/' + hpoId;
+                    newLink.textContent = hpoLabel + ' (' + hpoId + ')';
+                    newLink.target = "_blank";
+                    newLink.rel = "noopener noreferrer";
+                    newItem.appendChild(newLink);
+                    listContainer.appendChild(newItem);
+                };
+        };
+
         function uploadFile() {
             const fileInput = document.getElementById('fileInput');
             const file = fileInput.files[0];
@@ -303,8 +320,13 @@
                 document.querySelector('[name="id"]').value = data.id || '';
                 document.querySelector('[name="presentHpoTermIds"]').value = data.presentHpoTermIds || '';
                 document.querySelector('[name="excludedHpoTermIds"]').value = data.excludedHpoTermIds || '';
-                document.querySelector('[name="presentHpoTerms"]').value = data.presentHpoTerms || '';
-                document.querySelector('[name="excludedHpoTerms"]').value = data.excludedHpoTerms || '';
+
+                var presentHpoTermsListContainer = document.getElementById('presentHpoTermsList');
+                var presentHpoTermsMap = new Map(Object.entries(data.presentHpoTerms));
+                addHpoTermToList(presentHpoTermsListContainer, presentHpoTermsMap);
+                var excludedHpoTermsListContainer = document.getElementById('excludedHpoTermsList');
+                var excludedHpoTermsMap = new Map(Object.entries(data.excludedHpoTerms));
+                addHpoTermToList(excludedHpoTermsListContainer, excludedHpoTermsMap);
             })
             .catch(error => console.error("Upload error:", error));
 
