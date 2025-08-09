@@ -3,7 +3,7 @@ package org.monarchinitiative.maxodiff.html.controller;
 import org.monarchinitiative.maxodiff.core.diffdg.DifferentialDiagnosisEngine;
 import org.monarchinitiative.maxodiff.phenomizer.IcMicaData;
 import org.monarchinitiative.maxodiff.phenomizer.PhenomizerDifferentialDiagnosisEngine;
-import org.monarchinitiative.maxodiff.phenomizer.ScoringMode;
+import org.monarchinitiative.maxodiff.phenomizer.PhenomizerScoringMode;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
 import org.monarchinitiative.phenol.ontology.similarity.TermPair;
 import org.springframework.stereotype.Controller;
@@ -31,11 +31,11 @@ public class PhenomizerInputController {
 
     @RequestMapping("/phenomizerInput")
     public String phenomizerInput(
-            @RequestParam(value = "scoringMode", required = false) ScoringMode scoringMode,
+            @RequestParam(value = "scoringMode", required = false) PhenomizerScoringMode scoringMode,
             Model model) {
 
             if (scoringMode == null) {
-                scoringMode = ScoringMode.ONE_SIDED;
+                scoringMode = PhenomizerScoringMode.ONE_SIDED;
             }
             model.addAttribute("scoringMode", scoringMode);
 

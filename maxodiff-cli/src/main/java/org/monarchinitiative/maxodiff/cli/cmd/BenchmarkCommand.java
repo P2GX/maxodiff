@@ -6,7 +6,6 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
-import org.monarchinitiative.lirical.configuration.impl.BundledBackgroundVariantFrequencyServiceFactory;
 import org.monarchinitiative.lirical.core.Lirical;
 import org.monarchinitiative.lirical.core.analysis.AnalysisOptions;
 import org.monarchinitiative.lirical.core.analysis.probability.PretestDiseaseProbabilities;
@@ -25,7 +24,7 @@ import org.monarchinitiative.maxodiff.core.service.BiometadataService;
 import org.monarchinitiative.maxodiff.phenomizer.IcMicaData;
 import org.monarchinitiative.maxodiff.phenomizer.IcMicaDictLoader;
 import org.monarchinitiative.maxodiff.phenomizer.PhenomizerDifferentialDiagnosisEngine;
-import org.monarchinitiative.maxodiff.phenomizer.ScoringMode;
+import org.monarchinitiative.maxodiff.phenomizer.PhenomizerScoringMode;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDisease;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
 import org.monarchinitiative.phenol.annotations.io.hpo.HpoDiseaseLoader;
@@ -44,7 +43,6 @@ import picocli.CommandLine;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.*;
@@ -165,7 +163,7 @@ public class BenchmarkCommand extends DifferentialDiagnosisCommand {
                         .build();
                 engine = liricalDifferentialDiagnosisEngineConfigurer.configure(analysisOptions);
             } else if (ddEngine.equals("phenomizer")) {
-                ScoringMode scoringMode = scoringModeArg.equals("one-sided") ? ScoringMode.ONE_SIDED : ScoringMode.TWO_SIDED;
+                PhenomizerScoringMode scoringMode = scoringModeArg.equals("one-sided") ? PhenomizerScoringMode.ONE_SIDED : PhenomizerScoringMode.TWO_SIDED;
                 Map<TermPair, Double> icMicaDict = icMicaData.icMicaDict();
                 engine = new PhenomizerDifferentialDiagnosisEngine(hpoDiseases, icMicaDict, scoringMode);
             }

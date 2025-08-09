@@ -15,7 +15,7 @@ import org.monarchinitiative.maxodiff.html.results.HtmlResults;
 import org.monarchinitiative.maxodiff.lirical.PhenopacketFileParser;
 import org.monarchinitiative.maxodiff.phenomizer.IcMicaData;
 import org.monarchinitiative.maxodiff.phenomizer.PhenomizerDifferentialDiagnosisEngine;
-import org.monarchinitiative.maxodiff.phenomizer.ScoringMode;
+import org.monarchinitiative.maxodiff.phenomizer.PhenomizerScoringMode;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDisease;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
 import org.monarchinitiative.phenol.ontology.data.MinimalOntology;
@@ -118,7 +118,7 @@ public class MaxodiffController {
         List<DifferentialDiagnosis> differentialDiagnoses = List.of();
 
 
-        ScoringMode scoringMode = ScoringMode.ONE_SIDED;
+        PhenomizerScoringMode scoringMode = PhenomizerScoringMode.ONE_SIDED;
         model.addAttribute("scoringMode", scoringMode);
 
         Map<TermPair, Double> icMicaDict = icMicaData.icMicaDict();

@@ -24,7 +24,7 @@ import org.monarchinitiative.maxodiff.core.service.BiometadataService;
 import org.monarchinitiative.maxodiff.phenomizer.IcMicaData;
 import org.monarchinitiative.maxodiff.phenomizer.IcMicaDictLoader;
 import org.monarchinitiative.maxodiff.phenomizer.PhenomizerDifferentialDiagnosisEngine;
-import org.monarchinitiative.maxodiff.phenomizer.ScoringMode;
+import org.monarchinitiative.maxodiff.phenomizer.PhenomizerScoringMode;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDisease;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
 import org.monarchinitiative.phenol.annotations.io.hpo.HpoDiseaseLoader;
@@ -119,7 +119,7 @@ public class DifferentialDiagnosisCommand extends BaseCommand {
         int nDiseases = nDiseasesArg;
         int nRepetitions = nRepetitionsArg;
         String ddEngine = engineArg;
-        ScoringMode scoringMode = scoringModeArg.equals("one-sided") ? ScoringMode.ONE_SIDED : ScoringMode.TWO_SIDED;
+        PhenomizerScoringMode scoringMode = scoringModeArg.equals("one-sided") ? PhenomizerScoringMode.ONE_SIDED : PhenomizerScoringMode.TWO_SIDED;
 
         try (BufferedWriter writer = openOutputFileWriter(maxodiffResultsFilePath); CSVPrinter printer = CSVFormat.DEFAULT.print(writer)) {
             runSingleMaxodiffAnalysis(phenopacketPath, phenopacketName, nDiseases, nRepetitions, ddEngine, scoringMode, true, printer);
@@ -128,8 +128,15 @@ public class DifferentialDiagnosisCommand extends BaseCommand {
         return 0;
     }
 
-    protected void runSingleMaxodiffAnalysis(Path phenopacketPath, String phenopacketName, int nDiseases, int nRepetitions,
-                                             String ddEngine, ScoringMode scoringMode, boolean writeOutputFile, CSVPrinter printer) throws Exception {
+    protected void runSingleMaxodiffAnalysis(
+            Path phenopacketPath,
+            String phenopacketName,
+            int nDiseases,
+            int nRepetitions,
+            String ddEngine,
+            PhenomizerScoringMode scoringMode,
+            boolean writeOutputFile,
+            CSVPrinter printer) throws Exception {
 
 
         Path hpoPath = MaxodiffDataResolver.of(maxoDataPath).hpoJson();

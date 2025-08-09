@@ -27,14 +27,22 @@ of Maven prior to build is *not* required.
 
 ### Download resources
 
-We can download the resource files needed by maxodiff by running the `download` command of the CLI JAR:
-
+We can download the resource files needed by maxodiff by running the `download` command 
+of the CLI JAR:
 ```shell
 java -jar maxodiff-cli/target/maxodiff-cli.jar download
 ```
 
 The command will download the data files into `data` folder that will be created in the current working directory.
 See the command's documentation for more options.
+
+### MICA dictionary
+To run MaxoDiff with Phenomizer, we must first generate a file that contains the
+most informative common ancestors for pairs of HPO terms. See the class ``IcMicaDictLoader``.
+
+To generate this file ...
+
+
 
 ### Start Maxodiff web app
 
