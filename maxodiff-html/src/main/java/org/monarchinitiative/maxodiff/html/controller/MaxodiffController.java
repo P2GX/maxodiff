@@ -308,7 +308,7 @@ public class MaxodiffController {
     @GetMapping("progress1")
     @ResponseBody
     public double getProgress() {
-        return rankMaxo.getRankMaxoProgress().getTotalProgress();
+        return rankMaxo == null ? 0.01 : rankMaxo.getRankMaxoProgress().getTotalProgress();
     }
 
     @GetMapping("progress-bar1")
