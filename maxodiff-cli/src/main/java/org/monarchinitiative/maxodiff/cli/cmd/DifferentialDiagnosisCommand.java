@@ -42,6 +42,7 @@ import picocli.CommandLine;
 
 import java.io.*;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -143,7 +144,11 @@ public class DifferentialDiagnosisCommand extends BaseCommand {
         IcMicaData icMicaData = null;
         if (ddEngine.equals("phenomizer")) {
             LOGGER.info("Loading icMicaDict...");
-            icMicaData = IcMicaDictLoader.loadIcMicaDict(MaxodiffDataResolver.of(maxoDataPath).icMicaDict());
+            try {
+                icMicaData = IcMicaDictLoader.loadIcMicaDict(MaxodiffDataResolver.of(maxoDataPath).icMicaDict());
+            } catch (NoSuchFileException ex) {
+                throw new Exception(String.join(". ", ex.getMessage(), "Run Download command to download the necessary term-pair-similarity file."));
+            }
         }
 
         if (writeOutputFile) {
