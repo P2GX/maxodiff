@@ -1,5 +1,6 @@
 package org.monarchinitiative.maxodiff.core.model;
 
+import org.monarchinitiative.maxodiff.core.JpsChecker;
 import org.monarchinitiative.maxodiff.core.ProgessBar;
 import org.monarchinitiative.maxodiff.core.SimpleTerm;
 import org.monarchinitiative.maxodiff.core.analysis.*;
@@ -68,7 +69,9 @@ public class RankMaxo {
                         engine,  minimalOntology, ontology,  sampleHpoIds,  ppkt, nRepetitions, diseaseIds, maxoId);
                 double done = completedTasks.incrementAndGet();
                 rankMaxoProgress.updateProgress(maxoId, done);
-                pb.print(finalMaxoIdx);
+                if (JpsChecker.isMainClassRunning("org.monarchinitiative.maxodiff.cli.Main")) {
+                    pb.print(finalMaxoIdx);
+                }
                 return evaluateMaxoTerm.call();
             });
             maxoIdx++;
