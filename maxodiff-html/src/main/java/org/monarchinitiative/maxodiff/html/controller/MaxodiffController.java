@@ -29,6 +29,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -122,6 +123,10 @@ public class MaxodiffController {
         model.addAttribute("scoringMode", scoringMode);
 
         Map<TermPair, Double> icMicaDict = icMicaData.icMicaDict();
+        System.out.println(icMicaDict.isEmpty());
+        if (icMicaDict.isEmpty()) {
+            throw new Exception("Phenomizer necessary MICA information content is empty. Run Download command to download the necessary term-pair-similarity file.");
+        }
         engine = new PhenomizerDifferentialDiagnosisEngine(hpoDiseases, icMicaDict, scoringMode);
 
         model.addAttribute("icMicaDict", icMicaDict);
