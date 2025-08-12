@@ -237,7 +237,7 @@
 <form th:action="@{/maxodiff}">
 
     <div class="section-box-view">
-        <h1>View Results As:</h1>
+        <h1>View by Diagnostic Modality:</h1>
 
         <select th:value="${view} ?: clinician" name="view" id="view">
             <option th:selected="${view} == clinician ? selected" value="clinician">Clinician</option>
