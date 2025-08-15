@@ -4,7 +4,6 @@ import org.monarchinitiative.maxodiff.core.SimpleTerm;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 
 import java.io.*;
-import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
@@ -12,50 +11,71 @@ import java.util.Set;
 
 public class MaxoDxAnnots {
 
-    private final Map<SimpleTerm, Set<SimpleTerm>> simpleTermSetMap;
-
+    private MaxoDxAnnots() {}
 
     /**
-     * Read TSV from annots_tsv_file
-     * hpo_id	hpo_label	predicate_id	maxo_id	maxo_label	creator_id
-     * @param annots_tsv_file
+     * @deprecated use {@link #parseMaxoToHpo(BufferedReader)} instead
      */
-    public MaxoDxAnnots(Path annots_tsv_file) {
-        simpleTermSetMap = new HashMap<>();
-        try (BufferedReader br = new BufferedReader(new FileReader(annots_tsv_file.toFile()))) {
-            String line;
-            while ((line = br.readLine()) != null) {
-                if (line.startsWith("#")) continue;
-                if (line.startsWith("hpo_id")) continue;
-                String [] fields = line.split("\t");
-                if (fields.length != 6) {
-                    System.err.printf("Malformed line with %d fields (expected 6): %s", fields.length, line);
-                    continue;
-                }
-                TermId hpoid = TermId.of(fields[0]);
-                String hpoLabel = fields[1];
-                SimpleTerm hterm = new SimpleTerm(hpoid, hpoLabel);
-                String predicate = fields[2];
-                if (predicate.equals("is_observable_through")) {
-                    ; // good
-                } else if (predicate.equals("is_prenatally_observable_through")) {
-                    continue; // skip prenatal for this analysis
-                } else {
-                    throw new RuntimeException(String.format("Did not recognize predicate %s", predicate));
-                }
+    @Deprecated
+    public static Map<SimpleTerm, Set<SimpleTerm>> parseHpoToMaxo(BufferedReader reader) throws IOException {
+        Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxo = new HashMap<>();
+
+        String line;
+        while ((line = reader.readLine()) != null) {
+            if (line.startsWith("#")) continue;
+            if (line.startsWith("hpo_id")) continue;
+            String[] fields = line.split("\t");
+            if (fields.length != 6) {
+                System.err.printf("Malformed line with %d fields (expected 6): %s", fields.length, line);
+                continue;
+            }
+            TermId hpoid = TermId.of(fields[0]);
+            String hpoLabel = fields[1];
+            SimpleTerm hterm = new SimpleTerm(hpoid, hpoLabel);
+            String predicate = fields[2];
+            if (predicate.equals("is_observable_through")) {
                 TermId maxoId = TermId.of(fields[3]);
                 String maxoLabel = fields[4];
                 SimpleTerm mterm = new SimpleTerm(maxoId, maxoLabel);
-                simpleTermSetMap.putIfAbsent(hterm, new HashSet<>());
-                simpleTermSetMap.get(hterm).add(mterm);
+                hpoToMaxo.computeIfAbsent(hterm, whatever -> new HashSet<>()).add(mterm);
+            } else if (predicate.equals("is_prenatally_observable_through")) {
+                continue; // skip prenatal for this analysis
+            } else {
+                throw new RuntimeException(String.format("Did not recognize predicate %s", predicate));
             }
-        } catch (IOException e) {
-            e.printStackTrace();
         }
 
+        return hpoToMaxo;
     }
 
-    public Map<SimpleTerm, Set<SimpleTerm>> getSimpleTermSetMap() {
-        return simpleTermSetMap;
+    public static Map<SimpleTerm, Set<SimpleTerm>> parseMaxoToHpo(BufferedReader reader) throws IOException {
+        Map<SimpleTerm, Set<SimpleTerm>> maxoToHpo = new HashMap<>();
+
+        String line;
+        while ((line = reader.readLine()) != null) {
+            if (line.startsWith("#")) continue;
+            if (line.startsWith("hpo_id")) continue;
+            String[] fields = line.split("\t");
+            if (fields.length != 6) {
+                System.err.printf("Malformed line with %d fields (expected 6): %s", fields.length, line);
+                continue;
+            }
+            TermId hpoid = TermId.of(fields[0]);
+            String hpoLabel = fields[1];
+            SimpleTerm hterm = new SimpleTerm(hpoid, hpoLabel);
+            String predicate = fields[2];
+            if (predicate.equals("is_observable_through")) {
+                TermId maxoId = TermId.of(fields[3]);
+                String maxoLabel = fields[4];
+                SimpleTerm mterm = new SimpleTerm(maxoId, maxoLabel);
+                maxoToHpo.computeIfAbsent(mterm, whatever -> new HashSet<>()).add(hterm);
+            } else if (predicate.equals("is_prenatally_observable_through")) {
+                continue; // skip prenatal for this analysis
+            } else {
+                throw new RuntimeException(String.format("Did not recognize predicate %s", predicate));
+            }
+        }
+
+        return maxoToHpo;
     }
 }

@@ -1,0 +1,75 @@
+<!DOCTYPE html SYSTEM "http://www.thymeleaf.org/dtd/xhtml1-strict-thymeleaf-spring4-4.dtd">
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<link rel="stylesheet" type="text/css" th:href="@{/css/style.css}"/>
+<head>
+    <meta charset="UTF-8">
+    <title>maxodiff analysis</title>
+</head>
+<body>
+
+<div th:replace="~{index :: header}">...</div>
+
+<form th:action="@{/sampleInput}" th:object="${sample}" enctype="multipart/form-data">
+
+    <div th:fragment="sample">
+        <h1>Differential Diagnosis Sample Input</h1>
+
+        <label for="file">Upload Phenopacket File: </label>
+        <input type="file" id="fileInput" name="file"/>
+        <button type="button" onclick="uploadFile()">Upload File</button>
+        <p></p>
+        <!--        <label>Phenopacket: </label>-->
+        <!--        <input type="text" th:value="${phenopacketName}" th:readonly="true"/>-->
+
+        <h2>Sample parameters:</h2>
+        <table>
+            <tbody>
+            <tr>
+                <td>ID:</td><td><input type="text" th:value="*{id}" name="id" id="id"/></td>
+            </tr>
+            <tr>
+                <td>Present HPO Term IDs:</td>
+                <td><textarea rows="1" th:field="*{presentHpoTermIds}"></textarea></td>
+            </tr>
+            <tr>
+                <td>Excluded HPO Term IDs:</td>
+                <td><textarea rows="1" th:field="*{excludedHpoTermIds}"></textarea></td>
+            </tr>
+            </tbody>
+        </table>
+
+        <div method="post">
+            <input type="submit" value="Update Sample"/>
+<!--            <input type="submit" th:value="'Launch ' + ${engineName} + ' Input Page'"-->
+<!--                   th:data-url="@{/__${engineName}__Input}"-->
+<!--                   onclick="window.open(this.getAttribute('data-url'))"/>-->
+        </div>
+
+        <script>
+            function uploadFile() {
+                const fileInput = document.getElementById('fileInput');
+                const file = fileInput.files[0];
+                const formData = new FormData();
+                formData.append("file", file);
+
+                fetch('/upload', {
+                    method: 'POST',
+                    body: formData
+                })
+                .then(response => response.json())
+                .then(data => {
+    <!--                document.querySelector('[name="phenopacketName"]').value = data.phenopacket || '';-->
+                    document.querySelector('[name="id"]').value = data.id || '';
+                    document.querySelector('[name="presentHpoTermIds"]').value = data.presentHpoTermIds || '';
+                    document.querySelector('[name="excludedHpoTermIds"]').value = data.excludedHpoTermIds || '';
+                })
+                .catch(error => console.error("Upload error:", error));
+            }
+        </script>
+    </div>
+
+</form>
+
+</body>
+</html>
+

@@ -1,13 +1,10 @@
 package org.monarchinitiative.maxodiff.cli;
 
-import org.monarchinitiative.maxodiff.cli.cmd.BatchDiagnosisCommand;
-import org.monarchinitiative.maxodiff.cli.cmd.DifferentialDiagnosisCommand;
-import org.monarchinitiative.maxodiff.cli.cmd.DownloadCommand;
-import org.monarchinitiative.maxodiff.cli.cmd.MaxodiffCommand;
+import org.monarchinitiative.maxodiff.cli.cmd.*;
 import picocli.CommandLine;
 import java.util.concurrent.Callable;
 
-@CommandLine.Command(name = "org/monarchinitiative/maxodiff/cli", mixinStandardHelpOptions = true, version = "0.0.1",
+@CommandLine.Command(name = "maxodiff", mixinStandardHelpOptions = true, version = "0.0.1",
         description = "maxo terms for differential diagnosis")
 public class Main implements Callable<Integer> {
 
@@ -17,10 +14,12 @@ public class Main implements Callable<Integer> {
             args = new String[]{"-h"};
         }
         CommandLine cline = new CommandLine(new Main())
-                .addSubcommand("maxodiff", new MaxodiffCommand())
+                //.addSubcommand("maxodiff", new MaxodiffCommand())
                 .addSubcommand("download", new DownloadCommand())
                 .addSubcommand("diagnosis", new DifferentialDiagnosisCommand())
-                .addSubcommand("batchDiagnosis", new BatchDiagnosisCommand())
+                .addSubcommand("batch", new BatchDiagnosisCommand())
+                .addSubcommand("benchmark", new BenchmarkCommand())
+                .addSubcommand("precompute-resnik", new PrecomputeResnikMapCommand())
                 ;
         cline.setToggleBooleanFlags(false);
         int exitCode = cline.execute(args);

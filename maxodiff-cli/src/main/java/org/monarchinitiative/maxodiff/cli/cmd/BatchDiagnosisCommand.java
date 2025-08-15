@@ -2,6 +2,7 @@ package org.monarchinitiative.maxodiff.cli.cmd;
 
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
+import org.monarchinitiative.maxodiff.phenomizer.ScoringMode;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -12,8 +13,6 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.*;
-import java.util.stream.Collectors;
-import java.util.zip.GZIPOutputStream;
 
 
 /**
@@ -30,24 +29,24 @@ public class BatchDiagnosisCommand extends DifferentialDiagnosisCommand {
             description = "Path to directory containing phenopackets.")
     protected String batchDir;
 
-    @CommandLine.Option(names = {"-W", "--weights"},
-            split=",",
-            arity = "1..*",
-            description = "Comma-separated list of weight values to use in final score calculation.")
-    public List<Double> weightsArg;
-
-    @CommandLine.Option(names = {"-T", "--thresholds"},
+    @CommandLine.Option(names = {"-N", "--nDiseasesList"},
 //            required = true,
             split=",",
             arity = "1..*",
-            description = "Comma-separated list of posttest probability thresholds for filtering diseases to include in differential diagnosis.")
-    protected List<Double> thresholdsArg;
+            description = "Comma-separated list of n diseases to include in differential diagnosis.")
+    protected List<Integer> nDiseasesArg;
+    @CommandLine.Option(names = {"-NR", "--nRepetitionsList"},
+//            required = true,
+            split=",",
+            arity = "1..*",
+            description = "Comma-separated list of n repetitions to include in differential diagnosis.")
+    protected List<Integer> nRepetitionsArg;
 
     public static Map<String, List<Object>> resultsMap;
 
 
     @Override
-    public Integer call() throws Exception {
+    public Integer execute() throws Exception {
 
         List<Path> phenopacketPaths = new ArrayList<>();
         if (batchDir != null) {
@@ -63,60 +62,57 @@ public class BatchDiagnosisCommand extends DifferentialDiagnosisCommand {
         }
         Collections.sort(phenopacketPaths);
 
+        List<Integer> nDiseasesList = new ArrayList<>();
+        nDiseasesArg.forEach(nDiseasesList::add);
+        List<Integer> nRepetitionsList = new ArrayList<>();
+        nRepetitionsArg.forEach(nRepetitionsList::add);
+
         Path maxodiffResultsFilePath = Path.of(String.join(File.separator, outputDir.toString(), "maxodiff_results.csv"));
 
-        try (BufferedWriter writer = openWriter(maxodiffResultsFilePath); CSVPrinter printer = CSVFormat.DEFAULT.print(writer)) {
-            printer.printRecord("phenopacket", "background_vcf", "disease_id", "maxo_id", "maxo_label",
-                    "filter_posttest_prob", "n_diseases", "disease_ids", "weight", "score"); // header
+        try (BufferedWriter writer = openOutputFileWriter(maxodiffResultsFilePath); CSVPrinter printer = CSVFormat.DEFAULT.print(writer)) {
+            printer.printRecord("phenopacket", "disease_id", "maxo_id", "maxo_label",
+                    "n_diseases", "disease_ids", "n_repetitions", "score"); // header
 
-            for (int i = 0; i < phenopacketPaths.size(); i++) {
-                String thresholds = thresholdsArg.stream().map(Object::toString).collect(Collectors.joining(","));
-                String weights = weightsArg.stream().map(Object::toString).collect(Collectors.joining(","));
-                try {
-                    DifferentialDiagnosisCommand differentialDiagnosisCommand = new DifferentialDiagnosisCommand();
-                    CommandLine.call(differentialDiagnosisCommand,
-                            "-d", dataSection.liricalDataDirectory.toString(),
-                            "-p", phenopacketPaths.get(i).toString(),
-                            "-e", dataSection.exomiserDatabase.toString(),
-                            "--vcf", vcfPath.toString(),
-                            "--assembly", genomeBuild.toString(),
-                            "-t", thresholds,
-                            "-w", weights,
-                            "-O", outputDir.toString());
+            for (Path phenopacketPath : phenopacketPaths) {
+                for (int nDiseases : nDiseasesList) {
+                    for (int nRepetitions : nRepetitionsList) {
+                        try {
+
+                            String phenopacketFileName = phenopacketPath.toFile().getName();
+                            ScoringMode scoringMode = ScoringMode.ONE_SIDED;
+
+                            runSingleMaxodiffAnalysis(phenopacketPath, phenopacketFileName, nDiseases, nRepetitions, engineArg, scoringMode, false, printer);
 
 
-                    Map<String, List<Object>> resultsMap = getResultsMap();
+                            Map<String, List<Object>> resultsMap = getResultsMap();
 
-//                    System.out.println("BatchCmd resultsMap = " + resultsMap);
+                            System.out.println("BatchCmd resultsMap = " + resultsMap);
 
-                    List<Object> phenopacketNames = resultsMap.get("phenopacketName");
-                    List<Object> backgroundVcfs = resultsMap.get("backgroundVcf");
-                    List<Object> diseaseIdList = resultsMap.get("diseaseId");
-                    List<Object> maxScoreMaxoTermIds = resultsMap.get("maxScoreMaxoTermId");
-                    List<Object> maxScoreTermLabels = resultsMap.get("maxScoreTermLabel");
-                    List<Object> posttestFilters = resultsMap.get("threshold");
-                    List<Object> topNDiseasesList = resultsMap.get("topNDiseases");
-                    List<Object> diseaseIdsList = resultsMap.get("diseaseIds");
-                    List<Object> weightList = resultsMap.get("weight");
-                    List<Object> maxScoreValues = resultsMap.get("maxScoreValue");
-                    for (int j = 0; j < phenopacketNames.size(); j++) {
-                        String phenopacketName = phenopacketNames.get(j).toString();
-                        String backgroundVcf = backgroundVcfs.get(j).toString();
-                        TermId diseaseId = TermId.of(diseaseIdList.get(j).toString());
-                        TermId maxScoreMaxoTermId = TermId.of(maxScoreMaxoTermIds.get(j).toString());
-                        String maxScoreTermLabel = maxScoreTermLabels.get(j).toString();
-                        double posttestFilter = Double.parseDouble(posttestFilters.get(j).toString());
-                        int topNDiseases = Integer.parseInt(topNDiseasesList.get(j).toString());
-                        String diseaseIds = diseaseIdsList.get(j).toString();
-                        double weight = Double.parseDouble(weightList.get(j).toString());
-                        double maxScoreValue = Double.parseDouble(maxScoreValues.get(j).toString());
+                            List<Object> phenopacketNames = resultsMap.get("phenopacketName");
+                            List<Object> diseaseIdList = resultsMap.get("diseaseId");
+                            List<Object> maxScoreMaxoTermIds = resultsMap.get("maxScoreMaxoTermId");
+                            List<Object> maxScoreTermLabels = resultsMap.get("maxScoreTermLabel");
+                            List<Object> topNDiseasesList = resultsMap.get("topNDiseases");
+                            List<Object> diseaseIdsList = resultsMap.get("diseaseIds");
+                            List<Object> nRepList = resultsMap.get("nRepetitions");
+                            List<Object> maxScoreValues = resultsMap.get("maxScoreValue");
+                            for (int j = 0; j < phenopacketNames.size(); j++) {
+                                String phenopacketName = phenopacketNames.get(j).toString();
+                                TermId diseaseId = TermId.of(diseaseIdList.get(j).toString());
+                                TermId maxScoreMaxoTermId = TermId.of(maxScoreMaxoTermIds.get(j).toString());
+                                String maxScoreTermLabel = maxScoreTermLabels.get(j).toString();
+                                int topNDiseases = Integer.parseInt(topNDiseasesList.get(j).toString());
+                                String diseaseIds = diseaseIdsList.get(j).toString();
+                                int nRepetitionsValue = Integer.parseInt(nRepList.get(j).toString());
+                                double maxScoreValue = Double.parseDouble(maxScoreValues.get(j).toString());
 
-                        writeResults(phenopacketName, backgroundVcf, diseaseId, maxScoreMaxoTermId, maxScoreTermLabel,
-                                posttestFilter, topNDiseases, diseaseIds, weight, maxScoreValue, printer);
+                                writeResults(phenopacketName, diseaseId, maxScoreMaxoTermId, maxScoreTermLabel,
+                                        topNDiseases, diseaseIds, nRepetitionsValue, maxScoreValue, printer);
+                            }
+                        } catch (Exception ex) {
+                            System.out.println(ex.getMessage());
+                        }
                     }
-                } catch (Exception ex) {
-                    LOGGER.error(ex.getMessage());
-                    continue;
                 }
             }
         }
@@ -134,44 +130,6 @@ public class BatchDiagnosisCommand extends DifferentialDiagnosisCommand {
         return resultsMap;
     }
 
-    private static BufferedWriter openWriter(Path outputPath) throws IOException {
-        return outputPath.toFile().getName().endsWith(".gz")
-                ? new BufferedWriter(new OutputStreamWriter(new GZIPOutputStream(Files.newOutputStream(outputPath))))
-                : Files.newBufferedWriter(outputPath);
-    }
 
-
-
-    /**
-     * Write results of a single benchmark into the provided {@code printer}.
-     */
-    private static void writeResults(String phenopacketName,
-                                     String backgroundVcfName,
-                                     TermId diseaseId,
-                                     TermId maxoId,
-                                     String maxoLabel,
-                                     double topPosttestProb,
-                                     int topNdiseases,
-                                     String diseaseIds,
-                                     double weight,
-                                     double score,
-                                     CSVPrinter printer) {
-
-        try {
-            printer.print(phenopacketName);
-            printer.print(backgroundVcfName);
-            printer.print(diseaseId);
-            printer.print(maxoId);
-            printer.print(maxoLabel);
-            printer.print(topPosttestProb);
-            printer.print(topNdiseases);
-            printer.print(diseaseIds);
-            printer.print(weight);
-            printer.print(score);
-            printer.println();
-        } catch (IOException e) {
-            LOGGER.error("Error writing results for {}: {}", diseaseId, e.getMessage(), e);
-        }
-    }
 
 }

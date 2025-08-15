@@ -1,0 +1,38 @@
+<!DOCTYPE html SYSTEM "http://www.thymeleaf.org/dtd/xhtml1-strict-thymeleaf-spring4-4.dtd">
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<link rel="stylesheet" type="text/css" th:href="@{/css/style.css}"/>
+<head>
+    <meta charset="UTF-8">
+    <title>maxodiff index</title>
+</head>
+<body>
+<div class="navbar navbar-inverse navbar-fixed-top" th:fragment="header">
+    <div class="container">
+        <div class="navbar-header">
+            <a class="navbar-brand" href="#">Maxodiff Differential Diagnosis Analysis</a>
+        </div>
+        <div class="navbar-collapse collapse">
+            <ul class="nav">
+                <li class="nav-link" th:classappend="${requestURI == '/engineInput' ? 'active' : ''}">
+                    <a class="nav-item" href="#" th:href="@{/engineInput}">Engine</a>
+                </li>
+                <li class="nav-link" th:classappend="${requestURI == '/sampleInput' ? 'active' : ''}">
+                    <a class="nav-item" href="#" th:href="@{/sampleInput}">Sample</a>
+                </li>
+                <li class="nav-link" th:classappend="${requestURI == '/' + request.getSession().getAttribute('engineName') + 'Input' ? 'active' : ''}">
+                    <a class="nav-item" href="#" th:href="@{/__${request.getSession().getAttribute('engineName')}__Input}"
+                       th:text="${#strings.toUpperCase(request.getSession().getAttribute('engineName'))} + ' Input'"></a>
+                </li>
+                <li class="nav-link" th:classappend="${requestURI == '/' + request.getSession().getAttribute('engineName') + 'Analysis' ? 'active' : ''}">
+                    <a class="nav-item" href="#" th:href="@{/__${request.getSession().getAttribute('engineName')}__Analysis}"
+                       th:text="${#strings.toUpperCase(request.getSession().getAttribute('engineName'))} + ' Analysis'"></a>
+                </li>
+                <li class="nav-link" th:classappend="${requestURI == '/sessionResults' ? 'active' : ''}">
+                    <a class="nav-item" href="#" th:href="@{/sessionResults}">Maxodiff Analysis</a>
+                </li>
+            </ul>
+        </div>
+    </div>
+</div>
+</body>
+</html>

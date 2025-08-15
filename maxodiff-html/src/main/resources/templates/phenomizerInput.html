@@ -1,0 +1,38 @@
+<!DOCTYPE html SYSTEM "http://www.thymeleaf.org/dtd/xhtml1-strict-thymeleaf-spring4-4.dtd">
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<link rel="stylesheet" type="text/css" th:href="@{/css/style.css}"/>
+<head>
+    <meta charset="UTF-8">
+    <title>maxodiff analysis</title>
+</head>
+<body>
+
+<div th:replace="~{index :: header}">...</div>
+
+<h1>Maxodiff Phenomizer Input</h1>
+
+<form th:action="@{/phenomizerInput}">
+    <h2>Phenomizer parameters:</h2>
+    <div>
+        <table>
+            <tbody>
+            <tr>
+                <td>Scoring Mode:</td>
+                <td><select th:value="${scoringMode}" name="scoringMode" id="scoringMode">
+                    <option th:selected="${scoringMode} == ONE_SIDED ? selected" value="ONE_SIDED">One-sided</option>
+                    <option th:selected="${scoringMode} == TWO_SIDED ? selected" value="TWO_SIDED">Two-sided</option></select></td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+
+
+    <div method="post">
+        <input type="submit" value="Confirm Phenomizer parameters"/>
+    </div>
+
+</form>
+
+</body>
+</html>
+

@@ -1,0 +1,170 @@
+package org.monarchinitiative.maxodiff.lirical;
+
+import org.monarchinitiative.lirical.core.analysis.*;
+import org.monarchinitiative.lirical.core.likelihoodratio.*;
+import org.monarchinitiative.lirical.core.model.Gene2Genotype;
+import org.monarchinitiative.lirical.core.service.PhenotypeService;
+import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDisease;
+import org.monarchinitiative.phenol.annotations.io.hpo.DiseaseDatabase;
+import org.monarchinitiative.phenol.ontology.data.TermId;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+import java.util.*;
+import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ForkJoinPool;
+import java.util.stream.Collectors;
+import java.util.stream.Stream;
+
+public class MaxodiffLiricalAnalysisRunnerImpl implements MaxodiffLiricalAnalysisRunner {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(MaxodiffLiricalAnalysisRunnerImpl.class);
+
+    private final PhenotypeService phenotypeService;
+    private final PhenotypeLikelihoodRatio phenotypeLrEvaluator;
+    private final ForkJoinPool pool;
+
+    public static MaxodiffLiricalAnalysisRunnerImpl of(PhenotypeService phenotypeService,
+                                                       int parallelism) {
+        return new MaxodiffLiricalAnalysisRunnerImpl(phenotypeService,
+                parallelism);
+    }
+
+    private MaxodiffLiricalAnalysisRunnerImpl(PhenotypeService phenotypeService,
+//                                              BackgroundVariantFrequencyServiceFactory backgroundVariantFrequencyServiceFactory,
+                                              int parallelism) {
+        this.phenotypeService = Objects.requireNonNull(phenotypeService);
+        this.phenotypeLrEvaluator = new PhenotypeLikelihoodRatio(phenotypeService.hpo(), phenotypeService.diseases());
+//        this.bgFreqFactory = backgroundVariantFrequencyServiceFactory;
+        LOGGER.debug("Creating LIRICAL pool with {} worker(s).", parallelism);
+        this.pool = new ForkJoinPool(parallelism, LiricalWorkerThread::new, null, false);
+    }
+
+    @Override
+    public AnalysisResults run(AnalysisData data, AnalysisOptions options) throws LiricalAnalysisException {
+
+        Collection<String> diseaseDatabasePrefixes = options.diseaseDatabases().stream()
+                .map(DiseaseDatabase::prefix)
+                .toList();
+        Set<TermId> diseaseIds = phenotypeService.diseases().hpoDiseases()
+                .parallel() // why not?
+                .map(HpoDisease::id)
+                .filter(diseaseId -> diseaseDatabasePrefixes.contains(diseaseId.getPrefix()))
+                .collect(Collectors.toSet());
+//        Set<TermId> diseaseIds = phenotypeService.diseases().diseaseIds();
+
+        return runWithTermIds(data, options, diseaseIds);
+    }
+
+    @Override
+    public AnalysisResults runWithTermIds(AnalysisData data, AnalysisOptions options, Set<TermId> diseaseIds) throws LiricalAnalysisException {
+
+        Map<TermId, List<Gene2Genotype>> diseaseToGenotype = Map.of(); 
+
+        GenotypeLikelihoodRatio genotypeLikelihoodRatio = null;
+
+        ProgressReporter progressReporter = new ProgressReporter(1_000, "diseases");
+        Stream<TestResult> testResultStream = phenotypeService.diseases().hpoDiseases()
+                .parallel() // why not?
+                .filter(disease -> diseaseIds.contains(disease.id()))
+                .peek(d -> progressReporter.log())
+                .map(disease -> analyzeDisease(genotypeLikelihoodRatio, disease, data, options, diseaseToGenotype))
+                .flatMap(Optional::stream);
+
+        try {
+            List<TestResult> results = pool.submit(testResultStream::toList).get();
+            progressReporter.summarize();
+            return AnalysisResults.of(results);
+        } catch (InterruptedException | ExecutionException e) {
+            LOGGER.error(e.getMessage(), e);
+            return AnalysisResults.empty();
+        }
+    }
+
+    private Optional<TestResult> analyzeDisease(GenotypeLikelihoodRatio genotypeLikelihoodRatio,
+                                                HpoDisease disease,
+                                                AnalysisData analysisData,
+                                                AnalysisOptions options,
+                                                Map<TermId, List<Gene2Genotype>> diseaseToGenotype) {
+        Optional<Double> pretestOptional = options.pretestDiseaseProbability().pretestProbability(disease.id());
+        if (pretestOptional.isEmpty()) {
+            LOGGER.warn("Missing pretest probability for {} ({})", disease.diseaseName(), disease.id());
+            return Optional.empty();
+        }
+        double pretestProbability = pretestOptional.get();
+
+        List<Gene2Genotype> genotypes = diseaseToGenotype.getOrDefault(disease.id(), List.of());
+
+        InducedDiseaseGraph idg = InducedDiseaseGraph.create(disease, phenotypeService.hpo());
+        List<LrWithExplanation> observed = observedPhenotypesLikelihoodRatios(analysisData.presentPhenotypeTerms(), idg);
+        List<LrWithExplanation> excluded = excludedPhenotypesLikelihoodRatios(analysisData.negatedPhenotypeTerms(), idg);
+
+        // The GT LR stays `null` if no genotype data is available.
+        GenotypeLrWithExplanation bestGenotypeLr = null;
+        if (!diseaseToGenotype.isEmpty()) {
+            // The variant/genotype data is available for the individual
+            boolean noPredictedDeleteriousVariantsWereFound = true;
+            for (Gene2Genotype g2g : genotypes) { // Find the gene with the best LR match
+                GenotypeLrWithExplanation candidate = genotypeLikelihoodRatio.evaluateGenotype(analysisData.sampleId(), g2g, disease.modesOfInheritance());
+                bestGenotypeLr = takeNonNullOrGreaterLr(bestGenotypeLr, candidate);
+
+                if (!options.includeDiseasesWithNoDeleteriousVariants()) {
+                    // has at least one pathogenic clinvar variant or predicted pathogenic variant?
+                    if (g2g.pathogenicClinVarCount(analysisData.sampleId()) > 0
+                            || g2g.deleteriousAlleleCount(analysisData.sampleId(), options.variantDeleteriousnessThreshold()) > 0) {
+                        noPredictedDeleteriousVariantsWereFound = false;
+                    }
+                }
+            }
+
+            if (!options.includeDiseasesWithNoDeleteriousVariants() && noPredictedDeleteriousVariantsWereFound)
+                return Optional.empty();
+
+            /*
+             At this point, the `bestGenotypeLr` is null iff no gene is associated with a disease.
+             If the global mode is on, we keep the differentials with no associated gene. In this case,
+             `bestGenotypeLr` stays null, and it's used downstream.
+
+             However, if the global mode is off, we skip the differential diagnosis as there is no known gene associated
+             with the disease, and we return an empty optional.
+            */
+            if (bestGenotypeLr == null && !options.useGlobal())
+                return Optional.empty();
+        }
+
+        return Optional.of(TestResult.of(disease.id(), pretestProbability, observed, excluded, bestGenotypeLr));
+    }
+
+
+    private List<LrWithExplanation> observedPhenotypesLikelihoodRatios(List<TermId> phenotypes, InducedDiseaseGraph idg) {
+        return phenotypes.stream()
+                .map(phenotype -> phenotypeLrEvaluator.lrForObservedTerm(phenotype, idg))
+                .toList();
+    }
+
+    private List<LrWithExplanation> excludedPhenotypesLikelihoodRatios(List<TermId> phenotypes, InducedDiseaseGraph idg) {
+        return phenotypes.stream()
+                .map(phenotype -> phenotypeLrEvaluator.lrForExcludedTerm(phenotype, idg))
+                .toList();
+    }
+
+    /**
+     * Use <code>candidate</code> if <code>base==null</code> or choose the {@link GenotypeLrWithExplanation}
+     * with greater {@link GenotypeLrWithExplanation#lr()} value.
+     */
+    private static GenotypeLrWithExplanation takeNonNullOrGreaterLr(GenotypeLrWithExplanation base,
+                                                                    GenotypeLrWithExplanation candidate) {
+        return base == null
+                ? candidate
+                : base.lr() > candidate.lr()
+                ? base
+                : candidate;
+    }
+
+    @Override
+    public void close() {
+        LOGGER.debug("Shutting down the analysis runner");
+        // TODO - use close after updating Java to 19+
+        pool.shutdownNow();
+    }
+}

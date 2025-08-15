@@ -7,7 +7,7 @@
     <parent>
         <groupId>org.monarchinitiative.maxodiff</groupId>
         <artifactId>maxodiff</artifactId>
-        <version>0.0.1</version>
+        <version>0.2.0</version>
     </parent>
 
     <artifactId>maxodiff-cli</artifactId>
@@ -19,82 +19,70 @@
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
+            <groupId>org.monarchinitiative.maxodiff</groupId>
+            <artifactId>maxodiff-config</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.monarchinitiative.maxodiff</groupId>
+            <artifactId>maxodiff-lirical</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.monarchinitiative.maxodiff</groupId>
+            <artifactId>maxodiff-phenomizer</artifactId>
+            <version>${project.parent.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.monarchinitiative.phenol</groupId>
+            <artifactId>phenol-cli</artifactId>
+            <version>2.1.1</version>
+        </dependency>
+        <dependency>
             <groupId>org.monarchinitiative.phenol</groupId>
             <artifactId>phenol-core</artifactId>
-            <version>${phenol.version}</version>
         </dependency>
         <dependency>
             <groupId>org.monarchinitiative.phenol</groupId>
             <artifactId>phenol-io</artifactId>
-            <version>${phenol.version}</version>
         </dependency>
         <dependency>
             <groupId>org.monarchinitiative.phenol</groupId>
             <artifactId>phenol-annotations</artifactId>
-            <version>${phenol.version}</version>
         </dependency>
 
         <dependency>
             <groupId>org.monarchinitiative.biodownload</groupId>
             <artifactId>biodownload</artifactId>
-            <version>${biodownload.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-csv</artifactId>
         </dependency>
         <dependency>
             <groupId>info.picocli</groupId>
             <artifactId>picocli</artifactId>
-            <version>${picocli.version}</version>
         </dependency>
-
         <dependency>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter</artifactId>
-            <version>${junit.version}</version>
-            <scope>test</scope>
+            <groupId>org.monarchinitiative.maxodiff</groupId>
+            <artifactId>maxodiff-html-results</artifactId>
+            <version>0.2.0</version>
+            <scope>compile</scope>
         </dependency>
-
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-log4j12</artifactId>
-            <version>${slf4j.version}</version>
-        </dependency>
-
-        <dependency>
-            <groupId>org.apache.commons</groupId>
-            <artifactId>commons-csv</artifactId>
-            <version>1.9.0</version>
-        </dependency>
-
-
     </dependencies>
 
     <build>
         <finalName>maxodiff-cli</finalName>
+        <resources>
+            <resource>
+                <directory>src/main/resources</directory>
+                <filtering>true</filtering>
+            </resource>
+        </resources>
         <plugins>
-
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-resources-plugin</artifactId>
-                <version>3.2.0</version>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-compiler-plugin</artifactId>
-                <version>3.8.0</version>
-                <configuration>
-                    <source>${java.version}</source>
-                    <target>${java.version}</target>
-                    <!--  <release>1.8</release> -->
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-surefire-plugin</artifactId>
-                <version>3.0.0-M5</version>
-            </plugin>
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-jar-plugin</artifactId>
-                <version>3.2.0</version>
                 <configuration>
                     <archive>
                         <index>true</index>
@@ -105,31 +93,6 @@
                             <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
                         </manifest>
                     </archive>
-                </configuration>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-install-plugin</artifactId>
-                <version>3.0.0-M1</version>
-            </plugin>
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-deploy-plugin</artifactId>
-                <version>3.0.0-M1</version>
-            </plugin>
-            <!-- site lifecycle, see https://maven.apache.org/ref/current/maven-core/lifecycles.html#site_Lifecycle -->
-            <plugin>
-                <groupId>org.apache.maven.plugins</groupId>
-                <artifactId>maven-site-plugin</artifactId>
-                <version>3.7.1</version>
-            </plugin>
-
-            <plugin>
-                <groupId>org.codehaus.mojo</groupId>
-                <artifactId>versions-maven-plugin</artifactId>
-                <version>2.8.1</version>
-                <configuration>
-                    <generateBackupPoms>false</generateBackupPoms>
                 </configuration>
             </plugin>
 

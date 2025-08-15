@@ -1,0 +1,54 @@
+<!DOCTYPE html SYSTEM "http://www.thymeleaf.org/dtd/xhtml1-strict-thymeleaf-spring4-4.dtd">
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<link rel="stylesheet" type="text/css" th:href="@{/css/style.css}"/>
+<head>
+    <meta charset="UTF-8">
+    <title>maxodiff analysis</title>
+</head>
+<body>
+
+<div th:replace="~{index :: header}">...</div>
+
+<h1>Maxodiff LIRICAL Input</h1>
+
+<form th:action="@{/liricalInput}">
+    <h2>LIRICAL parameters:</h2>
+    <div>
+        <table>
+            <tbody>
+            <tr>
+                <td>Strict:</td>
+                <td><select th:value="${strict}" name="strict" id="strict">
+                    <option th:selected="${strict} == true ? selected" value="true">True</option>
+                    <option th:selected="${strict} == false ? selected" value="false">False</option></select></td>
+                <td>Global Mode:</td>
+                <td><select th:value="${globalAnalysisMode}" name="globalAnalysisMode" id="globalAnalysisMode">
+                    <option th:selected="${globalAnalysisMode} == true ? selected" value="true">True</option>
+                    <option th:selected="${globalAnalysisMode} == false ? selected" value="false">False</option></select></td>
+            </tr>
+<!--            TODO?: checkboxes aren't binding properly-->
+<!--            <tr>-->
+<!--                <td>Strict:</td><td><input type="checkbox" th:checked="${strict}" th:field="${strict}" value="true"/></td>-->
+<!--                <td>Global Mode:</td><td><input type="checkbox" th:checked="${globalAnalysisMode}" th:value="${globalAnalysisMode} ?: false"-->
+<!--                                                name="globalAnalysisMode" id="globalAnalysisMode"/></td>-->
+<!--            </tr>-->
+            </tbody>
+        </table>
+<!--        <p>Exomiser Database File (Optional): <input style='width:20%' type="text" th:field="*{exomiserPath}"/></p>-->
+<!--        <p>VCF File (Optional): <input style='width:20%' type="text" th:field="*{vcfPath}"/></p>-->
+<!--        <input type="hidden" th:field="${liricalRecord}"/>-->
+    </div>
+
+
+    <div method="post">
+        <input type="submit" value="Confirm LIRICAL parameters"/><!-- th:onclick="runLirical([[${inputRecord}]], [[${liricalRecord}]]);"/>-->
+<!--        <input type="submit" value="Launch LIRICAL Analysis Page"-->
+<!--               th:data-url="@{/liricalAnalysis}"-->
+<!--               onclick="window.open(this.getAttribute('data-url'))"/>-->
+    </div>
+
+</form>
+
+</body>
+</html>
+

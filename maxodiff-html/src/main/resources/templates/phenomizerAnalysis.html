@@ -1,0 +1,58 @@
+<!DOCTYPE html SYSTEM "http://www.thymeleaf.org/dtd/xhtml1-strict-thymeleaf-spring4-4.dtd">
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<link rel="stylesheet" type="text/css" th:href="@{/css/style.css}"/>
+<head>
+    <meta charset="UTF-8">
+    <title>maxodiff analysis</title>
+</head>
+<body>
+
+<div th:replace="~{index :: header}">...</div>
+
+<h1>Maxodiff LIRICAL Differential Diagnosis</h1>
+
+<form th:action="@{/phenomizerAnalysis}">
+
+    <table th:object="${sample}">
+        <tbody>
+        <tr>
+            <!--            <td style='font-weight:bold;'>Phenopacket Path:</td><td th:text="${inputRecord.phenopacketPath}"></td>-->
+            <td style='font-weight:bold;'>Sample Id:</td><td th:text="${sample == null} ? '' : *{id}"></td>
+        </tr>
+        <tr>
+            <!--            <td style='font-weight:bold;'>Disease ID:</td><td th:text="${diseaseId}"></td>-->
+            <td style='font-weight:bold;'>Present HPO Term Ids:</td><td th:text="${sample == null} ? '' : *{presentHpoTermIds}"></td>
+        </tr>
+        <tr>
+            <td style='font-weight:bold;'>Excluded HPO Term Ids:</td><td th:text="${sample == null} ? '' : *{excludedHpoTermIds}"></td>
+        </tr>
+        </tbody>
+    </table>
+    <p></p>
+
+    <h2>Differential Diagnosis parameters:</h2>
+    <div>
+        <table class="liricalSummaryTable">
+            <thead>
+            <tr>
+                <th colspan="4">Phenomizer Calculation Parameters</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr>
+                <td>Scoring Mode:</td><td th:text="${scoringMode == null} ? '' : ${scoringMode}"></td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+    <p></p>
+
+    <div method="post">
+        <input type="submit" value="Run Phenomizer Calculation" th:disabled="${sample == null or scoringMode == null}"/>
+    </div>
+
+</form>
+
+</body>
+</html>
+

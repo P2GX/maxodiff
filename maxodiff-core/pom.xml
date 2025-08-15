@@ -7,54 +7,62 @@
     <parent>
         <groupId>org.monarchinitiative.maxodiff</groupId>
         <artifactId>maxodiff</artifactId>
-        <version>0.0.1</version>
+        <version>0.2.0</version>
     </parent>
 
     <artifactId>maxodiff-core</artifactId>
-    <name>maxodiff-core</name>
-
-
-    <prerequisites>
-        <maven>3.8.0</maven>
-    </prerequisites>
 
     <dependencies>
         <dependency>
             <groupId>org.monarchinitiative.phenol</groupId>
             <artifactId>phenol-core</artifactId>
-            <version>${phenol.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.monarchinitiative.phenol</groupId>
-            <artifactId>phenol-io</artifactId>
-            <version>${phenol.version}</version>
         </dependency>
         <dependency>
             <groupId>org.monarchinitiative.phenol</groupId>
             <artifactId>phenol-annotations</artifactId>
-            <version>${phenol.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.core</groupId>
+            <artifactId>jackson-annotations</artifactId>
+            <scope>provided</scope>
         </dependency>
 
+        <!-- TODO: use in benchmark module       -->
         <dependency>
-            <groupId>org.junit.jupiter</groupId>
-            <artifactId>junit-jupiter</artifactId>
-            <version>${junit.version}</version>
-            <scope>test</scope>
-        </dependency>
-
-        <dependency>
-            <groupId>org.slf4j</groupId>
-            <artifactId>slf4j-log4j12</artifactId>
-            <version>${slf4j.version}</version>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-csv</artifactId>
         </dependency>
 
         <dependency>
             <groupId>org.apache.commons</groupId>
-            <artifactId>commons-csv</artifactId>
-            <version>1.9.0</version>
+            <artifactId>commons-math3</artifactId>
         </dependency>
-
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-lang3</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.monarchinitiative.phenol</groupId>
+            <artifactId>phenol-io</artifactId>
+            <scope>test</scope>
+        </dependency>
+        <dependency>
+            <groupId>com.fasterxml.jackson.datatype</groupId>
+            <artifactId>jackson-datatype-jdk8</artifactId>
+        </dependency>
     </dependencies>
 
+    <build>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <configuration>
+                    <source>${java.version}</source>
+                    <target>${java.version}</target>
+                </configuration>
+            </plugin>
+        </plugins>
+    </build>
 
 </project>
