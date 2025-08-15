@@ -40,8 +40,23 @@ See the command's documentation for more options.
 To run MaxoDiff with Phenomizer, we must first generate a file that contains the
 most informative common ancestors for pairs of HPO terms. See the class ``IcMicaDictLoader``.
 
-To generate this file ...
+MaxoDiff uses the Phenomizer algorithm to calculate the differential diagnosis; see
+the original publication for details:
+[Clinical diagnostics in human genetics with semantic similarity searches in ontologies](https://pubmed.ncbi.nlm.nih.gov/19800049/)
 
+To run this algorithm, we require 
+the information content of the most informative common ancestor (MICA) for
+every pair of terms. It is more efficient to precalculate this using the
+following command. By default, the command will look for the input files ``hp.json``
+and ``phenotype.hpoa`` in the ``data``folder, which is created by the download command.
+```shell
+java -jar maxodiff-cli/target/maxodiff-cli.jar precalculate-resnik
+```
+On a modern commodity laptop, this command will require a few minutes to complete.
+By default, the output file will be created here. Currently, it occupies 117 Mb.
+```shell
+data/term-pair-similarity.csv.gz
+```
 
 
 ### Start Maxodiff web app
