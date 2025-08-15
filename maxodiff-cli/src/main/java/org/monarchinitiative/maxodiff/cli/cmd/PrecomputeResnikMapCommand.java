@@ -85,6 +85,11 @@ public class PrecomputeResnikMapCommand implements Callable<Integer> {
 
     LOGGER.info("Assigning MICA information content to term pairs");
     Map<TermPair, Double> termPairResnikSimilarityMap = assignMicaToTermPairs(hpo, termToIc);
+    //Optionally write Term:IC Map for benchmarking
+//    LocalDate date0 = LocalDate.now();
+//    String hpoVersion0 = hpo.version().orElse("N/A");
+//    String hpoaVersion0 = diseases.version().orElse("N/A");
+//    writeTermToIc(termToIc, date0, hpoVersion0, hpoaVersion0);
 
     LOGGER.info("Writing term pair similarity to {}", output.toAbsolutePath());
     LocalDate date = LocalDate.now();
@@ -131,6 +136,34 @@ public class PrecomputeResnikMapCommand implements Callable<Integer> {
       }
     }
   }
+
+    // Write Term:IC Map for benchmarking
+    private void writeTermToIc(Map<TermId, Double> termToIc,
+                               LocalDate now,
+                               String hpoVersion,
+                               String hpoaVersion) throws IOException {
+        try (Writer writer = openWriter();
+             CSVPrinter printer = CSVFormat.Builder.create(CSVFormat.DEFAULT)
+                     .setCommentMarker('#')
+                     .build()
+                     .print(writer)) {
+            // Metadata
+            printer.printComment("Information content of the most informative common ancestor for term pairs");
+            printer.printComment(String.format("HPO=%s;HPOA=%s;CREATED=%s", hpoVersion, hpoaVersion, now));
+
+            // Header
+            printer.printRecord("term_id", "ic");
+
+            // Content
+            for (Map.Entry<TermId, Double> e : termToIc.entrySet()) {
+                TermId id = e.getKey();
+                Double ic = e.getValue();
+                printer.print(id);
+                printer.print(ic);
+                printer.println();
+            }
+        }
+    }
 
   private Writer openWriter() throws IOException {
     return output.toFile().getName().endsWith(".gz")
