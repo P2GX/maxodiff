@@ -2,7 +2,7 @@ package org.monarchinitiative.maxodiff.cli.cmd;
 
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
-import org.monarchinitiative.maxodiff.phenomizer.PhenomizerScoringMode;
+import org.monarchinitiative.maxodiff.phenomizer.ScoringMode;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -79,7 +79,7 @@ public class BatchDiagnosisCommand extends DifferentialDiagnosisCommand {
                         try {
 
                             String phenopacketFileName = phenopacketPath.toFile().getName();
-                            PhenomizerScoringMode scoringMode = PhenomizerScoringMode.ONE_SIDED;
+                            ScoringMode scoringMode = ScoringMode.ONE_SIDED;
 
                             runSingleMaxodiffAnalysis(phenopacketPath, phenopacketFileName, nDiseases, nRepetitions, engineArg, scoringMode, false, printer);
 

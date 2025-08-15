@@ -6,6 +6,7 @@ import org.slf4j.LoggerFactory;
 
 import picocli.CommandLine;
 
+import java.io.*;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.Path;
@@ -48,7 +49,9 @@ public class DownloadCommand implements Callable<Integer>{
     public Integer call() throws Exception {
         LOGGER.info("Downloading maxodiff data files to {}", datadir.toAbsolutePath());
         downloadMaxodiffData(datadir, overwrite);
-        
+        LOGGER.info("Making Phenomizer Term Pair Similarity File...");
+        makePhenomizerTermPairSimilarity(datadir);
+
 //        Path liricalDataPath = datadir.resolve("lirical");
 //        LOGGER.info("Downloading LIRICAL data files to {}", liricalDataPath.toAbsolutePath());
 //        downloadLiricalData(liricalDataPath, overwrite);
@@ -80,6 +83,46 @@ public class DownloadCommand implements Callable<Integer>{
                 .custom("maxo_diagnostic_annotations.tsv", createUrlOrExplode("https://raw.githubusercontent.com/monarch-initiative/maxo-annotations/master/annotations/maxo_diagnostic_annotations.tsv"))
                 .build();
         downloader.download();
+    }
+
+    private static void makePhenomizerTermPairSimilarity(Path destinationFolder) {
+
+        String hpFile = String.join(File.separator, destinationFolder.toString(), "hp.json");
+        String hpoaFile = String.join(File.separator, destinationFolder.toString(), "phenotype.hpoa");
+        String outputFile = String.join(File.separator, destinationFolder.toString(), "term-pair-similarity.csv.gz");
+
+        String maxodiffDir = System.getProperty("user.dir");
+        String maxodiffCliJar = String.join(File.separator, maxodiffDir, "maxodiff-cli", "target", "maxodiff-cli.jar");
+
+        String[] command = new String[] {
+                "java",
+                "-jar",
+                maxodiffCliJar,
+                "precompute-resnik",
+                "--hpo=" + hpFile,
+                "--hpoa=" + hpoaFile,
+                "--output=" + outputFile
+        };
+
+        try {
+            ProcessBuilder pb = new ProcessBuilder(command);
+            pb.redirectErrorStream(true);
+            Process p = pb.start();
+            BufferedReader reader = new BufferedReader(new InputStreamReader(p.getInputStream()));
+            BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(p.getOutputStream()));
+
+            writer.newLine();
+            writer.close();
+
+            String line;
+
+            while ((line = reader.readLine()) != null) {
+                System.out.println(line);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
     }
 
     private static URL createUrlOrExplode(String url) throws Exception {

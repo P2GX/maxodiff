@@ -24,7 +24,7 @@ import org.monarchinitiative.maxodiff.core.service.BiometadataService;
 import org.monarchinitiative.maxodiff.phenomizer.IcMicaData;
 import org.monarchinitiative.maxodiff.phenomizer.IcMicaDictLoader;
 import org.monarchinitiative.maxodiff.phenomizer.PhenomizerDifferentialDiagnosisEngine;
-import org.monarchinitiative.maxodiff.phenomizer.PhenomizerScoringMode;
+import org.monarchinitiative.maxodiff.phenomizer.ScoringMode;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDisease;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
 import org.monarchinitiative.phenol.annotations.io.hpo.HpoDiseaseLoader;
@@ -42,6 +42,7 @@ import picocli.CommandLine;
 
 import java.io.*;
 import java.nio.file.Files;
+import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -119,7 +120,7 @@ public class DifferentialDiagnosisCommand extends BaseCommand {
         int nDiseases = nDiseasesArg;
         int nRepetitions = nRepetitionsArg;
         String ddEngine = engineArg;
-        PhenomizerScoringMode scoringMode = scoringModeArg.equals("one-sided") ? PhenomizerScoringMode.ONE_SIDED : PhenomizerScoringMode.TWO_SIDED;
+        ScoringMode scoringMode = scoringModeArg.equals("one-sided") ? ScoringMode.ONE_SIDED : ScoringMode.TWO_SIDED;
 
         try (BufferedWriter writer = openOutputFileWriter(maxodiffResultsFilePath); CSVPrinter printer = CSVFormat.DEFAULT.print(writer)) {
             runSingleMaxodiffAnalysis(phenopacketPath, phenopacketName, nDiseases, nRepetitions, ddEngine, scoringMode, true, printer);
@@ -128,15 +129,8 @@ public class DifferentialDiagnosisCommand extends BaseCommand {
         return 0;
     }
 
-    protected void runSingleMaxodiffAnalysis(
-            Path phenopacketPath,
-            String phenopacketName,
-            int nDiseases,
-            int nRepetitions,
-            String ddEngine,
-            PhenomizerScoringMode scoringMode,
-            boolean writeOutputFile,
-            CSVPrinter printer) throws Exception {
+    protected void runSingleMaxodiffAnalysis(Path phenopacketPath, String phenopacketName, int nDiseases, int nRepetitions,
+                                             String ddEngine, ScoringMode scoringMode, boolean writeOutputFile, CSVPrinter printer) throws Exception {
 
 
         Path hpoPath = MaxodiffDataResolver.of(maxoDataPath).hpoJson();
@@ -150,7 +144,11 @@ public class DifferentialDiagnosisCommand extends BaseCommand {
         IcMicaData icMicaData = null;
         if (ddEngine.equals("phenomizer")) {
             LOGGER.info("Loading icMicaDict...");
-            icMicaData = IcMicaDictLoader.loadIcMicaDict(MaxodiffDataResolver.of(maxoDataPath).icMicaDict());
+            try {
+                icMicaData = IcMicaDictLoader.loadIcMicaDict(MaxodiffDataResolver.of(maxoDataPath).icMicaDict());
+            } catch (NoSuchFileException ex) {
+                throw new Exception(String.join(". ", ex.getMessage(), "Run Download command to download the necessary term-pair-similarity file."));
+            }
         }
 
         if (writeOutputFile) {

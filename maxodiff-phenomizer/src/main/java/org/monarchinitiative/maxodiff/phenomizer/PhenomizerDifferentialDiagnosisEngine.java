@@ -17,12 +17,12 @@ public class PhenomizerDifferentialDiagnosisEngine implements DifferentialDiagno
     private final HpoDiseases diseases;
     private final Map<TermPair, Double> termPairToIc;
     private final Map<TermId, Integer> diseaseToPresentAnnotationCount;
-    private final PhenomizerScoringMode scoringMode;
+    private final ScoringMode scoringMode;
 
     public PhenomizerDifferentialDiagnosisEngine(
             HpoDiseases diseases,
             Map<TermPair, Double> termPairToIc,
-            PhenomizerScoringMode scoringMode
+            ScoringMode scoringMode
     ) {
         this.diseases = diseases;
         this.termPairToIc = termPairToIc;

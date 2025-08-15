@@ -15,7 +15,7 @@ import org.monarchinitiative.maxodiff.html.results.HtmlResults;
 import org.monarchinitiative.maxodiff.lirical.PhenopacketFileParser;
 import org.monarchinitiative.maxodiff.phenomizer.IcMicaData;
 import org.monarchinitiative.maxodiff.phenomizer.PhenomizerDifferentialDiagnosisEngine;
-import org.monarchinitiative.maxodiff.phenomizer.PhenomizerScoringMode;
+import org.monarchinitiative.maxodiff.phenomizer.ScoringMode;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDisease;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
 import org.monarchinitiative.phenol.ontology.data.MinimalOntology;
@@ -29,6 +29,7 @@ import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -118,10 +119,14 @@ public class MaxodiffController {
         List<DifferentialDiagnosis> differentialDiagnoses = List.of();
 
 
-        PhenomizerScoringMode scoringMode = PhenomizerScoringMode.ONE_SIDED;
+        ScoringMode scoringMode = ScoringMode.ONE_SIDED;
         model.addAttribute("scoringMode", scoringMode);
 
         Map<TermPair, Double> icMicaDict = icMicaData.icMicaDict();
+        System.out.println(icMicaDict.isEmpty());
+        if (icMicaDict.isEmpty()) {
+            throw new Exception("Phenomizer necessary MICA information content is empty. Run Download command to download the necessary term-pair-similarity file.");
+        }
         engine = new PhenomizerDifferentialDiagnosisEngine(hpoDiseases, icMicaDict, scoringMode);
 
         model.addAttribute("icMicaDict", icMicaDict);
@@ -308,7 +313,7 @@ public class MaxodiffController {
     @GetMapping("progress1")
     @ResponseBody
     public double getProgress() {
-        return rankMaxo.getRankMaxoProgress().getTotalProgress();
+        return rankMaxo == null ? 0.01 : rankMaxo.getRankMaxoProgress().getTotalProgress();
     }
 
     @GetMapping("progress-bar1")
