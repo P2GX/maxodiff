@@ -289,19 +289,19 @@
     <script>
         function addHpoTermToList(listContainer, termMap) {
             for (const item of termMap) {
-                    console.log(item);
-                    console.log(item.key);
-                    const newItem = document.createElement('li');
-                    const newLink = document.createElement('a');
-                    const hpoId = item[0];
-                    const hpoLabel = item[1];
-                    newLink.href = 'https://hpo.jax.org/browse/term/' + hpoId;
-                    newLink.textContent = hpoLabel + ' (' + hpoId + ')';
-                    newLink.target = "_blank";
-                    newLink.rel = "noopener noreferrer";
-                    newItem.appendChild(newLink);
-                    listContainer.appendChild(newItem);
-                };
+                console.log(item);
+                console.log(item.key);
+                const newItem = document.createElement('li');
+                const newLink = document.createElement('a');
+                const hpoId = item[0];
+                const hpoLabel = item[1];
+                newLink.href = 'https://hpo.jax.org/browse/term/' + hpoId;
+                newLink.textContent = hpoLabel + ' (' + hpoId + ')';
+                newLink.target = "_blank";
+                newLink.rel = "noopener noreferrer";
+                newItem.appendChild(newLink);
+                listContainer.appendChild(newItem);
+            };
         };
 
         function uploadFile() {

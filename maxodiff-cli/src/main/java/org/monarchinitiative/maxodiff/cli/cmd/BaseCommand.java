@@ -124,7 +124,6 @@ abstract class BaseCommand implements Callable<Integer> {
     protected Collection<String> checkInput() {
         Collection<String> errors = new LinkedList<>();
         // resources
-        LOGGER.info(String.valueOf(dataSection.liricalDataDirectory));
         if (dataSection.liricalDataDirectory == null) {
             String msg = "Path to Lirical data directory must be provided via `-d | --data` option";
             LOGGER.error(msg);

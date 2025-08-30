@@ -168,9 +168,6 @@ public class DifferentialDiagnosisCommand extends BaseCommand {
         resultsMap.put("maxScoreValue", new ArrayList<>());
 
 
-        System.out.println(nDiseases);
-        System.out.println(nRepetitions);
-
         try {
             // Make maxodiffRefiner
             MaxodiffDataResolver maxodiffDataResolver = MaxodiffDataResolver.of(maxoDataPath);
@@ -207,8 +204,6 @@ public class DifferentialDiagnosisCommand extends BaseCommand {
             // Get initial differential diagnoses
             assert engine != null;
             List<DifferentialDiagnosis> differentialDiagnoses = engine.run(sample);
-
-            System.out.println("n Diseases = " + nDiseases);
 
             // Get List of Refinement results: maxo term scores and frequencies
             RefinementOptions options = RefinementOptions.of(nDiseases, nRepetitions);
@@ -251,7 +246,7 @@ public class DifferentialDiagnosisCommand extends BaseCommand {
                 diseaseSubsetEngine = engine;
             }
 
-
+            LOGGER.info("Running Maxodiff calculation...");
             RankMaxo rankMaxo = new RankMaxo(hpoToMaxoTermMap, maxoToHpoTermIdMap, maxoHpoTermProbabilities, diseaseSubsetEngine,
                     minimalOntology, ontology);
 
@@ -271,6 +266,7 @@ public class DifferentialDiagnosisCommand extends BaseCommand {
             String maxScoreTermLabel = biometadataService.maxoLabel(maxScoreMaxoTermId).orElse("unknown");
             double maxScoreValue = topResult.rankMaxoScore().maxoScore();
 
+            System.out.println();
             System.out.println("Max Score: " + maxScoreMaxoTermId + " (" + maxScoreTermLabel + ")" + " = " + maxScoreValue);
 
             Set<TermId> diseaseIds = topResult.rankMaxoScore().maxoOmimTermIds();

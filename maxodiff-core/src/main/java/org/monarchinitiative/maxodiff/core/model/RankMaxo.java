@@ -1,5 +1,7 @@
 package org.monarchinitiative.maxodiff.core.model;
 
+import org.monarchinitiative.maxodiff.core.JpsChecker;
+import org.monarchinitiative.maxodiff.core.ProgessBar;
 import org.monarchinitiative.maxodiff.core.SimpleTerm;
 import org.monarchinitiative.maxodiff.core.analysis.*;
 import org.monarchinitiative.maxodiff.core.diffdg.DifferentialDiagnosisEngine;
@@ -57,15 +59,22 @@ public class RankMaxo {
         ExecutorService executor = Executors.newFixedThreadPool(numThreads);
         AtomicInteger completedTasks = new AtomicInteger(0);
         List<Callable<RankMaxoScore>> tasks = new ArrayList<>();
+        int maxoIdx = 0;
+        ProgessBar pb = new ProgessBar(maxoIdx, maxoToHpoTermIdMap.size());
         for (TermId maxoId : maxoToHpoTermIdMap.keySet()) {
             rankMaxoProgress = new RankMaxoProgress(maxoToHpoTermIdMap.size());
+            int finalMaxoIdx = maxoIdx;
             tasks.add(() -> {
                 EvaluateMaxoTerm evaluateMaxoTerm = new EvaluateMaxoTerm(hpoToMaxoTermMap, maxoToHpoTermIdMap, maxoHpoTermProbabilities,
                         engine,  minimalOntology, ontology,  sampleHpoIds,  ppkt, nRepetitions, diseaseIds, maxoId);
                 double done = completedTasks.incrementAndGet();
                 rankMaxoProgress.updateProgress(maxoId, done);
+                if (JpsChecker.isMainClassRunning("org.monarchinitiative.maxodiff.cli.Main")) {
+                    pb.print(finalMaxoIdx);
+                }
                 return evaluateMaxoTerm.call();
             });
+            maxoIdx++;
         }
 
         List<Future<RankMaxoScore>> futures = executor.invokeAll(tasks);
