@@ -27,9 +27,12 @@ theme:
         name: Switch to light mode
       primary: teal
       accent: lime
+  features:
+    - content.code.copy
 
 
-
+extra_css:
+  - stylesheets/extra.css
 
 plugins:
   - search
@@ -68,5 +71,5 @@ markdown_extensions:
 
 
 copyright: |
-  &copy; 2023 <a href="https://github.com/pnrobinson"  target="_blank" rel="noopener">Peter N Robinson</a>
+  &copy; 2025 <a href="https://github.com/pnrobinson"  target="_blank" rel="noopener">Peter N Robinson</a>
 
