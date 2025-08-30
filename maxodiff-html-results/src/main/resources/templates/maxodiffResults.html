@@ -123,6 +123,9 @@
           color: #003366;
           margin-bottom: 0.5em;
         }
+        .spaced-row td {
+            padding-top: 15px;
+        }
     </style>
 </head>
 
@@ -132,12 +135,12 @@
     <tbody>
         <tr>
 <!--            <td style='font-weight:bold;'>Disease ID:</td><td th:text="${diseaseId}"></td>-->
-            <td style='font-weight:bold;'>Sample Present HPO Terms:</td><td>$samplePresentHpoIds</td>
+            <td style='font-weight:bold;'>Observed HPO Terms:</td><td>$samplePresentHpoIds</td>
         </tr>
-        <tr>
-            <td style='font-weight:bold;'>Sample Excluded HPO Terms:</td><td>$sampleExcludedHpoIds</td>
+        <tr class="spaced-row">
+            <td style='font-weight:bold;'>Excluded HPO Terms:</td><td>$sampleExcludedHpoIds</td>
         </tr>
-        <tr>
+        <tr class="spaced-row">
             <td style='font-weight:bold;'>N Diseases:</td><td>$nDiseases</td>
         </tr>
         <tr>

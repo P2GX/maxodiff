@@ -1,0 +1,112 @@
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
+        "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml">
+<link rel="stylesheet" type="text/css" href="/css/style.css"/>
+<head>
+    <meta charset="UTF-8">
+    <title>maxodiff results</title>
+
+    <style>
+        * {
+            font-family: Arial, Helvetica, sans-serif;
+        }
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        .container {
+            width: 80%;
+            margin: 0 auto;
+            padding: 2em 0;
+        }
+
+        .section-box {
+            border: 1px solid #ccc;
+            border-left: 6px solid #007acc;
+            border-radius: 8px;
+            padding: 1em;
+            background: #f9f9f9;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            width: 90%;
+            margin: 2em auto;
+            overflow-x: auto;
+            max-width: 100%;
+        }
+
+        .section-box h2 {
+            font-size: 1.4em;
+            color: #003366;
+            margin-bottom: 0.5em;
+        }
+        .stats-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 1.5em 0;
+            gap: 1em;
+        }
+
+        .stat-item {
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            padding: 0.8em 1em;
+            text-align: center;
+            flex: 1;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .stat-label {
+            font-size: 0.85em;
+            color: #666;
+            margin-bottom: 0.3em;
+            font-weight: 500;
+        }
+
+        .stat-value {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #003366;
+        }
+
+        .stat-delta {
+            color: #007acc;
+        }
+
+        .stat-diseases {
+            color: #d63384;
+        }
+
+        .stat-terms {
+            color: #198754;
+        }
+
+    </style>
+</head>
+
+<body style="font-family: Arial, Helvetica, sans-serif;">
+
+<div class="container">
+    <div class="section-box">
+        <h2 th:text="|${maxoData.index()}) ${maxoData.maxoId()}: ${maxoData.maxoLabel()}|">Header</h2>
+        <div class="stats-row">
+            <div class="stat-item">
+                <div class="stat-label">ΔScore</div>
+                <div class="stat-value stat-delta" th:text="${maxoData.deltaScore()}">8.49</div>
+            </div>
+
+            <div class="stat-item">
+                <div class="stat-label">N Diseases</div>
+                <div class="stat-value stat-diseases" th:text="${maxoData.nDiseases()}">20</div>
+            </div>
+
+            <div class="stat-item">
+                <div class="stat-label">N Observed HPO Terms</div>
+                <div class="stat-value stat-terms" th:text="${maxoData.nObservedHpoTerms()}">2</div>
+            </div>
+        </div>
+    </div>
+</div>
+
+</body>

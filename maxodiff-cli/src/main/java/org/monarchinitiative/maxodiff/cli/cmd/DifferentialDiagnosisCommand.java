@@ -60,32 +60,22 @@ public class DifferentialDiagnosisCommand extends BaseCommand {
     private static final Logger LOGGER = LoggerFactory.getLogger(DifferentialDiagnosisCommand.class);
 
     @CommandLine.Option(names = {"-m", "--maxoData"},
-            description = "Path to MaXo data directory.")
+            description = "Path to MAxO data directory (default: ${DEFAULT-VALUE}).")
     protected Path maxoDataPath = Path.of("data");
 
     @CommandLine.Option(names = {"-p", "--phenopacket"},
-            description = "Path(s) to phenopacket JSON file(s).")
+            required = true,
+            description = "Path to phenopacket JSON file.")
     protected Path phenopacketPath;
 
     @CommandLine.Option(names = {"-O", "--outputDirectory"},
-//            required = true,
-            description = "Where to write the results files.")
+            description = "Where to write the results files (default: ${DEFAULT-VALUE}).")
     protected Path outputDir = Path.of(".");
 
-    @CommandLine.Option(names = {"--format"},
+   /* @CommandLine.Option(names = {"--format"},
             paramLabel = "{tsv,html,json}",
             description = "LIRICAL results output format (default: ${DEFAULT-VALUE}).")
-    protected String outputFormatArg = "tsv";
-
-    @CommandLine.Option(names = {"--compress"},
-            description = "Whether to output LIRICAL results file as a compressed file (default: ${DEFAULT-VALUE}).")
-    protected boolean compress = false;
-
-    @CommandLine.Option(names = {"-l", "--diseaseList"},
-            split=",",
-            arity = "1..*",
-            description = "Comma-separated list of diseases to include in differential diagnosis.")
-    protected List<String> diseaseIdsArg;
+    protected String outputFormatArg = "html";*/
 
     @CommandLine.Option(names = {"-n", "--nDiseases"},
             description = "Comma-separated list of n diseases for filtering diseases to include in differential diagnosis.")
@@ -103,7 +93,7 @@ public class DifferentialDiagnosisCommand extends BaseCommand {
     @CommandLine.Option(names = {"-e", "--engine"},
             paramLabel = "{lirical, phenomizer}",
             description = "Differential diagnosis engine (default: ${DEFAULT-VALUE}).")
-    protected String engineArg = "lirical";
+    protected String engineArg = "phenomizer";
 
     @CommandLine.Option(names = {"-s", "--scoringMode"},
             paramLabel = "{one-sided, two-sided}",
@@ -112,8 +102,12 @@ public class DifferentialDiagnosisCommand extends BaseCommand {
 
     @Override
     public Integer execute() throws Exception {
-
+        if (!Files.exists(phenopacketPath)) {
+            System.err.println("Could not find phenopacket file: " + phenopacketPath);
+            return 1;
+        }
         String phenopacketName = phenopacketPath.toFile().getName();
+
         String outputFilename = String.join("_", phenopacketName, "maxodiff", "results.csv");
         Path maxodiffResultsFilePath = Path.of(String.join(File.separator, outputDir.toString(), outputFilename));
 
@@ -168,6 +162,7 @@ public class DifferentialDiagnosisCommand extends BaseCommand {
         resultsMap.put("maxScoreValue", new ArrayList<>());
 
 
+        String outputFilename = null;
         try {
             // Make maxodiffRefiner
             MaxodiffDataResolver maxodiffDataResolver = MaxodiffDataResolver.of(maxoDataPath);
@@ -175,7 +170,7 @@ public class DifferentialDiagnosisCommand extends BaseCommand {
 
             DiffDiagRefiner maxoDiffRefiner = maxodiffPropsConfiguration.diffDiagRefiner("score");
             BiometadataService biometadataService = maxodiffPropsConfiguration.biometadataService();
-
+            outputFilename = null;
             DifferentialDiagnosisEngine engine = null;
             LiricalDifferentialDiagnosisEngineConfigurer liricalDifferentialDiagnosisEngineConfigurer = null;
             if (ddEngine.equals("lirical")) {
@@ -219,8 +214,7 @@ public class DifferentialDiagnosisCommand extends BaseCommand {
             switch (diseaseProbModel) {
                 case "ranked" -> diseaseModelProbability = DiseaseModelProbability.ranked(initialDiagnoses);
                 case "softmax" -> diseaseModelProbability = DiseaseModelProbability.softmax(initialDiagnoses);
-                case "expDecay" ->
-                        diseaseModelProbability = DiseaseModelProbability.exponentialDecay(initialDiagnoses);
+                case "expDecay" -> diseaseModelProbability = DiseaseModelProbability.exponentialDecay(initialDiagnoses);
             }
 
             MaxoHpoTermProbabilities maxoHpoTermProbabilities =
@@ -278,7 +272,7 @@ public class DifferentialDiagnosisCommand extends BaseCommand {
 
                 String nDiseasesAbbr = String.join("", "n", String.valueOf(nDiseases));
                 String nRepsAbbr = String.join("", "nr", String.valueOf(nRepetitions));
-                String outputFilename = String.join("_", phenopacketName, ddEngine,
+                outputFilename = String.join("_", phenopacketName, ddEngine,
                         nDiseasesAbbr, nRepsAbbr, "maxodiff", "results.html");
                 Path maxodiffResultsHTMLPath = Path.of(String.join(File.separator, outputDir.toString(), outputFilename));
 
@@ -320,7 +314,7 @@ public class DifferentialDiagnosisCommand extends BaseCommand {
             resultsMap = new HashMap<>();
             BatchDiagnosisCommand.setResultsMap(resultsMap);
         }
-
+        System.out.println("Wrote output to " + outputFilename);
     }
 
 

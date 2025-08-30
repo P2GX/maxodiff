@@ -28,16 +28,14 @@ public class HtmlResults {
         String htmlString = Files.readString(htmlTemplatePath);
 
         String sampleId = sample.id();
-        StringBuilder samplePresentTermsStringBuilder = new StringBuilder();
-        sample.presentHpoTermIds().forEach(tid -> samplePresentTermsStringBuilder
-                .append(biometadataService.hpoLabel(tid).orElse("unknown")).append(" (")
-                .append(tid).append("), "));
+        StringBuilder sampleObservedTermsStringBuilder = new StringBuilder();
+        sample.presentHpoTermIds().forEach(tid -> sampleObservedTermsStringBuilder
+                .append(hpoLink(tid,biometadataService)).append("; "));
         String samplePresentTermsString = sample.presentHpoTermIds().isEmpty() ? "" :
-                samplePresentTermsStringBuilder.substring(0, samplePresentTermsStringBuilder.length() - 2);
+                sampleObservedTermsStringBuilder.substring(0, sampleObservedTermsStringBuilder.length() - 2);
         StringBuilder sampleExcludedTermsStringBuilder = new StringBuilder();
         sample.excludedHpoTermIds().forEach(tid -> sampleExcludedTermsStringBuilder
-                .append(biometadataService.hpoLabel(tid).orElse("unknown")).append(" (")
-                .append(tid).append("), "));
+                .append(hpoLink(tid,biometadataService)).append("; "));
         String sampleExcludedTermsString = sample.excludedHpoTermIds().isEmpty() ? "" :
                 sampleExcludedTermsStringBuilder.substring(0, sampleExcludedTermsStringBuilder.length() - 2);
 
@@ -52,7 +50,11 @@ public class HtmlResults {
         htmlString = htmlString.replace("$results", resultsString);
 
         return htmlString;
+    }
 
+    private static String hpoLink(TermId tid, BiometadataService biometadataService) {
+        String label = biometadataService.hpoLabel(tid).orElse("n/a");
+        return String.format("<a href=\"https://hpo.jax.org/browse/term/%s\" target=\"_blank\">%s</a>", tid.getValue(), label);
     }
 
     protected static String getHTMLResults(List<MaxodiffResult> resultList, BiometadataService biometadataService,

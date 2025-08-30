@@ -16,7 +16,7 @@ public class Main implements Callable<Integer> {
         CommandLine cline = new CommandLine(new Main())
                 //.addSubcommand("maxodiff", new MaxodiffCommand())
                 .addSubcommand("download", new DownloadCommand())
-                .addSubcommand("diagnosis", new DifferentialDiagnosisCommand())
+                .addSubcommand("analyze", new DifferentialDiagnosisCommand())
                 .addSubcommand("batch", new BatchDiagnosisCommand())
                 .addSubcommand("benchmark", new BenchmarkCommand())
                 .addSubcommand("precompute-resnik", new PrecomputeResnikMapCommand())
