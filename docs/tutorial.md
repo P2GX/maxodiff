@@ -1,6 +1,6 @@
 # Tutorial
 
-This tutorial explains how to set up and run the command-line interface (CLI) version of maxo-diff. Instructions for the online version of maxdoff can be found here 
+This tutorial explains how to set up and run the command-line interface (CLI) version of maxodiff. Instructions for the online version of maxdoff can be found here 
 !!! danger "🚨 TODO"
     <span class="todo-pulse">Fill in the correct link to the online version of maxo-diff!</span>
 

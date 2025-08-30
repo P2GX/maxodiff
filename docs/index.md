@@ -17,7 +17,7 @@ We implement maxodiff as a Java application that can be run as a stand-alone com
 The process of differential diagnosis aims to identify the etiology of a condition by an evaluation of patient history, physical examination findings, and in many cases laboratory data or imaging tests. The result of this process can be conceptualized as a list of candidate diagnoses, and the goal of the process is to find the correct diagnosis in order to plan clinical management optimally.
 
 The [Human Phenotype Ontology](https://hpo.jax.org/){:target="_blank"} (HPO) provides a semantically unified framework of knowledge on diseases, genes, and phenotypes that is used to support phenotype-driven variant prioritization in diagnostic sequencing. The HPO is wiedely used to support
-differential diangosis in medical genetics and other fields. The [Medical Action Ontology](https://github.com/monarch-initiative/maxo){:target="_blank"} (MAxO) was developed to organize medical procedures, therapies and interventions in a structured way. MAxO contains terms describing activities and measures undertaken as a part of clinical management that collectively we refer to as medical actions. In addition to pharmaceutical treatment, medical actions include surgical procedures, ablations, treatment with biologics, behavioral and cognitive interventions, deep brain stimulation and many others. The MAxO project additionally provides annotations of diagnostic modalities (represented as MAxO terms) for specific clinical findings (represented as HPO terms).
+differential diagnosis in medical genetics and other fields. The [Medical Action Ontology](https://github.com/monarch-initiative/maxo){:target="_blank"} (MAxO) was developed to organize medical procedures, therapies and interventions in a structured way. MAxO contains terms describing activities and measures undertaken as a part of clinical management that collectively we refer to as medical actions. In addition to pharmaceutical treatment, medical actions include surgical procedures, ablations, treatment with biologics, behavioral and cognitive interventions, deep brain stimulation and many others. The MAxO project additionally provides annotations of diagnostic modalities (represented as MAxO terms) for specific clinical findings (represented as HPO terms).
 
 !!! quote ""
 For instance, one such annotation specifies that the HPO term [Corneal crystals](https://hpo.jax.org/browse/term/HP:0000531){:target="_blank"} is_observable_through slit-lamp examination (MAXO:0000973). 
@@ -34,12 +34,12 @@ The GA4GH [Phenopacket Schema](https://phenopacket-schema.readthedocs.io/en/late
 
 To test the software, users may obtain phenopackets from [Phenopacket Store](https://github.com/monarch-initiative/phenopacket-store){:target="_blank"} (See also [Danis et al, 2024](https://pubmed.ncbi.nlm.nih.gov/39394689/){:target="_blank"}). Currently, over 8000 phenopackets are available.
 
-We have develop software libraries that may be helpful in converting existing data to phenoapcket format.
+We have developed software libraries that may be helpful in converting existing data to phenoapcket format.
 
 - [SAMS](https://www.genecascade.org/sams-cgi/index.cgi): Symptom annotation made simple - SAMS is a database and phenotyping tool for precision medicine that includes numerous functionalities including the creation of phenopackets. 
-- [phenopacket-tools](https://github.com/phenopackets/phenopacket-tools){:target="_blank"} (See also [Danis et al., 2024](https://pubmed.ncbi.nlm.nih.gov/37196000/){:target="_blank"}): Java library and command-line application
-- [phenopackets ](https://pypi.org/project/phenopackets/){:target="_blank"} Python library
-- [phenopacket-schema](https://mvnrepository.com/artifact/org.phenopackets/phenopacket-schema){:target="_blank"} Java library
+- [phenopacket-tools](https://github.com/phenopackets/phenopacket-tools){:target="_blank"}: (See also [Danis et al., 2024](https://pubmed.ncbi.nlm.nih.gov/37196000/){:target="_blank"}): Java library and command-line application
+- [phenopackets ](https://pypi.org/project/phenopackets/){:target="_blank"}: Python library
+- [phenopacket-schema](https://mvnrepository.com/artifact/org.phenopackets/phenopacket-schema){:target="_blank"}: Java library
 
 
 
