@@ -126,30 +126,387 @@
         .spaced-row td {
             padding-top: 15px;
         }
+         * {
+             font-family: Arial, Helvetica, sans-serif;
+         }
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        .container {
+            width: 80%;
+            margin: 0 auto;
+            padding: 2em 0;
+        }
+
+        .section-box {
+            border: 1px solid #ccc;
+            border-left: 6px solid #007acc;
+            border-radius: 8px;
+            padding: 1em;
+            background: #fefefe;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            width: 90%;
+            margin: 2em auto;
+            overflow-x: auto;
+            max-width: 100%;
+        }
+
+        .section-box h2 {
+            font-size: 1.4em;
+            color: #003366;
+            margin-bottom: 0.5em;
+        }
+        .stats-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 1.5em 0;
+            gap: 1em;
+        }
+
+        .stat-item {
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            padding: 0.8em 1em;
+            text-align: center;
+            flex: 1;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .stat-label {
+            font-size: 0.85em;
+            color: #666;
+            margin-bottom: 0.3em;
+            font-weight: 500;
+        }
+
+        .stat-value {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #003366;
+        }
+
+        .stat-delta {
+            color: #007acc;
+        }
+
+        .stat-diseases {
+            color: #d63384;
+        }
+
+        .stat-terms {
+            color: #198754;
+        }
+        .countsTable {
+            border-collapse: collapse;
+            width: 100%;
+            table-layout: fixed; /
+        }
+
+        .countsTable th, td {
+            border: 1px solid #ddd;
+            text-align: center;
+            vertical-align: middle;
+            padding: 2px;
+        }
+
+        .countsTable th:first-child,
+        td:first-child {
+            width: 200px;
+            min-width: 200px;
+            max-width: 200px;
+            text-align: left; /* optional */
+        }
+
+        .countsTable th:nth-child(2), td:nth-child(2) {
+            width: 20px;
+            min-width: 20px;
+            max-width: 20px;
+        }
+
+        /* Column 3 = 10px */
+        .countsTable th:nth-child(3), td:nth-child(3) {
+            width: 10px;
+            min-width: 10px;
+            max-width: 10px;
+        }
+
+        .countsTable th:nth-child(n+4), td:nth-child(n+4) {
+            width: 40px;
+            min-width: 40px;
+            max-width: 40px;
+        }
+
+
+        .deltaR {
+            font-weight: bold;
+            color: #1e40af; /* Tailwind-ish blue-800 */
+            font-size: 1.1em;
+            text-decoration: overline;
+        }
+        .deltaR-header {
+            vertical-align: bottom;
+            height: 160px; /* same height as rotated headers for alignment */
+        }
+
+        .rotated-header {
+            color: #1e40af;
+            font-weight: 500;
+            cursor: pointer;
+            vertical-align: bottom;
+            white-space: nowrap;
+            padding: 0;
+            margin: 0;
+            height: 160px; /* space for rotation */
+        }
+
+        .rotated-header div {
+            transform: rotate(-45deg); /* 315deg == -45deg */
+            transform-origin: bottom left;
+            width: max-content;
+        }
+
+        .repetitionCell {
+            position: relative;
+            text-align: center;
+            cursor: pointer;
+            padding: 4px;  /* leaves margin around box */
+        }
+        .repetitionColorBox {
+            display: inline-block;
+            width: 80%;          /* not full width */
+            height: 80%;         /* not full height */
+            padding: 6px;        /* inner padding */
+            border-radius: 6px;
+            background: rgba(255,215,0,0.6); /* overwritten by th:style */
+            box-sizing: border-box;
+        }
+
+        .repetitionCell .tooltip {
+            position: absolute;
+            left: 50%;
+            bottom: 100%;                  /* show above the cell */
+            transform: translateX(-50%);
+            margin-bottom: 6px;
+
+            background: #f8f8f8;
+            border: 1px solid #ccc;
+            border-radius: 8px;
+            padding: 8px 12px;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.25);
+            white-space: normal;
+            max-width: 380px;
+            z-index: 1000;
+
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            transition: opacity .2s ease-in-out, visibility .2s;
+        }
+
+        .repetitionCell:hover .tooltip {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        /* Professional HPO Results Table Styling */
+        /* Professional HPO Results Table Styling */
+
+        .resultsTable {
+            width: 100%;
+            border-collapse: collapse;
+            background: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            border: 1px solid #e1e5e9;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 2em 0;
+        }
+
+        .resultsTable tbody tr {
+            border-bottom: 1px solid #f0f2f4;
+            transition: background-color 0.2s ease;
+        }
+
+        .resultsTable tbody tr:last-child {
+            border-bottom: none;
+        }
+
+        .resultsTable tbody tr:hover {
+            background-color: #f8fbff;
+        }
+
+        .resultsTable tbody tr.spaced-row {
+            border-top: 2px solid #e8ecf0;
+        }
+
+        .resultsTable td {
+            padding: 1.2em 1.5em;
+            vertical-align: top;
+            line-height: 1.6;
+        }
+
+        .resultsTable td:first-child {
+            background: linear-gradient(90deg, #f8fbff 0%, #ffffff 100%);
+            border-right: 3px solid #007acc;
+            width: 100px;
+            max-width: 100px;
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 0.85em;
+            text-transform: uppercase;
+            letter-spacing: 0.2px;
+            word-wrap: break-word;
+            hyphens: auto;
+        }
+
+        .resultsTable td:last-child {
+            background: #ffffff;
+            padding-left: 2em;
+        }
+
+        /* HPO Term Links Styling */
+        .resultsTable a {
+            color: #007acc;
+            text-decoration: none;
+            font-weight: 500;
+            padding: 0.2em 0.4em;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+            display: inline-block;
+            margin: 0.1em 0.2em 0.1em 0;
+            border: 1px solid transparent;
+        }
+
+        .resultsTable a:hover {
+            background: #007acc;
+            color: white;
+            text-decoration: none;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0, 122, 204, 0.3);
+        }
+
+        .resultsTable a:focus {
+            outline: 2px solid #007acc;
+            outline-offset: 2px;
+        }
+
+        /* Separator styling between links */
+        .resultsTable td:last-child {
+            word-spacing: 0.1em;
+        }
+
+        /* Numbers styling for statistics rows */
+        .resultsTable tr:nth-last-child(-n+2) td:last-child {
+            font-weight: 600;
+            color: #007acc;
+            font-size: 1.1em;
+        }
+
+        /* Enhanced spacing for better readability */
+        .resultsTable tr:first-child td:last-child a {
+            background: rgba(40, 167, 69, 0.05);
+            border: 1px solid rgba(40, 167, 69, 0.2);
+            color: #155724;
+        }
+
+        .resultsTable tr:first-child td:last-child a:hover {
+            background: #28a745;
+            color: white;
+            border-color: #28a745;
+        }
+
+        .resultsTable tr:nth-child(2) td:last-child a {
+            background: rgba(220, 53, 69, 0.05);
+            border: 1px solid rgba(220, 53, 69, 0.2);
+            color: #721c24;
+        }
+
+        .resultsTable tr:nth-child(2) td:last-child a:hover {
+            background: #dc3545;
+            color: white;
+            border-color: #dc3545;
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .resultsTable {
+                font-size: 0.9em;
+            }
+
+            .resultsTable td {
+                padding: 1em;
+            }
+
+            .resultsTable td:first-child {
+                width: 80px;
+                min-width: 80px;
+                font-size: 0.8em;
+                padding: 0.8em 0.5em;
+            }
+
+            .resultsTable td:last-child {
+                padding-left: 1.2em;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .resultsTable {
+                display: block;
+                overflow-x: auto;
+                white-space: nowrap;
+            }
+
+            .resultsTable td:last-child {
+                white-space: normal;
+            }
+        }
+
+        /* Optional: Add icons for different row types */
+        .resultsTable tr:first-child td:first-child::before {
+            content: "✓ ";
+            color: #28a745;
+            font-weight: bold;
+            margin-right: 0.3em;
+        }
+
+        .resultsTable tr:nth-child(2) td:first-child::before {
+            content: "✗ ";
+            color: #dc3545;
+            font-weight: bold;
+            margin-right: 0.3em;
+        }
+
+        .resultsTable tr:nth-last-child(-n+2) td:first-child::before {
+            content: "📊 ";
+            margin-right: 0.3em;
+        }
     </style>
 </head>
 
 <body style="font-family: Arial, Helvetica, sans-serif;">
 <h1>$sampleResultsTitle</h1>
-<table>
+<table class="resultsTable">
     <tbody>
         <tr>
-<!--            <td style='font-weight:bold;'>Disease ID:</td><td th:text="${diseaseId}"></td>-->
             <td style='font-weight:bold;'>Observed HPO Terms:</td><td>$samplePresentHpoIds</td>
         </tr>
         <tr class="spaced-row">
             <td style='font-weight:bold;'>Excluded HPO Terms:</td><td>$sampleExcludedHpoIds</td>
         </tr>
         <tr class="spaced-row">
-            <td style='font-weight:bold;'>N Diseases:</td><td>$nDiseases</td>
+            <td style='font-weight:bold;'>Diseases:</td><td>$nDiseases</td>
         </tr>
         <tr>
-            <td style='font-weight:bold;'>N Repetitions:</td><td>$nRepetitions</td>
+            <td style='font-weight:bold;'>Simulations:</td><td>$nRepetitions</td>
         </tr>
     </tbody>
 </table>
 
-<h1>Top 10 Recommended MAxO Terms</h1>
+<h1>Prioritized Diagnostic Investigations</h1>
 
 <div>$results</div>
 

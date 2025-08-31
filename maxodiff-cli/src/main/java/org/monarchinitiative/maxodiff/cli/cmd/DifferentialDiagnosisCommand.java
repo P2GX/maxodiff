@@ -109,6 +109,11 @@ public class DifferentialDiagnosisCommand extends BaseCommand {
         String phenopacketName = phenopacketPath.toFile().getName();
 
         String outputFilename = String.join("_", phenopacketName, "maxodiff", "results.csv");
+        if (! outputDir.toFile().exists()) {
+            System.err.println("Output directory does not exist: '" + outputDir +
+                    "'. Create the directory and rerun this command.");
+            return 1;
+        }
         Path maxodiffResultsFilePath = Path.of(String.join(File.separator, outputDir.toString(), outputFilename));
 
         int nDiseases = nDiseasesArg;
@@ -173,31 +178,17 @@ public class DifferentialDiagnosisCommand extends BaseCommand {
             outputFilename = null;
             DifferentialDiagnosisEngine engine = null;
             LiricalDifferentialDiagnosisEngineConfigurer liricalDifferentialDiagnosisEngineConfigurer = null;
-            if (ddEngine.equals("lirical")) {
-                Lirical lirical = prepareLirical();
-                PhenotypeService phenotypeService = lirical.phenotypeService();
-                Set<TermId> liricalDiseaseIds = lirical.phenotypeService().diseases().diseaseIds();
-                MaxodiffLiricalAnalysisRunner maxodiffLiricalAnalysisRunner = MaxodiffLiricalAnalysisRunnerImpl.of(phenotypeService, 4);
-                liricalDifferentialDiagnosisEngineConfigurer = LiricalDifferentialDiagnosisEngineConfigurer.of(maxodiffLiricalAnalysisRunner);
-                var analysisOptions = AnalysisOptions.builder()
-                        .useStrictPenalties(runConfiguration.strict)
-                        .useGlobal(runConfiguration.globalAnalysisMode)
-                        .pretestProbability(PretestDiseaseProbabilities.uniform(liricalDiseaseIds))
-                        .build();
-                engine = liricalDifferentialDiagnosisEngineConfigurer.configure(analysisOptions);
-            } else if (ddEngine.equals("phenomizer")) {
-                Map<TermPair, Double> icMicaDict = icMicaData.icMicaDict();
-                engine = new PhenomizerDifferentialDiagnosisEngine(hpoDiseases, icMicaDict, scoringMode);
+            if (icMicaData == null) {
+                System.err.println("No icMicaDict found. Please report to developers");
+                return;
             }
-
+            Map<TermPair, Double> icMicaDict = icMicaData.icMicaDict();
+            engine = new PhenomizerDifferentialDiagnosisEngine(hpoDiseases, icMicaDict, scoringMode);
 
             PhenopacketData phenopacketData = PhenopacketFileParser.readPhenopacketData(phenopacketPath);
             Sample sample = Sample.of(phenopacketData.sampleId(),
                     phenopacketData.presentHpoTermIds().toList(),
                     phenopacketData.excludedHpoTermIds().toList());
-
-            // Get initial differential diagnoses
-            assert engine != null;
             List<DifferentialDiagnosis> differentialDiagnoses = engine.run(sample);
 
             // Get List of Refinement results: maxo term scores and frequencies
@@ -227,18 +218,7 @@ public class DifferentialDiagnosisCommand extends BaseCommand {
                     .map(DifferentialDiagnosis::diseaseId)
                     .collect(Collectors.toSet());
 
-            DifferentialDiagnosisEngine diseaseSubsetEngine = null;
-            if (ddEngine.equals("lirical")) {
-                var diseaseSubsetOptions = AnalysisOptions.builder()
-                        .useStrictPenalties(runConfiguration.strict)
-                        .useGlobal(runConfiguration.globalAnalysisMode)
-                        .pretestProbability(PretestDiseaseProbabilities.uniform(initialDiagnosesIds))
-                        .addTargetDiseases(initialDiagnosesIds)
-                        .build();
-                diseaseSubsetEngine = liricalDifferentialDiagnosisEngineConfigurer.configure(diseaseSubsetOptions);
-            } else if (ddEngine.equals("phenomizer")) {
-                diseaseSubsetEngine = engine;
-            }
+            DifferentialDiagnosisEngine diseaseSubsetEngine = engine;
 
             LOGGER.info("Running Maxodiff calculation...");
             RankMaxo rankMaxo = new RankMaxo(hpoToMaxoTermMap, maxoToHpoTermIdMap, maxoHpoTermProbabilities, diseaseSubsetEngine,
@@ -265,7 +245,7 @@ public class DifferentialDiagnosisCommand extends BaseCommand {
 
             Set<TermId> diseaseIds = topResult.rankMaxoScore().maxoOmimTermIds();
             int topNDiseases = diseaseIds.size();
-
+        writeOutputFile = true;
             if (writeOutputFile) {
                 writeResults(phenopacketName, diseaseId, TermId.of(maxScoreMaxoTermId), maxScoreTermLabel,
                         topNDiseases, diseaseIds.toString(), nRepetitions, maxScoreValue, printer);
@@ -278,7 +258,7 @@ public class DifferentialDiagnosisCommand extends BaseCommand {
 
                 String htmlString = HtmlResults.writeHTMLResults(sample, nDiseases, nRepetitions, resultsList,
                         biometadataService, hpoTermCounts);
-
+                System.out.println("Wrote HTML: " + htmlString.substring(0, 200));
                 Files.writeString(maxodiffResultsHTMLPath, htmlString);
             }
 
