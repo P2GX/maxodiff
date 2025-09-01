@@ -46,7 +46,6 @@ public class MaxoResultRow {
         }
 
         for (TermId omimId : result.rankMaxoScore().maxoDiseaseAvgRankChangeMap().keySet()) {
-            System.out.println("maxo result row - " + omimId.getValue());
             String omimLabel = omimTermMap.get(omimId);
             int rankChange = Optional.ofNullable(avgRankChangeMap.get(omimId))
                     .orElse(0); // TODO -- ARE WE MISSING SOME VALUES WE NEED? CRASH WITHOUT THIS LINE
@@ -69,7 +68,13 @@ public class MaxoResultRow {
     }
 
     public String getStyle() {
-        double opacity =  (double) rankChange / nDiseases;
+        double opacity = 0.1d;
+        if (nDiseases == 0) {
+            System.err.println("TODO nDiseases is 0");
+
+        } else {
+            opacity = (double) rankChange / nDiseases;
+        }
         return  (rankChange < 0) ? "background: rgba(0, 128, 0, " + (-1.0 * opacity) + ")" :
                 "background: rgba(255, 0, 0, " + opacity + ")";
     }

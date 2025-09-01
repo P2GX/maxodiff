@@ -27,24 +27,15 @@ public class RepetitionRow {
         return "rgba(255, 215, 0, " + opacity + ")";
     }
 
-    private static String getTooltip(TermId hpoId, String hpoLabel, Map<Float,List<String>> freqMap) {
-        StringBuilder freqHTML = new StringBuilder();
-        freqHTML.append("<ul>");
+    private static List<RepetitionCellTooltipItem> getTooltipItems(Map<Float,List<String>> freqMap) {
+        List<RepetitionCellTooltipItem> items = new ArrayList<>();
         for (var entry : freqMap.entrySet()) {
             Float frequency = entry.getKey();
             String percentage = String.format("%.1f%%", frequency * 100);
-            String omimLabelString = String.join("; ", entry.getValue());
-            freqHTML.append("<li><span>")
-                        .append(omimLabelString)
-                        .append("</span>: ")
-                        .append(percentage)
-                        .append("</li>");
+            String name = String.join("; ", entry.getValue());
+            items.add(new RepetitionCellTooltipItem(name, percentage));
         }
-        freqHTML.append("</ul>");
-
-        return "<div style='background-color: lightgray; color: red'><b>HPO Term</b>: " + hpoLabel + "</div>" +
-                "<div><p></p></div>" +
-                freqHTML;
+        return items;
     }
 
 
@@ -76,8 +67,8 @@ public class RepetitionRow {
             String styleString = RepetitionRow.getStyleString(ct, nRepetitions);
             String hpoLabel = hpoTermsMap.get(hpoId);;
             Map<Float,List<String>> freqMap = frequencyMap.get(hpoLabel);
-            String tooltip = RepetitionRow.getTooltip(hpoId, ctString, freqMap);
-            RepetitionCell cell = new RepetitionCell(ctString, styleString, tooltip);
+            List<RepetitionCellTooltipItem> tooltipitems = RepetitionRow.getTooltipItems( freqMap);
+            RepetitionCell cell = new RepetitionCell(ctString, styleString, hpoLabel, tooltipitems);
             cells.add(cell);
         }
 

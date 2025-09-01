@@ -29,7 +29,7 @@
             </th>
             <th></th>
             <!-- Loop over HPO terms-->
-            <th th:each="entry : ${maxoData.hpoHeaders}" class="rotated-header">
+            <th th:each="entry : ${maxoData.hpoHeaders}" class="vertical-header">
                 <a th:href="|https://hpo.jax.org/browse/term/${entry.key}|">
                     <div th:text="${entry.value}"></div>
                 </a>
@@ -47,7 +47,15 @@
                 <div class="repetitionColorBox" th:style="'background:' + ${cell.background}">
                     <span th:text="${cell.count}">0</span>
                 </div>
-                <span class="tooltip" th:utext="${cell.tooltipHtml}"></span>
+                <div class="tooltip">
+                    <div class="tooltip-header" th:text="${cell.toolTipHeader}">Header</div>
+                    <ul  class="tooltip-list">
+                        <li th:each="item: ${cell.toolTipItems}">
+                            <span th:text="${item.hpo}">HPO Term</span>:
+                            <strong th:text="${item.percentage}">0%</strong>
+                        </li>
+                    </ul>
+                </div>
             </td>
         </tr>
         <!-- Now add one row for each of the diseases -->
@@ -58,19 +66,19 @@
                th:text="${row.omimLabel}"></a>
         </td>
         <!-- 2nd column: rank change -->
-        <td th:text="${row.rankChange}"></td>
+        <td th:text="${row.rankChange}" th:style="${row.style}"></td>
 
-        <!-- 3rd column: number of diseases -->
-        <td th:text="${row.nDiseases}"></td>
+        <!-- 3rd column: empty (this is a space hilder. TODO-lets refactor and do this with CSS -->
+        <td></td>
 
         <!-- Remaining columns: loop over HPO table cells -->
         <td th:each="cell : ${row.cells}" class="parentCell">
-            <div class="repetitionColorBox"
-                 th:style="'background:' + ${cell.getOpacity()}">
+            <div class="hpoCell"
+                 th:style="'background:' + ${cell.style}">
                 <span th:text="${cell.count}">0</span>
             </div>
         </td>
-        </tr>>
+        </tr>
     </table>
     </div>
 </div>

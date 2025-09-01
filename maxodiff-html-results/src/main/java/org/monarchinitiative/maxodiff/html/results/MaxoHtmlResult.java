@@ -74,37 +74,6 @@ public class MaxoHtmlResult {
         return resultRows;
     }
 
-    /*
-    public List<MaxoHtmlResultTableRow> buildRows(MaxodiffResult result) {
-        List<MaxoHtmlResultTableRow> rows = new ArrayList<>();
-        result.maxoTermScore().
-        for (Disease d : result.getDiseases()) {
-            MaxoHtmlResultTableRow row = new MaxoHtmlResultTableRow();
-            row.setDiseaseName(d.getName());
-
-            int deltaR = d.getDeltaRank();
-            row.setParentLabel(computeParentLabel(deltaR));
-            row.setParentValue(String.valueOf(deltaR));
-            row.setParentBackground(computeParentBackground(deltaR));
-
-            List<HpoCell> cells = new ArrayList<>();
-            for (TermId hpoId : result.rankMaxoScore().discoverableObservedHpoTermIds()) {
-                double score = d.getScoreFor(hpoId); // however you calculate
-                String background = computeHpoBackground(score);
-                cells.add(new HpoCell(background));
-            }
-            row.setHpoCells(cells);
-
-            rows.add(row);
-        }
-        return rows;
-    }*/
-
-    // Add getters for the new fields
-
-
-
-
     public int index() {
         return this.index;
     }

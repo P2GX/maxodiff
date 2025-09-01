@@ -11,53 +11,10 @@
           font-family: Arial, Helvetica, sans-serif;
         }
 
-        .apexcharts-tooltip {
-            font-family: Arial, Helvetica, sans-serif !important;
-            white-space: pre-wrap !important;
-        }
-
-        .countsTable {
-          table-layout: fixed;
-        }
-
-        .countsTable td {
-            padding: 10px 10px 10px 10px;
-            height: 30px;
-            width: 10px;
-        }
-
-        .countsTable td:first-child {
-            font-weight: bold;
-            white-space: nowrap;
-            max-width: 400px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .countsTable td:nth-child(2) {
-            border-right: thick double;
-        }
-
-        .countsTable th {
-            position: relative;
-            height: 200px;
-            width: 50px; /* needed for layout */
+        body {
+            margin: 5%;
             padding: 0;
-            margin: 0;
-            overflow: visible;
-            white-space: nowrap;
-            vertical-align: bottom;
-            text-align: center;
-        }
-
-        .countsTable th > div {
-           /*  transform: rotate(315deg); or -45deg */
-            transform-origin: bottom left;
-            position: absolute;
-            bottom: 0;
-            left: 50%;
-            transform: translateX(+0%) rotate(315deg); /* better centering */
-            white-space: nowrap;
+            box-sizing: border-box;
         }
 
         .diffDiagInputTable, .fileInputTable {
@@ -83,6 +40,17 @@
             position: relative;
         }
 
+        .hpoCell {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            padding: 4px;
+            box-sizing: border-box;
+            font-weight: bold;
+        }
+
         .tooltip {
             display: none;
             position: absolute;
@@ -93,21 +61,10 @@
             display:block;
         }
 
-        .scoreTable {
-          width: auto;
-          border-collapse: collapse;
-          margin-bottom: 1em;
-        }
-
-        .scoreTable td {
-          padding: 0.3em 0.6em;
-          border: none;
-          font-size: 0.95em;
-        }
-
         .section-box {
           border: 1px solid #ccc;
           border-left: 6px solid #007acc;
+          border-radius: 8px;
           border-radius: 8px;
           padding: 1em;
           margin: 2em 0;
@@ -199,46 +156,47 @@
         .stat-terms {
             color: #198754;
         }
+
         .countsTable {
+            table-layout: fixed;
             border-collapse: collapse;
+            border: none;
             width: 100%;
-            table-layout: fixed; /
         }
 
-        .countsTable th, td {
-            border: 1px solid #ddd;
-            text-align: center;
-            vertical-align: middle;
-            padding: 2px;
-        }
-
-        .countsTable th:first-child,
-        td:first-child {
-            width: 200px;
-            min-width: 200px;
-            max-width: 200px;
-            text-align: left; /* optional */
-        }
-
-        .countsTable th:nth-child(2), td:nth-child(2) {
-            width: 20px;
-            min-width: 20px;
-            max-width: 20px;
-        }
-
-        /* Column 3 = 10px */
-        .countsTable th:nth-child(3), td:nth-child(3) {
+        .countsTable td, .countsTable th {
+            padding: 10px;
+            height: 30px;
             width: 10px;
-            min-width: 10px;
-            max-width: 10px;
+            border: none;
+            text-align: center;
+        }
+
+        .countsTable thead tr {
+            height: 200px;
+        }
+
+        .countsTable th:first-child, td:first-child {
+            font-weight: bold;
+            width: 250px;
+            text-align: left;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .countsTable th:nth-child(2),.countsTable td:nth-child(2){
+            border-right: thick;
+            width: 60px;/* ΔR column */
+        }
+
+        .countsTable th:nth-child(3), td:nth-child(3) {
+            width: 20px; /* Spacer column */
         }
 
         .countsTable th:nth-child(n+4), td:nth-child(n+4) {
             width: 40px;
-            min-width: 40px;
-            max-width: 40px;
         }
-
 
         .deltaR {
             font-weight: bold;
@@ -248,71 +206,125 @@
         }
         .deltaR-header {
             vertical-align: bottom;
-            height: 160px; /* same height as rotated headers for alignment */
         }
 
-        .rotated-header {
-            color: #1e40af;
-            font-weight: 500;
-            cursor: pointer;
-            vertical-align: bottom;
-            white-space: nowrap;
-            padding: 0;
-            margin: 0;
-            height: 160px; /* space for rotation */
-        }
-
-        .rotated-header div {
-            transform: rotate(-45deg); /* 315deg == -45deg */
-            transform-origin: bottom left;
-            width: max-content;
-        }
-
-        .repetitionCell {
-            position: relative;
+        .vertical-header {
+            writing-mode: vertical-rl;
+            text-orientation: mixed;
+            width: 40px; /* Narrow width since text is vertical */
+            height: auto;
+            padding: 8px 4px;
             text-align: center;
-            cursor: pointer;
-            padding: 4px;  /* leaves margin around box */
+            vertical-align: bottom;
+        }
+
+        .vertical-header a {
+            text-decoration: none;
+            color: #2c3e50;
+            font-weight: 600;
+            font-size: 13px;
+
+            /* Nice looking font styling */
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            letter-spacing: 0.5px;
+            line-height: 1.2;
+        }
+
+        .vertical-header a:hover {
+            color: #007acc;
+        }
+
+        .vertical-header div {
+            margin: 0;
+            padding: 0;
+        }
+
+    .repetitionCell {
+        position: relative;
+        text-align: center;
+        cursor: pointer;
+        padding: 4px;  /* leaves margin around box */
         }
         .repetitionColorBox {
             display: inline-block;
-            width: 80%;          /* not full width */
-            height: 80%;         /* not full height */
-            padding: 6px;        /* inner padding */
-            border-radius: 6px;
+            width: 40px;          /* not full width */
+            height: 40px;         /* not full height */
+            padding: 4px;        /* inner padding */
             background: rgba(255,215,0,0.6); /* overwritten by th:style */
             box-sizing: border-box;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
         }
 
         .repetitionCell .tooltip {
-            position: absolute;
+            display: block;
+            position: fixed;  /* Changed from absolute to fixed */
             left: 50%;
-            bottom: 100%;                  /* show above the cell */
-            transform: translateX(-50%);
-            margin-bottom: 6px;
-
-            background: #f8f8f8;
-            border: 1px solid #ccc;
+            bottom: auto;
+            top: auto;
+            transform: translateX(-50%) translateY(-100%);  /* Positions above the trigger */
+            background: white;
+            border: 1px solid #ddd;
             border-radius: 8px;
-            padding: 8px 12px;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.25);
-            white-space: normal;
-            max-width: 380px;
-            z-index: 1000;
+            padding: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+
+            /* Auto-sizing */
+            width: auto;
+            min-width: 200px;
+            max-width: 400px;
+
+            font-size: 0.85em;  /* Smaller font */
+            z-index: 9999;  /* High z-index to appear above everything */
 
             opacity: 0;
             visibility: hidden;
             pointer-events: none;
-            transition: opacity .2s ease-in-out, visibility .2s;
+            transition: opacity 0.2s ease-in-out, visibility 0.2s;
         }
 
+        /* Position tooltip above the cell on hover */
         .repetitionCell:hover .tooltip {
             opacity: 1;
             visibility: visible;
+            /* Calculate position dynamically with JavaScript or use this approach: */
+            top: calc(var(--mouse-y, 50%) - 10px);
+            left: var(--mouse-x, 50%);
         }
 
-        /* Professional HPO Results Table Styling */
-        /* Professional HPO Results Table Styling */
+        .tooltip-header {
+            background-color: #f0f0f0;
+            color: #d32f2f;
+            font-weight: bold;
+            padding: 6px 8px;
+            margin: -12px -12px 8px -12px;  /* Extend to tooltip edges */
+            border-radius: 8px 8px 0 0;
+            font-size: 0.9em;
+        }
+
+        .tooltip-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            font-size: 0.8em;  /* Small font for list */
+        }
+
+        .tooltip-list li {
+            padding: 4px 0;
+            border-bottom: 1px solid #f0f0f0;
+            line-height: 1.3;
+            text-align: left;
+        }
+
+        .tooltip-list li:last-child {
+            border-bottom: none;
+        }
+
+        .tooltip-list strong {
+            color: #1976d2;
+            float: right;
+        }
 
         .resultsTable {
             width: 100%;
@@ -366,6 +378,16 @@
         .resultsTable td:last-child {
             background: #ffffff;
             padding-left: 2em;
+        }
+        .resultsTable td.narrow-column {
+            width: 1%;
+            max-width: none;
+            white-space: nowrap;
+            font-weight: bold;
+        }
+
+        .resultsTable .wide-column {
+            width: 99%;
         }
 
         /* HPO Term Links Styling */
@@ -492,16 +514,16 @@
 <table class="resultsTable">
     <tbody>
         <tr>
-            <td style='font-weight:bold;'>Observed HPO Terms:</td><td>$samplePresentHpoIds</td>
+            <td class="narrow-column">Observed HPO Terms:</td><td class="wide-column">$samplePresentHpoIds</td>
         </tr>
         <tr class="spaced-row">
-            <td style='font-weight:bold;'>Excluded HPO Terms:</td><td>$sampleExcludedHpoIds</td>
+            <td class="narrow-column">Excluded HPO Terms:</td><td class="wide-column">$sampleExcludedHpoIds</td>
         </tr>
         <tr class="spaced-row">
-            <td style='font-weight:bold;'>Diseases:</td><td>$nDiseases</td>
+            <td class="narrow-column">Diseases:</td><td class="wide-column">$nDiseases</td>
         </tr>
         <tr>
-            <td style='font-weight:bold;'>Simulations:</td><td>$nRepetitions</td>
+            <td class="narrow-column">Simulations:</td><td class="wide-column">$nRepetitions</td>
         </tr>
     </tbody>
 </table>

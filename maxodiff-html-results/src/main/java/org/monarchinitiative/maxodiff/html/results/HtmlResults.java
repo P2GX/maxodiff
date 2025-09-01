@@ -35,12 +35,12 @@ public class HtmlResults {
         String sampleId = sample.id();
         StringBuilder sampleObservedTermsStringBuilder = new StringBuilder();
         sample.presentHpoTermIds().forEach(tid -> sampleObservedTermsStringBuilder
-                .append(hpoLink(tid,biometadataService)).append("; "));
+                .append(hpoLink(tid,biometadataService)).append(" "));
         String samplePresentTermsString = sample.presentHpoTermIds().isEmpty() ? "" :
                 sampleObservedTermsStringBuilder.substring(0, sampleObservedTermsStringBuilder.length() - 2);
         StringBuilder sampleExcludedTermsStringBuilder = new StringBuilder();
         sample.excludedHpoTermIds().forEach(tid -> sampleExcludedTermsStringBuilder
-                .append(hpoLink(tid,biometadataService)).append("; "));
+                .append(hpoLink(tid,biometadataService)).append(" "));
         String sampleExcludedTermsString = sample.excludedHpoTermIds().isEmpty() ? "" :
                 sampleExcludedTermsStringBuilder.substring(0, sampleExcludedTermsStringBuilder.length() - 2);
 
@@ -243,14 +243,7 @@ public class HtmlResults {
 
         SpringTemplateEngine templateEngine = new SpringTemplateEngine();
         templateEngine.setTemplateResolver(templateResolver);
-        Map<TermId, String> hpoTermsMap = new HashMap<>();
-        Map<TermId, String> omimTerms = new LinkedHashMap<>();
         StringBuilder resultsString = new StringBuilder();
-
-        List<HpoFrequency> hpoFrequencies = HTMLFrequencyMap.getHpoFrequencies(hpoTermCounts);
-        Map<String, Map<Float, List<String>>> frequencyMap = new HashMap<>();
-
-        Map<TermId, Integer> nRepetitionsMap = new HashMap<>();
 
         int zeroIdx = resultList.stream()
                 .filter(result -> result.rankMaxoScore().maxoScore().equals(0.))
@@ -267,10 +260,6 @@ public class HtmlResults {
                     idx,
                     templateEngine);
             resultsString.append(templateHtml);
-            resultsString.append("        </tbody>\n" +
-                    "    </table>");
-            resultsString.append("</div>");
-
         }
 
         return resultsString.toString();
