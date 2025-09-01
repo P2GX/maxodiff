@@ -13,7 +13,6 @@ import org.monarchinitiative.maxodiff.core.model.Sample;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class LiricalDifferentialDiagnosisEngine implements DifferentialDiagnosisEngine {
 

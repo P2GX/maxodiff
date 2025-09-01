@@ -47,7 +47,7 @@ public class DiseaseTermCountTest {
         Map<TermId, List<HpoFrequency>> hpoFrequencyMap = dtcount.hpoTermCounts();
         List<HpoFrequency> hpofreqList = hpoFrequencyMap.get(TermId.of("HP:0004523"));
         assertEquals(1, hpofreqList.size());
-        HpoFrequency hpofreq = hpofreqList.get(0);
+        HpoFrequency hpofreq = hpofreqList.getFirst();
         assertEquals("OMIM:613224", hpofreq.omimId());
         assertEquals(1.0f, hpofreq.frequency(), TOLERANCE);
     }

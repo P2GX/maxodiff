@@ -12,9 +12,7 @@ import org.monarchinitiative.maxodiff.core.service.BiometadataService;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 import org.thymeleaf.context.Context;
 import org.thymeleaf.spring6.SpringTemplateEngine;
-import org.thymeleaf.templatemode.TemplateMode;
 import org.thymeleaf.templateresolver.ClassLoaderTemplateResolver;
-import org.thymeleaf.templateresolver.FileTemplateResolver;
 
 import java.io.File;
 import java.io.StringWriter;

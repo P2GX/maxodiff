@@ -2,10 +2,6 @@ package org.monarchinitiative.maxodiff.cli.cmd;
 
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
-import org.monarchinitiative.lirical.core.Lirical;
-import org.monarchinitiative.lirical.core.analysis.*;
-import org.monarchinitiative.lirical.core.analysis.probability.PretestDiseaseProbabilities;
-import org.monarchinitiative.lirical.core.service.PhenotypeService;
 import org.monarchinitiative.lirical.io.analysis.PhenopacketData;
 import org.monarchinitiative.maxodiff.config.MaxodiffDataResolver;
 import org.monarchinitiative.maxodiff.config.MaxodiffPropsConfiguration;
@@ -17,7 +13,6 @@ import org.monarchinitiative.maxodiff.core.analysis.refinement.RefinementOptions
 import org.monarchinitiative.maxodiff.core.analysis.refinement.RefinementResults;
 import org.monarchinitiative.maxodiff.core.diffdg.DifferentialDiagnosisEngine;
 import org.monarchinitiative.maxodiff.html.results.HtmlResults;
-import org.monarchinitiative.maxodiff.lirical.PhenopacketFileParser;
 import org.monarchinitiative.maxodiff.lirical.*;
 import org.monarchinitiative.maxodiff.core.model.*;
 import org.monarchinitiative.maxodiff.core.service.BiometadataService;

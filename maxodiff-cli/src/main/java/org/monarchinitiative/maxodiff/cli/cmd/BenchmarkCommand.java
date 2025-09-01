@@ -6,7 +6,6 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
-import org.monarchinitiative.lirical.configuration.impl.BundledBackgroundVariantFrequencyServiceFactory;
 import org.monarchinitiative.lirical.core.Lirical;
 import org.monarchinitiative.lirical.core.analysis.AnalysisOptions;
 import org.monarchinitiative.lirical.core.analysis.probability.PretestDiseaseProbabilities;
@@ -44,7 +43,6 @@ import picocli.CommandLine;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.*;
@@ -194,8 +192,7 @@ public class BenchmarkCommand extends DifferentialDiagnosisCommand {
                 double meanNDiscoverablePhenotypesAllMaxoTerms =  nAllMaxoTerms / nAllMaxoDiscoverablePhenotypes;
                 int p = 1;
                 int nPhenopackets = phenopacketPaths.size();
-                for (int i = 0; i < nPhenopackets; i++) {
-                    Path pPath0 = phenopacketPaths.get(i);
+                for (Path pPath0 : phenopacketPaths) {
                     String phenopacketName0 = pPath0.toFile().getName();
                     String outputFilename0 = String.join("_", phenopacketName0, ddEngine,
                                                 "n20", "nr30", "maxodiff", "results.html");
@@ -206,9 +203,7 @@ public class BenchmarkCommand extends DifferentialDiagnosisCommand {
                         continue;
                     }
                     try {
-
-                        Path pPath = phenopacketPaths.get(i);
-                        PhenopacketData phenopacketData = PhenopacketFileParser.readPhenopacketData(pPath);
+                        PhenopacketData phenopacketData = PhenopacketFileParser.readPhenopacketData(pPath0);
                         Sample sample = Sample.of(phenopacketData.sampleId(),
                                 phenopacketData.presentHpoTermIds().toList(),
                                 phenopacketData.excludedHpoTermIds().toList());
@@ -216,7 +211,7 @@ public class BenchmarkCommand extends DifferentialDiagnosisCommand {
                         LOGGER.info(String.valueOf(phenopacketPath));
                         LOGGER.info("nDiseases = {}", nDiseasesList);
                         LOGGER.info("refiners = {}", refinersList);
-                        String phenopacketName = pPath.toFile().getName();
+                        String phenopacketName = pPath0.toFile().getName();
                         List<TermId> termIdsToRemove = new ArrayList<>();
                         List<TermId> includedIds = new ArrayList<>(phenopacketData.presentHpoTermIds().toList());
                         List<TermId> excludedIds = new ArrayList<>(phenopacketData.excludedHpoTermIds().toList());

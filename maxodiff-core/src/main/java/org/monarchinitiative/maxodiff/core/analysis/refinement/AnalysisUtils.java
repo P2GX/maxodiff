@@ -1,19 +1,12 @@
 package org.monarchinitiative.maxodiff.core.analysis.refinement;
 
-import org.apache.commons.math3.random.EmpiricalDistribution;
 import org.monarchinitiative.maxodiff.core.analysis.DiseaseTermCount;
 import org.monarchinitiative.maxodiff.core.analysis.HpoFrequency;
-import org.monarchinitiative.maxodiff.core.analysis.MaxoTermScore;
-import org.monarchinitiative.maxodiff.core.diffdg.DifferentialDiagnosisEngine;
-import org.monarchinitiative.maxodiff.core.model.DifferentialDiagnosis;
-import org.monarchinitiative.maxodiff.core.model.Sample;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDisease;
 import org.monarchinitiative.phenol.ontology.data.MinimalOntology;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 
 import java.util.*;
-
-import org.apache.commons.math3.stat.inference.KolmogorovSmirnovTest;
 
 class AnalysisUtils {
 

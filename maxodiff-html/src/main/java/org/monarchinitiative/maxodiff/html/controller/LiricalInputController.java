@@ -2,8 +2,6 @@ package org.monarchinitiative.maxodiff.html.controller;
 
 import org.monarchinitiative.lirical.core.analysis.AnalysisOptions;
 import org.monarchinitiative.lirical.core.analysis.probability.PretestDiseaseProbabilities;
-import org.monarchinitiative.lirical.core.model.GenomeBuild;
-import org.monarchinitiative.lirical.core.model.TranscriptDatabase;
 import org.monarchinitiative.maxodiff.core.diffdg.DifferentialDiagnosisEngine;
 import org.monarchinitiative.maxodiff.lirical.LiricalDifferentialDiagnosisEngineConfigurer;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
