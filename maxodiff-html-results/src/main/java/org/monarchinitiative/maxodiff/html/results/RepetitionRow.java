@@ -51,7 +51,7 @@ public class RepetitionRow {
             MaxodiffResult result) {
         List<RepetitionCell> cells = new ArrayList<>();
         var hpoTermIdRepCtsMap = result.rankMaxoScore().hpoTermIdRepCtsMap();
-        System.out.println("Num items in nRepetitionsMap="+nRepetitionsMap.size());
+        int nDiscoverableHpoTerms = orderedDiscoverableHpoList.size();
         for (Map.Entry<TermId, Map<TermId, Integer>> diseaseHpoRepCtEntry : hpoTermIdRepCtsMap.entrySet()) {
 
             Map<TermId, Integer> hpoRetCtMap = diseaseHpoRepCtEntry.getValue();
@@ -60,18 +60,15 @@ public class RepetitionRow {
                 Integer repCt = hpoRepCtMapEntry.getValue();
                 if (repCt != null && !nRepetitionsMap.containsKey(hpoId)) {
                     nRepetitionsMap.put(hpoId, repCt);
-                    break;
+                    if (nRepetitionsMap.size() == nDiscoverableHpoTerms) {
+                        break;
+                    }
                 }
             }
         }
 
         for (TermId hpoId : orderedDiscoverableHpoList) {
-            if (!nRepetitionsMap.containsKey(hpoId)) {
-                System.out.println("Skipping \"" + hpoId +"\" " );
-            }
             Integer ct = nRepetitionsMap.get(hpoId);
-
-            System.out.println("l. 74");
             String ctString = RepetitionRow.getCountsString(ct);
             String styleString = RepetitionRow.getStyleString(ct, nRepetitions);
             String hpoLabel = hpoTermsMap.get(hpoId);;
