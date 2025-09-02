@@ -14,11 +14,13 @@ public class RepetitionRow {
     }
 
 
-
-
-
+    /** In current implementation, a null count is a signal that the disease in question is not annotated to the
+     * HPO term. Therefore, we do not count it.
+     * @param counts
+     * @return
+     */
     private static String getCountsString(Integer counts) {
-        return (counts == null) ? "na" : counts.toString();
+        return (counts == null) ? "" : counts.toString();
     }
 
     private static String getStyleString(Integer counts, int nRepetitions) {
@@ -45,11 +47,13 @@ public class RepetitionRow {
             int nRepetitions,
             Map<TermId,String> hpoTermsMap,
             Map<String, Map<Float, List<String>>> frequencyMap,
-            List<TermId> oderedDiscoverableHpoList,
+            List<TermId> orderedDiscoverableHpoList,
             MaxodiffResult result) {
         List<RepetitionCell> cells = new ArrayList<>();
         var hpoTermIdRepCtsMap = result.rankMaxoScore().hpoTermIdRepCtsMap();
+        System.out.println("Num items in nRepetitionsMap="+nRepetitionsMap.size());
         for (Map.Entry<TermId, Map<TermId, Integer>> diseaseHpoRepCtEntry : hpoTermIdRepCtsMap.entrySet()) {
+
             Map<TermId, Integer> hpoRetCtMap = diseaseHpoRepCtEntry.getValue();
             for (Map.Entry<TermId, Integer> hpoRepCtMapEntry : hpoRetCtMap.entrySet()) {
                 TermId hpoId = hpoRepCtMapEntry.getKey();
@@ -61,8 +65,13 @@ public class RepetitionRow {
             }
         }
 
-        for (TermId hpoId : oderedDiscoverableHpoList) {
+        for (TermId hpoId : orderedDiscoverableHpoList) {
+            if (!nRepetitionsMap.containsKey(hpoId)) {
+                System.out.println("Skipping \"" + hpoId +"\" " );
+            }
             Integer ct = nRepetitionsMap.get(hpoId);
+
+            System.out.println("l. 74");
             String ctString = RepetitionRow.getCountsString(ct);
             String styleString = RepetitionRow.getStyleString(ct, nRepetitions);
             String hpoLabel = hpoTermsMap.get(hpoId);;

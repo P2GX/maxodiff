@@ -30,8 +30,8 @@
             <th></th>
             <!-- Loop over HPO terms-->
             <th th:each="entry : ${maxoData.hpoHeaders}" class="vertical-header">
-                <a th:href="|https://hpo.jax.org/browse/term/${entry.key}|">
-                    <div th:text="${entry.value}"></div>
+                <a th:href="|https://hpo.jax.org/browse/term/${entry.termId}|">
+                    <div th:text="${entry.termLabel}"></div>
                 </a>
             </th>
         </tr>
@@ -49,6 +49,7 @@
                 </div>
                 <div class="tooltip">
                     <div class="tooltip-header" th:text="${cell.toolTipHeader}">Header</div>
+                    <div class="tooltip-subheader">Annotation frequency</div>
                     <ul  class="tooltip-list">
                         <li th:each="item: ${cell.toolTipItems}">
                             <span th:text="${item.hpo}">HPO Term</span>:

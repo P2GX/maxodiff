@@ -29,7 +29,7 @@ public class MaxoHtmlResult {
     private final MaxodiffResult maxodiffResult;
     private final RepetitionRow repetitionRow;
     private final List<MaxoResultRow> resultRows;
-    private final List<TermId> oderedDiscoverableHpoList;
+    private final List<TermId> orderedDiscoverableHpoList;
 
 
 
@@ -60,11 +60,11 @@ public class MaxoHtmlResult {
                 hpoTermIdRepCtsMap,
                 hpoFrequencies);
         Set<TermId> discoverableTermIdSet = result.rankMaxoScore().discoverableObservedHpoTermIds();
-        this.oderedDiscoverableHpoList = new ArrayList<>(discoverableTermIdSet);
+        this.orderedDiscoverableHpoList = new ArrayList<>(discoverableTermIdSet);
         repetitionRow = RepetitionRow.buildRepetitionRow(
-                 nRepetitionsMap, nRepetitions, this.hpoTermsMap, frequencyMap, this.oderedDiscoverableHpoList,result);
+                 nRepetitionsMap, nRepetitions, this.hpoTermsMap, frequencyMap, this.orderedDiscoverableHpoList,result);
 
-        this.resultRows = MaxoResultRow.createMaxoResultRows(result, omimTerms, nDiseases, this.oderedDiscoverableHpoList);
+        this.resultRows = MaxoResultRow.createMaxoResultRows(result, omimTerms, nDiseases, this.orderedDiscoverableHpoList);
     }
 
     public List<RepetitionCell> getRepetitionCells() {
@@ -99,16 +99,13 @@ public class MaxoHtmlResult {
         return this.maxodiffResult.rankMaxoScore().discoverableObservedHpoTermIds().size();
     }
 
-    public Map<String, String> getHpoHeaders() {
-        Map<String, String> hpoHeaders = oderedDiscoverableHpoList.stream()
-                .collect(Collectors.toMap(
-                        TermId::getValue,
-                        id -> {
-                            String label = hpoTermsMap.getOrDefault(id, "N/A");
-                            return label.length() > 30 ? label.substring(0, 30) + "..." : label;
-                        }
-                ));
-        return hpoHeaders;
+    public List<SimpleTerm> getHpoHeaders() {
+        List<SimpleTerm> hpoTerms = new ArrayList<>();
+        for (TermId termId : orderedDiscoverableHpoList) {
+            String label = hpoTermsMap.getOrDefault(termId, "N/A");
+            hpoTerms.add(new SimpleTerm(termId.getValue(), label));
+        }
+        return hpoTerms;
     }
 
 }
