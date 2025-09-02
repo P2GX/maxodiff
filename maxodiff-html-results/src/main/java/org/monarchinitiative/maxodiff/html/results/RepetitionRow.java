@@ -45,7 +45,7 @@ public class RepetitionRow {
             int nRepetitions,
             Map<TermId,String> hpoTermsMap,
             Map<String, Map<Float, List<String>>> frequencyMap,
-            List<TermId> hpoIds,
+            List<TermId> oderedDiscoverableHpoList,
             MaxodiffResult result) {
         List<RepetitionCell> cells = new ArrayList<>();
         var hpoTermIdRepCtsMap = result.rankMaxoScore().hpoTermIdRepCtsMap();
@@ -61,7 +61,7 @@ public class RepetitionRow {
             }
         }
 
-        for (TermId hpoId : hpoIds) {
+        for (TermId hpoId : oderedDiscoverableHpoList) {
             Integer ct = nRepetitionsMap.get(hpoId);
             String ctString = RepetitionRow.getCountsString(ct);
             String styleString = RepetitionRow.getStyleString(ct, nRepetitions);

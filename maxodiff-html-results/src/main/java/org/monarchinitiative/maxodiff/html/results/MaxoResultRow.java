@@ -6,13 +6,13 @@ import org.monarchinitiative.phenol.ontology.data.TermId;
 import java.util.*;
 
 public class MaxoResultRow {
-    private  final String omimId;
-    private  final String omimLabel;
-    private  final int rankChange;
-    private  final int nDiseases;
+    private final String omimId;
+    private final String omimLabel;
+    private final int rankChange;
+    private final int nDiseases;
     private final List<HpoTableCell> cells;
 
-    public MaxoResultRow(String omimId, String omimLabel, int rankChange, int nDiseases,List<HpoTableCell> cells) {
+    public MaxoResultRow(String omimId, String omimLabel, int rankChange, int nDiseases, List<HpoTableCell> cells) {
         this.omimId = omimId;
         this.omimLabel = omimLabel;
         this.rankChange = rankChange;
@@ -21,10 +21,10 @@ public class MaxoResultRow {
     }
 
 
-
     public static List<MaxoResultRow> createMaxoResultRows(MaxodiffResult result,
-                                       Map<TermId, String> omimTermMap,
-                                       int nDiseases) {
+                                                           Map<TermId, String> omimTermMap,
+                                                           int nDiseases,
+                                                           List<TermId> orderedDiscoverableHpoList) {
         List<MaxoResultRow> rows = new ArrayList<>();
         var hpoTermIdRepCtsMap = result.rankMaxoScore().hpoTermIdRepCtsMap();
         Map<TermId, Integer> nRepetitionsMap = new HashMap<>();
@@ -40,7 +40,7 @@ public class MaxoResultRow {
             }
         }
         Map<TermId, Integer> avgRankChangeMap = result.rankMaxoScore().maxoDiseaseAvgRankChangeMap();
-        if (avgRankChangeMap==null) {
+        if (avgRankChangeMap == null) {
             System.err.println("avgRankChangeMap==null");
             return rows;
         }
@@ -50,9 +50,9 @@ public class MaxoResultRow {
             int rankChange = Optional.ofNullable(avgRankChangeMap.get(omimId))
                     .orElse(0); // TODO -- ARE WE MISSING SOME VALUES WE NEED? CRASH WITHOUT THIS LINE
             List<HpoTableCell> cells = new ArrayList<>();
-            for (TermId hpoId : result.rankMaxoScore().discoverableObservedHpoTermIds()) {
+            for (TermId hpoId : orderedDiscoverableHpoList) {
                 Map<TermId, Integer> ctMap = hpoTermIdRepCtsMap.get(omimId);
-                if (ctMap==null) {
+                if (ctMap == null) {
                     ctMap = new HashMap<>();
                 }
                 /// TODO WHAT?
@@ -75,7 +75,7 @@ public class MaxoResultRow {
         } else {
             opacity = (double) rankChange / nDiseases;
         }
-        return  (rankChange < 0) ? "background: rgba(0, 128, 0, " + (-1.0 * opacity) + ")" :
+        return (rankChange < 0) ? "background: rgba(0, 128, 0, " + (-1.0 * opacity) + ")" :
                 "background: rgba(255, 0, 0, " + opacity + ")";
     }
 

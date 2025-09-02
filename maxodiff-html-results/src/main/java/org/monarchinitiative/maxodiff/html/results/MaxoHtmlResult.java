@@ -29,7 +29,7 @@ public class MaxoHtmlResult {
     private final MaxodiffResult maxodiffResult;
     private final RepetitionRow repetitionRow;
     private final List<MaxoResultRow> resultRows;
-    private final List<TermId> discoverableHpoTermIdList;
+    private final List<TermId> oderedDiscoverableHpoList;
 
 
 
@@ -60,11 +60,11 @@ public class MaxoHtmlResult {
                 hpoTermIdRepCtsMap,
                 hpoFrequencies);
         Set<TermId> discoverableTermIdSet = result.rankMaxoScore().discoverableObservedHpoTermIds();
-        this.discoverableHpoTermIdList = new ArrayList<>(discoverableTermIdSet);
+        this.oderedDiscoverableHpoList = new ArrayList<>(discoverableTermIdSet);
         repetitionRow = RepetitionRow.buildRepetitionRow(
-                 nRepetitionsMap, nRepetitions, this.hpoTermsMap, frequencyMap, discoverableHpoTermIdList ,result);
+                 nRepetitionsMap, nRepetitions, this.hpoTermsMap, frequencyMap, this.oderedDiscoverableHpoList,result);
 
-        this.resultRows = MaxoResultRow.createMaxoResultRows(result, omimTerms, nDiseases);
+        this.resultRows = MaxoResultRow.createMaxoResultRows(result, omimTerms, nDiseases, this.oderedDiscoverableHpoList);
     }
 
     public List<RepetitionCell> getRepetitionCells() {
@@ -100,7 +100,7 @@ public class MaxoHtmlResult {
     }
 
     public Map<String, String> getHpoHeaders() {
-        Map<String, String> hpoHeaders = discoverableHpoTermIdList.stream()
+        Map<String, String> hpoHeaders = oderedDiscoverableHpoList.stream()
                 .collect(Collectors.toMap(
                         TermId::getValue,
                         id -> {
