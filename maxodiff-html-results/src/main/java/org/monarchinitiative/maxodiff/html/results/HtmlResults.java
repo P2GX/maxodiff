@@ -71,6 +71,8 @@ public class HtmlResults {
                 result,
                 hpoTermCountMap,
                 idx,
+                nDiseases,
+                nRepetitions,
                 biometadataService
         );
         Context context = new Context();

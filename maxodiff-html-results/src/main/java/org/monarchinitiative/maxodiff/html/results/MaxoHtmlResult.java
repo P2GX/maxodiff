@@ -25,8 +25,6 @@ public class MaxoHtmlResult {
     private Map<String, Map<Float, List<String>>> frequencyMap;
 
     private Map<TermId, Map<TermId, Integer>> hpoTermIdRepCtsMap;
-    private int nRepetitions;
-    private int nDiseases;
     private int nDiscoverableHpo;
     private final MaxodiffResult maxodiffResult;
     private final RepetitionRow repetitionRow;
@@ -39,6 +37,8 @@ public class MaxoHtmlResult {
             MaxodiffResult result,
             Map<TermId, List<HpoFrequency>> hpoTermCountMap,
             int idx,
+            int nDiseases,
+            int nRepetitions,
             BiometadataService biometadataService) {
         this.hpoTermsMap = new HashMap<>();
         this.omimTerms = new HashMap<>();
@@ -63,6 +63,7 @@ public class MaxoHtmlResult {
         this.discoverableHpoTermIdList = new ArrayList<>(discoverableTermIdSet);
         repetitionRow = RepetitionRow.buildRepetitionRow(
                  nRepetitionsMap, nRepetitions, this.hpoTermsMap, frequencyMap, discoverableHpoTermIdList ,result);
+
         this.resultRows = MaxoResultRow.createMaxoResultRows(result, omimTerms, nDiseases);
     }
 
