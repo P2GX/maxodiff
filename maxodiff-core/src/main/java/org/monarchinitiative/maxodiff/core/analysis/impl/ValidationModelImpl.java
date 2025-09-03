@@ -5,7 +5,6 @@ import org.monarchinitiative.phenol.base.PhenolRuntimeException;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 
 import java.util.List;
-import java.util.Map;
 
 /**
  * This class and its three subclasses are responsible for validating the effectiveness

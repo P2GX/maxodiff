@@ -8,6 +8,7 @@ import picocli.CommandLine;
 
 import java.io.*;
 import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URL;
 import java.nio.file.Path;
 import java.util.concurrent.Callable;
@@ -51,11 +52,6 @@ public class DownloadCommand implements Callable<Integer>{
         downloadMaxodiffData(datadir, overwrite);
         LOGGER.info("Making Phenomizer Term Pair Similarity File...");
         makePhenomizerTermPairSimilarity(datadir);
-
-//        Path liricalDataPath = datadir.resolve("lirical");
-//        LOGGER.info("Downloading LIRICAL data files to {}", liricalDataPath.toAbsolutePath());
-//        downloadLiricalData(liricalDataPath, overwrite);
-        
         LOGGER.info("Download is complete!");
         LOGGER.info("Bye! 😎");
         return 0;
@@ -86,7 +82,7 @@ public class DownloadCommand implements Callable<Integer>{
     }
 
     private static void makePhenomizerTermPairSimilarity(Path destinationFolder) {
-
+        System.out.println("makePhenomizerTermPairSimilarity");
         String hpFile = String.join(File.separator, destinationFolder.toString(), "hp.json");
         String hpoaFile = String.join(File.separator, destinationFolder.toString(), "phenotype.hpoa");
         String outputFile = String.join(File.separator, destinationFolder.toString(), "term-pair-similarity.csv.gz");
@@ -120,16 +116,16 @@ public class DownloadCommand implements Callable<Integer>{
                 System.out.println(line);
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            LOGGER.error("Could not download maxodiff data", e);
         }
 
     }
 
     private static URL createUrlOrExplode(String url) throws Exception {
         try {
-            return new URL(url);
+            return URI.create(url).toURL();
         } catch (MalformedURLException e) {
-            throw new Exception(e);
+            throw new IllegalArgumentException("Invalid URL: " + url, e);
         }
     }
 

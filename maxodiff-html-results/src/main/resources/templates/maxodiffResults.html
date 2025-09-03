@@ -11,53 +11,10 @@
           font-family: Arial, Helvetica, sans-serif;
         }
 
-        .apexcharts-tooltip {
-            font-family: Arial, Helvetica, sans-serif !important;
-            white-space: pre-wrap !important;
-        }
-
-        .countsTable {
-          table-layout: fixed;
-        }
-
-        .countsTable td {
-            padding: 10px 10px 10px 10px;
-            height: 30px;
-            width: 10px;
-        }
-
-        .countsTable td:first-child {
-            font-weight: bold;
-            white-space: nowrap;
-            max-width: 400px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .countsTable td:nth-child(2) {
-            border-right: thick double;
-        }
-
-        .countsTable th {
-            position: relative;
-            height: 200px;
-            width: 50px; /* needed for layout */
+        body {
+            margin: 5%;
             padding: 0;
-            margin: 0;
-            overflow: visible;
-            white-space: nowrap;
-            vertical-align: bottom;
-            text-align: center;
-        }
-
-        .countsTable th > div {
-           /*  transform: rotate(315deg); or -45deg */
-            transform-origin: bottom left;
-            position: absolute;
-            bottom: 0;
-            left: 50%;
-            transform: translateX(+0%) rotate(315deg); /* better centering */
-            white-space: nowrap;
+            box-sizing: border-box;
         }
 
         .diffDiagInputTable, .fileInputTable {
@@ -83,6 +40,27 @@
             position: relative;
         }
 
+        .hpoCell {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            padding: 4px;
+            box-sizing: border-box;
+            font-weight: bold;
+        }
+
+        .hpoCell .emptyCell {
+            background-color: white;
+        }
+
+        .hpoCell.emptyCell span {
+            color: gray;
+            opacity: 0.5;
+            font-size: 1.2em;
+        }
+
         .tooltip {
             display: none;
             position: absolute;
@@ -93,21 +71,10 @@
             display:block;
         }
 
-        .scoreTable {
-          width: auto;
-          border-collapse: collapse;
-          margin-bottom: 1em;
-        }
-
-        .scoreTable td {
-          padding: 0.3em 0.6em;
-          border: none;
-          font-size: 0.95em;
-        }
-
         .section-box {
           border: 1px solid #ccc;
           border-left: 6px solid #007acc;
+          border-radius: 8px;
           border-radius: 8px;
           padding: 1em;
           margin: 2em 0;
@@ -123,30 +90,459 @@
           color: #003366;
           margin-bottom: 0.5em;
         }
+        .spaced-row td {
+            padding-top: 15px;
+        }
+         * {
+             font-family: Arial, Helvetica, sans-serif;
+         }
+        body {
+            margin: 0;
+            padding: 0;
+            font-family: Arial, sans-serif;
+        }
+
+        .container {
+            width: 80%;
+            margin: 0 auto;
+            padding: 2em 0;
+        }
+
+        .section-box {
+            border: 1px solid #ccc;
+            border-left: 6px solid #007acc;
+            border-radius: 8px;
+            padding: 1em;
+            background: #fefefe;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+            width: 90%;
+            margin: 2em auto;
+            overflow-x: auto;
+            max-width: 100%;
+        }
+
+        .section-box h2 {
+            font-size: 1.4em;
+            color: #003366;
+            margin-bottom: 0.5em;
+        }
+        .stats-row {
+            display: flex;
+            justify-content: space-between;
+            margin: 1.5em 0;
+            gap: 1em;
+        }
+
+        .stat-item {
+            background: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 6px;
+            padding: 0.8em 1em;
+            text-align: center;
+            flex: 1;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        .stat-label {
+            font-size: 0.85em;
+            color: #666;
+            margin-bottom: 0.3em;
+            font-weight: 500;
+        }
+
+        .stat-value {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #003366;
+        }
+
+        .stat-delta {
+            color: #007acc;
+        }
+
+        .stat-diseases {
+            color: #d63384;
+        }
+
+        .stat-terms {
+            color: #198754;
+        }
+
+        .countsTable {
+            table-layout: fixed;
+            border-collapse: collapse;
+            border: none;
+            width: 100%;
+        }
+
+        .countsTable td, .countsTable th {
+            padding: 10px;
+            height: 30px;
+            width: 10px;
+            border: none;
+            text-align: center;
+        }
+
+        .countsTable thead tr {
+            height: 200px;
+        }
+
+        .countsTable th:first-child, td:first-child {
+            font-weight: bold;
+            width: 250px;
+            text-align: left;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .countsTable th:nth-child(2),.countsTable td:nth-child(2){
+            border-right: thick;
+            width: 60px;/* ΔR column */
+        }
+
+        .countsTable th:nth-child(3), td:nth-child(3) {
+            width: 20px; /* Spacer column */
+        }
+
+        .countsTable th:nth-child(n+4), td:nth-child(n+4) {
+            width: 40px;
+        }
+
+        .deltaR {
+            font-weight: bold;
+            color: #1e40af; /* Tailwind-ish blue-800 */
+            font-size: 1.1em;
+            text-decoration: overline;
+        }
+        .deltaR-header {
+            vertical-align: bottom;
+        }
+
+        .vertical-header {
+            writing-mode: vertical-rl;
+            text-orientation: mixed;
+            width: 40px;
+            padding: 0;
+            margin: 0;
+            text-align: center;
+            vertical-align: middle;
+            line-height: 1;
+
+            justify-content: center;   /* center horizontally */
+            align-items: flex-end;
+        }
+
+        .vertical-header a {
+            position: relative;
+            color: black;
+            text-decoration: none;
+        }
+
+        .vertical-header a:hover {
+            color: #507acc;
+        }
+
+
+        .repetitionCell {
+        position: relative;
+        text-align: center;
+        cursor: pointer;
+        padding: 4px;  /* leaves margin around box */
+        }
+        .repetitionColorBox {
+            display: inline-block;
+            width: 40px;          /* not full width */
+            height: 40px;         /* not full height */
+            padding: 4px;        /* inner padding */
+            background: rgba(255,215,0,0.6); /* overwritten by th:style */
+            box-sizing: border-box;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+        }
+
+        .repetitionCell .tooltip {
+            display: block;
+            position: fixed;  /* Changed from absolute to fixed */
+            left: 50%;
+            bottom: auto;
+            top: auto;
+            transform: translateX(-50%) translateY(-100%);  /* Positions above the trigger */
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+
+            /* Auto-sizing */
+            width: auto;
+            min-width: 200px;
+            max-width: 400px;
+
+            font-size: 0.85em;  /* Smaller font */
+            z-index: 9999;  /* High z-index to appear above everything */
+
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            transition: opacity 0.2s ease-in-out, visibility 0.2s;
+        }
+
+        /* Position tooltip above the cell on hover */
+        .repetitionCell:hover .tooltip {
+            opacity: 1;
+            visibility: visible;
+            /* Calculate position dynamically with JavaScript or use this approach: */
+            top: calc(var(--mouse-y, 50%) - 10px);
+            left: var(--mouse-x, 50%);
+        }
+
+
+        .tooltip-header {
+            background-color: #4a90e2; /* Primary header color */
+            color: white;
+            padding: 8px 12px;
+            font-weight: bold;
+            border-top-left-radius: 4px;
+            border-top-right-radius: 4px;
+            margin: 0;
+        }
+
+        .tooltip-subheader {
+            background-color: #6ba3f0; /* Slightly lighter shade */
+            color: white;
+            padding: 6px 12px;
+            font-weight: 500;
+            font-size: 0.9em;
+            margin: 0;
+        }
+
+        .tooltip-list {
+            list-style: none;
+            padding: 0;
+            margin: 0;
+            font-size: 0.8em;  /* Small font for list */
+        }
+
+        .tooltip-list li {
+            padding: 4px 0;
+            border-bottom: 1px solid #f0f0f0;
+            line-height: 1.3;
+            text-align: left;
+        }
+
+        .tooltip-list li:last-child {
+            border-bottom: none;
+        }
+
+        .tooltip-list strong {
+            color: #1976d2;
+            float: right;
+        }
+
+        .resultsTable {
+            width: 100%;
+            border-collapse: collapse;
+            background: #ffffff;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+            border: 1px solid #e1e5e9;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            margin: 2em 0;
+        }
+
+        .resultsTable tbody tr {
+            border-bottom: 1px solid #f0f2f4;
+            transition: background-color 0.2s ease;
+        }
+
+        .resultsTable tbody tr:last-child {
+            border-bottom: none;
+        }
+
+        .resultsTable tbody tr:hover {
+            background-color: #f8fbff;
+        }
+
+        .resultsTable tbody tr.spaced-row {
+            border-top: 2px solid #e8ecf0;
+        }
+
+        .resultsTable td {
+            padding: 1.2em 1.5em;
+            vertical-align: top;
+            line-height: 1.6;
+        }
+
+        .resultsTable td:first-child {
+            background: linear-gradient(90deg, #f8fbff 0%, #ffffff 100%);
+            border-right: 3px solid #007acc;
+            width: 100px;
+            max-width: 100px;
+            font-weight: 600;
+            color: #2c3e50;
+            font-size: 0.85em;
+            text-transform: uppercase;
+            letter-spacing: 0.2px;
+            word-wrap: break-word;
+            hyphens: auto;
+        }
+
+        .resultsTable td:last-child {
+            background: #ffffff;
+            padding-left: 2em;
+        }
+        .resultsTable td.narrow-column {
+            width: 1%;
+            max-width: none;
+            white-space: nowrap;
+            font-weight: bold;
+        }
+
+        .resultsTable .wide-column {
+            width: 99%;
+        }
+
+        /* HPO Term Links Styling */
+        .resultsTable a {
+            color: #007acc;
+            text-decoration: none;
+            font-weight: 500;
+            padding: 0.2em 0.4em;
+            border-radius: 4px;
+            transition: all 0.2s ease;
+            display: inline-block;
+            margin: 0.1em 0.2em 0.1em 0;
+            border: 1px solid transparent;
+        }
+
+        .resultsTable a:hover {
+            background: #007acc;
+            color: white;
+            text-decoration: none;
+            transform: translateY(-1px);
+            box-shadow: 0 2px 4px rgba(0, 122, 204, 0.3);
+        }
+
+        .resultsTable a:focus {
+            outline: 2px solid #007acc;
+            outline-offset: 2px;
+        }
+
+        /* Separator styling between links */
+        .resultsTable td:last-child {
+            word-spacing: 0.1em;
+        }
+
+        /* Numbers styling for statistics rows */
+        .resultsTable tr:nth-last-child(-n+2) td:last-child {
+            font-weight: 600;
+            color: #007acc;
+            font-size: 1.1em;
+        }
+
+        /* Enhanced spacing for better readability */
+        .resultsTable tr:first-child td:last-child a {
+            background: rgba(40, 167, 69, 0.05);
+            border: 1px solid rgba(40, 167, 69, 0.2);
+            color: #155724;
+        }
+
+        .resultsTable tr:first-child td:last-child a:hover {
+            background: #28a745;
+            color: white;
+            border-color: #28a745;
+        }
+
+        .resultsTable tr:nth-child(2) td:last-child a {
+            background: rgba(220, 53, 69, 0.05);
+            border: 1px solid rgba(220, 53, 69, 0.2);
+            color: #721c24;
+        }
+
+        .resultsTable tr:nth-child(2) td:last-child a:hover {
+            background: #dc3545;
+            color: white;
+            border-color: #dc3545;
+        }
+
+        /* Responsive design */
+        @media (max-width: 768px) {
+            .resultsTable {
+                font-size: 0.9em;
+            }
+
+            .resultsTable td {
+                padding: 1em;
+            }
+
+            .resultsTable td:first-child {
+                width: 80px;
+                min-width: 80px;
+                font-size: 0.8em;
+                padding: 0.8em 0.5em;
+            }
+
+            .resultsTable td:last-child {
+                padding-left: 1.2em;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .resultsTable {
+                display: block;
+                overflow-x: auto;
+                white-space: nowrap;
+            }
+
+            .resultsTable td:last-child {
+                white-space: normal;
+            }
+        }
+
+        /* Optional: Add icons for different row types */
+        .resultsTable tr:first-child td:first-child::before {
+            content: "✓ ";
+            color: #28a745;
+            font-weight: bold;
+            margin-right: 0.3em;
+        }
+
+        .resultsTable tr:nth-child(2) td:first-child::before {
+            content: "✗ ";
+            color: #dc3545;
+            font-weight: bold;
+            margin-right: 0.3em;
+        }
+
+        .resultsTable tr:nth-last-child(-n+2) td:first-child::before {
+            content: "📊 ";
+            margin-right: 0.3em;
+        }
     </style>
 </head>
 
 <body style="font-family: Arial, Helvetica, sans-serif;">
 <h1>$sampleResultsTitle</h1>
-<table>
+<table class="resultsTable">
     <tbody>
         <tr>
-<!--            <td style='font-weight:bold;'>Disease ID:</td><td th:text="${diseaseId}"></td>-->
-            <td style='font-weight:bold;'>Sample Present HPO Terms:</td><td>$samplePresentHpoIds</td>
+            <td class="narrow-column">Observed HPO Terms:</td><td class="wide-column">$samplePresentHpoIds</td>
+        </tr>
+        <tr class="spaced-row">
+            <td class="narrow-column">Excluded HPO Terms:</td><td class="wide-column">$sampleExcludedHpoIds</td>
+        </tr>
+        <tr class="spaced-row">
+            <td class="narrow-column">Diseases:</td><td class="wide-column">$nDiseases</td>
         </tr>
         <tr>
-            <td style='font-weight:bold;'>Sample Excluded HPO Terms:</td><td>$sampleExcludedHpoIds</td>
-        </tr>
-        <tr>
-            <td style='font-weight:bold;'>N Diseases:</td><td>$nDiseases</td>
-        </tr>
-        <tr>
-            <td style='font-weight:bold;'>N Repetitions:</td><td>$nRepetitions</td>
+            <td class="narrow-column">Simulations:</td><td class="wide-column">$nRepetitions</td>
         </tr>
     </tbody>
 </table>
 
-<h1>Top 10 Recommended MAxO Terms</h1>
+<h1>Prioritized Diagnostic Investigations</h1>
 
 <div>$results</div>
 

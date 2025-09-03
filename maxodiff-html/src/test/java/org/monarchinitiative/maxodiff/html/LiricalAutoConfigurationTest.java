@@ -1,8 +1,6 @@
 package org.monarchinitiative.maxodiff.html;
 
 import org.junit.jupiter.api.Test;
-import org.monarchinitiative.lirical.core.model.GenomeBuild;
-import org.monarchinitiative.lirical.core.model.TranscriptDatabase;
 import org.monarchinitiative.maxodiff.html.config.LiricalProperties;
 import org.monarchinitiative.maxodiff.lirical.LiricalDifferentialDiagnosisEngineConfigurer;
 

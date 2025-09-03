@@ -5,20 +5,18 @@ import org.monarchinitiative.maxodiff.core.ProgessBar;
 import org.monarchinitiative.maxodiff.core.SimpleTerm;
 import org.monarchinitiative.maxodiff.core.analysis.*;
 import org.monarchinitiative.maxodiff.core.diffdg.DifferentialDiagnosisEngine;
-import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDisease;
-import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
-import org.monarchinitiative.phenol.ontology.algo.OntologyAlgorithm;
 import org.monarchinitiative.phenol.ontology.data.MinimalOntology;
 import org.monarchinitiative.phenol.ontology.data.Ontology;
 import org.monarchinitiative.phenol.ontology.data.TermId;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
 
 public class RankMaxo {
-
+    private final static Logger LOGGER = LoggerFactory.getLogger(RankMaxo.class);
     private final Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxoTermMap;
     private final Map<TermId, Set<TermId>> maxoToHpoTermIdMap;
     private final MaxoHpoTermProbabilities maxoHpoTermProbabilities;
@@ -84,7 +82,7 @@ public class RankMaxo {
             try {
                 results.add(future.get()); // blocks until the result is available
             } catch (InterruptedException | ExecutionException e) {
-                e.printStackTrace(); // handle exceptions properly in production
+                LOGGER.error(e.getMessage());
             }
         }
         executor.shutdown();
