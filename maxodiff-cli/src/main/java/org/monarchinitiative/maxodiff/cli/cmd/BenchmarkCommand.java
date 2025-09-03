@@ -150,23 +150,11 @@ public class BenchmarkCommand extends DifferentialDiagnosisCommand {
 
             DifferentialDiagnosisEngine engine = null;
             LiricalDifferentialDiagnosisEngineConfigurer liricalDifferentialDiagnosisEngineConfigurer = null;
-            if (ddEngine.equals("lirical")) {
-                Lirical lirical = prepareLirical();
-                PhenotypeService phenotypeService = lirical.phenotypeService();
-                Set<TermId> liricalDiseaseIds = lirical.phenotypeService().diseases().diseaseIds();
-                MaxodiffLiricalAnalysisRunner maxodiffLiricalAnalysisRunner = MaxodiffLiricalAnalysisRunnerImpl.of(phenotypeService, 4);
-                liricalDifferentialDiagnosisEngineConfigurer = LiricalDifferentialDiagnosisEngineConfigurer.of(maxodiffLiricalAnalysisRunner);
-                var analysisOptions = AnalysisOptions.builder()
-                        .useStrictPenalties(runConfiguration.strict)
-                        .useGlobal(runConfiguration.globalAnalysisMode)
-                        .pretestProbability(PretestDiseaseProbabilities.uniform(liricalDiseaseIds))
-                        .build();
-                engine = liricalDifferentialDiagnosisEngineConfigurer.configure(analysisOptions);
-            } else if (ddEngine.equals("phenomizer")) {
-                ScoringMode scoringMode = scoringModeArg.equals("one-sided") ? ScoringMode.ONE_SIDED : ScoringMode.TWO_SIDED;
-                Map<TermPair, Double> icMicaDict = icMicaData.icMicaDict();
-                engine = new PhenomizerDifferentialDiagnosisEngine(hpoDiseases, icMicaDict, scoringMode);
-            }
+
+            ScoringMode scoringMode = scoringModeArg.equals("one-sided") ? ScoringMode.ONE_SIDED : ScoringMode.TWO_SIDED;
+            Map<TermPair, Double> icMicaDict = icMicaData.icMicaDict();
+            engine = new PhenomizerDifferentialDiagnosisEngine(hpoDiseases, icMicaDict, scoringMode);
+
 
             Map<String, DiffDiagRefiner> refiners = new HashMap<>();
             refiners.put("MaxoDiff", maxodiffPropsConfiguration.diffDiagRefiner("score"));

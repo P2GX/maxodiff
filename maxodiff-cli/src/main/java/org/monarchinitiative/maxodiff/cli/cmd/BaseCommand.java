@@ -41,17 +41,12 @@ abstract class BaseCommand implements Callable<Integer> {
     public boolean[] verbosity = {};
 
 
-
+    @CommandLine.Option(
+            names={"-d","--data"},
+            description ="directory to download data (default: ${DEFAULT-VALUE})"
+    )
+    public Path datadir= Path.of("data");
     // ---------------------------------------------- RESOURCES --------------------------------------------------------
-    @CommandLine.ArgGroup(validate = false, heading = "Resource paths:%n")
-    public DataSection dataSection = new DataSection();
-
-    public static class DataSection {
-        @CommandLine.Option(names = {"-d", "--data"},
-                description = "Path to Lirical data directory.")
-        public Path liricalDataDirectory = Path.of("data", "lirical");
-
-    }
 
 
     // ---------------------------------------------- CONFIGURATION ----------------------------------------------------
@@ -111,45 +106,5 @@ abstract class BaseCommand implements Callable<Integer> {
         System.err.println(readBanner());
     }
 
-    protected Lirical prepareLirical() throws Exception {
-        // Check input.
-        Collection<String> errors = checkInput();
-        if (!errors.isEmpty())
-            throw new Exception(String.format("Errors: %s", String.join(", ", errors)));
-
-        // Bootstrap LIRICAL.
-        return bootstrapLirical();
-    }
-
-    protected Collection<String> checkInput() {
-        Collection<String> errors = new LinkedList<>();
-        // resources
-        if (dataSection.liricalDataDirectory == null) {
-            String msg = "Path to Lirical data directory must be provided via `-d | --data` option";
-            LOGGER.error(msg);
-            errors.add(msg);
-        }
-        return errors;
-    }
-
-    protected Lirical bootstrapLirical() throws Exception {
-        Properties properties = readProperties();
-        String liricalVersion = properties.getProperty("lirical.version", "unknown version");
-        LOGGER.info("Spooling up Lirical v{}", liricalVersion);
-        return LiricalBuilder.builder(dataSection.liricalDataDirectory)
-                .build();
-
-    }
-
-    private static Properties readProperties() {
-        Properties properties = new Properties();
-
-        try (InputStream is = BaseCommand.class.getResourceAsStream("/lirical.properties")) {
-            properties.load(is);
-        } catch (IOException e) {
-            LOGGER.warn("Error loading properties: {}", e.getMessage());
-        }
-        return properties;
-    }
 
 }
