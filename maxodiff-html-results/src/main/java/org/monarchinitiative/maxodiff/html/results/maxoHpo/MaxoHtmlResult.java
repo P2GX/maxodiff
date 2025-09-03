@@ -1,10 +1,11 @@
-package org.monarchinitiative.maxodiff.html.results;
+package org.monarchinitiative.maxodiff.html.results.maxoHpo;
 
 import org.monarchinitiative.maxodiff.core.analysis.HTMLFrequencyMap;
 import org.monarchinitiative.maxodiff.core.analysis.HpoFrequency;
 import org.monarchinitiative.maxodiff.core.analysis.RankMaxoScore;
 import org.monarchinitiative.maxodiff.core.analysis.refinement.MaxodiffResult;
 import org.monarchinitiative.maxodiff.core.service.BiometadataService;
+import org.monarchinitiative.maxodiff.html.results.SimpleTerm;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 
 import java.util.*;

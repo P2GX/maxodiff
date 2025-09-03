@@ -1,4 +1,4 @@
-package org.monarchinitiative.maxodiff.html.results;
+package org.monarchinitiative.maxodiff.html.results.maxoHpo;
 
 
 import java.util.List;

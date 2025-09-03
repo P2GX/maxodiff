@@ -231,16 +231,27 @@ public class DifferentialDiagnosisCommand extends BaseCommand {
                 writeResults(phenopacketName, diseaseId, TermId.of(maxScoreMaxoTermId), maxScoreTermLabel,
                         topNDiseases, diseaseIds.toString(), nRepetitions, maxScoreValue, printer);
 
+                // write Researcher view HTML results
                 String nDiseasesAbbr = String.join("", "n", String.valueOf(nDiseases));
                 String nRepsAbbr = String.join("", "nr", String.valueOf(nRepetitions));
                 outputFilename = String.join("_", phenopacketName, ddEngine,
-                        nDiseasesAbbr, nRepsAbbr, "maxodiff", "results.html");
+                        nDiseasesAbbr, nRepsAbbr, "maxodiff", "researcher", "results.html");
                 Path maxodiffResultsHTMLPath = Path.of(String.join(File.separator, outputDir.toString(), outputFilename));
 
                 String htmlString = HtmlResults.writeHTMLResults(sample, nDiseases, nRepetitions, resultsList,
                         biometadataService, hpoTermCounts);
-                System.out.println("Wrote HTML: " + htmlString.substring(0, 200));
+                System.out.println("Wrote Researcher HTML: " + htmlString.substring(0, 200));
                 Files.writeString(maxodiffResultsHTMLPath, htmlString);
+
+                // write Clinician view HTML results
+                String outputFilename1 = String.join("_", phenopacketName, ddEngine,
+                        nDiseasesAbbr, nRepsAbbr, "maxodiff", "clinician", "results.html");
+                Path maxodiffResultsHTMLPath1 = Path.of(String.join(File.separator, outputDir.toString(), outputFilename1));
+
+                String htmlString1 = HtmlResults.writeHTMLMaxoDiseaseResults(sample, nDiseases, nRepetitions, resultsList,
+                        biometadataService);
+                System.out.println("Wrote Clinician HTML: " + htmlString1.substring(0, 200));
+                Files.writeString(maxodiffResultsHTMLPath1, htmlString1);
             }
 
             List<Object> phenopacketNames = resultsMap.get("phenopacketName");

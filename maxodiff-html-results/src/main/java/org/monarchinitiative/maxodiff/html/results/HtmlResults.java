@@ -8,6 +8,8 @@ import org.monarchinitiative.maxodiff.core.analysis.HpoFrequency;
 import org.monarchinitiative.maxodiff.core.analysis.refinement.MaxodiffResult;
 import org.monarchinitiative.maxodiff.core.model.Sample;
 import org.monarchinitiative.maxodiff.core.service.BiometadataService;
+import org.monarchinitiative.maxodiff.html.results.maxoDisease.MaxoDiseaseHTML;
+import org.monarchinitiative.maxodiff.html.results.maxoHpo.MaxoHtmlResult;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 import org.thymeleaf.context.Context;
 import org.thymeleaf.spring6.SpringTemplateEngine;
@@ -48,6 +50,39 @@ public class HtmlResults {
         htmlString = htmlString.replace("$nRepetitions", String.valueOf(nRepetitions));
 
         String resultsString = getHTMLResults(resultList, biometadataService, nDiseases, nRepetitions, hpoTermCounts);
+
+        htmlString = htmlString.replace("$results", resultsString);
+
+        return htmlString;
+    }
+
+    public static String writeHTMLMaxoDiseaseResults(Sample sample, int nDiseases, int nRepetitions, List<MaxodiffResult> resultList,
+                                          BiometadataService biometadataService) throws Exception {
+
+        File file = new File("maxodiff-html-results/src/main/resources/templates/maxodiffResults.html");
+        String htmlTemplateFile = file.getAbsolutePath();
+        Path htmlTemplatePath = Path.of(htmlTemplateFile);
+        String htmlString = Files.readString(htmlTemplatePath);
+
+        String sampleId = sample.id();
+        StringBuilder sampleObservedTermsStringBuilder = new StringBuilder();
+        sample.presentHpoTermIds().forEach(tid -> sampleObservedTermsStringBuilder
+                .append(hpoLink(tid,biometadataService)).append(" "));
+        String samplePresentTermsString = sample.presentHpoTermIds().isEmpty() ? "" :
+                sampleObservedTermsStringBuilder.substring(0, sampleObservedTermsStringBuilder.length() - 2);
+        StringBuilder sampleExcludedTermsStringBuilder = new StringBuilder();
+        sample.excludedHpoTermIds().forEach(tid -> sampleExcludedTermsStringBuilder
+                .append(hpoLink(tid,biometadataService)).append(" "));
+        String sampleExcludedTermsString = sample.excludedHpoTermIds().isEmpty() ? "" :
+                sampleExcludedTermsStringBuilder.substring(0, sampleExcludedTermsStringBuilder.length() - 2);
+
+        htmlString = htmlString.replace("$sampleResultsTitle", "Maxodiff Analysis Results for " + sampleId);
+        htmlString = htmlString.replace("$samplePresentHpoIds", samplePresentTermsString);
+        htmlString = htmlString.replace("$sampleExcludedHpoIds", sampleExcludedTermsString);
+        htmlString = htmlString.replace("$nDiseases", String.valueOf(nDiseases));
+        htmlString = htmlString.replace("$nRepetitions", String.valueOf(nRepetitions));
+
+        String resultsString = getHTMLMaxoDiseaseResults(resultList, biometadataService);
 
         htmlString = htmlString.replace("$results", resultsString);
 
@@ -108,6 +143,44 @@ public class HtmlResults {
                     templateEngine);
             resultsString.append(templateHtml);
         }
+
+        return resultsString.toString();
+    }
+
+    static String getHTMLMaxoDiseaseBoxFromTemplate(List<MaxodiffResult> results,
+                                                    BiometadataService biometadataService,
+                                                    SpringTemplateEngine templateEngine) {
+
+        MaxoDiseaseHTML maxoDiseaseData = new MaxoDiseaseHTML(
+                results,
+                biometadataService
+        );
+        Context context = new Context();
+        context.setVariable("maxoDiseaseData", maxoDiseaseData);
+        return templateEngine.process("maxoDiseaseResultBox", context);
+    }
+
+    protected static String getHTMLMaxoDiseaseResults(List<MaxodiffResult> resultList, BiometadataService biometadataService) throws Exception {
+        ClassLoaderTemplateResolver templateResolver = new ClassLoaderTemplateResolver();
+        templateResolver.setPrefix("templates/");
+        templateResolver.setSuffix(".html");
+        templateResolver.setTemplateMode("HTML");
+        templateResolver.setCharacterEncoding("UTF-8");
+        templateResolver.setCacheable(false);
+
+        SpringTemplateEngine templateEngine = new SpringTemplateEngine();
+        templateEngine.setTemplateResolver(templateResolver);
+        StringBuilder resultsString = new StringBuilder();
+
+        int zeroIdx = resultList.stream()
+                .filter(result -> result.rankMaxoScore().maxoScore().equals(0.))
+                .findFirst().map(resultList::indexOf).orElse(0);
+        int nDisplayed = Math.min(resultList.size(), zeroIdx);
+        List<MaxodiffResult> results = resultList.subList(0, nDisplayed);
+        String templateHtml = getHTMLMaxoDiseaseBoxFromTemplate(results,
+                biometadataService,
+                templateEngine);
+        resultsString.append(templateHtml);
 
         return resultsString.toString();
     }
