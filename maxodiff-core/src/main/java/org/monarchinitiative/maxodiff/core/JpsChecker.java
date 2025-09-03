@@ -1,11 +1,14 @@
 package org.monarchinitiative.maxodiff.core;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.IOException;
 
 public class JpsChecker {
-
+    private static final Logger LOGGER = LoggerFactory.getLogger(JpsChecker.class);
     public static boolean isMainClassRunning(String mainClassName) {
         try {
             Process process = Runtime.getRuntime().exec("jps -l");
@@ -19,7 +22,7 @@ public class JpsChecker {
             }
             reader.close();
         } catch (IOException e) {
-            e.printStackTrace();
+            LOGGER.error(e.getMessage());
         }
         return false; // Main class not found
     }

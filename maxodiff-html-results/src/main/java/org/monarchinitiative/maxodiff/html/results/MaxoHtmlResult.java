@@ -8,7 +8,6 @@ import org.monarchinitiative.maxodiff.core.service.BiometadataService;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 /**
  * This is a class that will be used to hold data for each MAxO result

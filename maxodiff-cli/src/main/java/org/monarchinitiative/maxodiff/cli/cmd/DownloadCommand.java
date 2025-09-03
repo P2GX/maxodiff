@@ -8,6 +8,7 @@ import picocli.CommandLine;
 
 import java.io.*;
 import java.net.MalformedURLException;
+import java.net.URI;
 import java.net.URL;
 import java.nio.file.Path;
 import java.util.concurrent.Callable;
@@ -115,16 +116,16 @@ public class DownloadCommand implements Callable<Integer>{
                 System.out.println(line);
             }
         } catch (IOException e) {
-            e.printStackTrace();
+            LOGGER.error("Could not download maxodiff data", e);
         }
 
     }
 
     private static URL createUrlOrExplode(String url) throws Exception {
         try {
-            return new URL(url);
+            return URI.create(url).toURL();
         } catch (MalformedURLException e) {
-            throw new Exception(e);
+            throw new IllegalArgumentException("Invalid URL: " + url, e);
         }
     }
 
