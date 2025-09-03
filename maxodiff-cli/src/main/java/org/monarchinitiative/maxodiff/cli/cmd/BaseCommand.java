@@ -44,28 +44,7 @@ abstract class BaseCommand implements Callable<Integer> {
             description ="directory to download data (default: ${DEFAULT-VALUE})"
     )
     public Path datadir= Path.of("data");
-    // ---------------------------------------------- RESOURCES --------------------------------------------------------
 
-
-    // ---------------------------------------------- CONFIGURATION ----------------------------------------------------
-    @CommandLine.ArgGroup(validate = false, heading = "Configuration options:%n")
-    public RunConfiguration runConfiguration = new RunConfiguration();
-
-    public static class RunConfiguration {
-        /**
-         * If global is set to true, then LIRICAL will not discard candidate diseases with no known disease gene or
-         * candidates for which no predicted pathogenic variant was found in the VCF.
-         */
-        @CommandLine.Option(names = {"-g", "--global"},
-                description = "Global analysis (default: ${DEFAULT-VALUE}).")
-        public boolean globalAnalysisMode = false;
-
-        @CommandLine.Option(names = {"--strict"},
-                description = "Use strict penalties if the genotype does not match the disease model in terms " +
-                        "of number of called pathogenic alleles. (default: ${DEFAULT-VALUE}).")
-        public boolean strict = false;
-
-    }
 
     public Integer call() throws Exception {
         // (0) Set up verbosity and print banner.

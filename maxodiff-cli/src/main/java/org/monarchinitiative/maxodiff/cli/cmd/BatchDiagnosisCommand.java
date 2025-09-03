@@ -81,7 +81,7 @@ public class BatchDiagnosisCommand extends DifferentialDiagnosisCommand {
                             String phenopacketFileName = phenopacketPath.toFile().getName();
                             ScoringMode scoringMode = ScoringMode.ONE_SIDED;
 
-                            runSingleMaxodiffAnalysis(phenopacketPath, phenopacketFileName, nDiseases, nRepetitions, engineArg, scoringMode, false, printer);
+                            runSingleMaxodiffAnalysis(phenopacketPath, phenopacketFileName, nDiseases, nRepetitions, "phenomizer", scoringMode, false, printer);
 
 
                             Map<String, List<Object>> resultsMap = getResultsMap();

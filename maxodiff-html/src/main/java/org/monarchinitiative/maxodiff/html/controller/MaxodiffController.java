@@ -1,6 +1,5 @@
 package org.monarchinitiative.maxodiff.html.controller;
 
-import org.monarchinitiative.lirical.io.analysis.PhenopacketData;
 import org.monarchinitiative.maxodiff.core.SimpleTerm;
 import org.monarchinitiative.maxodiff.core.analysis.HTMLFrequencyMap;
 import org.monarchinitiative.maxodiff.core.analysis.HpoFrequency;
@@ -8,11 +7,11 @@ import org.monarchinitiative.maxodiff.core.analysis.RankMaxoScore;
 import org.monarchinitiative.maxodiff.core.analysis.refinement.*;
 import org.monarchinitiative.maxodiff.core.diffdg.DifferentialDiagnosisEngine;
 import org.monarchinitiative.maxodiff.core.model.DifferentialDiagnosis;
+import org.monarchinitiative.maxodiff.core.model.PhenopacketData;
 import org.monarchinitiative.maxodiff.core.model.RankMaxo;
 import org.monarchinitiative.maxodiff.core.model.Sample;
 import org.monarchinitiative.maxodiff.core.service.BiometadataService;
 import org.monarchinitiative.maxodiff.html.results.HtmlResults;
-import org.monarchinitiative.maxodiff.lirical.PhenopacketFileParser;
 import org.monarchinitiative.maxodiff.phenomizer.IcMicaData;
 import org.monarchinitiative.maxodiff.phenomizer.PhenomizerDifferentialDiagnosisEngine;
 import org.monarchinitiative.maxodiff.phenomizer.ScoringMode;
@@ -255,6 +254,7 @@ public class MaxodiffController {
                     rankMaxoScore.initialOmimTermIds().forEach(id -> diseaseTermsMap.put(id, biometadataService.diseaseLabel(id).orElse("unknown")));
                     rankMaxoScore.maxoOmimTermIds().forEach(id -> diseaseTermsMap.put(id, biometadataService.diseaseLabel(id).orElse("unknown")));
                     var hpoTermIdRepCtsMap = rankMaxoScore.hpoTermIdRepCtsMap();
+                    int nDiscoverableHpoTerms = rankMaxoScore.discoverableObservedHpoTermIds().size();
                     for (Map.Entry<TermId, Map<TermId, Integer>> diseaseHpoRepCtEntry : hpoTermIdRepCtsMap.entrySet()) {
                         Map<TermId, Integer> hpoRetCtMap = diseaseHpoRepCtEntry.getValue();
                         for (Map.Entry<TermId, Integer> hpoRepCtMapEntry : hpoRetCtMap.entrySet()) {
@@ -262,7 +262,9 @@ public class MaxodiffController {
                             Integer repCt = hpoRepCtMapEntry.getValue();
                             if (repCt != null && !nRepetitionsMap.containsKey(hpoId)) {
                                 nRepetitionsMap.put(hpoId, repCt);
-                                break;
+                                if (nRepetitionsMap.size() == nDiscoverableHpoTerms) {
+                                    break;
+                                }
                             }
                         }
                     }
@@ -371,9 +373,9 @@ public class MaxodiffController {
             String presentHpoTermIds = "";
             String excludedHpoTermIds = "";
             if (phenopacketPath != null) {
-                PhenopacketData phenopacketData = PhenopacketFileParser.readPhenopacketData(phenopacketPath);
+                PhenopacketData phenopacketData = PhenopacketData.readPhenopacketData(phenopacketPath);
                 sampleId = phenopacketData.sampleId();
-                presentHpoTermIds = phenopacketData.presentHpoTermIds().map(Object::toString).collect(Collectors.joining(","));
+                presentHpoTermIds = phenopacketData.observedHpoTermIds().map(Object::toString).collect(Collectors.joining(","));
                 excludedHpoTermIds = phenopacketData.excludedHpoTermIds().map(Object::toString).collect(Collectors.joining(","));
             }
 

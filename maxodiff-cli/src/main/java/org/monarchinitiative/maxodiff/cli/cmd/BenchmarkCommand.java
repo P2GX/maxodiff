@@ -107,11 +107,9 @@ public class BenchmarkCommand extends DifferentialDiagnosisCommand {
         HpoDiseases hpoDiseases = loader.load(hpoaPath);
 
         IcMicaData icMicaData = null;
-        String ddEngine = engineArg;
-        if (ddEngine.equals("phenomizer")) {
-            LOGGER.info("Loading icMicaDict...");
-            icMicaData = IcMicaDictLoader.loadIcMicaDict(MaxodiffDataResolver.of(maxoDataPath).icMicaDict());
-        }
+        String ddEngine = "phenomizer";
+        LOGGER.info("Loading icMicaDict...");
+        icMicaData = IcMicaDictLoader.loadIcMicaDict(MaxodiffDataResolver.of(maxoDataPath).icMicaDict());
 
         List<Path> phenopacketPaths = new ArrayList<>();
         if (batchDir != null) {
@@ -177,7 +175,9 @@ public class BenchmarkCommand extends DifferentialDiagnosisCommand {
                 for (Path pPath0 : phenopacketPaths) {
                     String phenopacketName0 = pPath0.toFile().getName();
                     String outputFilename0 = String.join("_", phenopacketName0, ddEngine,
-                                                "n20", "nr30", "maxodiff", "results.html");
+                                                String.join("", "n", nDiseasesList.getLast().toString()),
+                                                String.join("","nr", nRepetitionsList.getLast().toString()),
+                                                "maxodiff", "results.html");
                     Path maxodiffResultsHTMLPath0 = Path.of(String.join(File.separator, outputDir.toString(), outputFilename0));
 
                     if (Files.exists(maxodiffResultsHTMLPath0)) {
@@ -216,7 +216,7 @@ public class BenchmarkCommand extends DifferentialDiagnosisCommand {
                         assert engine != null;
                         List<DifferentialDiagnosis> differentialDiagnoses = engine.run(sample);
 
-                        // Summarize the LIRICAL results.
+                        // Summarize the intial differential diagnosis results.
                         String outFilename = String.join("_",
                                 phenopacketName.replace(".json", ""),
                                 "initial",
@@ -225,8 +225,6 @@ public class BenchmarkCommand extends DifferentialDiagnosisCommand {
                                 "results");
                         String ddOutputPath = String.join(File.separator, outputDir.toString(), outFilename + ".csv");
                         writeDifferentialDiagnosisResults(phenopacketName, differentialDiagnoses, Path.of(ddOutputPath));
-
-                        //TODO? get list of diseases from LIRICAL results, and add diseases from CLI arg to total list for analysis
 
                         Map<Integer, Map<TermId, List<DifferentialDiagnosis>>> nDiseaseMaxoTermToDifferentialDiagnosesMap = new HashMap<>();
                         for (Map.Entry<String, DiffDiagRefiner> e : refiners.entrySet()) {
@@ -237,11 +235,6 @@ public class BenchmarkCommand extends DifferentialDiagnosisCommand {
                                     initialDiagnoses = differentialDiagnoses.subList(0, nDiseases);
 
                                     DiseaseModelProbability diseaseModelProbability = null;
-                                    switch (diseaseProbModel) {
-                                        case "ranked" -> diseaseModelProbability = DiseaseModelProbability.ranked(initialDiagnoses);
-                                        case "softmax" -> diseaseModelProbability = DiseaseModelProbability.softmax(initialDiagnoses);
-                                        case "expDecay" -> diseaseModelProbability = DiseaseModelProbability.exponentialDecay(initialDiagnoses);
-                                    }
 
                                     maxoHpoTermProbabilities = new MaxoHpoTermProbabilities(hpoDiseases,
                                             hpoToMaxoTermMap,

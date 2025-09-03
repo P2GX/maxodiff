@@ -75,18 +75,13 @@ public class DifferentialDiagnosisCommand extends BaseCommand {
     protected Integer nDiseasesArg = 20;
 
     @CommandLine.Option(names = {"--diseaseProbModel"},
-            paramLabel = "{ranked,softmax,expDecay}",
+            paramLabel = "{ranked}",
             description = "Disease Probability Model to use for Rank MAxO algorithm (default: ${DEFAULT-VALUE}).")
     protected String diseaseProbModel = "ranked";
 
     @CommandLine.Option(names = {"-nr", "--nRepetitions"},
             description = "Number of repetitions for running differential diagnosis.")
     protected Integer nRepetitionsArg = 10;
-
-    @CommandLine.Option(names = {"-e", "--engine"},
-            paramLabel = "{lirical, phenomizer}",
-            description = "Differential diagnosis engine (default: ${DEFAULT-VALUE}).")
-    protected String engineArg = "phenomizer";
 
     @CommandLine.Option(names = {"-s", "--scoringMode"},
             paramLabel = "{one-sided, two-sided}",
@@ -111,7 +106,7 @@ public class DifferentialDiagnosisCommand extends BaseCommand {
 
         int nDiseases = nDiseasesArg;
         int nRepetitions = nRepetitionsArg;
-        String ddEngine = engineArg;
+        String ddEngine = "phenomizer";
         ScoringMode scoringMode = scoringModeArg.equals("one-sided") ? ScoringMode.ONE_SIDED : ScoringMode.TWO_SIDED;
 
         try (BufferedWriter writer = openOutputFileWriter(maxodiffResultsFilePath); CSVPrinter printer = CSVFormat.DEFAULT.print(writer)) {
@@ -168,14 +163,12 @@ public class DifferentialDiagnosisCommand extends BaseCommand {
 
             DiffDiagRefiner maxoDiffRefiner = maxodiffPropsConfiguration.diffDiagRefiner("score");
             BiometadataService biometadataService = maxodiffPropsConfiguration.biometadataService();
-            outputFilename = null;
-            DifferentialDiagnosisEngine engine = null;
             if (icMicaData == null) {
                 System.err.println("No icMicaDict found. Please report to developers");
                 return;
             }
             Map<TermPair, Double> icMicaDict = icMicaData.icMicaDict();
-            engine = new PhenomizerDifferentialDiagnosisEngine(hpoDiseases, icMicaDict, scoringMode);
+            DifferentialDiagnosisEngine engine = new PhenomizerDifferentialDiagnosisEngine(hpoDiseases, icMicaDict, scoringMode);
 
             PhenopacketData phenopacketData = PhenopacketData.readPhenopacketData(phenopacketPath);
             Sample sample = Sample.of(phenopacketData.sampleId(),
@@ -206,10 +199,6 @@ public class DifferentialDiagnosisCommand extends BaseCommand {
                             initialDiagnoses,
                             diseaseModelProbability);
 
-            Set<TermId> initialDiagnosesIds = initialDiagnoses.stream()
-                    .map(DifferentialDiagnosis::diseaseId)
-                    .collect(Collectors.toSet());
-
             DifferentialDiagnosisEngine diseaseSubsetEngine = engine;
 
             LOGGER.info("Running Maxodiff calculation...");
@@ -237,7 +226,7 @@ public class DifferentialDiagnosisCommand extends BaseCommand {
 
             Set<TermId> diseaseIds = topResult.rankMaxoScore().maxoOmimTermIds();
             int topNDiseases = diseaseIds.size();
-        writeOutputFile = true;
+
             if (writeOutputFile) {
                 writeResults(phenopacketName, diseaseId, TermId.of(maxScoreMaxoTermId), maxScoreTermLabel,
                         topNDiseases, diseaseIds.toString(), nRepetitions, maxScoreValue, printer);

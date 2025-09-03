@@ -77,13 +77,15 @@
             <td></td>
 
             <!-- Remaining columns: loop over HPO table cells -->
-            <td class="parentCell">
-                <div class="hpoCell"
-                     th:classappend="${cell.empty} ? ' emptyCell'"
-                     th:style="${cell.empty} ? '' : 'background:' + cell.style">
-                    <span th:text="${cell.empty} ? '∅' : cell.count"></span>
-                </div>
-            </td>
+            <th:block th:each="cell : ${row.getCells}">
+                <td class="parentCell">
+                    <div class="hpoCell"
+                         th:classappend="${cell.empty} ? ' emptyCell'"
+                         th:style="${cell.empty} ? '' : 'background:' + ${cell.style}">
+                        <span th:text="${cell.empty} ? '∅' : ${cell.count}"></span>
+                    </div>
+                </td>
+            </th:block>
         </tr>
     </table>
     </div>
