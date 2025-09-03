@@ -6,11 +6,7 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
-import org.monarchinitiative.lirical.core.Lirical;
-import org.monarchinitiative.lirical.core.analysis.AnalysisOptions;
-import org.monarchinitiative.lirical.core.analysis.probability.PretestDiseaseProbabilities;
-import org.monarchinitiative.lirical.core.service.PhenotypeService;
-import org.monarchinitiative.lirical.io.analysis.PhenopacketData;
+
 import org.monarchinitiative.maxodiff.config.MaxodiffDataResolver;
 import org.monarchinitiative.maxodiff.config.MaxodiffPropsConfiguration;
 import org.monarchinitiative.maxodiff.core.SimpleTerm;
@@ -19,7 +15,6 @@ import org.monarchinitiative.maxodiff.core.analysis.refinement.*;
 import org.monarchinitiative.maxodiff.core.diffdg.DifferentialDiagnosisEngine;
 import org.monarchinitiative.maxodiff.core.model.*;
 import org.monarchinitiative.maxodiff.html.results.HtmlResults;
-import org.monarchinitiative.maxodiff.lirical.*;
 import org.monarchinitiative.maxodiff.core.service.BiometadataService;
 import org.monarchinitiative.maxodiff.phenomizer.IcMicaData;
 import org.monarchinitiative.maxodiff.phenomizer.IcMicaDictLoader;
@@ -149,7 +144,6 @@ public class BenchmarkCommand extends DifferentialDiagnosisCommand {
             BiometadataService biometadataService = maxodiffPropsConfiguration.biometadataService();
 
             DifferentialDiagnosisEngine engine = null;
-            LiricalDifferentialDiagnosisEngineConfigurer liricalDifferentialDiagnosisEngineConfigurer = null;
 
             ScoringMode scoringMode = scoringModeArg.equals("one-sided") ? ScoringMode.ONE_SIDED : ScoringMode.TWO_SIDED;
             Map<TermPair, Double> icMicaDict = icMicaData.icMicaDict();
@@ -190,10 +184,11 @@ public class BenchmarkCommand extends DifferentialDiagnosisCommand {
                         System.out.println("File " + outputFilename0 + " exists.");
                         continue;
                     }
+
                     try {
-                        PhenopacketData phenopacketData = PhenopacketFileParser.readPhenopacketData(pPath0);
+                        PhenopacketData phenopacketData = PhenopacketData.readPhenopacketData(pPath0);
                         Sample sample = Sample.of(phenopacketData.sampleId(),
-                                phenopacketData.presentHpoTermIds().toList(),
+                                phenopacketData.observedHpoTermIds().toList(),
                                 phenopacketData.excludedHpoTermIds().toList());
 
                         LOGGER.info(String.valueOf(phenopacketPath));
@@ -201,7 +196,7 @@ public class BenchmarkCommand extends DifferentialDiagnosisCommand {
                         LOGGER.info("refiners = {}", refinersList);
                         String phenopacketName = pPath0.toFile().getName();
                         List<TermId> termIdsToRemove = new ArrayList<>();
-                        List<TermId> includedIds = new ArrayList<>(phenopacketData.presentHpoTermIds().toList());
+                        List<TermId> includedIds = new ArrayList<>(phenopacketData.observedHpoTermIds().toList());
                         List<TermId> excludedIds = new ArrayList<>(phenopacketData.excludedHpoTermIds().toList());
                         List<TermId> allSampleHpoTerms = Stream.of(sample.presentHpoTermIds(), sample.excludedHpoTermIds())
                                 .flatMap(Collection::stream).toList();
@@ -307,17 +302,8 @@ public class BenchmarkCommand extends DifferentialDiagnosisCommand {
                                                 .collect(Collectors.toSet());
 
                                         DifferentialDiagnosisEngine diseaseSubsetEngine = null;
-                                        if (ddEngine.equals("lirical")) {
-                                            var diseaseSubsetOptions = AnalysisOptions.builder()
-                                                    .useStrictPenalties(runConfiguration.strict)
-                                                    .useGlobal(runConfiguration.globalAnalysisMode)
-                                                    .pretestProbability(PretestDiseaseProbabilities.uniform(initialDiagnosesIds))
-                                                    .addTargetDiseases(initialDiagnosesIds)
-                                                    .build();
-                                            diseaseSubsetEngine = liricalDifferentialDiagnosisEngineConfigurer.configure(diseaseSubsetOptions);
-                                        } else if (ddEngine.equals("phenomizer")) {
-                                            diseaseSubsetEngine = engine;
-                                        }
+                                        diseaseSubsetEngine = engine;
+
 
                                         RankMaxo rankMaxo = new RankMaxo(hpoToMaxoTermMap, maxoToHpoTermIdMap, maxoHpoTermProbabilities, diseaseSubsetEngine,
                                                 minimalOntology, ontology);

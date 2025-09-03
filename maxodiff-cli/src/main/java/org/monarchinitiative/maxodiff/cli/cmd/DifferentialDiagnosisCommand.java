@@ -2,7 +2,6 @@ package org.monarchinitiative.maxodiff.cli.cmd;
 
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
-import org.monarchinitiative.lirical.io.analysis.PhenopacketData;
 import org.monarchinitiative.maxodiff.config.MaxodiffDataResolver;
 import org.monarchinitiative.maxodiff.config.MaxodiffPropsConfiguration;
 import org.monarchinitiative.maxodiff.core.SimpleTerm;
@@ -13,7 +12,6 @@ import org.monarchinitiative.maxodiff.core.analysis.refinement.RefinementOptions
 import org.monarchinitiative.maxodiff.core.analysis.refinement.RefinementResults;
 import org.monarchinitiative.maxodiff.core.diffdg.DifferentialDiagnosisEngine;
 import org.monarchinitiative.maxodiff.html.results.HtmlResults;
-import org.monarchinitiative.maxodiff.lirical.*;
 import org.monarchinitiative.maxodiff.core.model.*;
 import org.monarchinitiative.maxodiff.core.service.BiometadataService;
 import org.monarchinitiative.maxodiff.phenomizer.IcMicaData;
@@ -172,7 +170,6 @@ public class DifferentialDiagnosisCommand extends BaseCommand {
             BiometadataService biometadataService = maxodiffPropsConfiguration.biometadataService();
             outputFilename = null;
             DifferentialDiagnosisEngine engine = null;
-            LiricalDifferentialDiagnosisEngineConfigurer liricalDifferentialDiagnosisEngineConfigurer = null;
             if (icMicaData == null) {
                 System.err.println("No icMicaDict found. Please report to developers");
                 return;
@@ -180,9 +177,9 @@ public class DifferentialDiagnosisCommand extends BaseCommand {
             Map<TermPair, Double> icMicaDict = icMicaData.icMicaDict();
             engine = new PhenomizerDifferentialDiagnosisEngine(hpoDiseases, icMicaDict, scoringMode);
 
-            PhenopacketData phenopacketData = PhenopacketFileParser.readPhenopacketData(phenopacketPath);
+            PhenopacketData phenopacketData = PhenopacketData.readPhenopacketData(phenopacketPath);
             Sample sample = Sample.of(phenopacketData.sampleId(),
-                    phenopacketData.presentHpoTermIds().toList(),
+                    phenopacketData.observedHpoTermIds().toList(),
                     phenopacketData.excludedHpoTermIds().toList());
             List<DifferentialDiagnosis> differentialDiagnoses = engine.run(sample);
 
