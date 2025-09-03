@@ -61,24 +61,29 @@
         </tr>
         <!-- Now add one row for each of the diseases -->
         <tr th:each="row : ${maxoData.resultRows}">
-        <!-- 1st column: OMIM label with link -->
-        <td>
-            <a th:href="|https://www.omim.org/entry/${row.omimId}|"
-               th:text="${row.omimLabel}"></a>
-        </td>
-        <!-- 2nd column: rank change -->
-        <td th:text="${row.rankChange}" th:style="${row.style}"></td>
+            <!-- 1st column: OMIM label with link -->
+            <td>
+                <a th:href="|https://www.omim.org/entry/${row.omimId}|"
+                   th:text="${row.omimLabel}"></a>
+            </td>
+            <!-- 2nd column: rank change -->
+            <td class="parentCell">
+                <div class="hpoCell"
+                     th:text="${row.rankChange}"
+                     th:style="|background: ${row.style}|">
+                </div>
+            </td>
+            <!-- 3rd column: empty (this is a space hider. TODO-lets refactor and do this with CSS -->
+            <td></td>
 
-        <!-- 3rd column: empty (this is a space hilder. TODO-lets refactor and do this with CSS -->
-        <td></td>
-
-        <!-- Remaining columns: loop over HPO table cells -->
-        <td th:each="cell : ${row.cells}" class="parentCell">
-            <div class="hpoCell"
-                 th:style="'background:' + ${cell.style}">
-                <span th:text="${cell.count}">0</span>
-            </div>
-        </td>
+            <!-- Remaining columns: loop over HPO table cells -->
+            <td class="parentCell">
+                <div class="hpoCell"
+                     th:classappend="${cell.empty} ? ' emptyCell'"
+                     th:style="${cell.empty} ? '' : 'background:' + cell.style">
+                    <span th:text="${cell.empty} ? '∅' : cell.count"></span>
+                </div>
+            </td>
         </tr>
     </table>
     </div>

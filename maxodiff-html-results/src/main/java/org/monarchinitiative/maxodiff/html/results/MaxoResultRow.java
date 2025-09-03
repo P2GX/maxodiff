@@ -68,15 +68,9 @@ public class MaxoResultRow {
     }
 
     public String getStyle() {
-        double opacity = 0.1d;
-        if (nDiseases == 0) {
-            System.err.println("TODO nDiseases is 0");
-
-        } else {
-            opacity = (double) rankChange / nDiseases;
-        }
-        return (rankChange < 0) ? "background: rgba(0, 128, 0, " + (-1.0 * opacity) + ")" :
-                "background: rgba(255, 0, 0, " + opacity + ")";
+        double opacity = (double) rankChange / nDiseases;
+        return (rankChange < 0) ? "rgba(0, 128, 0, " + (-1.0 * opacity) + ")" :
+                "rgba(255, 0, 0, " + opacity + ")";
     }
 
     public String getOmimId() {

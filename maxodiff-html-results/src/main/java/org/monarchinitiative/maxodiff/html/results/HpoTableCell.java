@@ -28,4 +28,8 @@ public class HpoTableCell {
         return "rgba(33, 0, 90, " + opc + ")";
     }
 
+    public boolean isEmpty() {
+        return count == 0;
+    }
+
 }
