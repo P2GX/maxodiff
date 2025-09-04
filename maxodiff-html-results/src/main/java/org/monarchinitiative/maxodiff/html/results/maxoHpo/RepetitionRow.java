@@ -1,4 +1,4 @@
-package org.monarchinitiative.maxodiff.html.results;
+package org.monarchinitiative.maxodiff.html.results.maxoHpo;
 
 import org.monarchinitiative.maxodiff.core.analysis.refinement.MaxodiffResult;
 import org.monarchinitiative.phenol.ontology.data.TermId;
