@@ -48,7 +48,7 @@ public class CandidateDiseaseScores {
         Set<TermId> maxoBenefitHpoIds = maxoHpoTermProbabilities.getDiscoverableByMaxoHpoTerms(ppkt, maxoId, maxoToHpoTermIdMap);
         List<TermId> diseaseIdList = new LinkedList<>(diseaseIds);
         Map<TermId, Double> diseaseRankProbabilityMap = new LinkedHashMap<>();
-        diseaseIds.stream().forEach(id -> diseaseRankProbabilityMap.put(id, 1./(diseaseIdList.indexOf(id)+1)));
+        diseaseIds.forEach(id -> diseaseRankProbabilityMap.put(id, 1./(diseaseIdList.indexOf(id)+1)));
         Double diseaseRankProbabilityValueSum = diseaseRankProbabilityMap.values().stream().mapToDouble(d->d).sum();
         diseaseRankProbabilityMap.forEach((diseaseIdKey, probabilityValue) ->
                 diseaseRankProbabilityMap.replace(diseaseIdKey, probabilityValue / diseaseRankProbabilityValueSum));

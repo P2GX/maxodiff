@@ -61,11 +61,14 @@
             font-size: 1.2em;
         }
 
-
+        .table-wrapper {
+            overflow-x: auto;
+            max-width: 100%;   /* only scroll if table is too wide */
+        }
         /* Table to show MAxO (columns) vs disease (rows) */
         .dBoxTable {
             border-collapse: collapse;
-            table-layout: fixed;
+            width: max-content;
         }
 
         .dBoxTable td, .dBoxTable th {
