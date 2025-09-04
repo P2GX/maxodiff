@@ -11,12 +11,12 @@
 
         <div class="stat-item">
             <div class="stat-label">N Diseases</div>
-            <div class="stat-value stat-diseases" th:text="${maxoData.nDiseases()}">20</div>
+            <div class="stat-value stat-diseases" th:utext="${maxoData.nDiseases()}">20</div>
         </div>
 
         <div class="stat-item">
             <div class="stat-label">N Observed HPO Terms</div>
-            <div class="stat-value stat-terms" th:text="${maxoData.nObservedHpoTerms()}">2</div>
+            <div class="stat-value stat-terms" th:utext="${maxoData.nObservedHpoTerms()}">2</div>
         </div>
     </div>
 

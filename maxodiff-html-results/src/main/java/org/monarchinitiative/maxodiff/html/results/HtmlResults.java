@@ -35,13 +35,7 @@ public class HtmlResults {
 
         String sampleId = sample.id();
         List<String> observedHpoLinks = sample.presentHpoTermIds().stream().map(tid -> hpoLink(tid,biometadataService)).toList();
-//        StringBuilder sampleObservedTermsStringBuilder = new StringBuilder();
-//        sample.presentHpoTermIds().forEach(tid -> sampleObservedTermsStringBuilder
-//                .append(hpoLink(tid,biometadataService)).append(" "));
-////        sample.presentHpoTermIds().forEach(tid -> sampleObservedTermsStringBuilder
-////                .append(hpoLink(tid,biometadataService)).append(" "));
         String samplePresentTermsString = String.join(" ", observedHpoLinks);
-
         List<String> excludedHpoLinks = sample.excludedHpoTermIds().stream().map(tid -> hpoLink(tid,biometadataService)).toList();
         String sampleExcludedTermsString = String.join(" ", excludedHpoLinks);
 
@@ -54,7 +48,7 @@ public class HtmlResults {
         context.setVariable("maxodiff", maxodiffHtml);
 
         SpringTemplateEngine templateEngine = new SpringTemplateEngine();
-
+        templateEngine.setTemplateResolver(templateResolver);
         return templateEngine.process("maxodiffResults", context);
 
     }

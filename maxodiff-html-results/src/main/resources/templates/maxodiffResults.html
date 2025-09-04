@@ -626,14 +626,14 @@
 </head>
 
 <body style="font-family: Arial, Helvetica, sans-serif;">
-<h1>$sampleResultsTitle</h1>
+<h1 th:text="${maxodiff.sampleResultsTitle}"></h1>
 <table class="resultsTable">
     <tbody>
         <tr>
-            <td class="narrow-column">Observed HPO Terms:</td><td class="wide-column" th:text="${maxodiff.samplePresentHpoIds}">Present HPO Ids</td>
+            <td class="narrow-column">Observed HPO Terms:</td><td class="wide-column" th:utext="${maxodiff.samplePresentHpoIds}">Present HPO Ids</td>
         </tr>
         <tr class="spaced-row">
-            <td class="narrow-column">Excluded HPO Terms:</td><td class="wide-column" th:text="${maxodiff.sampleExcludedHpoIds}">Excluded HPO Ids</td>
+            <td class="narrow-column">Excluded HPO Terms:</td><td class="wide-column" th:utext="${maxodiff.sampleExcludedHpoIds}">Excluded HPO Ids</td>
         </tr>
         <tr class="spaced-row">
             <td class="narrow-column">Diseases:</td><td class="wide-column" th:text="${maxodiff.nDiseases}">n Diseases</td>
@@ -646,7 +646,7 @@
 
 <h1>Prioritized Diagnostic Investigations</h1>
 
-<div th:text="${maxodiff.resultsString}">results</div>
+<div th:utext="${maxodiff.resultsString}">results</div>
 
 
 </body>
