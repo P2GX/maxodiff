@@ -9,7 +9,7 @@
             </div>
         </div>
 
-        <table class="countsTable">
+        <table class="dBoxTable">
             <thead>
             <tr>
                 <th></th>
@@ -22,15 +22,16 @@
             <!-- Now add one row for each of the diseases -->
             <tr th:each="row : ${maxoDiseaseData.resultsRows}">
                 <!-- 1st column: OMIM label with link -->
-                <td>
+                <td th:attr="data-fulltext=${row.omimLabel}">
                     <a th:href="|https://www.omim.org/entry/${row.omimId}|"
-                       th:text="${row.omimLabel}"></a>
+                       th:text="${row.omimLabel}"
+                       class="disease-link"></a>
                 </td>
 
                 <!-- Remaining columns: loop over MAxO table cells -->
                 <th:block th:each="cell : ${row.getCells}">
                     <td class="parentCell">
-                        <div class="hpoCell"
+                        <div class="dBoxCell"
                              th:classappend="${cell.empty} ? ' emptyCell'"
                              th:style="${cell.empty} ? '' : 'background:' + ${cell.style}">
                             <span th:text="${cell.empty} ? '∅' : ${cell.score}"></span>
