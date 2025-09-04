@@ -30,11 +30,20 @@
 
                 <!-- Remaining columns: loop over MAxO table cells -->
                 <th:block th:each="cell : ${row.getCells}">
-                    <td class="parentCell">
+                    <td class="parentMaxoDiseaseCell">
                         <div class="dBoxCell"
                              th:classappend="${cell.empty} ? ' emptyCell'"
                              th:style="${cell.empty} ? '' : 'background:' + ${cell.style}">
-                            <span th:text="${cell.empty} ? '∅' : ${cell.score}"></span>
+<!--                            <span th:text="${cell.empty} ? '∅' : ${cell.score}"></span>-->
+                        </div>
+                        <div class="tooltip">
+                            <div class="tooltip-header" th:text="${cell.toolTipHeader}">Header</div>
+                            <ul  class="tooltip-list">
+                                <li th:each="item: ${cell.toolTipItems}">
+                                    <span th:text="${item.maxo}">MAxO Term</span>:
+                                    <strong th:text="${item.score}">0</strong>
+                                </li>
+                            </ul>
                         </div>
                     </td>
                 </th:block>

@@ -1,13 +1,18 @@
 package org.monarchinitiative.maxodiff.html.results.maxoDisease;
 
+import java.util.List;
+
 public class MaxoDiseaseTableCell {
-    //TODO: show maxo term rank as text, and color-code accordingly
     private final double score;
     private final double opacity;
+    private final String toolTipHeader;
+    private final List<MaxoDiseaseCellTooltipItem> toolTipItems;
 
-    public MaxoDiseaseTableCell(double score, double opacity) {
+    public MaxoDiseaseTableCell(double score, double opacity, String toolTipHeader, List<MaxoDiseaseCellTooltipItem> toolTipItems) {
         this.score = score;
         this.opacity = opacity;
+        this.toolTipHeader = toolTipHeader;
+        this.toolTipItems = toolTipItems;
     }
 
     public String getScore() {
@@ -27,6 +32,14 @@ public class MaxoDiseaseTableCell {
             opc = 0.01;
         }
         return "rgba(33, 0, 90, " + opc + ")";
+    }
+
+    public String getToolTipHeader() {
+        return toolTipHeader;
+    }
+
+    public List<MaxoDiseaseCellTooltipItem> getToolTipItems() {
+        return toolTipItems;
     }
 
     public boolean isEmpty() {

@@ -239,7 +239,7 @@ public class DifferentialDiagnosisCommand extends BaseCommand {
 
                 String htmlString = HtmlResults.writeHTMLResults(sample, nDiseases, nRepetitions, resultsList,
                         biometadataService, hpoTermCounts);
-                System.out.println("Wrote Researcher HTML: " + htmlString.substring(0, 200));
+//                System.out.println("Wrote Researcher HTML: " + htmlString.substring(0, 200));
                 Files.writeString(maxodiffResultsHTMLPath, htmlString);
 
                 // write Clinician view HTML results
@@ -249,7 +249,7 @@ public class DifferentialDiagnosisCommand extends BaseCommand {
 
                 String htmlString1 = HtmlResults.writeHTMLMaxoDiseaseResults(sample, nDiseases, nRepetitions, resultsList,
                         biometadataService);
-                System.out.println("Wrote Clinician HTML: " + htmlString1.substring(0, 200));
+//                System.out.println("Wrote Clinician HTML: " + htmlString1.substring(0, 200));
                 Files.writeString(maxodiffResultsHTMLPath1, htmlString1);
             }
 
@@ -281,6 +281,7 @@ public class DifferentialDiagnosisCommand extends BaseCommand {
 
             BatchDiagnosisCommand.setResultsMap(resultsMap);
         } catch (Exception ex) {
+            ex.printStackTrace();
             System.out.println(ex.getMessage());
             resultsMap = new HashMap<>();
             BatchDiagnosisCommand.setResultsMap(resultsMap);

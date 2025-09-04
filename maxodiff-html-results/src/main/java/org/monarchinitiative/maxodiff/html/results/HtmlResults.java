@@ -26,43 +26,48 @@ public class HtmlResults {
     public static String writeHTMLResults(Sample sample, int nDiseases, int nRepetitions, List<MaxodiffResult> resultList,
                                            BiometadataService biometadataService, Map<TermId, List<HpoFrequency>> hpoTermCounts) throws Exception {
 
-        File file = new File("maxodiff-html-results/src/main/resources/templates/maxodiffResults.html");
-        String htmlTemplateFile = file.getAbsolutePath();
-        Path htmlTemplatePath = Path.of(htmlTemplateFile);
-        String htmlString = Files.readString(htmlTemplatePath);
+        ClassLoaderTemplateResolver templateResolver = new ClassLoaderTemplateResolver();
+        templateResolver.setPrefix("templates/");
+        templateResolver.setSuffix(".html");
+        templateResolver.setTemplateMode("HTML");
+        templateResolver.setCharacterEncoding("UTF-8");
+        templateResolver.setCacheable(false);
 
         String sampleId = sample.id();
-        StringBuilder sampleObservedTermsStringBuilder = new StringBuilder();
-        sample.presentHpoTermIds().forEach(tid -> sampleObservedTermsStringBuilder
-                .append(hpoLink(tid,biometadataService)).append(" "));
-        String samplePresentTermsString = sample.presentHpoTermIds().isEmpty() ? "" :
-                sampleObservedTermsStringBuilder.substring(0, sampleObservedTermsStringBuilder.length() - 2);
-        StringBuilder sampleExcludedTermsStringBuilder = new StringBuilder();
-        sample.excludedHpoTermIds().forEach(tid -> sampleExcludedTermsStringBuilder
-                .append(hpoLink(tid,biometadataService)).append(" "));
-        String sampleExcludedTermsString = sample.excludedHpoTermIds().isEmpty() ? "" :
-                sampleExcludedTermsStringBuilder.substring(0, sampleExcludedTermsStringBuilder.length() - 2);
+        List<String> observedHpoLinks = sample.presentHpoTermIds().stream().map(tid -> hpoLink(tid,biometadataService)).toList();
+//        StringBuilder sampleObservedTermsStringBuilder = new StringBuilder();
+//        sample.presentHpoTermIds().forEach(tid -> sampleObservedTermsStringBuilder
+//                .append(hpoLink(tid,biometadataService)).append(" "));
+////        sample.presentHpoTermIds().forEach(tid -> sampleObservedTermsStringBuilder
+////                .append(hpoLink(tid,biometadataService)).append(" "));
+        String samplePresentTermsString = String.join(" ", observedHpoLinks);
 
-        htmlString = htmlString.replace("$sampleResultsTitle", "Maxodiff Analysis Results for " + sampleId);
-        htmlString = htmlString.replace("$samplePresentHpoIds", samplePresentTermsString);
-        htmlString = htmlString.replace("$sampleExcludedHpoIds", sampleExcludedTermsString);
-        htmlString = htmlString.replace("$nDiseases", String.valueOf(nDiseases));
-        htmlString = htmlString.replace("$nRepetitions", String.valueOf(nRepetitions));
+        List<String> excludedHpoLinks = sample.excludedHpoTermIds().stream().map(tid -> hpoLink(tid,biometadataService)).toList();
+        String sampleExcludedTermsString = String.join(" ", excludedHpoLinks);
 
         String resultsString = getHTMLResults(resultList, biometadataService, nDiseases, nRepetitions, hpoTermCounts);
 
-        htmlString = htmlString.replace("$results", resultsString);
+        MaxodiffHtml maxodiffHtml = new MaxodiffHtml(sampleId, samplePresentTermsString, sampleExcludedTermsString,
+                nDiseases, nRepetitions, resultsString);
 
-        return htmlString;
+        Context context = new Context();
+        context.setVariable("maxodiff", maxodiffHtml);
+
+        SpringTemplateEngine templateEngine = new SpringTemplateEngine();
+
+        return templateEngine.process("maxodiffResults", context);
+
     }
 
     public static String writeHTMLMaxoDiseaseResults(Sample sample, int nDiseases, int nRepetitions, List<MaxodiffResult> resultList,
                                           BiometadataService biometadataService) throws Exception {
 
-        File file = new File("maxodiff-html-results/src/main/resources/templates/maxodiffResults.html");
-        String htmlTemplateFile = file.getAbsolutePath();
-        Path htmlTemplatePath = Path.of(htmlTemplateFile);
-        String htmlString = Files.readString(htmlTemplatePath);
+        ClassLoaderTemplateResolver templateResolver = new ClassLoaderTemplateResolver();
+        templateResolver.setPrefix("templates/");
+        templateResolver.setSuffix(".html");
+        templateResolver.setTemplateMode("HTML");
+        templateResolver.setCharacterEncoding("UTF-8");
+        templateResolver.setCacheable(false);
 
         String sampleId = sample.id();
         StringBuilder sampleObservedTermsStringBuilder = new StringBuilder();
@@ -76,17 +81,18 @@ public class HtmlResults {
         String sampleExcludedTermsString = sample.excludedHpoTermIds().isEmpty() ? "" :
                 sampleExcludedTermsStringBuilder.substring(0, sampleExcludedTermsStringBuilder.length() - 2);
 
-        htmlString = htmlString.replace("$sampleResultsTitle", "Maxodiff Analysis Results for " + sampleId);
-        htmlString = htmlString.replace("$samplePresentHpoIds", samplePresentTermsString);
-        htmlString = htmlString.replace("$sampleExcludedHpoIds", sampleExcludedTermsString);
-        htmlString = htmlString.replace("$nDiseases", String.valueOf(nDiseases));
-        htmlString = htmlString.replace("$nRepetitions", String.valueOf(nRepetitions));
-
         String resultsString = getHTMLMaxoDiseaseResults(resultList, biometadataService);
 
-        htmlString = htmlString.replace("$results", resultsString);
+        MaxodiffHtml maxodiffHtml = new MaxodiffHtml(sampleId, samplePresentTermsString, sampleExcludedTermsString,
+                                                nDiseases, nRepetitions, resultsString);
 
-        return htmlString;
+
+        Context context = new Context();
+        context.setVariable("maxodiff", maxodiffHtml);
+        SpringTemplateEngine templateEngine = new SpringTemplateEngine();
+        templateEngine.setTemplateResolver(templateResolver);
+
+        return templateEngine.process("maxodiffResults", context);
     }
 
     private static String hpoLink(TermId tid, BiometadataService biometadataService) {

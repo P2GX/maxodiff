@@ -21,7 +21,7 @@ public class MaxoDiseaseHTML {
         Map<TermId, String> omimTermMap = new HashMap<>();
         results.getFirst().rankMaxoScore().initialOmimTermIds()
                 .forEach(id -> omimTermMap.put(id, biometadataService.diseaseLabel(id).orElse("unknown")));
-        this.resultsRows= MaxoDiseaseRow.createMaxoDiseaseRows(results, omimTermMap);
+        this.resultsRows= MaxoDiseaseRow.createMaxoDiseaseRows(results, omimTermMap, biometadataService);
     }
 
     public List<MaxoDiseaseRow> getResultsRows() { return this.resultsRows;}

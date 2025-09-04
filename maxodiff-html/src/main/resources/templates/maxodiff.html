@@ -238,6 +238,7 @@
     <div class="section-box-view">
         <h1>View by Diagnostic Modality:</h1>
 
+<!--        TODO: change this to a e.g. show clinician/researcher results checkbox, but always run both -->
         <select th:value="${view} ?: clinician" name="view" id="view">
             <option th:selected="${view} == clinician ? selected" value="clinician">Clinician</option>
             <option th:selected="${view} == researcher ? selected" value="researcher">Researcher</option>
@@ -334,6 +335,7 @@
         }
     </script>
 
+<!--    TODO: move N Diseases and N Simulations to Sample box-->
     <div class="section-box-maxodiff">
         <h1>Maxodiff Calculation:</h1>
         <table class="diffDiagInputTable">
@@ -388,6 +390,7 @@
 <!--<h1 th:text="'maxodiff Analysis Results for ' + ${phenopacket}"></h1>-->
 <!--<h1 th:text="${algorithm} + ' Algorithm'" style="color: orangered"></h1>-->
 
+<!--TODO: move results to separate tab-->
 <div th:if="${maxoTables != null and #lists.size(maxoTables) > 0}">
 
     <div th:if="${view == 'clinician'}">

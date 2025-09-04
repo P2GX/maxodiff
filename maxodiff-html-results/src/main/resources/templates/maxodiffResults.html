@@ -363,6 +363,42 @@
             left: var(--mouse-x, 50%);
         }
 
+        .parentMaxoDiseaseCell .tooltip {
+            display: block;
+            position: fixed;  /* Changed from absolute to fixed */
+            left: 50%;
+            bottom: auto;
+            top: auto;
+            transform: translateX(-50%) translateY(-100%);  /* Positions above the trigger */
+            background: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.15);
+
+            /* Auto-sizing */
+            width: auto;
+            min-width: 200px;
+            max-width: 400px;
+
+            font-size: 0.85em;  /* Smaller font */
+            z-index: 9999;  /* High z-index to appear above everything */
+
+            opacity: 0;
+            visibility: hidden;
+            pointer-events: none;
+            transition: opacity 0.2s ease-in-out, visibility 0.2s;
+        }
+
+        /* Position tooltip above the cell on hover */
+        .parentMaxoDiseaseCell:hover .tooltip {
+            opacity: 1;
+            visibility: visible;
+            /* Calculate position dynamically with JavaScript or use this approach: */
+            top: calc(var(--mouse-y, 50%) - 10px);
+            left: var(--mouse-x, 50%);
+        }
+
 
         .tooltip-header {
             background-color: #4a90e2; /* Primary header color */
@@ -594,23 +630,23 @@
 <table class="resultsTable">
     <tbody>
         <tr>
-            <td class="narrow-column">Observed HPO Terms:</td><td class="wide-column">$samplePresentHpoIds</td>
+            <td class="narrow-column">Observed HPO Terms:</td><td class="wide-column" th:text="${maxodiff.samplePresentHpoIds}">Present HPO Ids</td>
         </tr>
         <tr class="spaced-row">
-            <td class="narrow-column">Excluded HPO Terms:</td><td class="wide-column">$sampleExcludedHpoIds</td>
+            <td class="narrow-column">Excluded HPO Terms:</td><td class="wide-column" th:text="${maxodiff.sampleExcludedHpoIds}">Excluded HPO Ids</td>
         </tr>
         <tr class="spaced-row">
-            <td class="narrow-column">Diseases:</td><td class="wide-column">$nDiseases</td>
+            <td class="narrow-column">Diseases:</td><td class="wide-column" th:text="${maxodiff.nDiseases}">n Diseases</td>
         </tr>
         <tr>
-            <td class="narrow-column">Simulations:</td><td class="wide-column">$nRepetitions</td>
+            <td class="narrow-column">Simulations:</td><td class="wide-column" th:text="${maxodiff.nSimulations}">n Simulations</td>
         </tr>
     </tbody>
 </table>
 
 <h1>Prioritized Diagnostic Investigations</h1>
 
-<div>$results</div>
+<div th:text="${maxodiff.resultsString}">results</div>
 
 
 </body>
