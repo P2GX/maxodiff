@@ -79,7 +79,6 @@ public class MaxodiffController {
     public String showResults(@RequestParam(value = "id", required = false) String sampleId,
                               @RequestParam(value = "observedHpoTermIds", required = false) String observedHpoTermIds,
                               @RequestParam(value = "excludedHpoTermIds", required = false) String excludedHpoTermIds,
-                              @RequestParam(value = "refiner", required = false) String refiner,
                               @RequestParam(value = "nDiseases", required = false) Integer nDiseases,
                               @RequestParam(value = "nRepetitions", required = false) Integer nRepetitions,
                               @RequestParam(value = "view", required = false) String view,
@@ -90,8 +89,6 @@ public class MaxodiffController {
         model.addAttribute("excludedHpoTermIds", excludedHpoTermIds);
         model.addAttribute("view", view);
 
-        //TODO: add other possible separators to regex
-        //TODO: only add valid termIDs to list
         List<TermId> observedHpoTermIdsList = (observedHpoTermIds == null | (observedHpoTermIds != null && observedHpoTermIds.isEmpty())) ?
                 List.of() : Arrays.stream(observedHpoTermIds.split("[\\s,;]+"))
                 .map(String::strip)
@@ -127,32 +124,14 @@ public class MaxodiffController {
             differentialDiagnoses = phenomizerDifferentialDxEngine.run(sample);
         }
 
-       model.addAttribute("engine", phenomizerDifferentialDxEngine);
+        model.addAttribute("engine", phenomizerDifferentialDxEngine);
         model.addAttribute("differentialDiagnoses", differentialDiagnoses);
 
+        diffDiagRefiner = new MaxoDiffRefiner(hpoDiseases, hpoToMaxoIdMap, hpoToMaxoTermMap, minHpo, hpo);
 
-        String algorithm = "";
-        if (refiner == null) {
-            refiner = "score";
-            algorithm = "Score";
-        }
-
-        if (refiner.equals("score")) {
-            diffDiagRefiner = new MaxoDiffRefiner(hpoDiseases, hpoToMaxoIdMap, hpoToMaxoTermMap, minHpo, hpo);
-            algorithm = "Score";
-        }
-
-       model.addAttribute("refiner", refiner);
-       model.addAttribute("algorithm", algorithm);
         Integer prevNDiseases = (Integer) model.getAttribute("nDiseases");
         model.addAttribute("nDiseases", nDiseases);
         model.addAttribute("nRepetitions", nRepetitions);
-
-        if (differentialDiagnoses != null && !differentialDiagnoses.isEmpty()) {
-            int nOrigDiffDiagnosesShown = Math.min(differentialDiagnoses.size(), 10);  // TODO: this should not be hard-coded
-           model.addAttribute("nOrigDiffDiagnosesShown", nOrigDiffDiagnosesShown);
-           model.addAttribute("totalNDiseases", differentialDiagnoses.size());
-        }
 
         if (shouldMaxoAnalysisBeRun(sample, differentialDiagnoses, nDiseases, nRepetitions)) {
             RefinementOptions options = RefinementOptions.of(nDiseases, nRepetitions);
@@ -171,41 +150,36 @@ public class MaxodiffController {
             Map<TermId, List<HpoFrequency>> hpoTermCounts = (Map<TermId, List<HpoFrequency>>) model.getAttribute("hpoTermCounts");
 
             if (model.getAttribute("maxoToHpoTermIdMap") == null || !nDiseases.equals(prevNDiseases)) {
-                List<TermId> termIdsToRemove = Stream.of(sample.presentHpoTermIds(), sample.excludedHpoTermIds())
-                        .flatMap(Collection::stream).toList();
+                List<TermId> termIdsToRemove = List.of();
                 Map<TermId, Set<TermId>> maxoToHpoTermIdMap = diffDiagRefiner.getMaxoToHpoTermIdMap(termIdsToRemove, hpoTermCounts);
                 model.addAttribute("maxoToHpoTermIdMap", maxoToHpoTermIdMap);
             }
             Map<TermId, Set<TermId>> maxoToHpoTermIdMap = (Map<TermId, Set<TermId>>) model.getAttribute("maxoToHpoTermIdMap");
 
-            RefinementResults refinementResults = null;
+            RefinementResults refinementResults;
             DifferentialDiagnosisEngine diseaseSubsetEngine;
-            if (diffDiagRefiner instanceof MaxoDiffRefiner) {
-                assert orderedDiagnoses != null;
-                List<DifferentialDiagnosis> initialDiagnoses = orderedDiagnoses.stream().toList()
-                        .subList(0, options.nDiseases());
+            assert orderedDiagnoses != null;
+            List<DifferentialDiagnosis> initialDiagnoses = orderedDiagnoses.stream().toList()
+                    .subList(0, options.nDiseases());
 
-                diseaseSubsetEngine = phenomizerDifferentialDxEngine;
+            diseaseSubsetEngine = phenomizerDifferentialDxEngine;
 
-                assert maxoToHpoTermIdMap != null;
-                String diseaseProbModel = "ranked";
-                rankMaxo = ((MaxoDiffRefiner) diffDiagRefiner).getRankMaxo(initialDiagnoses,
-                        diseaseSubsetEngine,
-                        maxoToHpoTermIdMap,
-                        diseaseProbModel);
-                refinementResults = diffDiagRefiner.run(sample,
-                        orderedDiagnoses,
-                        options,
-                        rankMaxo,
-                        hpoTermCounts,
-                        maxoToHpoTermIdMap);
-            }
+            assert maxoToHpoTermIdMap != null;
+            String diseaseProbModel = "ranked";
+            rankMaxo = ((MaxoDiffRefiner) diffDiagRefiner).getRankMaxo(initialDiagnoses,
+                    diseaseSubsetEngine,
+                    maxoToHpoTermIdMap,
+                    diseaseProbModel);
+            refinementResults = diffDiagRefiner.run(sample,
+                    orderedDiagnoses,
+                    options,
+                    rankMaxo,
+                    hpoTermCounts,
+                    maxoToHpoTermIdMap);
 
 
             List<MaxodiffResult> resultsList = new ArrayList<>(refinementResults.maxodiffResults());
-            if (diffDiagRefiner instanceof MaxoDiffRefiner) {
-                resultsList.sort(Comparator.<MaxodiffResult>comparingDouble(mr -> mr.rankMaxoScore().maxoScore()).reversed());
-            }
+            resultsList.sort(Comparator.<MaxodiffResult>comparingDouble(mr -> mr.rankMaxoScore().maxoScore()).reversed());
 
 
             String htmlString = HtmlResults.writeHTMLResults(sample, nDiseases, nRepetitions, resultsList,
@@ -244,8 +218,6 @@ public class MaxodiffController {
             model.addAttribute("presentHpoTermIds", presentHpoTermIds);
             model.addAttribute("excludedHpoTermIds", excludedHpoTermIds);
 
-            //TODO: add other possible separators to regex
-            //TODO: only add valid termIDs to list
             List<TermId> presentHpoTermIdsList = (presentHpoTermIds == null | (presentHpoTermIds != null && presentHpoTermIds.isEmpty())) ?
                     List.of() : Arrays.stream(presentHpoTermIds.split("[\\s,;]+"))
                     .map(String::strip)
