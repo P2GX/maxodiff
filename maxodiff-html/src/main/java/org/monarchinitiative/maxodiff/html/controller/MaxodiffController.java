@@ -1,9 +1,7 @@
 package org.monarchinitiative.maxodiff.html.controller;
 
 import org.monarchinitiative.maxodiff.core.SimpleTerm;
-import org.monarchinitiative.maxodiff.core.analysis.HTMLFrequencyMap;
 import org.monarchinitiative.maxodiff.core.analysis.HpoFrequency;
-import org.monarchinitiative.maxodiff.core.analysis.RankMaxoScore;
 import org.monarchinitiative.maxodiff.core.analysis.refinement.*;
 import org.monarchinitiative.maxodiff.core.diffdg.DifferentialDiagnosisEngine;
 import org.monarchinitiative.maxodiff.core.model.DifferentialDiagnosis;
@@ -26,9 +24,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
-import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
-import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -81,7 +77,7 @@ public class MaxodiffController {
 
     @RequestMapping("/maxodiff")
     public String showResults(@RequestParam(value = "id", required = false) String sampleId,
-                              @RequestParam(value = "presentHpoTermIds", required = false) String presentHpoTermIds,
+                              @RequestParam(value = "observedHpoTermIds", required = false) String observedHpoTermIds,
                               @RequestParam(value = "excludedHpoTermIds", required = false) String excludedHpoTermIds,
                               @RequestParam(value = "refiner", required = false) String refiner,
                               @RequestParam(value = "nDiseases", required = false) Integer nDiseases,
@@ -89,17 +85,15 @@ public class MaxodiffController {
                               @RequestParam(value = "view", required = false) String view,
                               Model model) throws Exception {
 
-        String engineName = "phenomizer";
-
         model.addAttribute("sampleId", sampleId);
-        model.addAttribute("presentHpoTermIds", presentHpoTermIds);
+        model.addAttribute("presentHpoTermIds", observedHpoTermIds);
         model.addAttribute("excludedHpoTermIds", excludedHpoTermIds);
         model.addAttribute("view", view);
 
         //TODO: add other possible separators to regex
         //TODO: only add valid termIDs to list
-        List<TermId> presentHpoTermIdsList = (presentHpoTermIds == null | (presentHpoTermIds != null && presentHpoTermIds.isEmpty())) ?
-                List.of() : Arrays.stream(presentHpoTermIds.split("[\\s,;]+"))
+        List<TermId> observedHpoTermIdsList = (observedHpoTermIds == null | (observedHpoTermIds != null && observedHpoTermIds.isEmpty())) ?
+                List.of() : Arrays.stream(observedHpoTermIds.split("[\\s,;]+"))
                 .map(String::strip)
                 .map(TermId::of)
                 .toList();
@@ -110,11 +104,11 @@ public class MaxodiffController {
                 .toList();
 
         Sample sample = Sample.of(sampleId,
-                presentHpoTermIdsList,
+                observedHpoTermIdsList,
                 excludedHpoTermIdsList);
         model.addAttribute("sample", sample);
 
-        DifferentialDiagnosisEngine engine = null;
+        DifferentialDiagnosisEngine phenomizerDifferentialDxEngine = null;
         List<DifferentialDiagnosis> differentialDiagnoses = List.of();
 
 
@@ -125,16 +119,15 @@ public class MaxodiffController {
         if (icMicaDict.isEmpty()) {
             throw new Exception("Phenomizer necessary MICA information content is empty. Run Download command to download the necessary term-pair-similarity file.");
         }
-        engine = new PhenomizerDifferentialDiagnosisEngine(hpoDiseases, icMicaDict, scoringMode);
-
+        phenomizerDifferentialDxEngine = new PhenomizerDifferentialDiagnosisEngine(hpoDiseases, icMicaDict, scoringMode);
         model.addAttribute("icMicaDict", icMicaDict);
 
         if (sample != null && sample.id() != null) {
             // Get initial differential diagnoses from running Phenomizer
-            differentialDiagnoses = engine.run(sample);
+            differentialDiagnoses = phenomizerDifferentialDxEngine.run(sample);
         }
 
-        model.addAttribute("engine", engine);
+       model.addAttribute("engine", phenomizerDifferentialDxEngine);
         model.addAttribute("differentialDiagnoses", differentialDiagnoses);
 
 
@@ -149,19 +142,19 @@ public class MaxodiffController {
             algorithm = "Score";
         }
 
-        model.addAttribute("refiner", refiner);
-        model.addAttribute("algorithm", algorithm);
+       model.addAttribute("refiner", refiner);
+       model.addAttribute("algorithm", algorithm);
         Integer prevNDiseases = (Integer) model.getAttribute("nDiseases");
         model.addAttribute("nDiseases", nDiseases);
         model.addAttribute("nRepetitions", nRepetitions);
 
         if (differentialDiagnoses != null && !differentialDiagnoses.isEmpty()) {
             int nOrigDiffDiagnosesShown = Math.min(differentialDiagnoses.size(), 10);  // TODO: this should not be hard-coded
-            model.addAttribute("nOrigDiffDiagnosesShown", nOrigDiffDiagnosesShown);
-            model.addAttribute("totalNDiseases", differentialDiagnoses.size());
+           model.addAttribute("nOrigDiffDiagnosesShown", nOrigDiffDiagnosesShown);
+           model.addAttribute("totalNDiseases", differentialDiagnoses.size());
         }
 
-        if (sample != null && differentialDiagnoses != null && nDiseases != null && nRepetitions != null) {
+        if (shouldMaxoAnalysisBeRun(sample, differentialDiagnoses, nDiseases, nRepetitions)) {
             RefinementOptions options = RefinementOptions.of(nDiseases, nRepetitions);
 
             if (model.getAttribute("orderedDiagnoses") == null || !nDiseases.equals(prevNDiseases)) {
@@ -192,7 +185,7 @@ public class MaxodiffController {
                 List<DifferentialDiagnosis> initialDiagnoses = orderedDiagnoses.stream().toList()
                         .subList(0, options.nDiseases());
 
-                diseaseSubsetEngine = engine;
+                diseaseSubsetEngine = phenomizerDifferentialDxEngine;
 
                 assert maxoToHpoTermIdMap != null;
                 String diseaseProbModel = "ranked";
@@ -219,8 +212,14 @@ public class MaxodiffController {
                     biometadataService, hpoTermCounts, view);
 
             model.addAttribute("htmlTemplateString", htmlString);
+            model.addAttribute("showMDresults", true);
         }
         return "maxodiff";
+    }
+
+    /** This is a flag indicating that the next step is to run the MAxOdiff analysis */
+    private boolean shouldMaxoAnalysisBeRun(Sample sample, List<DifferentialDiagnosis> differentialDiagnoses, Integer nDiseases, Integer nRepetitions) {
+        return sample != null && differentialDiagnoses != null && nDiseases != null && nRepetitions != null;
     }
 
     @GetMapping("progress1")

@@ -229,6 +229,11 @@
 </head>
 <body>
 
+
+<div th:if="${showMDresults}">
+    <div th:utext="${htmlTemplateString}"></div>
+</div>
+<div th:unless="${showMDresults}">
 <div th:replace="~{maxodiffNavBar :: header}">...</div>
 
 <h1>Maxodiff Differential Diagnosis</h1>
@@ -411,9 +416,9 @@
         }
     </script>
 </form>
+</div>
 
-<hr class="line">
-<div th:utext="${htmlTemplateString}"></div>
+
 
 <!--<h1 th:text="'maxodiff Analysis Results for ' + ${phenopacket}"></h1>-->
 <!--<h1 th:text="${algorithm} + ' Algorithm'" style="color: orangered"></h1>-->
