@@ -26,6 +26,7 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.mvc.support.RedirectAttributes;
 
 import java.io.File;
 import java.nio.file.Files;
@@ -121,7 +122,6 @@ public class MaxodiffController {
         model.addAttribute("scoringMode", scoringMode);
 
         Map<TermPair, Double> icMicaDict = icMicaData.icMicaDict();
-        System.out.println(icMicaDict.isEmpty());
         if (icMicaDict.isEmpty()) {
             throw new Exception("Phenomizer necessary MICA information content is empty. Run Download command to download the necessary term-pair-similarity file.");
         }
@@ -186,7 +186,7 @@ public class MaxodiffController {
             Map<TermId, Set<TermId>> maxoToHpoTermIdMap = (Map<TermId, Set<TermId>>) model.getAttribute("maxoToHpoTermIdMap");
 
             RefinementResults refinementResults = null;
-            DifferentialDiagnosisEngine diseaseSubsetEngine = null;
+            DifferentialDiagnosisEngine diseaseSubsetEngine;
             if (diffDiagRefiner instanceof MaxoDiffRefiner) {
                 assert orderedDiagnoses != null;
                 List<DifferentialDiagnosis> initialDiagnoses = orderedDiagnoses.stream().toList()
@@ -214,98 +214,10 @@ public class MaxodiffController {
                 resultsList.sort(Comparator.<MaxodiffResult>comparingDouble(mr -> mr.rankMaxoScore().maxoScore()).reversed());
             }
 
-            model.addAttribute("maxodiffResults", resultsList);
-
-            int zeroIdx = resultsList.stream()
-                    .filter(result -> result.rankMaxoScore().maxoScore().equals(0.))
-                    .findFirst().map(resultsList::indexOf).orElse(0);
-            int nDisplayed = Math.min(resultsList.size(), zeroIdx);
-            model.addAttribute("nDisplayed", nDisplayed);
-
-            StringBuilder samplePresentTermsStringBuilder = new StringBuilder();
-            sample.presentHpoTermIds().forEach(tid -> samplePresentTermsStringBuilder
-                    .append(biometadataService.hpoLabel(tid).orElse("unknown")).append(" (")
-                    .append(tid).append("), "));
-            String samplePresentTermsString = sample.presentHpoTermIds().isEmpty() ? "" :
-                    samplePresentTermsStringBuilder.substring(0, samplePresentTermsStringBuilder.length() - 2);
-            StringBuilder sampleExcludedTermsStringBuilder = new StringBuilder();
-            sample.excludedHpoTermIds().forEach(tid -> sampleExcludedTermsStringBuilder
-                    .append(biometadataService.hpoLabel(tid).orElse("unknown")).append(" (")
-                    .append(tid).append("), "));
-            String sampleExcludedTermsString = sample.excludedHpoTermIds().isEmpty() ? "" :
-                    sampleExcludedTermsStringBuilder.substring(0, sampleExcludedTermsStringBuilder.length() - 2);
-            model.addAttribute("samplePresentTermsString", samplePresentTermsString);
-            model.addAttribute("sampleExcludedTermsString", sampleExcludedTermsString);
-
-            Map<TermId, String> maxoTermsMap = new HashMap<>();
-            Map<TermId, String> hpoTermsMap = new HashMap<>();
-            Map<TermId, String> diseaseTermsMap = new LinkedHashMap<>();
-
-            List<HpoFrequency> hpoFrequencies = HTMLFrequencyMap.getHpoFrequencies(hpoTermCounts);
-            Map<String, Map<Float, List<String>>> frequencyMap = new HashMap<>();
-            Map<TermId, Integer> nRepetitionsMap = new HashMap<>();
-            Map<TermId, Map<TermId, Double>> diseaseMaxoScoresMap = new HashMap<>();
-
-            for (MaxodiffResult maxodiffResult : resultsList.subList(0, nDisplayed)) {
-                if (diffDiagRefiner instanceof MaxoDiffRefiner) {
-                    RankMaxoScore rankMaxoScore = maxodiffResult.rankMaxoScore();
-                    maxoTermsMap.put(rankMaxoScore.maxoId(), biometadataService.maxoLabel(rankMaxoScore.maxoId().toString()).orElse("unknown"));
-                    rankMaxoScore.discoverableObservedHpoTermIds().forEach(id -> hpoTermsMap.put(id, biometadataService.hpoLabel(id).orElse("unknown")));
-                    rankMaxoScore.initialOmimTermIds().forEach(id -> diseaseTermsMap.put(id, biometadataService.diseaseLabel(id).orElse("unknown")));
-                    rankMaxoScore.maxoOmimTermIds().forEach(id -> diseaseTermsMap.put(id, biometadataService.diseaseLabel(id).orElse("unknown")));
-                    var hpoTermIdRepCtsMap = rankMaxoScore.hpoTermIdRepCtsMap();
-                    int nDiscoverableHpoTerms = rankMaxoScore.discoverableObservedHpoTermIds().size();
-                    for (Map.Entry<TermId, Map<TermId, Integer>> diseaseHpoRepCtEntry : hpoTermIdRepCtsMap.entrySet()) {
-                        Map<TermId, Integer> hpoRetCtMap = diseaseHpoRepCtEntry.getValue();
-                        for (Map.Entry<TermId, Integer> hpoRepCtMapEntry : hpoRetCtMap.entrySet()) {
-                            TermId hpoId = hpoRepCtMapEntry.getKey();
-                            Integer repCt = hpoRepCtMapEntry.getValue();
-                            if (repCt != null && !nRepetitionsMap.containsKey(hpoId)) {
-                                nRepetitionsMap.put(hpoId, repCt);
-                                if (nRepetitionsMap.size() == nDiscoverableHpoTerms) {
-                                    break;
-                                }
-                            }
-                        }
-                    }
-                    Map<String, Map<Float, List<String>>> resultFrequencyMap = HTMLFrequencyMap.makeFrequencyDiseaseMap(hpoTermsMap, diseaseTermsMap, hpoTermIdRepCtsMap, hpoFrequencies);
-                    frequencyMap.putAll(resultFrequencyMap);
-                    assert orderedDiagnoses != null;
-                    Map<TermId, Double> maxoScoreMap = new HashMap<>();
-                    for (DifferentialDiagnosis originalDiagnosis : orderedDiagnoses) {
-                        TermId originalDiseaseId = originalDiagnosis.diseaseId();
-                        TermId maxoId = maxodiffResult.rankMaxoScore().maxoId();
-                        maxoScoreMap.put(originalDiseaseId, 0.);
-                        diseaseMaxoScoresMap.put(maxoId, maxoScoreMap);
-                        Optional<TermId> firstMaxoDiseaseIdOpt = maxodiffResult.rankMaxoScore().maxoDiseaseAvgRankChangeMap().keySet().stream().findFirst();
-                        if (firstMaxoDiseaseIdOpt.isPresent()) {
-                            TermId firstMaxoDiseaseId = firstMaxoDiseaseIdOpt.get();
-                            if (firstMaxoDiseaseId == originalDiseaseId) {
-                                Double score = maxodiffResult.rankMaxoScore().maxoScore();
-                                maxoScoreMap = diseaseMaxoScoresMap.get(maxoId);
-                                maxoScoreMap.replace(originalDiseaseId, score);
-                                diseaseMaxoScoresMap.replace(maxoId, maxoScoreMap);
-                            }
-                        }
-                    }
-                }
-
-            }
-            model.addAttribute("omimTerms", diseaseTermsMap);
-            model.addAttribute("nRepetitionsMap", nRepetitionsMap);
-            model.addAttribute("frequencyDiseaseMap", frequencyMap);
-            model.addAttribute("allHpoTermsMap", hpoTermsMap);
-            model.addAttribute("allMaxoTermsMap", maxoTermsMap);
-            model.addAttribute("maxoTables", resultsList.subList(0, nDisplayed));
-            model.addAttribute("diseaseMaxoScoresMap", diseaseMaxoScoresMap);
 
             String htmlString = HtmlResults.writeHTMLResults(sample, nDiseases, nRepetitions, resultsList,
-                    biometadataService, hpoTermCounts);
+                    biometadataService, hpoTermCounts, view);
 
-            File resultsFile = new File("maxodiff-html-results/src/main/resources/templates/maxodiffResults.html");
-            String htmlTemplatePath = resultsFile.getAbsolutePath();
-
-            model.addAttribute("htmlTemplatePath", htmlTemplatePath);
             model.addAttribute("htmlTemplateString", htmlString);
         }
         return "maxodiff";
