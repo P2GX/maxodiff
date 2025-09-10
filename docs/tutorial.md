@@ -104,3 +104,17 @@ We need to update the CLI to use Phenomizer. Now it is crashing and complaining 
 
 !!! danger "🚨 TODO"
     <span class="todo-pulse">java.lang.ArrayIndexOutOfBoundsException: Index 1 out of bounds for length 1</span>
+
+
+# Server
+We can start a local server as follows. First download the files as mentioned above.
+Then enter
+
+```bash
+java -jar maxodiff-html/target/maxodiff-html.jar
+```
+
+A server will start at ``http://localhost:8080/maxodiff``
+
+We see a data entry page with Clinician and Researcher view (Note: We will combine these later on so that the results page has both).
+The styling is still preliminary, but it works.
