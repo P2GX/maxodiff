@@ -7,7 +7,7 @@
     <parent>
         <groupId>org.monarchinitiative.maxodiff</groupId>
         <artifactId>maxodiff</artifactId>
-        <version>0.2.0</version>
+        <version>0.3.1</version>
     </parent>
 
     <artifactId>maxodiff-cli</artifactId>
@@ -25,12 +25,12 @@
         </dependency>
         <dependency>
             <groupId>org.monarchinitiative.maxodiff</groupId>
-            <artifactId>maxodiff-lirical</artifactId>
+            <artifactId>maxodiff-phenomizer</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
             <groupId>org.monarchinitiative.maxodiff</groupId>
-            <artifactId>maxodiff-phenomizer</artifactId>
+            <artifactId>maxodiff-html-results</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
@@ -66,7 +66,7 @@
         <dependency>
             <groupId>org.monarchinitiative.maxodiff</groupId>
             <artifactId>maxodiff-html-results</artifactId>
-            <version>0.2.0</version>
+            <version>0.3.1</version>
             <scope>compile</scope>
         </dependency>
     </dependencies>

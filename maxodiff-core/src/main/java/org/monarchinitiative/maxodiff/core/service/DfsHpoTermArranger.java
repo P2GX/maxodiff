@@ -1,7 +1,5 @@
 package org.monarchinitiative.maxodiff.core.service;
 
-import org.monarchinitiative.phenol.ontology.algo.OntologyAlgorithm;
-import org.monarchinitiative.phenol.ontology.data.Dbxref;
 import org.monarchinitiative.phenol.ontology.data.Ontology;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 

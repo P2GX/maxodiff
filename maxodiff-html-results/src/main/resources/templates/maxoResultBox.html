@@ -1,0 +1,93 @@
+
+
+<div class="container">
+    <div class="section-box">
+        <h2 th:text="|${maxoData.index()}) ${maxoData.maxoId()}: ${maxoData.maxoLabel()}|">Header</h2>
+    <div class="stats-row">
+        <div class="stat-item">
+            <div class="stat-label">ΔScore</div>
+            <div class="stat-value stat-delta" th:text="${maxoData.deltaScore()}">8.49</div>
+        </div>
+
+        <div class="stat-item">
+            <div class="stat-label">N Diseases</div>
+            <div class="stat-value stat-diseases" th:utext="${maxoData.nDiseases()}">20</div>
+        </div>
+
+        <div class="stat-item">
+            <div class="stat-label">N Observed HPO Terms</div>
+            <div class="stat-value stat-terms" th:utext="${maxoData.nObservedHpoTerms()}">2</div>
+        </div>
+    </div>
+
+    <table class="countsTable">
+        <thead>
+        <tr>
+            <th></th>
+            <th class="deltaR-header">
+                <span class="deltaR">&#916;&thinsp;R</span>
+            </th>
+            <th></th>
+            <!-- Loop over HPO terms-->
+            <th th:each="entry : ${maxoData.hpoHeaders}" class="vertical-header">
+                <a th:href="|https://hpo.jax.org/browse/term/${entry.termId}|">
+                    <div th:text="${entry.termLabel}"></div>
+                </a>
+            </th>
+        </tr>
+        </thead>
+        <!-- the following is the N Repetitions row -->
+        <tr>
+            <!-- Empty cells (needed to align with correct column) -->
+            <td>Observed in</td><td></td><td></td>
+            <!-- Loop over repetition cells -->
+            <td th:each="cell : ${maxoData.repetitionCells}"
+                class="repetitionCell"
+                >
+                <div class="repetitionColorBox" th:style="'background:' + ${cell.background}">
+                    <span th:text="${cell.count}">0</span>
+                </div>
+                <div class="tooltip">
+                    <div class="tooltip-header" th:text="${cell.toolTipHeader}">Header</div>
+                    <div class="tooltip-subheader">Annotation frequency</div>
+                    <ul  class="tooltip-list">
+                        <li th:each="item: ${cell.toolTipItems}">
+                            <span th:text="${item.hpo}">HPO Term</span>:
+                            <strong th:text="${item.percentage}">0%</strong>
+                        </li>
+                    </ul>
+                </div>
+            </td>
+        </tr>
+        <!-- Now add one row for each of the diseases -->
+        <tr th:each="row : ${maxoData.resultRows}">
+            <!-- 1st column: OMIM label with link -->
+            <td>
+                <a th:href="|https://www.omim.org/entry/${row.omimId}|"
+                   th:text="${row.omimLabel}"></a>
+            </td>
+            <!-- 2nd column: rank change -->
+            <td class="parentCell">
+                <div class="hpoCell"
+                     th:text="${row.rankChange}"
+                     th:style="|background: ${row.style}|">
+                </div>
+            </td>
+            <!-- 3rd column: empty (this is a space hider. TODO-lets refactor and do this with CSS -->
+            <td></td>
+
+            <!-- Remaining columns: loop over HPO table cells -->
+            <th:block th:each="cell : ${row.getCells}">
+                <td class="parentCell">
+                    <div class="hpoCell"
+                         th:classappend="${cell.empty} ? ' emptyCell'"
+                         th:style="${cell.empty} ? '' : 'background:' + ${cell.style}">
+                        <span th:text="${cell.empty} ? '∅' : ${cell.count}"></span>
+                    </div>
+                </td>
+            </th:block>
+        </tr>
+    </table>
+    </div>
+</div>
+

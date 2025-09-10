@@ -49,7 +49,7 @@ public class PrecomputeResnikMapCommand implements Callable<Integer> {
   /** Default path points to the data download directory */
   @CommandLine.Option(names = "--hpoa",
     description = "path to phenotype.hpoa file (default: ${DEFAULT-VALUE})")
-  public Path hpoaPath = Paths.get("data", "hp.json");
+  public Path hpoaPath = Paths.get("data", "phenotype.hpoa");
 
   @CommandLine.Option(names = {"--assume-annotated"},
     description = {"Assume that each term annotates at least one disease.", "This prevents IC=Infinity for the absent terms"})
