@@ -54,10 +54,12 @@ public class CandidateDiseaseScores {
                 diseaseRankProbabilityMap.replace(diseaseIdKey, probabilityValue / diseaseRankProbabilityValueSum));
         AscertainablePhenotypes ascertainablePhenotypes = new AscertainablePhenotypes(hpoDiseases);
         TermId selectedDiseaseId = getDiseaseId(diseaseRankProbabilityMap);
+        //TODO: Get ascertainable phenotypes from e.g. top 500 diseases, not just one of the top n
         Set<TermId> ascertainablePhenotypeIds = ascertainablePhenotypes.getAscertainablePhenotypeIds(ppkt, selectedDiseaseId);
         Set<TermId> maxoAddedObservedHpoIds = new HashSet<>();
         Set<TermId> maxoAddedObservedDescendantHpoIds = new HashSet<>();
         Set<TermId> maxoAddedExcludedHpoIds = new HashSet<>();
+        //TODO: Add ancestor HPO term set
         for (TermId hpoId : ascertainablePhenotypeIds) {
             if (maxoBenefitHpoIds.contains(hpoId)) {
                 if (!excluded.contains(hpoId)) {

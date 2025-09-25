@@ -56,7 +56,7 @@ public class DifferentialDiagnosisCommand extends BaseCommand {
     protected Path maxoDataPath = Path.of("data");
 
     @CommandLine.Option(names = {"-p", "--phenopacket"},
-            required = true,
+//            required = true,
             description = "Path to phenopacket JSON file.")
     protected Path phenopacketPath;
 

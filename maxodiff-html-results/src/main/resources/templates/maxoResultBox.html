@@ -20,6 +20,70 @@
         </div>
     </div>
 
+    <div th:id="${'sankey-container-' + maxoData.index()}" class="sankey-plot"></div>
+    <script src="https://cdn.plot.ly/plotly-3.1.0.min.js"></script>
+    <script th:inline="javascript">
+        var diseaseLabels = []
+        var termLabels = []
+        var sourceColors = []
+        var linkColors = []
+        var sources = [];
+        var targets = [];
+        var values  = [];
+
+        /*<![CDATA[*/
+        var containerId = 'sankey-container-' + /*[[${maxoData.index}]]*/;
+        var container = document.getElementById(containerId);
+        console.log(containerId)
+        console.log(container)
+
+        var hpoHeaders = /*[[${maxoData.hpoHeaders}]]*/ [];
+        hpoHeaders.forEach(function(hpo) {
+            termLabels.push(hpo.termLabel)
+        });
+        var resultRows = /*[[${maxoData.resultRows}]]*/ [];
+        console.log(resultRows)
+        resultRows.forEach(function(row) {
+            diseaseLabels.push(row.omimLabel)
+            sourceColors.push(row.style)
+            row.cells.forEach(function(cell) {
+                if (!cell.empty) {
+                    sources.push(resultRows.indexOf(row));
+                    targets.push(resultRows.length + row.cells.indexOf(cell));
+                    linkColors.push(cell.style)
+                    values.push(cell.count);
+                } else {
+                    values.push(0.1);
+                }
+            });
+        });
+        /*]]>*/
+
+        var labels = diseaseLabels.concat(termLabels);
+
+        var data = {
+          type: "sankey",
+          orientation: "h",
+          node: {
+            color: sourceColors,
+            pad: 15,
+            thickness: 20,
+            line: { color: "black", width: 0.5 },
+            label: labels
+          },
+          link: {
+            color: linkColors,
+            source: sources,
+            target: targets,
+            value: values
+          }
+        };
+        Plotly.newPlot(container, [data], {
+          margin:{t:10,l:10,r:10,b:10},
+          font: { size: 12 }
+        });
+    </script>
+
     <table class="countsTable">
         <thead>
         <tr>

@@ -167,12 +167,12 @@ public class BenchmarkCommand extends DifferentialDiagnosisCommand {
                 Set<TermId> allMaxoAscertainablePhenotypes = new HashSet<>();
                 long allMaxoAscertainablePhenoypesCalcTime = 0;
                 //7036 phenotypes discoverable by 257 MAxO terms
-                double nAllMaxoTerms = 257;
-                int nAllMaxoDiscoverablePhenotypes = 7036;//6170;//5302;
-                double meanNDiscoverablePhenotypesAllMaxoTerms =  nAllMaxoTerms / nAllMaxoDiscoverablePhenotypes;
+                double nAllMaxoTerms = 313;//257;
+                int nAllMaxoDiscoverablePhenotypes = 7192;//7036;//6170;//5302;
+                double meanNDiscoverablePhenotypesAllMaxoTerms = nAllMaxoTerms / nAllMaxoDiscoverablePhenotypes;
                 int p = 1;
-                int nPhenopackets = phenopacketPaths.size();
-                for (Path pPath0 : phenopacketPaths) {
+                int nPhenopackets = 600;//phenopacketPaths.size();
+                for (Path pPath0 : phenopacketPaths.subList(0,nPhenopackets)) {
                     String phenopacketName0 = pPath0.toFile().getName();
                     String outputFilename0 = String.join("_", phenopacketName0, ddEngine,
                                                 String.join("", "n", nDiseasesList.getLast().toString()),
@@ -191,7 +191,7 @@ public class BenchmarkCommand extends DifferentialDiagnosisCommand {
                                 phenopacketData.observedHpoTermIds().toList(),
                                 phenopacketData.excludedHpoTermIds().toList());
 
-                        LOGGER.info(String.valueOf(phenopacketPath));
+                        LOGGER.info(String.valueOf(pPath0));
                         LOGGER.info("nDiseases = {}", nDiseasesList);
                         LOGGER.info("refiners = {}", refinersList);
                         String phenopacketName = pPath0.toFile().getName();
