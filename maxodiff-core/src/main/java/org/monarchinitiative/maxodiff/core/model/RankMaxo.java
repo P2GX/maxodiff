@@ -50,7 +50,7 @@ public class RankMaxo {
     public List<RankMaxoScore> rankMaxoTerms(Sample ppkt, int nRepetitions, Set<TermId> diseaseIds) throws Exception {
 
         Set<TermId> sampleHpoIds = new HashSet<>();
-        sampleHpoIds.addAll(ppkt.presentHpoTermIds());
+        sampleHpoIds.addAll(ppkt.observedHpoTermIds());
         sampleHpoIds.addAll(ppkt.excludedHpoTermIds());
 
         int numThreads = Runtime.getRuntime().availableProcessors() - 1;

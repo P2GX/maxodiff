@@ -11,15 +11,15 @@ public interface Sample {
 
     static Sample of(
             String id,
-            Collection<TermId> presentHpoTermIds,
+            Collection<TermId> observedHpoTermIds,
             Collection<TermId> excludedHpoTermIds
     ) {
-        return new SimpleSample(id, presentHpoTermIds, excludedHpoTermIds);
+        return new SimpleSample(id, observedHpoTermIds, excludedHpoTermIds);
     }
 
     String id();
 
-    Collection<TermId> presentHpoTermIds();
+    Collection<TermId> observedHpoTermIds();
 
     Collection<TermId> excludedHpoTermIds();
 

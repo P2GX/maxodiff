@@ -198,7 +198,7 @@ public class BenchmarkCommand extends DifferentialDiagnosisCommand {
                         List<TermId> termIdsToRemove = new ArrayList<>();
                         List<TermId> includedIds = new ArrayList<>(phenopacketData.observedHpoTermIds().toList());
                         List<TermId> excludedIds = new ArrayList<>(phenopacketData.excludedHpoTermIds().toList());
-                        List<TermId> allSampleHpoTerms = Stream.of(sample.presentHpoTermIds(), sample.excludedHpoTermIds())
+                        List<TermId> allSampleHpoTerms = Stream.of(sample.observedHpoTermIds(), sample.excludedHpoTermIds())
                                 .flatMap(Collection::stream).toList();
                         if (removeIdsFile != null) {
                             termIdsToRemove = getTermIdsToRemove(phenopacketName, removeIdsFile);
@@ -207,7 +207,7 @@ public class BenchmarkCommand extends DifferentialDiagnosisCommand {
                             sample = Sample.of(phenopacketData.sampleId(), includedIds, excludedIds);
                         }
                         if (removeSampleTerms) {
-                            termIdsToRemove = Stream.of(sample.presentHpoTermIds(), sample.excludedHpoTermIds())
+                            termIdsToRemove = Stream.of(sample.observedHpoTermIds(), sample.excludedHpoTermIds())
                                     .flatMap(Collection::stream).toList();
                         }
                         LOGGER.info("{} removed Ids = {}", phenopacketName, termIdsToRemove);

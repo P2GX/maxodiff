@@ -59,11 +59,11 @@ public class PhenomizerDifferentialDiagnosisEngine implements DifferentialDiagno
 
             double similarity = switch (scoringMode) {
                 case ONE_SIDED -> oneSided(
-                        sample.presentHpoTermIds(),
+                        sample.observedHpoTermIds(),
                         disease
                 );
                 case TWO_SIDED -> twoSided(
-                        sample.presentHpoTermIds(),
+                        sample.observedHpoTermIds(),
                         disease
                 );
             };

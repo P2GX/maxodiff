@@ -6,7 +6,7 @@ import java.util.Collection;
 
 record SimpleSample(
         String id,
-        Collection<TermId> presentHpoTermIds,
+        Collection<TermId> observedHpoTermIds,
         Collection<TermId> excludedHpoTermIds
 ) implements Sample {
 }

@@ -37,7 +37,7 @@ public class AscertainablePhenotypes {
      */
     //TODO: use Sample instead of SamplePhenopacket and pass List of diseaseIds separately
     public Set<TermId> getAscertainablePhenotypeIds(Sample myPpkt, TermId targetDiseaseId) throws PhenolRuntimeException {
-        Set<TermId> existingTerms = new HashSet<>(myPpkt.presentHpoTermIds());
+        Set<TermId> existingTerms = new HashSet<>(myPpkt.observedHpoTermIds());
         existingTerms.addAll(myPpkt.excludedHpoTermIds());
         Optional<HpoDisease> opt = hpoDiseases.diseaseById(targetDiseaseId);
         if (opt.isEmpty()) {

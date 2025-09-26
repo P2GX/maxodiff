@@ -85,7 +85,7 @@ public class MaxodiffController {
                               Model model) throws Exception {
 
         model.addAttribute("sampleId", sampleId);
-        model.addAttribute("presentHpoTermIds", observedHpoTermIds);
+        model.addAttribute("observedHpoTermIds", observedHpoTermIds);
         model.addAttribute("excludedHpoTermIds", excludedHpoTermIds);
         model.addAttribute("view", view);
 
@@ -210,16 +210,16 @@ public class MaxodiffController {
 
 //    @GetMapping("/updateSample")
     public Sample updateSample(@RequestParam(value = "id", required = false) String sampleId,
-                             @RequestParam(value = "presentHpoTermIds", required = false) String presentHpoTermIds,
+                             @RequestParam(value = "observedHpoTermIds", required = false) String observedHpoTermIds,
                              @RequestParam(value = "excludedHpoTermIds", required = false) String excludedHpoTermIds,
                              Model model) {
 
             model.addAttribute("sampleId", sampleId);
-            model.addAttribute("presentHpoTermIds", presentHpoTermIds);
+            model.addAttribute("observedHpoTermIds", observedHpoTermIds);
             model.addAttribute("excludedHpoTermIds", excludedHpoTermIds);
 
-            List<TermId> presentHpoTermIdsList = (presentHpoTermIds == null | (presentHpoTermIds != null && presentHpoTermIds.isEmpty())) ?
-                    List.of() : Arrays.stream(presentHpoTermIds.split("[\\s,;]+"))
+            List<TermId> observedHpoTermIdsList = (observedHpoTermIds == null | (observedHpoTermIds != null && observedHpoTermIds.isEmpty())) ?
+                    List.of() : Arrays.stream(observedHpoTermIds.split("[\\s,;]+"))
                     .map(String::strip)
                     .map(TermId::of)
                     .toList();
@@ -230,7 +230,7 @@ public class MaxodiffController {
                     .toList();
 
             Sample sample = Sample.of(sampleId,
-                    presentHpoTermIdsList,
+                    observedHpoTermIdsList,
                     excludedHpoTermIdsList);
             model.addAttribute("sample", sample);
 
@@ -253,12 +253,12 @@ public class MaxodiffController {
             file.transferTo(phenopacketPath.toFile());
 
             String sampleId = "";
-            String presentHpoTermIds = "";
+            String observedHpoTermIds = "";
             String excludedHpoTermIds = "";
             if (phenopacketPath != null) {
                 PhenopacketData phenopacketData = PhenopacketData.readPhenopacketData(phenopacketPath);
                 sampleId = phenopacketData.sampleId();
-                presentHpoTermIds = phenopacketData.observedHpoTermIds().map(Object::toString).collect(Collectors.joining(","));
+                observedHpoTermIds = phenopacketData.observedHpoTermIds().map(Object::toString).collect(Collectors.joining(","));
                 excludedHpoTermIds = phenopacketData.excludedHpoTermIds().map(Object::toString).collect(Collectors.joining(","));
             }
 
@@ -266,24 +266,24 @@ public class MaxodiffController {
 
             result.put("phenopacketName", phenopacketName);
             result.put("id", sampleId);
-            result.put("presentHpoTermIds", presentHpoTermIds);
+            result.put("observedHpoTermIds", observedHpoTermIds);
             result.put("excludedHpoTermIds", excludedHpoTermIds);
 
-            Sample sample = updateSample(sampleId, presentHpoTermIds, excludedHpoTermIds, model);
+            Sample sample = updateSample(sampleId, observedHpoTermIds, excludedHpoTermIds, model);
 
             model.addAttribute("sample", sample);
 
-            Map<TermId, String> samplePresentTermsMap = new HashMap<>();
-            sample.presentHpoTermIds().forEach(tid ->
-                    samplePresentTermsMap.put(tid, biometadataService.hpoLabel(tid).orElse("unknown")));
+            Map<TermId, String> sampleObservedTermsMap = new HashMap<>();
+            sample.observedHpoTermIds().forEach(tid ->
+                    sampleObservedTermsMap.put(tid, biometadataService.hpoLabel(tid).orElse("unknown")));
             Map<TermId, String> sampleExcludedTermsMap = new HashMap<>();
             sample.excludedHpoTermIds().forEach(tid ->
                     sampleExcludedTermsMap.put(tid, biometadataService.hpoLabel(tid).orElse("unknown")));
 
-            result.put("presentHpoTerms", samplePresentTermsMap);
+            result.put("observedHpoTerms", sampleObservedTermsMap);
             result.put("excludedHpoTerms", sampleExcludedTermsMap);
 
-            model.addAttribute("presentHpoTerms", samplePresentTermsMap);
+            model.addAttribute("observedHpoTerms", sampleObservedTermsMap);
             model.addAttribute("excludedHpoTerms", sampleExcludedTermsMap);
 
             return ResponseEntity.ok(result);
