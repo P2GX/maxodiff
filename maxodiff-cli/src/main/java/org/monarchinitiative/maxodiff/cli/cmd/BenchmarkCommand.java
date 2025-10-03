@@ -282,6 +282,9 @@ public class BenchmarkCommand extends DifferentialDiagnosisCommand {
                                     LOGGER.info("{}: {}", e.getKey(), e.getValue());
                                     LOGGER.info("n Diseases = {}, n Repetitions = {}", nDiseases, nRepetitions);
                                     List<DifferentialDiagnosis> orderedDiagnoses = e.getValue().getOrderedDiagnoses(differentialDiagnoses, options);
+                                    List<DifferentialDiagnosis> allOrderedDiagnoses = differentialDiagnoses.stream()
+                                            .sorted(Comparator.comparingDouble(DifferentialDiagnosis::score).reversed())
+                                            .toList();
                                     List<HpoDisease> diseases = e.getValue().getDiseases(orderedDiagnoses);
                                     Map<TermId, List<HpoFrequency>> hpoTermCounts = e.getValue().getHpoTermCounts(diseases);
                                     Map<TermId, Set<TermId>> maxoToHpoTermIdMap = e.getValue().getMaxoToHpoTermIdMap(termIdsToRemove, hpoTermCounts);
@@ -299,7 +302,7 @@ public class BenchmarkCommand extends DifferentialDiagnosisCommand {
 
 
                                         RankMaxo rankMaxo = new RankMaxo(hpoToMaxoTermMap, maxoToHpoTermIdMap, maxoHpoTermProbabilities, diseaseSubsetEngine,
-                                                minimalOntology, ontology);
+                                                minimalOntology, ontology, allOrderedDiagnoses);
 
                                         refinementResults = e.getValue().run(sample,
                                                 orderedDiagnoses,

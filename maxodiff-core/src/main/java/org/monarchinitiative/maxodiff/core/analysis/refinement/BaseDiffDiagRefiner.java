@@ -76,7 +76,8 @@ public class BaseDiffDiagRefiner implements DiffDiagRefiner {
         return new RefinementResultsImpl(maxodiffResultsList);
     }
 
-    public RankMaxo getRankMaxo(List<DifferentialDiagnosis> initialDiagnoses,
+    public RankMaxo getRankMaxo(List<DifferentialDiagnosis> allInitialDiagnoses,
+                                List<DifferentialDiagnosis> initialDiagnoses,
                                  DifferentialDiagnosisEngine engine,
                                  Map<TermId, Set<TermId>> maxoToHpoTermIdMap,
                                  String diseaseProbModel) {
@@ -95,7 +96,7 @@ public class BaseDiffDiagRefiner implements DiffDiagRefiner {
 
 
         RankMaxo rankMaxo = new RankMaxo(hpoToMaxoTermMap, maxoToHpoTermIdMap, maxoHpoTermProbabilities, engine,
-                minHpo, hpo);
+                minHpo, hpo, allInitialDiagnoses);
 
         return rankMaxo;
     }

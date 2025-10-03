@@ -35,7 +35,7 @@ public class AscertainablePhenotypes {
      * @return Ascertainable term Ids: HPO terms that are annotated to the disease, but are not present in the phenopacket.
      * @throws PhenolRuntimeException if that targetDiseaseId is not found.
      */
-    //TODO: use Sample instead of SamplePhenopacket and pass List of diseaseIds separately
+
     public Set<TermId> getAscertainablePhenotypeIds(Sample myPpkt, TermId targetDiseaseId) throws PhenolRuntimeException {
         Set<TermId> existingTerms = new HashSet<>(myPpkt.observedHpoTermIds());
         existingTerms.addAll(myPpkt.excludedHpoTermIds());

@@ -31,6 +31,9 @@ public class RepetitionRow {
 
     private static List<RepetitionCellTooltipItem> getTooltipItems(Map<Float,List<String>> freqMap) {
         List<RepetitionCellTooltipItem> items = new ArrayList<>();
+        if (freqMap == null) {
+            freqMap = new HashMap<>();
+        }
         for (var entry : freqMap.entrySet()) {
             Float frequency = entry.getKey();
             String percentage = String.format("%.1f%%", frequency * 100);
@@ -50,21 +53,17 @@ public class RepetitionRow {
             List<TermId> orderedDiscoverableHpoList,
             MaxodiffResult result) {
         List<RepetitionCell> cells = new ArrayList<>();
-        var hpoTermIdRepCtsMap = result.rankMaxoScore().hpoTermIdRepCtsMap();
+        var chosenHpoTermCtsMap = result.rankMaxoScore().chosenHpoTermCtsMap();
         int nDiscoverableHpoTerms = orderedDiscoverableHpoList.size();
-        for (Map.Entry<TermId, Map<TermId, Integer>> diseaseHpoRepCtEntry : hpoTermIdRepCtsMap.entrySet()) {
-
-            Map<TermId, Integer> hpoRetCtMap = diseaseHpoRepCtEntry.getValue();
-            for (Map.Entry<TermId, Integer> hpoRepCtMapEntry : hpoRetCtMap.entrySet()) {
-                TermId hpoId = hpoRepCtMapEntry.getKey();
-                Integer repCt = hpoRepCtMapEntry.getValue();
+        for (Map.Entry<TermId, Integer> entry : chosenHpoTermCtsMap.entrySet()) {
+                TermId hpoId = entry.getKey();
+                Integer repCt = entry.getValue();
                 if (repCt != null && !nRepetitionsMap.containsKey(hpoId)) {
                     nRepetitionsMap.put(hpoId, repCt);
                     if (nRepetitionsMap.size() == nDiscoverableHpoTerms) {
                         break;
                     }
                 }
-            }
         }
 
         for (TermId hpoId : orderedDiscoverableHpoList) {

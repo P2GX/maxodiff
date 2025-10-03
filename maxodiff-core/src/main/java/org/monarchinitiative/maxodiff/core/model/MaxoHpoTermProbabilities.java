@@ -93,4 +93,8 @@ public class MaxoHpoTermProbabilities {
     public List<DifferentialDiagnosis> getInitialDiagnoses() { return initialDiagnoses; }
 
     public HpoDiseases getHpoDiseases() { return hpoDiseases; }
+
+    public Map<TermId, Set<TermId>> getMaxoToHpoTermIdMap() {
+        return maxoToHpoTermIdMap;
+    }
 }

@@ -27,18 +27,6 @@ public class MaxoResultRow {
                                                            List<TermId> orderedDiscoverableHpoList) {
         List<MaxoResultRow> rows = new ArrayList<>();
         var hpoTermIdRepCtsMap = result.rankMaxoScore().hpoTermIdRepCtsMap();
-        Map<TermId, Integer> nRepetitionsMap = new HashMap<>();
-        for (Map.Entry<TermId, Map<TermId, Integer>> diseaseHpoRepCtEntry : hpoTermIdRepCtsMap.entrySet()) {
-            Map<TermId, Integer> hpoRetCtMap = diseaseHpoRepCtEntry.getValue();
-            for (Map.Entry<TermId, Integer> hpoRepCtMapEntry : hpoRetCtMap.entrySet()) {
-                TermId hpoId = hpoRepCtMapEntry.getKey();
-                Integer repCt = hpoRepCtMapEntry.getValue();
-                if (repCt != null && !nRepetitionsMap.containsKey(hpoId)) {
-                    nRepetitionsMap.put(hpoId, repCt);
-                    break;
-                }
-            }
-        }
         Map<TermId, Integer> avgRankChangeMap = result.rankMaxoScore().maxoDiseaseAvgRankChangeMap();
         if (avgRankChangeMap == null) {
             System.err.println("avgRankChangeMap==null");
@@ -57,8 +45,8 @@ public class MaxoResultRow {
                 }
                 /// TODO WHAT?
                 int ct1 = Optional.ofNullable(ctMap.get(hpoId)).orElse(0);
-                double opacity1 =
-                        (result.rankMaxoScore().discoverableObservedDescendantHpoTermIds().contains(hpoId) ? 0.5 : 1);
+                double opacity1 = 1;
+//                        (result.rankMaxoScore().discoverableObservedDescendantHpoTermIds().contains(hpoId) ? 0.5 : 1);
                 cells.add(new HpoTableCell(ct1, opacity1));
             }
             rows.add(new MaxoResultRow(omimId.getValue(), omimLabel, rankChange, nDiseases, cells));

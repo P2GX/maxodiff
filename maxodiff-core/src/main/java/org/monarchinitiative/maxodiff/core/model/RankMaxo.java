@@ -25,19 +25,22 @@ public class RankMaxo {
     RankMaxoProgress rankMaxoProgress;
     private final MinimalOntology minimalOntology;
     private final Ontology ontology;
+    private final List<DifferentialDiagnosis> allInitialDiagnoses;
 
     public RankMaxo(Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxoTermMap,
                     Map<TermId, Set<TermId>> maxoToHpoTermIdMap,
                     MaxoHpoTermProbabilities maxoHpoTermProbabilities,
                     DifferentialDiagnosisEngine engine,
                     MinimalOntology minHpo,
-                    Ontology hpo) {
+                    Ontology hpo,
+                    List<DifferentialDiagnosis> allInitialDiagnoses) {
         this.hpoToMaxoTermMap = hpoToMaxoTermMap;
         this.maxoToHpoTermIdMap = maxoToHpoTermIdMap;
         this.maxoHpoTermProbabilities = maxoHpoTermProbabilities;
         this.engine = engine;
         this.minimalOntology = minHpo;
         this.ontology = hpo;
+        this.allInitialDiagnoses = allInitialDiagnoses;
     }
 
     /**
@@ -53,6 +56,9 @@ public class RankMaxo {
         sampleHpoIds.addAll(ppkt.observedHpoTermIds());
         sampleHpoIds.addAll(ppkt.excludedHpoTermIds());
 
+        AscertainablePhenotypes ascertainablePhenotypes = new AscertainablePhenotypes(maxoHpoTermProbabilities.getHpoDiseases());
+        Map<TermId, Set<TermId>> fullMaxoToHpoTermIdMap = maxoHpoTermProbabilities.getMaxoToHpoTermIdMap();
+
         int numThreads = Runtime.getRuntime().availableProcessors() - 1;
         ExecutorService executor = Executors.newFixedThreadPool(numThreads);
         AtomicInteger completedTasks = new AtomicInteger(0);
@@ -60,11 +66,14 @@ public class RankMaxo {
         int maxoIdx = 0;
         ProgessBar pb = new ProgessBar(maxoIdx, maxoToHpoTermIdMap.size());
         for (TermId maxoId : maxoToHpoTermIdMap.keySet()) {
+            MaxoHpoDiseaseRank maxoHpoDiseaseRank = new MaxoHpoDiseaseRank(allInitialDiagnoses, ascertainablePhenotypes, fullMaxoToHpoTermIdMap, maxoId);
+            maxoHpoDiseaseRank.makeAscertainedHpoCountListAndRankMap(ppkt, 500);
+            maxoHpoDiseaseRank.makeHpoToProbabilityMap(ppkt);
             rankMaxoProgress = new RankMaxoProgress(maxoToHpoTermIdMap.size());
             int finalMaxoIdx = maxoIdx;
             tasks.add(() -> {
-                EvaluateMaxoTerm evaluateMaxoTerm = new EvaluateMaxoTerm(hpoToMaxoTermMap, maxoToHpoTermIdMap, maxoHpoTermProbabilities,
-                        engine,  minimalOntology, ontology,  sampleHpoIds,  ppkt, nRepetitions, diseaseIds, maxoId);
+                NewEvaluateMaxoTerm evaluateMaxoTerm = new NewEvaluateMaxoTerm(maxoHpoDiseaseRank, nRepetitions, ppkt,
+                                                                            engine, maxoHpoTermProbabilities, diseaseIds);
                 double done = completedTasks.incrementAndGet();
                 rankMaxoProgress.updateProgress(maxoId, done);
                 if (JpsChecker.isMainClassRunning("org.monarchinitiative.maxodiff.cli.Main")) {

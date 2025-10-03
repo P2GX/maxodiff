@@ -161,12 +161,18 @@ public class MaxodiffController {
             assert orderedDiagnoses != null;
             List<DifferentialDiagnosis> initialDiagnoses = orderedDiagnoses.stream().toList()
                     .subList(0, options.nDiseases());
+            int totalNDiseases = differentialDiagnoses.size();
+            RefinementOptions allDiseasesOptions = RefinementOptions.of(totalNDiseases, nRepetitions);
+            List<DifferentialDiagnosis> allInitialDiagnoses = diffDiagRefiner.getOrderedDiagnoses(differentialDiagnoses, allDiseasesOptions);
+            List<HpoDisease> allDiseases = diffDiagRefiner.getDiseases(allInitialDiagnoses);
+            Map<TermId, List<HpoFrequency>> allHpoTermCounts = diffDiagRefiner.getHpoTermCounts(allDiseases);
 
             diseaseSubsetEngine = phenomizerDifferentialDxEngine;
 
             assert maxoToHpoTermIdMap != null;
             String diseaseProbModel = "ranked";
-            rankMaxo = ((MaxoDiffRefiner) diffDiagRefiner).getRankMaxo(initialDiagnoses,
+            rankMaxo = ((MaxoDiffRefiner) diffDiagRefiner).getRankMaxo(allInitialDiagnoses,
+                    initialDiagnoses,
                     diseaseSubsetEngine,
                     maxoToHpoTermIdMap,
                     diseaseProbModel);
@@ -174,7 +180,7 @@ public class MaxodiffController {
                     orderedDiagnoses,
                     options,
                     rankMaxo,
-                    hpoTermCounts,
+                    allHpoTermCounts,
                     maxoToHpoTermIdMap);
 
 

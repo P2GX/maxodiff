@@ -172,7 +172,7 @@ public class EvaluateMaxoTerm implements Callable<RankMaxoScore> {
 
 
         return new RankMaxoScore(maxoId, initialDiagnosesDiseaseIds, maxoDiagnosesDiseaseIds,
-                maxoDiscoverableObservedHpoIds, maxoObservedDescendantHpoIds, meanScore,
+                maxoDiscoverableObservedHpoIds, Map.of(), meanScore,
                 maxoDDResultsList.getLast().maxoDifferentialDiagnoses(),
                 maxoDiscoverableHpoIdCtsSorted, maxoDiseaseAvgRankChangeMapSorted,
                 Collections.min(maxoDiseaseAvgRankChangeMapSorted.values()), Collections.max(maxoDiseaseAvgRankChangeMapSorted.values()));

@@ -178,6 +178,9 @@ public class DifferentialDiagnosisCommand extends BaseCommand {
             // Get List of Refinement results: maxo term scores and frequencies
             RefinementOptions options = RefinementOptions.of(nDiseases, nRepetitions);
             List<DifferentialDiagnosis> orderedDiagnoses = maxoDiffRefiner.getOrderedDiagnoses(differentialDiagnoses, options);
+            List<DifferentialDiagnosis> allOrderedDiagnoses = differentialDiagnoses.stream()
+                    .sorted(Comparator.comparingDouble(DifferentialDiagnosis::score).reversed())
+                    .toList();
             List<HpoDisease> diseases = maxoDiffRefiner.getDiseases(orderedDiagnoses);
             Map<TermId, List<HpoFrequency>> hpoTermCounts = maxoDiffRefiner.getHpoTermCounts(diseases);
 
@@ -202,7 +205,7 @@ public class DifferentialDiagnosisCommand extends BaseCommand {
 
             LOGGER.info("Running Maxodiff calculation...");
             RankMaxo rankMaxo = new RankMaxo(hpoToMaxoTermMap, maxoToHpoTermIdMap, maxoHpoTermProbabilities, diseaseSubsetEngine,
-                    minimalOntology, ontology);
+                    minimalOntology, ontology, allOrderedDiagnoses);
 
             RefinementResults refinementResults = maxoDiffRefiner.run(sample,
                     orderedDiagnoses,
