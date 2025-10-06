@@ -127,7 +127,7 @@
         <tr th:each="row : ${maxoData.resultRows}">
             <!-- 1st column: OMIM label with link -->
             <td>
-                <a th:href="|https://www.omim.org/entry/${row.omimId}|"
+                <a th:href="|https://www.omim.org/entry/${row.omimIdDigits}|"
                    th:text="${row.omimLabel}"></a>
             </td>
             <!-- 2nd column: rank change -->

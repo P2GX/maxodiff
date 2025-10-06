@@ -2,8 +2,6 @@ package org.monarchinitiative.maxodiff.core.analysis;
 
 import org.monarchinitiative.maxodiff.core.diffdg.DifferentialDiagnosisEngine;
 import org.monarchinitiative.maxodiff.core.model.*;
-import org.monarchinitiative.maxodiff.core.service.DfsHpoTermArranger;
-import org.monarchinitiative.maxodiff.core.service.HpoTermArranger;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDisease;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 
@@ -79,18 +77,11 @@ public class NewEvaluateMaxoTerm implements Callable<RankMaxoScore> {
             scores.add(finalScore);
         }
         OptionalDouble meanScoreOptional = scores.stream().mapToDouble(s -> s).average();
-        double meanScore = 0.0;
-        if (meanScoreOptional.isPresent()) {
-            meanScore = meanScoreOptional.getAsDouble();
-        }
-
+        double meanScore = meanScoreOptional.orElse(0.0);
         return makeRankMaxoScore(chosenHpoIds, meanScore, initialDiagnoses, newMaxoDiagnosesList, chosenHpoTermCountsMap);
     }
 
     public static List<TermId> selectKWeightedHpoTerms(List<TermId> hpoIds, List<Double> probabilities, int k) {
-
-        int n = hpoIds.size();
-
         // Create cumulative probabilities
         List<Double> cumulative = new ArrayList<>();
         double cumSum = 0.0;

@@ -65,6 +65,11 @@ public class MaxoResultRow {
         return omimId;
     }
 
+    public String getOmimIdDigits() {
+        String[] fields =  omimId.split(":");
+        return fields.length == 2 ? fields[1] : omimId;
+    }
+
     public String getOmimLabel() {
         return omimLabel;
     }

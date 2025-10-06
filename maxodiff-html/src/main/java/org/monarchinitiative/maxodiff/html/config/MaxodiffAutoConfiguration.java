@@ -76,7 +76,7 @@ public class MaxodiffAutoConfiguration {
     @Bean
     public HpoDiseases hpoDiseases(MinimalOntology minHpo, MaxodiffDataResolver maxodiffDataResolver) throws IOException {
         LOGGER.debug("Loading HPO annotations from {}", maxodiffDataResolver.phenotypeAnnotations().toAbsolutePath());
-        HpoDiseaseLoader loader = HpoDiseaseLoaders.defaultLoader(minHpo, HpoDiseaseLoaderOptions.defaultOptions());
+        HpoDiseaseLoader loader = HpoDiseaseLoaders.defaultLoader(minHpo, HpoDiseaseLoaderOptions.defaultOmim());
         return loader.load(maxodiffDataResolver.phenotypeAnnotations());
     }
 
