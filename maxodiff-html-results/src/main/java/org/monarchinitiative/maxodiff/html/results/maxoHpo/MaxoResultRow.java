@@ -8,13 +8,15 @@ import java.util.*;
 public class MaxoResultRow {
     private final String omimId;
     private final String omimLabel;
+    private final int initialRank;
     private final int rankChange;
     private final int nDiseases;
     private final List<HpoTableCell> cells;
 
-    public MaxoResultRow(String omimId, String omimLabel, int rankChange, int nDiseases, List<HpoTableCell> cells) {
+    public MaxoResultRow(String omimId, String omimLabel, int initialRank, int rankChange, int nDiseases, List<HpoTableCell> cells) {
         this.omimId = omimId;
         this.omimLabel = omimLabel;
+        this.initialRank = initialRank;
         this.rankChange = rankChange;
         this.nDiseases = nDiseases;
         this.cells = cells;
@@ -27,7 +29,7 @@ public class MaxoResultRow {
                                                            List<TermId> orderedDiscoverableHpoList) {
         List<MaxoResultRow> rows = new ArrayList<>();
         var hpoTermIdRepCtsMap = result.rankMaxoScore().hpoTermIdRepCtsMap();
-        Map<TermId, Integer> avgRankChangeMap = result.rankMaxoScore().maxoDiseaseAvgRankChangeMap();
+        Map<TermId, List<Integer>> avgRankChangeMap = result.rankMaxoScore().maxoDiseaseAvgRankChangeMap();
         if (avgRankChangeMap == null) {
             System.err.println("avgRankChangeMap==null");
             return rows;
@@ -35,7 +37,9 @@ public class MaxoResultRow {
 
         for (TermId omimId : result.rankMaxoScore().maxoDiseaseAvgRankChangeMap().keySet()) {
             String omimLabel = omimTermMap.get(omimId);
-            int rankChange = Optional.ofNullable(avgRankChangeMap.get(omimId))
+            int initialRank = Optional.ofNullable(avgRankChangeMap.get(omimId).getFirst())
+                    .orElse(0);
+            int rankChange = Optional.ofNullable(avgRankChangeMap.get(omimId).getLast())
                     .orElse(0); // TODO -- ARE WE MISSING SOME VALUES WE NEED? CRASH WITHOUT THIS LINE
             List<HpoTableCell> cells = new ArrayList<>();
             for (TermId hpoId : orderedDiscoverableHpoList) {
@@ -49,7 +53,7 @@ public class MaxoResultRow {
 //                        (result.rankMaxoScore().discoverableObservedDescendantHpoTermIds().contains(hpoId) ? 0.5 : 1);
                 cells.add(new HpoTableCell(ct1, opacity1));
             }
-            rows.add(new MaxoResultRow(omimId.getValue(), omimLabel, rankChange, nDiseases, cells));
+            rows.add(new MaxoResultRow(omimId.getValue(), omimLabel, initialRank, rankChange, nDiseases, cells));
 
         }
         return rows;
@@ -72,6 +76,10 @@ public class MaxoResultRow {
 
     public String getOmimLabel() {
         return omimLabel;
+    }
+
+    public int getInitialRank() {
+        return initialRank;
     }
 
     public int getRankChange() {

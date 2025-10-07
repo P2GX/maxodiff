@@ -1,4 +1,4 @@
-
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
 
 <div class="container">
     <div class="section-box">
@@ -20,16 +20,40 @@
         </div>
     </div>
 
+<!--        TODO: change Sankey plot to show original disease rank on left and changed rank on right-->
     <div th:id="${'sankey-container-' + maxoData.index()}" class="sankey-plot"></div>
     <script src="https://cdn.plot.ly/plotly-3.1.0.min.js"></script>
     <script th:inline="javascript">
         var diseaseLabels = []
-        var termLabels = []
-        var sourceColors = []
-        var linkColors = []
-        var sources = [];
-        var targets = [];
-        var values  = [];
+        var labels = []
+        var sourceColors = ["red",
+        "orange",
+        "yellow",
+        "green",
+        "blue",
+        "skyblue",
+        "purple",
+        "lightpink",
+        "brown",
+        "darkgray",
+        "darkred",
+        "darkorange",
+        "gold",
+        "darkgreen",
+        "darkblue",
+        "deepskyblue",
+        "rebeccapurple",
+        "hotpink",
+        "saddlebrown",
+        "gray"]
+        var targetColors = [...sourceColors];
+        var sources = []
+        var targets = []
+        var values  = []
+        nodeSourceX = []
+        nodeSourceY = []
+        nodeTargetX = []
+        nodeTargetY = []
 
         /*<![CDATA[*/
         var containerId = 'sankey-container-' + /*[[${maxoData.index}]]*/;
@@ -37,42 +61,49 @@
         console.log(containerId)
         console.log(container)
 
-        var hpoHeaders = /*[[${maxoData.hpoHeaders}]]*/ [];
-        hpoHeaders.forEach(function(hpo) {
-            termLabels.push(hpo.termLabel)
-        });
         var resultRows = /*[[${maxoData.resultRows}]]*/ [];
-        console.log(resultRows)
+        resultRows.sort((a, b) => a.initialRank - b.initialRank);
         resultRows.forEach(function(row) {
-            diseaseLabels.push(row.omimLabel)
-            sourceColors.push(row.style)
-            row.cells.forEach(function(cell) {
-                if (!cell.empty) {
-                    sources.push(resultRows.indexOf(row));
-                    targets.push(resultRows.length + row.cells.indexOf(cell));
-                    linkColors.push(cell.style)
-                    values.push(cell.count);
-                } else {
-                    values.push(0.1);
-                }
-            });
+            sourceIdx = row.initialRank - 1
+            sources.splice(sourceIdx, 0, sourceIdx);
+            labels.splice(sourceIdx, 0, row.omimLabel);
+            nodeSourceX.push(0.0001)
+            nodeSourceY.push(row.initialRank / row.nDiseases)
+            values.push(1)
+        });
+
+        targetResultRows = resultRows.toSorted((a, b) => (a.initialRank + a.rankChange) - (b.initialRank + b.rankChange));
+        targets = [...sources];
+        console.log(targetResultRows)
+        targetResultRows.forEach(function(row) {
+            targetIdx = targetResultRows.indexOf(row)
+            sourceIdx = row.initialRank - 1
+            targets[sourceIdx] = resultRows.length + targetIdx;
+            targetColors[targetIdx] = sourceColors[sourceIdx];
+            labels.push(row.omimLabel);
+            nodeTargetX.push(0.9999)
+            nodeTargetY.push((targetIdx + 1) / row.nDiseases)
+            values.push(1)
         });
         /*]]>*/
 
-        var labels = diseaseLabels.concat(termLabels);
+        var nodeX = nodeSourceX.concat(nodeTargetX);
+        var nodeY = nodeSourceY.concat(nodeTargetY);
+        var nodeColors = sourceColors.concat(targetColors);
 
         var data = {
           type: "sankey",
           orientation: "h",
           node: {
-            color: sourceColors,
+            x: nodeX,
+            y: nodeY,
+            color: nodeColors,
             pad: 15,
             thickness: 20,
             line: { color: "black", width: 0.5 },
             label: labels
           },
           link: {
-            color: linkColors,
             source: sources,
             target: targets,
             value: values

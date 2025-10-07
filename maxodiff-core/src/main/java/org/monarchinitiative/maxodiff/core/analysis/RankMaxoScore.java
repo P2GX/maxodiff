@@ -13,7 +13,7 @@ public record RankMaxoScore(TermId maxoId, Set<TermId> initialOmimTermIds, Set<T
                             Double maxoScore,
                             List<DifferentialDiagnosis> maxoDiagnoses,
                             Map<TermId, Map<TermId, Integer>> hpoTermIdRepCtsMap,
-                            Map<TermId, Integer> maxoDiseaseAvgRankChangeMap,
+                            Map<TermId, List<Integer>> maxoDiseaseAvgRankChangeMap,
                             int minRankChange,
                             int maxRankChange) {
 }
