@@ -45,7 +45,7 @@ import java.util.zip.GZIPOutputStream;
  * Perform Differential Diagnosis calculations
  */
 
-@CommandLine.Command(name = "diagnosis", aliases = {"d"},
+@CommandLine.Command(name = "analyze", aliases = {"a"},
         mixinStandardHelpOptions = true,
         description = "maxodiff analysis")
 public class DifferentialDiagnosisCommand extends BaseCommand {
