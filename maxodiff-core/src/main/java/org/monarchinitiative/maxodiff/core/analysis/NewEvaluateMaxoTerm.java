@@ -33,57 +33,52 @@ public class NewEvaluateMaxoTerm implements Callable<RankMaxoScore> {
     @Override
     public RankMaxoScore call() {
 
-        List<Integer> ascertainedHpoCtList = maxoHpoDiseaseRank.getAscertainedHpoCountList();
         Map<TermId, Double> hpoToProbabilityMap = maxoHpoDiseaseRank.getHpoToProbabiltyMap();
+        List<Integer> nHposToSample = maxoHpoDiseaseRank.getSampledHpoCounts(nRepetitions);
 
-        List<TermId> hpoIds = new ArrayList<>();
-        List<Double> probabilities = new ArrayList<>();
+        // Separate HPO IDs and their probabilities
+        List<TermId> hpoIds = new ArrayList<>(hpoToProbabilityMap.keySet());
+        List<Double> probabilities = new ArrayList<>(hpoToProbabilityMap.values());
 
-        for (Map.Entry<TermId, Double> entry : hpoToProbabilityMap.entrySet()) {
-            TermId hpoId = entry.getKey();
-            Double probability = entry.getValue();
-            hpoIds.add(hpoId);
-            probabilities.add(probability);
-        }
-
-        if (hpoIds.size() != probabilities.size()) {
-            throw new IllegalArgumentException("hpoIds and probabilities must have the same size.");
-        }
-
+        // Run simulations and calculate final scores
         List<DifferentialDiagnosis> initialDiagnoses = maxoHpoTermProbabilities.getInitialDiagnoses();
         List<List<DifferentialDiagnosis>> newMaxoDiagnosesList = new ArrayList<>();
         List<Double> scores = new ArrayList<>();
-        // Choose average count HPO terms from hpoList according to probability. (Poisson sample)
-        Set<TermId> chosenHpoIds = new HashSet<>();
-        Map<TermId, Integer> chosenHpoTermCountsMap = new HashMap<>();
+        Set<TermId> simulatedHpoIdSet = new HashSet<>();
+        Map<TermId, Integer> simulatedHpoCountSet = new HashMap<>();
         for (int i = 0; i < nRepetitions; i++) {
-            double meanOpt = ascertainedHpoCtList.stream().mapToInt(Integer::intValue).average().orElse(1);
-            chosenHpoIds.addAll(selectKWeightedHpoTerms(hpoIds, probabilities, (int) meanOpt));
-            for (TermId hpoId : chosenHpoIds) {
-                if (!chosenHpoTermCountsMap.containsKey(hpoId)) {
-                    chosenHpoTermCountsMap.put(hpoId, 1);
-                } else {
-                    chosenHpoTermCountsMap.put(hpoId, chosenHpoTermCountsMap.get(hpoId) + 1);
-                }
-            }
+            // Sample and count simulated HPO terms
+            int nHpos = nHposToSample.get(i);
+            simulatedHpoIdSet.addAll(selectKWeightedHpoTerms(hpoIds, probabilities, nHpos));
+            simulatedHpoIdSet.forEach(hpoId -> simulatedHpoCountSet.merge(hpoId, 1, Integer::sum));
 
-            Set<TermId> observed = chosenHpoIds;
-            Set<TermId> excluded = new HashSet<>(List.of());
-            Sample newSample = getNewSample(ppkt, observed, excluded);
+            Sample newSample = getNewSample(ppkt, simulatedHpoIdSet);
             List<DifferentialDiagnosis> newMaxoDiagnoses = engine.run(newSample, diseaseIds);
             newMaxoDiagnosesList.add(newMaxoDiagnoses);
 
             double finalScore = ValidationModel.weightedRankDiff(initialDiagnoses, newMaxoDiagnoses).validationScore();
             scores.add(finalScore);
         }
-        OptionalDouble meanScoreOptional = scores.stream().mapToDouble(s -> s).average();
-        double meanScore = meanScoreOptional.orElse(0.0);
-        return makeRankMaxoScore(chosenHpoIds, meanScore, initialDiagnoses, newMaxoDiagnosesList, chosenHpoTermCountsMap);
+        double meanScore = scores.stream().mapToDouble(Double::doubleValue).average().orElse(0.0);
+        return makeRankMaxoScore(simulatedHpoIdSet, meanScore, initialDiagnoses, newMaxoDiagnosesList, simulatedHpoCountSet);
     }
 
+    /**
+     * Randomly selects {@code k} unique HPO term IDs from a weighted probability distribution.
+     * <p>
+     * Each HPO term in {@code hpoIds} is associated with a probability in {@code probabilities},
+     * defining how likely it is to be selected. Sampling is performed <b>without replacement</b>,
+     * meaning each term can only be selected once.
+     * </p>
+     *
+     * @param hpoIds        list of HPO term identifiers
+     * @param probabilities list of normalized probabilities corresponding to each HPO term
+     * @param k              number of unique HPO terms to sample
+     * @return a list of {@code k} sampled HPO term IDs
+     */
     public static List<TermId> selectKWeightedHpoTerms(List<TermId> hpoIds, List<Double> probabilities, int k) {
         // Create cumulative probabilities
-        List<Double> cumulative = new ArrayList<>();
+        List<Double> cumulative = new ArrayList<>(probabilities.size());
         double cumSum = 0.0;
         for (double p : probabilities) {
             cumSum += p;
@@ -109,95 +104,218 @@ public class NewEvaluateMaxoTerm implements Callable<RankMaxoScore> {
         return selected;
     }
 
-    private Sample getNewSample(Sample ppkt, Set<TermId> observed, Set<TermId> excluded) {
+    /** Create a new sample by adding the simulated observed terms (from the MAxO diagnostic test) to
+     * the existing phenopacket and keeping the original excluded terms
+     * @param ppkt A Sample object representing the original phenopacket
+     * @param observed A Set of simulated new observed HPO terms
+     * @return The modified (simulated) phenopacket Sample.
+     */
+    private Sample getNewSample(Sample ppkt, Set<TermId> observed) {
         Set<TermId> ppktObserved = new HashSet<>(ppkt.observedHpoTermIds());
-        Set<TermId> ppktExcluded = new HashSet<>(ppkt.excludedHpoTermIds());
-        Set<TermId> newObserved = Stream.concat(ppktObserved.stream(), observed.stream()).collect(Collectors.toSet());
-        Set<TermId> newExcluded = Stream.concat(ppktExcluded.stream(), excluded.stream()).collect(Collectors.toSet());
+        Set<TermId> combinedObserved = Stream.concat(ppktObserved.stream(), observed.stream()).collect(Collectors.toSet());
 
-        return Sample.of(ppkt.id(), newObserved, newExcluded);
+        return Sample.of(ppkt.id(), combinedObserved, ppkt.excludedHpoTermIds());
     }
 
-    private RankMaxoScore makeRankMaxoScore(Set<TermId> chosenHpoIds, double meanScore,
-                                            List<DifferentialDiagnosis> initialDiagnoses,
-                                            List<List<DifferentialDiagnosis>> newMaxoDiagnosesList,
-                                            Map<TermId, Integer> chosenHpoTermCountsMap) {
 
-        Set<TermId> initialDiagnosesDiseaseIds = initialDiagnoses.stream()
-                .map(DifferentialDiagnosis::diseaseId)
-                .collect(Collectors.toSet());
-        Set<TermId> maxoDiagnosesDiseaseIds = newMaxoDiagnosesList.getFirst().stream()
-                .map(DifferentialDiagnosis::diseaseId)
-                .collect(Collectors.toSet());
-
-        Set<TermId> maxoDiscoverableObservedHpoIds = chosenHpoIds;
-        Set<TermId> maxoObservedDescendantHpoIds = Set.of();
-
-        Map<TermId, List<Integer>> maxoDiseaseAvgRankChangeMap = new HashMap<>();
-        Map<TermId, Map<TermId, Integer>> maxoDiscoverableHpoIdCts = new HashMap<>();
-        for (TermId omimId : maxoDiagnosesDiseaseIds) {
-            int initialRank = 0;
-            List<DifferentialDiagnosis> initialDiffDiagnoses = initialDiagnoses.stream()
-                    .filter(dd -> dd.diseaseId().equals(omimId)).toList();
-            if (!initialDiffDiagnoses.isEmpty()) {
-                DifferentialDiagnosis initialDiagnosis = initialDiffDiagnoses.getFirst();
-                initialRank = initialDiagnoses.indexOf(initialDiagnosis) + 1;
+    /**
+     * Returns the 1-based rank (position) of a disease within a list of differential diagnoses.
+     * <p>
+     * The method iterates through the provided list of {@link DifferentialDiagnosis} objects
+     * (representing the ordered initial ranks assigned by Phenomizer)
+     * and compares each diagnosis's disease ID to the given {@link TermId}. If a match is found,
+     * the method returns the index position (starting from 1). If the disease is not present
+     * in the list, the method returns {@code 0}.
+     * </p>
+     *
+     * @param diagnoses the ordered list of {@link DifferentialDiagnosis} instances to search
+     * @param diseaseId the {@link TermId} of the disease whose rank should be determined
+     * @return the 1-based rank of the disease in the list, or {@code 0} if not found
+     */
+    private int findRank(List<DifferentialDiagnosis> diagnoses, TermId diseaseId) {
+        for (int i = 0; i < diagnoses.size(); i++) {
+            if (diagnoses.get(i).diseaseId().equals(diseaseId)) {
+                return i + 1; // 1-based rank
             }
+        }
+        return 0;
+    }
+
+    /** Compute average changes in disease ranks between the initial disease rankings and the MAxO disease rankings.
+     *
+     * @param initialDiagnoses List of diseases from the original differential diagnosis.
+     * @param newMaxoDiagnosesList List of diseases from the differential diagnosis using the new sample with additional
+     *                             HPO terms that can be ascertained by the MAxO term.
+     * @param diseaseIds Set of disease ids for the top n diseases.
+     *
+     * @return Map of disease OMIM id : List of [initial rank, rank change]
+     */
+    private Map<TermId, List<Integer>> computeDiseaseAverageRankChanges(
+            List<DifferentialDiagnosis> initialDiagnoses,
+            List<List<DifferentialDiagnosis>> newMaxoDiagnosesList,
+            Set<TermId> diseaseIds) {
+
+        Map<TermId, List<Integer>> avgRankChange = new HashMap<>();
+
+        for (TermId omimId : diseaseIds) {
+            int initialRank = findRank(initialDiagnoses, omimId);
 
             List<Integer> rankDiffs = new ArrayList<>();
-            for (List<DifferentialDiagnosis> newMaxoDiagnoses : newMaxoDiagnosesList) {
-                List<DifferentialDiagnosis> maxoDiagnoses = newMaxoDiagnoses.stream()
-                        .filter(dd -> dd.diseaseId().equals(omimId)).toList();
-                if (!maxoDiagnoses.isEmpty()) {
-                    DifferentialDiagnosis maxoDiagnosis = maxoDiagnoses.getFirst();
-                    int maxoRank = newMaxoDiagnoses.indexOf(maxoDiagnosis) + 1;
-                    int maxoRankDiff = maxoRank - initialRank;
-                    rankDiffs.add(maxoRankDiff);
+            for (List<DifferentialDiagnosis> newList : newMaxoDiagnosesList) {
+                int newRank = findRank(newList, omimId);
+                if (newRank > 0) {
+                    rankDiffs.add(newRank - initialRank);
                 }
             }
 
-            double meanRankDiffDouble = rankDiffs.stream().mapToDouble(s -> s).average().orElse(0);
-            int meanRankDiff = (int) Math.round(meanRankDiffDouble);
-            List<Integer> rankChanges = new ArrayList<>();
-            rankChanges.add(initialRank);
-            rankChanges.add(meanRankDiff);
-            maxoDiseaseAvgRankChangeMap.put(omimId, rankChanges);
-
-            List<TermId> diseaseAssociatedHpoIds = List.of();
-            Optional<HpoDisease> opt = maxoHpoTermProbabilities.getHpoDiseases().diseaseById(omimId);
-            if (opt.isPresent()) {
-                HpoDisease disease = opt.get();
-                diseaseAssociatedHpoIds = disease.annotationTermIdList();
-            }
-            Map<TermId, Integer> hpoIdCtsMap = new HashMap<>();
-            for (TermId discoverableHpoId : chosenHpoIds) {
-                if (diseaseAssociatedHpoIds.contains(discoverableHpoId)) {
-                    hpoIdCtsMap.put(discoverableHpoId, chosenHpoTermCountsMap.get(discoverableHpoId));
-                }
-            }
-            maxoDiscoverableHpoIdCts.put(omimId, hpoIdCtsMap);
+            double avg = rankDiffs.stream().mapToDouble(Double::valueOf).average().orElse(0);
+            avgRankChange.put(omimId, List.of(initialRank, (int) Math.round(avg)));
         }
-        //sort maps by disease average rank change
-        Map<TermId, List<Integer>> maxoDiseaseAvgRankChangeMapSorted = maxoDiseaseAvgRankChangeMap.entrySet().stream()
-                .sorted(Comparator.comparing(entry -> entry.getValue().get(entry.getValue().size() - 1)))
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (a,b)->b, LinkedHashMap::new));
 
-        Map<TermId, Map<TermId, Integer>> maxoDiscoverableHpoIdCtsSorted = maxoDiseaseAvgRankChangeMapSorted.keySet().stream()
-                .filter(maxoDiscoverableHpoIdCts::containsKey)
+        return avgRankChange;
+    }
+
+    private Set<TermId> extractDiseaseIds(List<DifferentialDiagnosis> diagnoses) {
+        return diagnoses.stream()
+                .map(DifferentialDiagnosis::diseaseId)
+                .collect(Collectors.toSet());
+    }
+
+    /** Compute average changes in disease ranks between the initial disease rankings and the MAxO disease rankings.
+     *
+     * @param chosenHpoIds The set of HPO term IDs that were selected (ascertained) in the simulations
+     * @param chosenHpoTermCountsMap A mapping of HPO term IDs to how many times each term was selected across simulations
+     * @param diseaseIds Set of disease ids for the top n diseases.
+     *
+     * @return Map of disease id : Map of hpo id : count of hpo id occurrences across simulations.
+     */
+    private Map<TermId, Map<TermId, Integer>> computeDiscoverableHpoCounts(
+            Set<TermId> chosenHpoIds,
+            Map<TermId, Integer> chosenHpoTermCountsMap,
+            Set<TermId> diseaseIds) {
+
+        Map<TermId, Map<TermId, Integer>> result = new HashMap<>();
+
+        for (TermId omimId : diseaseIds) {
+            Optional<HpoDisease> opt = maxoHpoTermProbabilities.getHpoDiseases().diseaseById(omimId);
+            if (opt.isEmpty()) continue;
+
+            List<TermId> annotatedHpoIds = opt.get().annotationTermIdList();
+            Map<TermId, Integer> hpoCounts = new HashMap<>();
+
+            for (TermId hpoId : chosenHpoIds) {
+                if (annotatedHpoIds.contains(hpoId)) {
+                    hpoCounts.put(hpoId, chosenHpoTermCountsMap.get(hpoId));
+                }
+            }
+
+            result.put(omimId, hpoCounts);
+        }
+
+        return result;
+    }
+
+    private Map<TermId, List<Integer>> sortByRankChange(Map<TermId, List<Integer>> map) {
+        return map.entrySet().stream()
+                .sorted(Comparator.comparing(entry ->
+                        entry.getValue()
+                                .get(entry.getValue().size() - 1))) //rank change is last integer in list
                 .collect(Collectors.toMap(
-                        key -> key,
-                        maxoDiscoverableHpoIdCts::get,
-                        (oldValue, newValue) -> newValue,
+                        Map.Entry::getKey,
+                        Map.Entry::getValue,
+                        (a, b) -> b,
                         LinkedHashMap::new
                 ));
+    }
 
-        int minRankChange = maxoDiseaseAvgRankChangeMapSorted.entrySet().stream().toList().getFirst().getValue().getLast();
-        int maxRankChange = maxoDiseaseAvgRankChangeMapSorted.entrySet().stream().toList().getLast().getValue().getLast();
+    private Map<TermId, Map<TermId, Integer>> sortHpoCountMapByRankChange(
+            Map<TermId, List<Integer>> rankChangeMap,
+            Map<TermId, Map<TermId, Integer>> hpoCountMap) {
 
-        return new RankMaxoScore(maxoHpoDiseaseRank.getMaxoId(), initialDiagnosesDiseaseIds, maxoDiagnosesDiseaseIds,
-                maxoDiscoverableObservedHpoIds, chosenHpoTermCountsMap, meanScore,
+        return rankChangeMap.keySet().stream()
+                .filter(hpoCountMap::containsKey)
+                .collect(Collectors.toMap(
+                        key -> key,
+                        hpoCountMap::get,
+                        (a, b) -> b,
+                        LinkedHashMap::new
+                ));
+    }
+
+    /**
+     * Constructs a {@link RankMaxoScore} summarizing how diseases and HPO terms change
+     * in diagnostic ranking after simulated ascertainment of additional phenotypes.
+     * <p>
+     * This method aggregates rank changes across repeated simulation runs, associates
+     * each disease with the corresponding ascertainable HPO terms, and computes
+     * summary statistics such as mean rank change and overall validation score.
+     * The output {@link RankMaxoScore} captures both disease-level and phenotype-level
+     * effects of adding MAxO-derived HPO terms to the analysis.
+     * </p>
+     *
+     * <h3>Processing steps:</h3>
+     * <ol>
+     *   <li>Compute the disease IDs from the initial and MAxO-adjusted differential diagnosis lists.</li>
+     *   <li>For each disease:
+     *     <ul>
+     *       <li>Determine its initial rank and rank in each simulation.</li>
+     *       <li>Calculate the mean rank change across all simulation runs.</li>
+     *       <li>Collect ascertainable HPO terms associated with that disease and record how often they were sampled.</li>
+     *     </ul>
+     *   </li>
+     *   <li>Sort diseases by their average rank change.</li>
+     *   <li>Build a {@link RankMaxoScore} containing the sorted disease metrics, associated HPO term counts,
+     *       and summary statistics (minimum and maximum rank change values, mean score, etc.).</li>
+     * </ol>
+     *
+     * @param chosenHpoIds              the set of HPO term IDs that were selected (ascertained) in this simulation
+     * @param meanScore                 the average validation score across all repetitions (typically derived from rank differences)
+     * @param initialDiagnoses          the original list of {@link DifferentialDiagnosis} instances before MAxO-based adjustment
+     * @param newMaxoDiagnosesList      a list of differential diagnosis lists, one for each simulation repetition
+     * @param chosenHpoTermCountsMap    a mapping of HPO term IDs to how many times each term was selected across simulations
+     * @return a {@link RankMaxoScore} summarizing disease rank shifts, ascertainable HPO associations, and aggregate scoring
+     */
+    private RankMaxoScore makeRankMaxoScore(
+            Set<TermId> chosenHpoIds,
+            double meanScore,
+            List<DifferentialDiagnosis> initialDiagnoses,
+            List<List<DifferentialDiagnosis>> newMaxoDiagnosesList,
+            Map<TermId, Integer> chosenHpoTermCountsMap) {
+
+        // Step 1: extract ID sets
+        Set<TermId> initialIds = extractDiseaseIds(initialDiagnoses);
+        Set<TermId> maxoIds = extractDiseaseIds(newMaxoDiagnosesList.getFirst());
+
+        // Step 2: compute average rank changes per disease
+        Map<TermId, List<Integer>> avgRankChange = computeDiseaseAverageRankChanges(
+                initialDiagnoses, newMaxoDiagnosesList, maxoIds
+        );
+
+        // Step 3: compute discoverable HPO term counts per disease
+        Map<TermId, Map<TermId, Integer>> hpoCountMap = computeDiscoverableHpoCounts(
+                chosenHpoIds, chosenHpoTermCountsMap, maxoIds
+        );
+
+        // Step 4: sort both maps by average rank change
+        Map<TermId, List<Integer>> avgRankChangeSorted = sortByRankChange(avgRankChange);
+        Map<TermId, Map<TermId, Integer>> hpoCountMapSorted = sortHpoCountMapByRankChange(avgRankChangeSorted, hpoCountMap);
+
+        int minRankChange = avgRankChangeSorted.entrySet().stream().toList().getFirst().getValue().getLast();
+        int maxRankChange = avgRankChangeSorted.entrySet().stream().toList().getLast().getValue().getLast();
+
+        // Step 5: construct final score
+        return new RankMaxoScore(
+                maxoHpoDiseaseRank.getMaxoId(),
+                initialIds,
+                maxoIds,
+                chosenHpoIds,
+                chosenHpoTermCountsMap,
+                meanScore,
                 newMaxoDiagnosesList.getFirst(),
-                maxoDiscoverableHpoIdCtsSorted, maxoDiseaseAvgRankChangeMapSorted,
-                minRankChange, maxRankChange);
+                hpoCountMapSorted,
+                avgRankChangeSorted,
+                minRankChange,
+                maxRankChange
+        );
     }
 }

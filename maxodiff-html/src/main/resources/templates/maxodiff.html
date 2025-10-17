@@ -163,7 +163,6 @@
           max-width: 50%;
           left: 50%;
           margin-right: -50%;
-          transform: translate(50%);
         }
 
         .section-box h2 {
@@ -297,8 +296,12 @@
                     newLink.textContent = hpoLabel + ' (' + hpoId + ')';
                     newLink.target = "_blank";
                     newLink.rel = "noopener noreferrer";
-                    newItem.appendChild(newLink);
-                    listContainer.appendChild(newItem);
+                    const existingLink = listContainer.querySelector(`a[href="${newLink.href}"]`);
+                    console.log(existingLink)
+                    if (!existingLink) {
+                        newItem.appendChild(newLink);
+                        listContainer.appendChild(newItem);
+                    }
                 };
             };
 

@@ -26,27 +26,18 @@
     <script th:inline="javascript">
         var diseaseLabels = []
         var labels = []
-        var sourceColors = ["red",
-        "orange",
-        "yellow",
-        "green",
-        "blue",
-        "skyblue",
-        "purple",
-        "lightpink",
-        "brown",
-        "darkgray",
-        "darkred",
-        "darkorange",
-        "gold",
-        "darkgreen",
-        "darkblue",
-        "deepskyblue",
-        "rebeccapurple",
-        "hotpink",
-        "saddlebrown",
-        "gray"]
-        var targetColors = [...sourceColors];
+        <!--red, orange, yellow, green, blue, deepskyblue, purple, lightpink, brown, black-->
+        var colors = ["rgba(255, 0, 0, 1)",
+        "rgba(255, 165, 0, 1)",
+        "rgba(255, 255, 0, 1)",
+        "rgba(0, 255, 0, 1)",
+        "rgba(0, 0, 255, 1)",
+        "rgba(0, 191, 255, 1)",
+        "rgba(128, 0, 128, 1)",
+        "rgba(255, 182, 193, 1)",
+        "rgba(165, 42, 42, 1)",
+        "rgba(0, 0, 0, 1)"]
+        var sourceColors = [];
         var sources = []
         var targets = []
         var values  = []
@@ -54,6 +45,22 @@
         nodeSourceY = []
         nodeTargetX = []
         nodeTargetY = []
+
+        function setRgbaOpacity(rgbaString, newOpacity) {
+          // Use a regular expression to capture the red, green, and blue values.
+          // This regex handles both comma-separated and space-separated RGBA strings,
+          // and accounts for optional percentage values for R, G, B, and A.
+          const regex = /rgba?\(\s*(\d+%?)\s*[,\s]+(\d+%?)\s*[,\s]+(\d+%?)\s*(?:[/\s,]+\s*(\d*\.?\d+%?))?\)/i;
+          const match = rgbaString.match(regex);
+
+          // Extract the R, G, B values from the match
+          const r = match[1];
+          const g = match[2];
+          const b = match[3];
+
+          // Construct the new RGBA string with the desired opacity
+          return `rgba(${r}, ${g}, ${b}, ${newOpacity})`;
+        }
 
         /*<![CDATA[*/
         var containerId = 'sankey-container-' + /*[[${maxoData.index}]]*/;
@@ -65,6 +72,12 @@
         resultRows.sort((a, b) => a.initialRank - b.initialRank);
         resultRows.forEach(function(row) {
             sourceIdx = row.initialRank - 1
+            sourceIdxOnesDigit = Math.floor(sourceIdx % 10)
+            sourceIdxTensDigit = Math.floor(sourceIdx/10 % 10)
+            sourceColorRGBA = colors[sourceIdxOnesDigit]
+            newOpacity = 1 / (1 + sourceIdxTensDigit);
+            sourceColor = setRgbaOpacity(sourceColorRGBA, newOpacity)
+            sourceColors.push(sourceColor)
             sources.splice(sourceIdx, 0, sourceIdx);
             labels.splice(sourceIdx, 0, row.omimLabel);
             nodeSourceX.push(0.0001)
@@ -74,6 +87,7 @@
 
         targetResultRows = resultRows.toSorted((a, b) => (a.initialRank + a.rankChange) - (b.initialRank + b.rankChange));
         targets = [...sources];
+        var targetColors = [...sourceColors];
         console.log(targetResultRows)
         targetResultRows.forEach(function(row) {
             targetIdx = targetResultRows.indexOf(row)
@@ -119,10 +133,6 @@
         <thead>
         <tr>
             <th></th>
-            <th class="deltaR-header">
-                <span class="deltaR">&#916;&thinsp;R</span>
-            </th>
-            <th></th>
             <!-- Loop over HPO terms-->
             <th th:each="entry : ${maxoData.hpoHeaders}" class="vertical-header">
                 <a th:href="|https://hpo.jax.org/browse/term/${entry.termId}|">
@@ -133,8 +143,7 @@
         </thead>
         <!-- the following is the N Repetitions row -->
         <tr>
-            <!-- Empty cells (needed to align with correct column) -->
-            <td>Observed in</td><td></td><td></td>
+            <td>Observed in</td>
             <!-- Loop over repetition cells -->
             <td th:each="cell : ${maxoData.repetitionCells}"
                 class="repetitionCell"
@@ -161,15 +170,6 @@
                 <a th:href="|https://www.omim.org/entry/${row.omimIdDigits}|"
                    th:text="${row.omimLabel}"></a>
             </td>
-            <!-- 2nd column: rank change -->
-            <td class="parentCell">
-                <div class="hpoCell"
-                     th:text="${row.rankChange}"
-                     th:style="|background: ${row.style}|">
-                </div>
-            </td>
-            <!-- 3rd column: empty (this is a space hider. TODO-lets refactor and do this with CSS -->
-            <td></td>
 
             <!-- Remaining columns: loop over HPO table cells -->
             <th:block th:each="cell : ${row.getCells}">

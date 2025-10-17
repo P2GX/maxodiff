@@ -27,6 +27,21 @@ public class RankMaxo {
     private final Ontology ontology;
     private final List<DifferentialDiagnosis> allInitialDiagnoses;
 
+    /**
+     * The {@code RankMaxo} ranks MAxO terms and returns results in descending order by score.
+     *
+     * @param hpoToMaxoTermMap Map of HPO terms : Set of corresponding MAxO terms.
+     * @param maxoToHpoTermIdMap Map of MAxO term ids : Set of corresponding HPO term ids.
+     * @param maxoHpoTermProbabilities Class with methods for MAxO:HPO term probability calculations
+     *                                 (e.g. Probability that the HPO term will be ascertained by a MAxO term procedure).
+     * @param engine The engine used for the differential diagnosis. The default is Phenomizer.
+     * @param minHpo MinimalOntology HPO ontology.
+     * @param hpo Full HPO ontology.
+     * @param allInitialDiagnoses Full list of diseases from the initial differential diagnosis.
+     *
+     * @author Martha Beckwith
+     * @since 1.0
+     */
     public RankMaxo(Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxoTermMap,
                     Map<TermId, Set<TermId>> maxoToHpoTermIdMap,
                     MaxoHpoTermProbabilities maxoHpoTermProbabilities,
@@ -47,7 +62,7 @@ public class RankMaxo {
      *
      * @param ppkt Input phenopacket with present and excluded HPO terms.
      * @param nRepetitions number of times to calculate scores for each MAxO term.
-     * @param diseaseIds Set of OMIM disease Ids to use for analysis.
+     * @param diseaseIds Set of top n OMIM disease Ids to use for analysis.
      * @return Map of MAxO scores sorted in descending order by score
      */
     public List<RankMaxoScore> rankMaxoTerms(Sample ppkt, int nRepetitions, Set<TermId> diseaseIds) throws Exception {
@@ -66,9 +81,14 @@ public class RankMaxo {
         int maxoIdx = 0;
         ProgessBar pb = new ProgessBar(maxoIdx, maxoToHpoTermIdMap.size());
         for (TermId maxoId : maxoToHpoTermIdMap.keySet()) {
-            MaxoHpoDiseaseRank maxoHpoDiseaseRank = new MaxoHpoDiseaseRank(allInitialDiagnoses, ascertainablePhenotypes, fullMaxoToHpoTermIdMap, maxoId);
-            maxoHpoDiseaseRank.makeAscertainedHpoCountListAndRankMap(ppkt, 500);
-            maxoHpoDiseaseRank.makeHpoToProbabilityMap(ppkt);
+            MaxoHpoDiseaseRank maxoHpoDiseaseRank = MaxoHpoDiseaseRank.Builder.builder()
+                    .initialDiagnoses(allInitialDiagnoses)
+                    .ascertainablePhenotypes(ascertainablePhenotypes)
+                    .maxoToHpoTermIdMap(maxoToHpoTermIdMap)
+                    .maxoId(maxoId)
+                    .sample(ppkt)
+                    .nDiagnoses(500)
+                    .build();
             rankMaxoProgress = new RankMaxoProgress(maxoToHpoTermIdMap.size());
             int finalMaxoIdx = maxoIdx;
             tasks.add(() -> {
