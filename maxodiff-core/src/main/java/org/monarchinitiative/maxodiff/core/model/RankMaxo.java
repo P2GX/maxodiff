@@ -84,7 +84,7 @@ public class RankMaxo {
             MaxoHpoDiseaseRank maxoHpoDiseaseRank = MaxoHpoDiseaseRank.Builder.builder()
                     .initialDiagnoses(allInitialDiagnoses)
                     .ascertainablePhenotypes(ascertainablePhenotypes)
-                    .maxoToHpoTermIdMap(maxoToHpoTermIdMap)
+                    .maxoToHpoTermIdMap(fullMaxoToHpoTermIdMap)
                     .maxoId(maxoId)
                     .sample(ppkt)
                     .nDiagnoses(500)

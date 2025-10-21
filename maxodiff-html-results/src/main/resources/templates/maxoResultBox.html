@@ -177,7 +177,7 @@
                     <div class="hpoCell"
                          th:classappend="${cell.empty} ? ' emptyCell'"
                          th:style="${cell.empty} ? '' : 'background:' + ${cell.style}">
-                        <span th:text="${cell.empty} ? '∅' : ${cell.count}"></span>
+                        <span th:text="${cell.empty} ? '∅' : ''"></span>
                     </div>
                 </td>
             </th:block>
