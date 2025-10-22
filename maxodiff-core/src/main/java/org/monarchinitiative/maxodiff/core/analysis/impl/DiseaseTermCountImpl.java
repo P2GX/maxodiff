@@ -2,6 +2,7 @@ package org.monarchinitiative.maxodiff.core.analysis.impl;
 
 import org.monarchinitiative.maxodiff.core.analysis.DiseaseTermCount;
 import org.monarchinitiative.maxodiff.core.analysis.HpoFrequency;
+import org.monarchinitiative.phenol.annotations.base.Ratio;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDisease;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 
@@ -20,10 +21,32 @@ public class DiseaseTermCountImpl implements DiseaseTermCount {
     /** Key is an HPO term Id, and value is a list of {@link HpoFrequency} objects for that term.  Each object is an OMIM id*/
     private final Map<TermId, List<HpoFrequency>> hpoTermCounts;
 
-    public DiseaseTermCountImpl(List<HpoDisease> diseaseList, Map<TermId, List<HpoFrequency>> hpoTermCounts) {
+    public DiseaseTermCountImpl(
+            List<HpoDisease> diseaseList,
+            Map<TermId, List<HpoFrequency>> hpoTermCounts) {
         this.diseaseList = Objects.requireNonNull(diseaseList);
         this.hpoTermCounts = hpoTermCounts;
     }
+
+    /**
+     * Default implementation that constructs a {@link DiseaseTermCount} from a list of {@link HpoDisease}s.
+     *
+     * @param diseaseList list of diseases to include
+     * @return a {@link DiseaseTermCountImpl} summarizing term frequencies
+     */
+    public static DiseaseTermCountImpl defaultCount(List<HpoDisease> diseaseList) {
+        Map<TermId, List<HpoFrequency>> hpoTermCounts = new HashMap<>();
+        for (HpoDisease disease : diseaseList) {
+            TermId omimId = disease.id();
+            for (TermId hpoId : disease.annotationTermIdList()) {
+                List<HpoFrequency> freqRecords = hpoTermCounts.computeIfAbsent(hpoId, id -> new ArrayList<>());
+                Float freq = disease.getFrequencyOfTermInDisease(hpoId).map(Ratio::frequency).orElse(null);
+                freqRecords.add(new HpoFrequency(omimId.toString(), hpoId.toString(), 1, freq));
+            }
+        }
+        return new DiseaseTermCountImpl(diseaseList, hpoTermCounts);
+    }
+
 
     public int nDiseases() { return diseaseList.size(); }
 
