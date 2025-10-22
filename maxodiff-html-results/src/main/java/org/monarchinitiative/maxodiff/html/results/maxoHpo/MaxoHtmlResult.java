@@ -5,6 +5,7 @@ import org.monarchinitiative.maxodiff.core.analysis.HpoFrequency;
 import org.monarchinitiative.maxodiff.core.analysis.RankMaxoScore;
 import org.monarchinitiative.maxodiff.core.analysis.refinement.MaxodiffResult;
 import org.monarchinitiative.maxodiff.core.service.BiometadataService;
+import org.monarchinitiative.maxodiff.html.results.HtmlResults;
 import org.monarchinitiative.maxodiff.html.results.SimpleTerm;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
 import org.monarchinitiative.phenol.ontology.data.TermId;
@@ -39,10 +40,9 @@ public class MaxoHtmlResult {
             Map<TermId, List<HpoFrequency>> hpoTermCountMap,
             int idx,
             int nDiseases,
-            HpoDiseases diseases,
             int nRepetitions,
             BiometadataService biometadataService,
-            Map<TermPair, Double> icMicaData) {
+            HTMLFrequencyMap htmlFrequencyMap) {
         this.hpoTermsMap = new HashMap<>();
         this.omimTerms = new HashMap<>();
         Map<TermId, Integer> nRepetitionsMap = new HashMap<>();
@@ -57,6 +57,23 @@ public class MaxoHtmlResult {
         result.rankMaxoScore().maxoOmimTermIds()
                 .forEach(id -> omimTerms.put(id, biometadataService.diseaseLabel(id).orElse("unknown")));
         List<HpoFrequency> hpoFrequencies = HTMLFrequencyMap.getHpoFrequencies(hpoTermCountMap);
+        List<HpoFrequency> hpoFrequenciesMica = new ArrayList<>();
+        for (TermId omimId : result.rankMaxoScore().maxoOmimTermIds()) {
+            for (TermId hpoId : result.rankMaxoScore().discoverableObservedHpoTermIds()) {
+                int count = 0;
+                float frequency = 0f;
+                if (hpoTermCountMap.get(omimId) != null) {
+                    Optional<HpoFrequency> hpoFrequencyOpt = hpoTermCountMap.get(omimId).stream()
+                            .filter(hpoFrequency -> hpoFrequency.hpoId().equals(hpoId.toString())).findFirst();
+                    if (hpoFrequencyOpt.isPresent()) {
+                        count = hpoFrequencyOpt.get().count();
+                        frequency = hpoFrequencyOpt.get().frequency();
+                    }
+                }
+                float mica = htmlFrequencyMap.micaForDisease(hpoId, omimId);
+                hpoFrequenciesMica.add(new HpoFrequency(omimId.toString(), hpoId.toString(), count, frequency, mica));
+            }
+        }
         this.hpoTermIdRepCtsMap = result.rankMaxoScore().hpoTermIdRepCtsMap();
         this.frequencyMap = HTMLFrequencyMap.makeFrequencyDiseaseMap(hpoTermsMap,
                 omimTerms,
@@ -67,7 +84,7 @@ public class MaxoHtmlResult {
         repetitionRow = RepetitionRow.buildRepetitionRow(
                 nRepetitionsMap, nRepetitions, this.hpoTermsMap, frequencyMap, this.orderedDiscoverableHpoList, result);
 
-        this.resultRows = MaxoResultRow.createMaxoResultRows(result, omimTerms, nDiseases, this.orderedDiscoverableHpoList);
+        this.resultRows = MaxoResultRow.createMaxoResultRows(result, omimTerms, nDiseases, this.orderedDiscoverableHpoList, hpoFrequenciesMica);
     }
 
     public List<RepetitionCell> getRepetitionCells() {

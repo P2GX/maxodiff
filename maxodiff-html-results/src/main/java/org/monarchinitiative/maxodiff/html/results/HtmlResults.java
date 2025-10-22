@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
+import org.monarchinitiative.maxodiff.core.analysis.HTMLFrequencyMap;
 import org.monarchinitiative.maxodiff.core.analysis.HpoFrequency;
 import org.monarchinitiative.maxodiff.core.analysis.refinement.MaxodiffResult;
 import org.monarchinitiative.maxodiff.core.model.Sample;
@@ -41,14 +42,15 @@ public class HtmlResults {
         List<String> excludedHpoLinks = sample.excludedHpoTermIds().stream().map(tid -> hpoLink(tid,biometadataService)).toList();
         String sampleExcludedTermsString = String.join(" ", excludedHpoLinks);
 
+        HTMLFrequencyMap htmlFrequencyMap = new HTMLFrequencyMap(diseases, icMicaData);
+
         String resultsString = getHTMLResults(
                 resultList,
                 biometadataService,
                 nDiseases,
-                diseases,
                 nRepetitions,
                 hpoTermCounts,
-                icMicaData);
+                htmlFrequencyMap);
         if (mode.equals("clinician")) {
             resultsString = getHTMLMaxoDiseaseResults(resultList, biometadataService);
         }
@@ -75,11 +77,10 @@ public class HtmlResults {
     static String getHTMLboxFromTemplate(MaxodiffResult result,
                                          BiometadataService biometadataService,
                                          int nDiseases,
-                                         HpoDiseases diseases,
                                          int nRepetitions,
                                          Map<TermId, List<HpoFrequency>> hpoTermCountMap,
                                          int idx,
-                                         Map<TermPair, Double> icMicaData,
+                                         HTMLFrequencyMap htmlFrequencyMap,
                                          SpringTemplateEngine templateEngine) {
 
         MaxoHtmlResult maxoData = new MaxoHtmlResult(
@@ -87,10 +88,9 @@ public class HtmlResults {
                 hpoTermCountMap,
                 idx,
                 nDiseases,
-                diseases,
                 nRepetitions,
                 biometadataService,
-                icMicaData
+                htmlFrequencyMap
         );
         Context context = new Context();
         context.setVariable("maxoData", maxoData);
@@ -117,10 +117,9 @@ public class HtmlResults {
             List<MaxodiffResult> resultList,
             BiometadataService biometadataService,
             int nDiseases,
-            HpoDiseases disease,
             int nRepetitions,
             Map<TermId, List<HpoFrequency>> hpoTermCounts,
-            Map<TermPair, Double> icMicaData) {
+            HTMLFrequencyMap htmlFrequencyMap) {
         SpringTemplateEngine templateEngine = templateEngine();
         StringBuilder resultsString = new StringBuilder();
 
@@ -133,11 +132,10 @@ public class HtmlResults {
             String templateHtml = getHTMLboxFromTemplate(result,
                     biometadataService,
                     nDiseases,
-                    disease,
                     nRepetitions,
                     hpoTermCounts,
                     idx,
-                    icMicaData,
+                    htmlFrequencyMap,
                     templateEngine);
             resultsString.append(templateHtml);
         }

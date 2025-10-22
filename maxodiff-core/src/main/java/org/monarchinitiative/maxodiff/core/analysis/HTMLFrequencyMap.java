@@ -44,20 +44,20 @@ public class HTMLFrequencyMap {
      * @param diseaseId target OMIM disease
      * @return maximum MICA for the HPO term and any of the disease observed HPO terms
      */
-    private double micaForDisease(TermId hpoId, TermId diseaseId) {
+    public float micaForDisease(TermId hpoId, TermId diseaseId) {
         Optional<HpoDisease> opt = this.diseases.diseaseById(diseaseId);
         if (opt.isEmpty()) {
-            return 0d;
+            return 0f;
         }
         HpoDisease disease = opt.get();
         List<TermId> diseaseHpoTermIds = disease.presentAnnotationsStream()
                 .map(HpoDiseaseAnnotation::id)
                 .toList();
-        double mica = 0d;
+        float mica = 0f;
         for (TermId tid : diseaseHpoTermIds) {
             TermPair tp = TermPair.symmetric(tid, hpoId);
             double m = icMicaData.getOrDefault(tp, 0d);
-            if (m > mica) mica = m;
+            if (m > mica) mica = (float) m;
         }
         return mica;
     }

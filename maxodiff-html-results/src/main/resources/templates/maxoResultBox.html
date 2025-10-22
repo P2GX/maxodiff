@@ -176,8 +176,8 @@
                 <td class="parentCell">
                     <div class="hpoCell"
                          th:classappend="${cell.empty} ? ' emptyCell'"
-                         th:style="${cell.empty} ? '' : 'background:' + ${cell.style}">
-                        <span th:text="${cell.empty} ? '∅' : ''"></span>
+                         th:style="${cell.empty} ? 'background:' + ${cell.style} : 'background:' + ${cell.style}">
+                        <span th:text="${cell.empty} ? ${#numbers.formatDecimal(cell.mica, 1, 2)} : ''"></span>
                     </div>
                 </td>
             </th:block>
