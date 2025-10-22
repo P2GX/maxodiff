@@ -7,13 +7,16 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
-public record RankMaxoScore(TermId maxoId, Set<TermId> initialOmimTermIds, Set<TermId> maxoOmimTermIds,
-                            Set<TermId> discoverableObservedHpoTermIds,
-                            Map<TermId, Integer> chosenHpoTermCtsMap,
-                            Double maxoScore,
-                            List<DifferentialDiagnosis> maxoDiagnoses,
-                            Map<TermId, Map<TermId, Integer>> hpoTermIdRepCtsMap,
-                            Map<TermId, List<Integer>> maxoDiseaseAvgRankChangeMap,
-                            int minRankChange,
-                            int maxRankChange) {
+public record RankMaxoScore(
+        TermId maxoId,
+        Set<TermId> initialOmimTermIds,
+        Set<TermId> maxoOmimTermIds,
+        Set<TermId> discoverableObservedHpoTermIds,
+        Map<TermId, Integer> chosenHpoTermCtsMap,
+        Double maxoScore,
+        List<DifferentialDiagnosis> maxoDiagnoses,
+        Map<TermId, Map<TermId, Integer>> hpoTermIdRepCtsMap,
+        Map<TermId, List<Integer>> maxoDiseaseAvgRankChangeMap,
+        int minRankChange,
+        int maxRankChange) {
 }

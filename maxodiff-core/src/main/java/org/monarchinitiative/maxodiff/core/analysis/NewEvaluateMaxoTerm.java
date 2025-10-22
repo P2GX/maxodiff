@@ -19,9 +19,13 @@ public class NewEvaluateMaxoTerm implements Callable<RankMaxoScore> {
     private final MaxoHpoTermProbabilities maxoHpoTermProbabilities;
     private final Set<TermId> diseaseIds;
 
-    public NewEvaluateMaxoTerm(MaxoHpoDiseaseRank maxoHpoDiseaseRank,
-                               int nRepetitions, Sample ppkt, DifferentialDiagnosisEngine engine,
-                               MaxoHpoTermProbabilities maxoHpoTermProbabilities, Set<TermId> diseaseIds) {
+    public NewEvaluateMaxoTerm(
+            MaxoHpoDiseaseRank maxoHpoDiseaseRank,
+            int nRepetitions,
+            Sample ppkt,
+            DifferentialDiagnosisEngine engine,
+            MaxoHpoTermProbabilities maxoHpoTermProbabilities,
+            Set<TermId> diseaseIds) {
         this.maxoHpoDiseaseRank = maxoHpoDiseaseRank;
         this.nRepetitions = nRepetitions;
         this.ppkt = ppkt;

@@ -361,7 +361,7 @@ public class BenchmarkCommand extends DifferentialDiagnosisCommand {
                                         Path maxodiffResultsHTMLPath = Path.of(String.join(File.separator, outputDir.toString(), outputFilename));
 
                                         String htmlString = HtmlResults.writeHTMLResults(sample, nDiseases, nRepetitions, resultsList,
-                                                biometadataService, hpoTermCounts, "researcher");
+                                                biometadataService, hpoTermCounts, icMicaDict, "researcher");
 
                                         Files.writeString(maxodiffResultsHTMLPath, htmlString);
                                     }

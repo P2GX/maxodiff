@@ -189,7 +189,7 @@ public class MaxodiffController {
 
 
             String htmlString = HtmlResults.writeHTMLResults(sample, nDiseases, nRepetitions, resultsList,
-                    biometadataService, hpoTermCounts, view);
+                    biometadataService, hpoTermCounts, icMicaDict, view);
 
             model.addAttribute("htmlTemplateString", htmlString);
             model.addAttribute("showMDresults", true);

@@ -11,21 +11,25 @@ import org.monarchinitiative.maxodiff.core.service.BiometadataService;
 import org.monarchinitiative.maxodiff.html.results.maxoDisease.MaxoDiseaseHTML;
 import org.monarchinitiative.maxodiff.html.results.maxoHpo.MaxoHtmlResult;
 import org.monarchinitiative.phenol.ontology.data.TermId;
+import org.monarchinitiative.phenol.ontology.similarity.TermPair;
 import org.thymeleaf.context.Context;
 import org.thymeleaf.spring6.SpringTemplateEngine;
 import org.thymeleaf.templateresolver.ClassLoaderTemplateResolver;
 
-import java.io.File;
 import java.io.StringWriter;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.*;
 
 public class HtmlResults {
 
-    public static String writeHTMLResults(Sample sample, int nDiseases, int nRepetitions, List<MaxodiffResult> resultList,
-                                           BiometadataService biometadataService, Map<TermId, List<HpoFrequency>> hpoTermCounts,
-                                          String mode) throws Exception {
+    public static String writeHTMLResults(
+            Sample sample,
+            int nDiseases,
+            int nRepetitions,
+            List<MaxodiffResult> resultList,
+            BiometadataService biometadataService,
+            Map<TermId, List<HpoFrequency>> hpoTermCounts,
+            Map<TermPair, Double> icMicaData,
+            String mode) throws Exception {
 
         ClassLoaderTemplateResolver templateResolver = new ClassLoaderTemplateResolver();
         templateResolver.setPrefix("templates/");
