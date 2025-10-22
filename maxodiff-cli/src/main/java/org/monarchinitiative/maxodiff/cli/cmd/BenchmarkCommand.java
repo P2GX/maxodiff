@@ -302,7 +302,7 @@ public class BenchmarkCommand extends DifferentialDiagnosisCommand {
 
 
                                         RankMaxo rankMaxo = new RankMaxo(hpoToMaxoTermMap, maxoToHpoTermIdMap, maxoHpoTermProbabilities, diseaseSubsetEngine,
-                                                minimalOntology, ontology, allOrderedDiagnoses);
+                                                ontology, allOrderedDiagnoses);
 
                                         refinementResults = e.getValue().run(sample,
                                                 orderedDiagnoses,

@@ -197,7 +197,7 @@ public class DifferentialDiagnosisCommand extends BaseCommand {
 
             LOGGER.info("Running Maxodiff calculation...");
             RankMaxo rankMaxo = new RankMaxo(hpoToMaxoTermMap, maxoToHpoTermIdMap, maxoHpoTermProbabilities, engine,
-                    minimalOntology, ontology, allOrderedDiagnoses);
+                     ontology, allOrderedDiagnoses);
 
             RefinementResults refinementResults = maxoDiffRefiner.run(sample,
                     orderedDiagnoses,

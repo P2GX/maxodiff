@@ -14,10 +14,10 @@ public class HTMLFrequencyMap {
 
     public HTMLFrequencyMap(
             HpoDiseases diseases,
-            Map<TermPair, Double> icMicaData, HpoDiseases diseases1, Map<TermPair, Double> icMicaData1
+            Map<TermPair, Double> icMicaData
     ) {
-        this.diseases = diseases1;
-        this.icMicaData = icMicaData1;
+        this.diseases = diseases;
+        this.icMicaData = icMicaData;
     }
 
 
@@ -31,12 +31,9 @@ public class HTMLFrequencyMap {
      * @return a combined list of all {@link HpoFrequency} objects across all HPO terms
      */
     public static List<HpoFrequency> getHpoFrequencies(Map<TermId, List<HpoFrequency>> hpoTermCounts) {
-        List<HpoFrequency> freqRecords = new ArrayList<>();
-        for (Map.Entry<TermId, List<HpoFrequency>> entry : hpoTermCounts.entrySet()) {
-            var freqRecordList = entry.getValue();
-            freqRecords.addAll(freqRecordList);
-        }
-        return freqRecords;
+        return hpoTermCounts.values().stream()
+                .flatMap(List::stream)
+                .toList();
     }
 
 

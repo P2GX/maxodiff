@@ -99,7 +99,7 @@ public class BaseDiffDiagRefiner implements DiffDiagRefiner {
 
 
         return new RankMaxo(hpoToMaxoTermMap, maxoToHpoTermIdMap, maxoHpoTermProbabilities, engine,
-                minHpo, hpo, allInitialDiagnoses);
+                hpo, allInitialDiagnoses);
     }
 
     //TODO: handle possible multiple differential diagnoses with same termId
