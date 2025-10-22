@@ -59,10 +59,13 @@ public class BaseDiffDiagRefiner implements DiffDiagRefiner {
             differentialDiagnosisModels.sort(Comparator.comparingDouble(DifferentialDiagnosis::score).reversed());
             differentialDiagnosisModels.forEach(d -> diseaseIds.add(d.diseaseId()));
             Set<TermId> hpoTermIds = maxoToHpoTermIdMap.get(maxoId);
-            int nHpoTerms = hpoTermIds.size();
 
-            MaxoTermScore maxoTermScore = new MaxoTermScore(maxoId.toString(), options.nDiseases(),
-                    diseaseIds, Set.of(), nHpoTerms, hpoTermIds,
+
+            MaxoTermScore maxoTermScore = new MaxoTermScore(
+                    maxoId.toString(),
+                    diseaseIds,
+                    Set.of(),
+                    hpoTermIds,
                     0.0, 0.0, scoreDiff, TermId.of("HP:000000"),
                     List.of(), List.of(),null,null);
             // Get HPO frequency records

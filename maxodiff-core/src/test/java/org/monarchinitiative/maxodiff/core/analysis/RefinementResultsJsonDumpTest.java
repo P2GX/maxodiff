@@ -43,10 +43,8 @@ public class RefinementResultsJsonDumpTest {
                   "maxodiffResults" : [ {
                     "maxoTermScore" : {
                       "maxoId" : "MAXO:123",
-                      "nOmimTerms" : 1,
                       "omimTermIds" : [ "OMIM:256000" ],
                       "maxoOmimTermIds" : [ "OMIM:128000" ],
-                      "nHpoTerms" : 0,
                       "hpoTermIds" : [ ],
                       "initialScore" : 1.0,
                       "score" : 3.0,
@@ -89,13 +87,17 @@ public class RefinementResultsJsonDumpTest {
                         MaxodiffResult.of(
                                 new MaxoTermScore(
                                         "MAXO:123",
-                                        1, Set.of(TermId.of("OMIM:256000")), Set.of(TermId.of("OMIM:128000")),
-                                        0, Set.of(),
+                                        Set.of(TermId.of("OMIM:256000")),
+                                        Set.of(TermId.of("OMIM:128000")),
+                                        Set.of(),
                                         1.,
                                         3.,
                                         2.,
                                         TermId.of("OMIM:640000"),
-                                        List.of(), List.of(), new double[1], new double[1]
+                                        List.of(),
+                                        List.of(),
+                                        new double[1],
+                                        new double[1]
                                 ),
                                 new RankMaxoScore(
                                         TermId.of("MAXO:123"),
