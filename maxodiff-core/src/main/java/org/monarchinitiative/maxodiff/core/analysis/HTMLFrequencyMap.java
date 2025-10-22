@@ -38,7 +38,7 @@ public class HTMLFrequencyMap {
                         var freqRecordOmimId = freqRecord.omimId();
                         var freqRecordHpoId = freqRecord.hpoId();
                         var frequency = freqRecord.frequency();
-                        if (freqRecordOmimId.equals(omimId.toString()) && freqRecordHpoId.equals(hpoId.toString()) && frequency != null) {
+                        if (freqRecordOmimId.equals(omimId.toString()) && freqRecordHpoId.equals(hpoId.toString()) && frequency > 0) {
                             List<String> frequencyMapDiseaseList = new ArrayList<>();
                             if (!frequencyOmimMap.containsKey(frequency)) {
                                 frequencyMapDiseaseList.add(omimLabel);
