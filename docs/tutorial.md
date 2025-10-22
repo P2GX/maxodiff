@@ -1,8 +1,8 @@
 # Tutorial
 
-This tutorial explains how to set up and run the command-line interface (CLI) version of maxodiff. Instructions for the online version of maxdoff can be found here 
+This tutorial explains how to set up and run the command-line interface (CLI) version of maxodiff. Instructions for the online version of maxodiff can be found here 
 !!! danger "🚨 TODO"
-    <span class="todo-pulse">Fill in the correct link to the online version of maxo-diff!</span>
+    <span class="todo-pulse">Fill in the correct link to the online version of maxodiff!</span>
 
 
 ## Requirements
@@ -23,7 +23,7 @@ maxodiff was developed using the [Apache maven](https://maven.apache.org/){:targ
 ```bash
 git clone https://github.com/P2GX/maxodiff.git
 ``` 
-2. enter into the directory and build the executable with maven.
+2. Enter into the directory and build the executable with maven.
 This can be done using the script
 ```bash
 cd maxodiff
@@ -40,20 +40,19 @@ java -jar maxodiff-cli/target/maxodiff-cli.jar
 ``` 
 If the executable was successfully created, you should see the following in your shell
 ```bash
-:copy: false
 Usage: maxodiff [-hV] [COMMAND]
 maxo terms for differential diagnosis
   -h, --help      Show this help message and exit.
   -V, --version   Print version information and exit.
 Commands:
   download, D        Download files for maxodiff
-  diagnosis, d       maxodiff analysis
+  analyze, a         maxodiff analysis
   batch, b           batch maxodiff analysis
   benchmark, B       benchmark maxodiff analysis
   precompute-resnik  Precompute Resnik term pair similarity table
 ``` 
 
-These steps generally should work if Java is correctly installed on your system. If you encounter issues, first try the following comamnd and check that Java is correctly installed and has at least version 21.
+These steps generally should work if Java is correctly installed on your system. If you encounter issues, first try the following command and check that Java is correctly installed and has at least version 21.
 ```bash
 java -version
 ``` 
@@ -95,16 +94,17 @@ This command, which will take about 10-20 minutes to run, creates the file
 ``term-pair-similarity.csv.gz`` in the ``data`` subfolder (This subfolder was created by the download command and is
 the place where the other data files are kept).
 
-This command needs to be run once every time the datafiles are updated.
+!!! note "Note"
+    The ``precompute-resnik`` command needs to be run once every time the data files are updated.
 
 
 ## Running maxodiff
 
-We need to update the CLI to use Phenomizer. Now it is crashing and complaining it cannot find the LIRICAL files.
+The CLI version of maxodiff can be run with default values using the analyze command, specifying a path to a phenopacket of interest:
 
-!!! danger "🚨 TODO"
-    <span class="todo-pulse">java.lang.ArrayIndexOutOfBoundsException: Index 1 out of bounds for length 1</span>
-
+```bash
+java -jar maxodiff-cli/target/maxodiff-cli.jar analyze -p <path to phenopacket file> 
+```
 
 # Server
 We can start a local server as follows. First download the files as mentioned above.
@@ -112,6 +112,12 @@ Then enter
 
 ```bash
 java -jar maxodiff-html/target/maxodiff-html.jar
+```
+
+If a Java heap space error occurs, more memory can be allocated by adding VM options:
+
+```shell
+java -Xmx8g -jar maxodiff-html/target/maxodiff-html.jar
 ```
 
 A server will start at ``http://localhost:8080/maxodiff``
