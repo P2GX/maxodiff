@@ -98,10 +98,8 @@ public class BaseDiffDiagRefiner implements DiffDiagRefiner {
                 diseaseModelProbability);
 
 
-        RankMaxo rankMaxo = new RankMaxo(hpoToMaxoTermMap, maxoToHpoTermIdMap, maxoHpoTermProbabilities, engine,
+        return new RankMaxo(hpoToMaxoTermMap, maxoToHpoTermIdMap, maxoHpoTermProbabilities, engine,
                 minHpo, hpo, allInitialDiagnoses);
-
-        return rankMaxo;
     }
 
     //TODO: handle possible multiple differential diagnoses with same termId
