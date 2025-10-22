@@ -235,6 +235,7 @@ public class DifferentialDiagnosisCommand extends BaseCommand {
                 String htmlString = HtmlResults.writeHTMLResults(
                         sample,
                         nDiseases,
+                        hpoDiseases,
                         nRepetitions,
                         resultsList,
                         biometadataService,
@@ -248,7 +249,7 @@ public class DifferentialDiagnosisCommand extends BaseCommand {
                         nDiseasesAbbr, nRepsAbbr, "maxodiff", "clinician", "results.html");
                 Path maxodiffResultsHTMLPath1 = Path.of(String.join(File.separator, outputDir.toString(), outputFilename1));
 
-                String htmlString1 = HtmlResults.writeHTMLResults(sample, nDiseases, nRepetitions, resultsList,
+                String htmlString1 = HtmlResults.writeHTMLResults(sample, nDiseases, hpoDiseases, nRepetitions, resultsList,
                         biometadataService, hpoTermCounts, icMicaDict,"clinician");
                 Files.writeString(maxodiffResultsHTMLPath1, htmlString1);
             }

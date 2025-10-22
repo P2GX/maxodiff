@@ -188,9 +188,16 @@ public class MaxodiffController {
             resultsList.sort(Comparator.<MaxodiffResult>comparingDouble(mr -> mr.rankMaxoScore().maxoScore()).reversed());
 
 
-            String htmlString = HtmlResults.writeHTMLResults(sample, nDiseases, nRepetitions, resultsList,
-                    biometadataService, hpoTermCounts, icMicaDict, view);
-
+            String htmlString = HtmlResults.writeHTMLResults(
+                    sample,
+                    nDiseases,
+                    hpoDiseases,
+                    nRepetitions,
+                    resultsList,
+                    biometadataService,
+                    hpoTermCounts,
+                    icMicaDict,
+                    view);
             model.addAttribute("htmlTemplateString", htmlString);
             model.addAttribute("showMDresults", true);
         }

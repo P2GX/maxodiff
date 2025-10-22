@@ -50,7 +50,6 @@ public class MaxoResultRow {
                 /// TODO WHAT?
                 int ct1 = Optional.ofNullable(ctMap.get(hpoId)).orElse(0);
                 double opacity1 = 1;
-//                        (result.rankMaxoScore().discoverableObservedDescendantHpoTermIds().contains(hpoId) ? 0.5 : 1);
                 cells.add(new HpoTableCell(ct1, opacity1));
             }
             rows.add(new MaxoResultRow(omimId.getValue(), omimLabel, initialRank, rankChange, nDiseases, cells));

@@ -1,22 +1,68 @@
 package org.monarchinitiative.maxodiff.core.analysis;
 
+import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDisease;
+import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseaseAnnotation;
+import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
 import org.monarchinitiative.phenol.ontology.data.TermId;
+import org.monarchinitiative.phenol.ontology.similarity.TermPair;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class HTMLFrequencyMap {
+    private final HpoDiseases diseases;
+    private final Map<TermPair, Double> icMicaData;
 
+    public HTMLFrequencyMap(
+            HpoDiseases diseases,
+            Map<TermPair, Double> icMicaData, HpoDiseases diseases1, Map<TermPair, Double> icMicaData1
+    ) {
+        this.diseases = diseases1;
+        this.icMicaData = icMicaData1;
+    }
+
+
+    /**
+     * Retrieve a flattened list of {@link HpoFrequency} records from the provided map.
+     *
+     * <p>Each {@link HpoFrequency} has an OMIM id, an HPO id, and a frequency..</p>
+     *
+     * @param hpoTermCounts a map where each key is an {@link TermId} and the value is a list of
+     *                      {@link HpoFrequency} objects associated with that term
+     * @return a combined list of all {@link HpoFrequency} objects across all HPO terms
+     */
     public static List<HpoFrequency> getHpoFrequencies(Map<TermId, List<HpoFrequency>> hpoTermCounts) {
         List<HpoFrequency> freqRecords = new ArrayList<>();
         for (Map.Entry<TermId, List<HpoFrequency>> entry : hpoTermCounts.entrySet()) {
             var freqRecordList = entry.getValue();
             freqRecords.addAll(freqRecordList);
         }
-
         return freqRecords;
+    }
+
+
+
+
+    /**
+     * @param hpoId target HPO term
+     * @param diseaseId target OMIM disease
+     * @return maximum MICA for the HPO term and any of the disease observed HPO terms
+     */
+    private double micaForDisease(TermId hpoId, TermId diseaseId) {
+        Optional<HpoDisease> opt = this.diseases.diseaseById(diseaseId);
+        if (opt.isEmpty()) {
+            return 0d;
+        }
+        HpoDisease disease = opt.get();
+        List<TermId> diseaseHpoTermIds = disease.presentAnnotationsStream()
+                .map(HpoDiseaseAnnotation::id)
+                .toList();
+        double mica = 0d;
+        for (TermId tid : diseaseHpoTermIds) {
+            TermPair tp = TermPair.symmetric(tid, hpoId);
+            double m = icMicaData.getOrDefault(tp, 0d);
+            if (m > mica) mica = m;
+        }
+        return mica;
     }
 
     public static Map<String, Map<Float, List<String>>> makeFrequencyDiseaseMap(Map<TermId, String> hpoIdToLabelMap,

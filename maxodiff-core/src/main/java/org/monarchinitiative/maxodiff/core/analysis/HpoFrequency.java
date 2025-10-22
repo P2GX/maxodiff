@@ -12,5 +12,6 @@ public record HpoFrequency(
         String omimId,
         String hpoId,
         int count,
-        float frequency) {
+        float frequency,
+        float mica) {
 }

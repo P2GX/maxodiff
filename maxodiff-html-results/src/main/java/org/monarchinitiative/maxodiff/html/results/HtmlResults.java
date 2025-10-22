@@ -10,6 +10,7 @@ import org.monarchinitiative.maxodiff.core.model.Sample;
 import org.monarchinitiative.maxodiff.core.service.BiometadataService;
 import org.monarchinitiative.maxodiff.html.results.maxoDisease.MaxoDiseaseHTML;
 import org.monarchinitiative.maxodiff.html.results.maxoHpo.MaxoHtmlResult;
+import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 import org.monarchinitiative.phenol.ontology.similarity.TermPair;
 import org.thymeleaf.context.Context;
@@ -24,6 +25,7 @@ public class HtmlResults {
     public static String writeHTMLResults(
             Sample sample,
             int nDiseases,
+            HpoDiseases diseases,
             int nRepetitions,
             List<MaxodiffResult> resultList,
             BiometadataService biometadataService,
@@ -31,12 +33,7 @@ public class HtmlResults {
             Map<TermPair, Double> icMicaData,
             String mode) throws Exception {
 
-        ClassLoaderTemplateResolver templateResolver = new ClassLoaderTemplateResolver();
-        templateResolver.setPrefix("templates/");
-        templateResolver.setSuffix(".html");
-        templateResolver.setTemplateMode("HTML");
-        templateResolver.setCharacterEncoding("UTF-8");
-        templateResolver.setCacheable(false);
+        SpringTemplateEngine templateEngine = templateEngine();
 
         String sampleId = sample.id();
         List<String> observedHpoLinks = sample.observedHpoTermIds().stream().map(tid -> hpoLink(tid,biometadataService)).toList();
@@ -44,19 +41,28 @@ public class HtmlResults {
         List<String> excludedHpoLinks = sample.excludedHpoTermIds().stream().map(tid -> hpoLink(tid,biometadataService)).toList();
         String sampleExcludedTermsString = String.join(" ", excludedHpoLinks);
 
-        String resultsString = getHTMLResults(resultList, biometadataService, nDiseases, nRepetitions, hpoTermCounts);
+        String resultsString = getHTMLResults(
+                resultList,
+                biometadataService,
+                nDiseases,
+                diseases,
+                nRepetitions,
+                hpoTermCounts,
+                icMicaData);
         if (mode.equals("clinician")) {
             resultsString = getHTMLMaxoDiseaseResults(resultList, biometadataService);
         }
 
-        MaxodiffHtml maxodiffHtml = new MaxodiffHtml(sampleId, samplePresentTermsString, sampleExcludedTermsString,
-                nDiseases, nRepetitions, resultsString);
+        MaxodiffHtml maxodiffHtml = new MaxodiffHtml(
+                sampleId,
+                samplePresentTermsString,
+                sampleExcludedTermsString,
+                nDiseases,
+                nRepetitions,
+                resultsString);
 
         Context context = new Context();
         context.setVariable("maxodiff", maxodiffHtml);
-
-        SpringTemplateEngine templateEngine = new SpringTemplateEngine();
-        templateEngine.setTemplateResolver(templateResolver);
         return templateEngine.process("maxodiffResults", context);
 
     }
@@ -69,34 +75,53 @@ public class HtmlResults {
     static String getHTMLboxFromTemplate(MaxodiffResult result,
                                          BiometadataService biometadataService,
                                          int nDiseases,
+                                         HpoDiseases diseases,
                                          int nRepetitions,
                                          Map<TermId, List<HpoFrequency>> hpoTermCountMap,
-                                         int idx, SpringTemplateEngine templateEngine) {
+                                         int idx,
+                                         Map<TermPair, Double> icMicaData,
+                                         SpringTemplateEngine templateEngine) {
 
         MaxoHtmlResult maxoData = new MaxoHtmlResult(
                 result,
                 hpoTermCountMap,
                 idx,
                 nDiseases,
+                diseases,
                 nRepetitions,
-                biometadataService
+                biometadataService,
+                icMicaData
         );
         Context context = new Context();
         context.setVariable("maxoData", maxoData);
         return templateEngine.process("maxoResultBox", context);
     }
 
-    protected static String getHTMLResults(List<MaxodiffResult> resultList, BiometadataService biometadataService,
-                                           int nDiseases, int nRepetitions, Map<TermId, List<HpoFrequency>> hpoTermCounts) throws Exception {
+    /**
+     * @return Spring thymeleaf template engine
+     */
+    static private SpringTemplateEngine templateEngine() {
         ClassLoaderTemplateResolver templateResolver = new ClassLoaderTemplateResolver();
         templateResolver.setPrefix("templates/");
         templateResolver.setSuffix(".html");
         templateResolver.setTemplateMode("HTML");
         templateResolver.setCharacterEncoding("UTF-8");
         templateResolver.setCacheable(false);
-
         SpringTemplateEngine templateEngine = new SpringTemplateEngine();
         templateEngine.setTemplateResolver(templateResolver);
+        return templateEngine;
+    }
+
+
+    protected static String getHTMLResults(
+            List<MaxodiffResult> resultList,
+            BiometadataService biometadataService,
+            int nDiseases,
+            HpoDiseases disease,
+            int nRepetitions,
+            Map<TermId, List<HpoFrequency>> hpoTermCounts,
+            Map<TermPair, Double> icMicaData) {
+        SpringTemplateEngine templateEngine = templateEngine();
         StringBuilder resultsString = new StringBuilder();
 
         int zeroIdx = resultList.stream()
@@ -105,13 +130,14 @@ public class HtmlResults {
         int nDisplayed = Math.min(resultList.size(), zeroIdx);
         for (MaxodiffResult result : resultList.subList(0, nDisplayed)) {
             int idx = resultList.indexOf(result) + 1;
-           // String html = getHTMLbox(result, biometadataService, nDiseases, nRepetitions, hpoTermCounts, idx);
             String templateHtml = getHTMLboxFromTemplate(result,
                     biometadataService,
                     nDiseases,
+                    disease,
                     nRepetitions,
                     hpoTermCounts,
                     idx,
+                    icMicaData,
                     templateEngine);
             resultsString.append(templateHtml);
         }
@@ -133,15 +159,7 @@ public class HtmlResults {
     }
 
     protected static String getHTMLMaxoDiseaseResults(List<MaxodiffResult> resultList, BiometadataService biometadataService) throws Exception {
-        ClassLoaderTemplateResolver templateResolver = new ClassLoaderTemplateResolver();
-        templateResolver.setPrefix("templates/");
-        templateResolver.setSuffix(".html");
-        templateResolver.setTemplateMode("HTML");
-        templateResolver.setCharacterEncoding("UTF-8");
-        templateResolver.setCacheable(false);
-
-        SpringTemplateEngine templateEngine = new SpringTemplateEngine();
-        templateEngine.setTemplateResolver(templateResolver);
+        SpringTemplateEngine templateEngine = templateEngine();
         StringBuilder resultsString = new StringBuilder();
 
         int zeroIdx = resultList.stream()
