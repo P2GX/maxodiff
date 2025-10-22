@@ -35,7 +35,7 @@ public class HtmlResults {
         templateResolver.setCacheable(false);
 
         String sampleId = sample.id();
-        List<String> observedHpoLinks = sample.presentHpoTermIds().stream().map(tid -> hpoLink(tid,biometadataService)).toList();
+        List<String> observedHpoLinks = sample.observedHpoTermIds().stream().map(tid -> hpoLink(tid,biometadataService)).toList();
         String samplePresentTermsString = String.join(" ", observedHpoLinks);
         List<String> excludedHpoLinks = sample.excludedHpoTermIds().stream().map(tid -> hpoLink(tid,biometadataService)).toList();
         String sampleExcludedTermsString = String.join(" ", excludedHpoLinks);

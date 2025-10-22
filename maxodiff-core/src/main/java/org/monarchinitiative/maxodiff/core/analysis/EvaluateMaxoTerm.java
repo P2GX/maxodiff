@@ -126,7 +126,7 @@ public class EvaluateMaxoTerm implements Callable<RankMaxoScore> {
                 .flatMap(Collection::stream)
                 .collect(Collectors.toSet());
 
-        Map<TermId, Integer> maxoDiseaseAvgRankChangeMap = new HashMap<>();
+        Map<TermId, List<Integer>> maxoDiseaseAvgRankChangeMap = new HashMap<>();
         for (TermId omimId : maxoDiagnosesDiseaseIds) {
             int initialRank = 0;
             List<DifferentialDiagnosis> initialDiffDiagnoses = initialDiagnoses.stream()
@@ -154,11 +154,14 @@ public class EvaluateMaxoTerm implements Callable<RankMaxoScore> {
                 double meanRankDiffDouble = meanRankDiffOptional.getAsDouble();
                 meanRankDiff = (int) Math.round(meanRankDiffDouble);
             }
-            maxoDiseaseAvgRankChangeMap.put(omimId, meanRankDiff);
+            List<Integer> rankChanges = new ArrayList<>();
+            rankChanges.add(initialRank);
+            rankChanges.add(meanRankDiff);
+            maxoDiseaseAvgRankChangeMap.put(omimId, rankChanges);
         }
         //sort maps by disease average rank change
-        Map<TermId, Integer> maxoDiseaseAvgRankChangeMapSorted = maxoDiseaseAvgRankChangeMap.entrySet().stream()
-                .sorted(Map.Entry.comparingByValue())
+        Map<TermId, List<Integer>> maxoDiseaseAvgRankChangeMapSorted = maxoDiseaseAvgRankChangeMap.entrySet().stream()
+                .sorted(Comparator.comparing(entry -> entry.getValue().get(entry.getValue().size() - 1)))
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (a,b)->b, LinkedHashMap::new));
 
         Map<TermId, Map<TermId, Integer>> maxoDiscoverableHpoIdCtsSorted = maxoDiseaseAvgRankChangeMapSorted.keySet().stream()
@@ -171,10 +174,14 @@ public class EvaluateMaxoTerm implements Callable<RankMaxoScore> {
                 ));
 
 
+        int minRankChange = maxoDiseaseAvgRankChangeMapSorted.entrySet().stream().toList().getFirst().getValue().getLast();
+        int maxRankChange = maxoDiseaseAvgRankChangeMapSorted.entrySet().stream().toList().getLast().getValue().getLast();
+
         return new RankMaxoScore(maxoId, initialDiagnosesDiseaseIds, maxoDiagnosesDiseaseIds,
-                maxoDiscoverableObservedHpoIds, maxoObservedDescendantHpoIds, meanScore,
+                maxoDiscoverableObservedHpoIds, Map.of(), meanScore,
                 maxoDDResultsList.getLast().maxoDifferentialDiagnoses(),
                 maxoDiscoverableHpoIdCtsSorted, maxoDiseaseAvgRankChangeMapSorted,
-                Collections.min(maxoDiseaseAvgRankChangeMapSorted.values()), Collections.max(maxoDiseaseAvgRankChangeMapSorted.values()));
+                minRankChange,
+                maxRankChange);
     }
 }

@@ -15,46 +15,6 @@
             white-space: pre-wrap !important;
         }
 
-        .countsTable {
-          table-layout: fixed;
-        }
-
-        .countsTable td {
-            padding: 10px 10px 10px 10px;
-            height: 30px;
-            width: 10px;
-        }
-
-        .countsTable td:first-child {
-            font-weight: bold;
-            white-space: nowrap;
-            max-width: 400px;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
-        .countsTable th {
-            position: relative;
-            height: 200px;
-            width: 50px; /* needed for layout */
-            padding: 0;
-            margin: 0;
-            overflow: visible;
-            white-space: nowrap;
-            vertical-align: bottom;
-            text-align: center;
-        }
-
-        .countsTable th > div {
-           /*  transform: rotate(315deg); or -45deg */
-            transform-origin: bottom left;
-            position: absolute;
-            bottom: 0;
-            left: 50%;
-            transform: translateX(+0%) rotate(315deg); /* better centering */
-            white-space: nowrap;
-        }
-
         .diffDiagInputTable, .fileInputTable {
           border: 1px solid black;
           background-color: lemonchiffon;
@@ -108,20 +68,6 @@
            background-color: cornflowerblue;
         }
 
-        .parentCell {
-            position: relative;
-        }
-
-        .tooltip {
-            display: none;
-            position: absolute;
-            background-color: white;
-        }
-
-        .parentCell:hover span.tooltip {
-            display:block;
-        }
-
         #progressBarContainer1 {
             width: 80%;
             background-color: #f3f3f3;
@@ -139,38 +85,7 @@
             color: white;
         }
 
-        .scoreTable {
-          width: auto;
-          border-collapse: collapse;
-          margin-bottom: 1em;
-        }
 
-        .scoreTable td {
-          padding: 0.3em 0.6em;
-          border: none;
-          font-size: 0.95em;
-        }
-
-        .section-box {
-          border: 1px solid #ccc;
-          border-left: 6px solid #007acc;
-          border-radius: 8px;
-          padding: 1em;
-          margin: 2em 0;
-          background: #f9f9f9;
-          box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-          overflow-x: visible;
-          max-width: 50%;
-          left: 50%;
-          margin-right: -50%;
-          transform: translate(50%);
-        }
-
-        .section-box h2 {
-          font-size: 1.4em;
-          color: #003366;
-          margin-bottom: 0.5em;
-        }
 
         .section-box-view {
           border: 1px solid #ccc;
@@ -268,15 +183,15 @@
                 </tr>
                 <tr>
     <!--                <td>Present HPO Term IDs:</td>-->
-                    <td><input type="hidden" th:field="*{presentHpoTermIds}" readonly="readonly"/></td>
+                    <td><input type="hidden" th:field="*{observedHpoTermIds}" readonly="readonly"/></td>
                 </tr>
                 <tr>
     <!--                <td>Excluded HPO Term IDs:</td>-->
                     <td><input type="hidden" th:field="*{excludedHpoTermIds}" readonly="readonly"/></td>
                 </tr>
                 <tr>
-                    <td>Present HPO Terms:</td>
-                    <td><ul id="presentHpoTermsList"></ul></td>
+                    <td>Observed HPO Terms:</td>
+                    <td><ul id="observedHpoTermsList"></ul></td>
                 </tr>
                 <tr>
                     <td>Excluded HPO Terms:</td>
@@ -297,8 +212,11 @@
                     newLink.textContent = hpoLabel + ' (' + hpoId + ')';
                     newLink.target = "_blank";
                     newLink.rel = "noopener noreferrer";
-                    newItem.appendChild(newLink);
-                    listContainer.appendChild(newItem);
+                    const existingLink = listContainer.querySelector(`a[href="${newLink.href}"]`);
+                    if (!existingLink) {
+                        newItem.appendChild(newLink);
+                        listContainer.appendChild(newItem);
+                    }
                 };
             };
 
@@ -316,12 +234,15 @@
                 .then(data => {
     <!--                document.getElementById('phenopacketName').textContent = data.phenopacketName;-->
                     document.querySelector('[name="id"]').value = data.id || '';
-                    document.querySelector('[name="presentHpoTermIds"]').value = data.presentHpoTermIds || '';
+                    console.log(data)
+                    console.log(document.querySelector('[name="observedHpoTermIds"]'))
+                    console.log(document.querySelector('[name="excludedHpoTermIds"]'))
+                    document.querySelector('[name="observedHpoTermIds"]').value = data.observedHpoTermIds || '';
                     document.querySelector('[name="excludedHpoTermIds"]').value = data.excludedHpoTermIds || '';
 
-                    var presentHpoTermsListContainer = document.getElementById('presentHpoTermsList');
-                    var presentHpoTermsMap = new Map(Object.entries(data.presentHpoTerms));
-                    addHpoTermToList(presentHpoTermsListContainer, presentHpoTermsMap);
+                    var observedHpoTermsListContainer = document.getElementById('observedHpoTermsList');
+                    var observedHpoTermsMap = new Map(Object.entries(data.observedHpoTerms));
+                    addHpoTermToList(observedHpoTermsListContainer, observedHpoTermsMap);
                     var excludedHpoTermsListContainer = document.getElementById('excludedHpoTermsList');
                     var excludedHpoTermsMap = new Map(Object.entries(data.excludedHpoTerms));
                     addHpoTermToList(excludedHpoTermsListContainer, excludedHpoTermsMap);

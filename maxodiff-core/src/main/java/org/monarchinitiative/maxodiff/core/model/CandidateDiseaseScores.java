@@ -54,6 +54,7 @@ public class CandidateDiseaseScores {
                 diseaseRankProbabilityMap.replace(diseaseIdKey, probabilityValue / diseaseRankProbabilityValueSum));
         AscertainablePhenotypes ascertainablePhenotypes = new AscertainablePhenotypes(hpoDiseases);
         TermId selectedDiseaseId = getDiseaseId(diseaseRankProbabilityMap);
+        //TODO: See Brainstorm Google doc for new algorithm
         Set<TermId> ascertainablePhenotypeIds = ascertainablePhenotypes.getAscertainablePhenotypeIds(ppkt, selectedDiseaseId);
         Set<TermId> maxoAddedObservedHpoIds = new HashSet<>();
         Set<TermId> maxoAddedObservedDescendantHpoIds = new HashSet<>();
@@ -132,7 +133,7 @@ public class CandidateDiseaseScores {
     }
 
     private Sample getNewSample(Sample ppkt, Set<TermId> observed, Set<TermId> excluded) {
-        Set<TermId> ppktObserved = new HashSet<>(ppkt.presentHpoTermIds());
+        Set<TermId> ppktObserved = new HashSet<>(ppkt.observedHpoTermIds());
         Set<TermId> ppktExcluded = new HashSet<>(ppkt.excludedHpoTermIds());
         Set<TermId> newObserved = Stream.concat(ppktObserved.stream(), observed.stream()).collect(Collectors.toSet());
         Set<TermId> newExcluded = Stream.concat(ppktExcluded.stream(), excluded.stream()).collect(Collectors.toSet());

@@ -9,11 +9,11 @@ import java.util.Set;
 
 public record RankMaxoScore(TermId maxoId, Set<TermId> initialOmimTermIds, Set<TermId> maxoOmimTermIds,
                             Set<TermId> discoverableObservedHpoTermIds,
-                            Set<TermId> discoverableObservedDescendantHpoTermIds,
+                            Map<TermId, Integer> chosenHpoTermCtsMap,
                             Double maxoScore,
                             List<DifferentialDiagnosis> maxoDiagnoses,
                             Map<TermId, Map<TermId, Integer>> hpoTermIdRepCtsMap,
-                            Map<TermId, Integer> maxoDiseaseAvgRankChangeMap,
+                            Map<TermId, List<Integer>> maxoDiseaseAvgRankChangeMap,
                             int minRankChange,
                             int maxRankChange) {
 }
