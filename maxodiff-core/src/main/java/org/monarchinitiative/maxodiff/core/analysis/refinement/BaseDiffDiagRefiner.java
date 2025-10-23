@@ -60,19 +60,11 @@ public class BaseDiffDiagRefiner implements DiffDiagRefiner {
             differentialDiagnosisModels.forEach(d -> diseaseIds.add(d.diseaseId()));
             Set<TermId> hpoTermIds = maxoToHpoTermIdMap.get(maxoId);
 
-
-            MaxoTermScore maxoTermScore = new MaxoTermScore(
-                    maxoId.toString(),
-                    diseaseIds,
-                    Set.of(),
-                    hpoTermIds,
-                    0.0, 0.0, scoreDiff, TermId.of("HP:000000"),
-                    List.of(), List.of(),null,null);
             // Get HPO frequency records
-            List<Frequencies> frequencies = getFrequencyRecords(maxoTermScore.omimTermIds(),
-                    maxoTermScore.hpoTermIds(), hpoTermCounts);
+            List<Frequencies> frequencies = getFrequencyRecords(rankMaxoScore.initialOmimTermIds(),
+                    hpoTermIds, hpoTermCounts);
             // Make MaxodiffResult for the MAXO term
-            MaxodiffResult maxodiffResult = new MaxodiffResultImpl(maxoTermScore, rankMaxoScore, frequencies, List.of());
+            MaxodiffResult maxodiffResult = new MaxodiffResultImpl(rankMaxoScore, frequencies);
             maxodiffResultsList.add(maxodiffResult);
         }
         // Return RefinementResults object, which contains the list of MaxodiffResult objects.

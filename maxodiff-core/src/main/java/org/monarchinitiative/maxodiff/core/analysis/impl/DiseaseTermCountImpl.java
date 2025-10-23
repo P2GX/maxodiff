@@ -33,7 +33,7 @@ public class DiseaseTermCountImpl implements DiseaseTermCount {
      * Default implementation that constructs a {@link DiseaseTermCount} from a list of {@link HpoDisease}s.
      *
      * @param diseaseList list of diseases to include
-     * @return a {@link DiseaseTermCountImpl} summarizing term frequencies
+     * @return a {@link DiseaseTermCountImpl} summarizing hpo term frequencies for the diseases of interest
      */
     public static DiseaseTermCountImpl defaultCount(List<HpoDisease> diseaseList) {
         Map<TermId, List<HpoFrequency>> hpoTermCounts = new HashMap<>();

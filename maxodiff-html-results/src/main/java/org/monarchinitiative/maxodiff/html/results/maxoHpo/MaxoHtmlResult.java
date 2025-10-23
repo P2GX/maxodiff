@@ -47,7 +47,7 @@ public class MaxoHtmlResult {
         this.omimTerms = new HashMap<>();
         Map<TermId, Integer> nRepetitionsMap = new HashMap<>();
         this.index = idx;
-        this.maxoId = result.maxoTermScore().maxoId();
+        this.maxoId = result.rankMaxoScore().maxoId().toString();
         this.maxoLabel = biometadataService.maxoLabel(maxoId).orElse("unknown");
         this.maxodiffResult = result;
         result.rankMaxoScore().discoverableObservedHpoTermIds()
