@@ -23,7 +23,6 @@ public class RankMaxo {
     private final DifferentialDiagnosisEngine engine;
     double progress;
     RankMaxoProgress rankMaxoProgress;
-    private final MinimalOntology minimalOntology;
     private final Ontology ontology;
     private final List<DifferentialDiagnosis> allInitialDiagnoses;
 
@@ -35,7 +34,6 @@ public class RankMaxo {
      * @param maxoHpoTermProbabilities Class with methods for MAxO:HPO term probability calculations
      *                                 (e.g. Probability that the HPO term will be ascertained by a MAxO term procedure).
      * @param engine The engine used for the differential diagnosis. The default is Phenomizer.
-     * @param minHpo MinimalOntology HPO ontology.
      * @param hpo Full HPO ontology.
      * @param allInitialDiagnoses Full list of diseases from the initial differential diagnosis.
      *
@@ -46,14 +44,12 @@ public class RankMaxo {
                     Map<TermId, Set<TermId>> maxoToHpoTermIdMap,
                     MaxoHpoTermProbabilities maxoHpoTermProbabilities,
                     DifferentialDiagnosisEngine engine,
-                    MinimalOntology minHpo,
                     Ontology hpo,
                     List<DifferentialDiagnosis> allInitialDiagnoses) {
         this.hpoToMaxoTermMap = hpoToMaxoTermMap;
         this.maxoToHpoTermIdMap = maxoToHpoTermIdMap;
         this.maxoHpoTermProbabilities = maxoHpoTermProbabilities;
         this.engine = engine;
-        this.minimalOntology = minHpo;
         this.ontology = hpo;
         this.allInitialDiagnoses = allInitialDiagnoses;
     }

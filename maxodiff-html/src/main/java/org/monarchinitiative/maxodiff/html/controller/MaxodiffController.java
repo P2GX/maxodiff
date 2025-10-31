@@ -89,6 +89,7 @@ public class MaxodiffController {
         model.addAttribute("excludedHpoTermIds", excludedHpoTermIds);
         model.addAttribute("view", view);
 
+        // Sample observed and excluded HPO terms
         List<TermId> observedHpoTermIdsList = (observedHpoTermIds == null | (observedHpoTermIds != null && observedHpoTermIds.isEmpty())) ?
                 List.of() : Arrays.stream(observedHpoTermIds.split("[\\s,;]+"))
                 .map(String::strip)
@@ -100,6 +101,7 @@ public class MaxodiffController {
                 .map(TermId::of)
                 .toList();
 
+        // Sample object
         Sample sample = Sample.of(sampleId,
                 observedHpoTermIdsList,
                 excludedHpoTermIdsList);
@@ -108,14 +110,16 @@ public class MaxodiffController {
         DifferentialDiagnosisEngine phenomizerDifferentialDxEngine = null;
         List<DifferentialDiagnosis> differentialDiagnoses = List.of();
 
-
+        // Phenomizer scoring mode. Default is one-sided
         ScoringMode scoringMode = ScoringMode.ONE_SIDED;
         model.addAttribute("scoringMode", scoringMode);
 
+        // Phenomizer icMicaData object containing term-pair similarity scores for pairs of hpo terms
         Map<TermPair, Double> icMicaDict = icMicaData.icMicaDict();
         if (icMicaDict.isEmpty()) {
             throw new Exception("Phenomizer necessary MICA information content is empty. Run Download command to download the necessary term-pair-similarity file.");
         }
+        // Phenomizer differential diagnosis engine
         phenomizerDifferentialDxEngine = new PhenomizerDifferentialDiagnosisEngine(hpoDiseases, icMicaDict, scoringMode);
         model.addAttribute("icMicaDict", icMicaDict);
 
@@ -127,8 +131,10 @@ public class MaxodiffController {
         model.addAttribute("engine", phenomizerDifferentialDxEngine);
         model.addAttribute("differentialDiagnoses", differentialDiagnoses);
 
+        // Maxodiff refiner
         diffDiagRefiner = new MaxoDiffRefiner(hpoDiseases, hpoToMaxoIdMap, hpoToMaxoTermMap, minHpo, hpo);
 
+        // maxodiff analysis parameters: n diseases to use and n simulations to run
         Integer prevNDiseases = (Integer) model.getAttribute("nDiseases");
         model.addAttribute("nDiseases", nDiseases);
         model.addAttribute("nRepetitions", nRepetitions);
@@ -136,12 +142,14 @@ public class MaxodiffController {
         if (shouldMaxoAnalysisBeRun(sample, differentialDiagnoses, nDiseases, nRepetitions)) {
             RefinementOptions options = RefinementOptions.of(nDiseases, nRepetitions);
 
+            // n diseases subset of initial differential diagnoses in order of decreasing probability
             if (model.getAttribute("orderedDiagnoses") == null || !nDiseases.equals(prevNDiseases)) {
                 List<DifferentialDiagnosis> orderedDiagnoses = diffDiagRefiner.getOrderedDiagnoses(differentialDiagnoses, options);
                 model.addAttribute("orderedDiagnoses", orderedDiagnoses);
             }
             List<DifferentialDiagnosis> orderedDiagnoses = (List<DifferentialDiagnosis>) model.getAttribute("orderedDiagnoses");
 
+            // Map of HPO Term Id and List of HpoFrequency objects for the subset n diseases.
             if (model.getAttribute("hpoTermCounts") == null || !nDiseases.equals(prevNDiseases)) {
                 List<HpoDisease> diseases = diffDiagRefiner.getDiseases(orderedDiagnoses);
                 Map<TermId, List<HpoFrequency>> hpoTermCounts = diffDiagRefiner.getHpoTermCounts(diseases);
@@ -149,6 +157,7 @@ public class MaxodiffController {
             }
             Map<TermId, List<HpoFrequency>> hpoTermCounts = (Map<TermId, List<HpoFrequency>>) model.getAttribute("hpoTermCounts");
 
+            // Map of MAxO term id : List of associated HPO term ids for the subset n diseases. HPO ancestors are removed
             if (model.getAttribute("maxoToHpoTermIdMap") == null || !nDiseases.equals(prevNDiseases)) {
                 List<TermId> termIdsToRemove = List.of();
                 Map<TermId, Set<TermId>> maxoToHpoTermIdMap = diffDiagRefiner.getMaxoToHpoTermIdMap(termIdsToRemove, hpoTermCounts);
@@ -169,6 +178,7 @@ public class MaxodiffController {
 
             diseaseSubsetEngine = phenomizerDifferentialDxEngine;
 
+            // Perform maxodiff refinement
             assert maxoToHpoTermIdMap != null;
             String diseaseProbModel = "ranked";
             rankMaxo = ((MaxoDiffRefiner) diffDiagRefiner).getRankMaxo(allInitialDiagnoses,
@@ -184,13 +194,22 @@ public class MaxodiffController {
                     maxoToHpoTermIdMap);
 
 
+            // Sort list of refinement results in order of decreasing score
             List<MaxodiffResult> resultsList = new ArrayList<>(refinementResults.maxodiffResults());
             resultsList.sort(Comparator.<MaxodiffResult>comparingDouble(mr -> mr.rankMaxoScore().maxoScore()).reversed());
 
 
-            String htmlString = HtmlResults.writeHTMLResults(sample, nDiseases, nRepetitions, resultsList,
-                    biometadataService, hpoTermCounts, view);
-
+            // Write final results to HTML
+            String htmlString = HtmlResults.writeHTMLResults(
+                    sample,
+                    nDiseases,
+                    hpoDiseases,
+                    nRepetitions,
+                    resultsList,
+                    biometadataService,
+                    hpoTermCounts,
+                    icMicaDict,
+                    view);
             model.addAttribute("htmlTemplateString", htmlString);
             model.addAttribute("showMDresults", true);
         }

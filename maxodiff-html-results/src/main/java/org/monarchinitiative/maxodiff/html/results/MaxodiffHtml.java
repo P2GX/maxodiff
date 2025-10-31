@@ -9,7 +9,12 @@ public class MaxodiffHtml {
     private final int nSimulations;
     private final String resultsString;
 
-    public MaxodiffHtml(String sampleResultsTitle, String samplePresentHpoIds, String sampleExcludedHpoIds, int nDiseases, int nSimulations, String resultsString) {
+    public MaxodiffHtml(String sampleResultsTitle,
+                        String samplePresentHpoIds,
+                        String sampleExcludedHpoIds,
+                        int nDiseases,
+                        int nSimulations,
+                        String resultsString) {
         this.sampleResultsTitle = sampleResultsTitle;
         this.samplePresentHpoIds = samplePresentHpoIds;
         this.sampleExcludedHpoIds = sampleExcludedHpoIds;

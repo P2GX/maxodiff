@@ -59,17 +59,12 @@ public class BaseDiffDiagRefiner implements DiffDiagRefiner {
             differentialDiagnosisModels.sort(Comparator.comparingDouble(DifferentialDiagnosis::score).reversed());
             differentialDiagnosisModels.forEach(d -> diseaseIds.add(d.diseaseId()));
             Set<TermId> hpoTermIds = maxoToHpoTermIdMap.get(maxoId);
-            int nHpoTerms = hpoTermIds.size();
 
-            MaxoTermScore maxoTermScore = new MaxoTermScore(maxoId.toString(), options.nDiseases(),
-                    diseaseIds, Set.of(), nHpoTerms, hpoTermIds,
-                    0.0, 0.0, scoreDiff, TermId.of("HP:000000"),
-                    List.of(), List.of(),null,null);
             // Get HPO frequency records
-            List<Frequencies> frequencies = getFrequencyRecords(maxoTermScore.omimTermIds(),
-                    maxoTermScore.hpoTermIds(), hpoTermCounts);
+            List<Frequencies> frequencies = getFrequencyRecords(rankMaxoScore.initialOmimTermIds(),
+                    hpoTermIds, hpoTermCounts);
             // Make MaxodiffResult for the MAXO term
-            MaxodiffResult maxodiffResult = new MaxodiffResultImpl(maxoTermScore, rankMaxoScore, frequencies, List.of());
+            MaxodiffResult maxodiffResult = new MaxodiffResultImpl(rankMaxoScore, frequencies);
             maxodiffResultsList.add(maxodiffResult);
         }
         // Return RefinementResults object, which contains the list of MaxodiffResult objects.
@@ -95,10 +90,8 @@ public class BaseDiffDiagRefiner implements DiffDiagRefiner {
                 diseaseModelProbability);
 
 
-        RankMaxo rankMaxo = new RankMaxo(hpoToMaxoTermMap, maxoToHpoTermIdMap, maxoHpoTermProbabilities, engine,
-                minHpo, hpo, allInitialDiagnoses);
-
-        return rankMaxo;
+        return new RankMaxo(hpoToMaxoTermMap, maxoToHpoTermIdMap, maxoHpoTermProbabilities, engine,
+                hpo, allInitialDiagnoses);
     }
 
     //TODO: handle possible multiple differential diagnoses with same termId

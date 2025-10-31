@@ -106,10 +106,9 @@ public class BenchmarkCommand extends DifferentialDiagnosisCommand {
         Path hpoaPath = MaxodiffDataResolver.of(maxoDataPath).phenotypeAnnotations();
         HpoDiseases hpoDiseases = loader.load(hpoaPath);
 
-        IcMicaData icMicaData = null;
         String ddEngine = "phenomizer";
         LOGGER.info("Loading icMicaDict...");
-        icMicaData = IcMicaDictLoader.loadIcMicaDict(MaxodiffDataResolver.of(maxoDataPath).icMicaDict());
+        IcMicaData icMicaData = IcMicaDictLoader.loadIcMicaDict(MaxodiffDataResolver.of(maxoDataPath).icMicaDict());
 
         List<Path> phenopacketPaths = new ArrayList<>();
         if (batchDir != null) {
@@ -131,7 +130,6 @@ public class BenchmarkCommand extends DifferentialDiagnosisCommand {
         nDiseasesArg.forEach(nDiseasesList::add);
         List<Integer> nRepetitionsList = new ArrayList<>();
         nRepetitionsArg.forEach(nRepetitionsList::add);
-        List<String> refinersList = new ArrayList<>();
 
         try {
             // Make maxodiffRefiner
@@ -150,9 +148,6 @@ public class BenchmarkCommand extends DifferentialDiagnosisCommand {
 
             Map<String, DiffDiagRefiner> refiners = new HashMap<>();
             refiners.put("MaxoDiff", maxodiffPropsConfiguration.diffDiagRefiner("score"));
-            for (String refiner : refinersList) {
-                refiners.put(refiner, maxodiffPropsConfiguration.diffDiagRefiner(refiner));
-            }
 
             Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxoTermMap = maxodiffPropsConfiguration.maxoAnnotsMap();
 
@@ -193,7 +188,7 @@ public class BenchmarkCommand extends DifferentialDiagnosisCommand {
 
                         LOGGER.info(String.valueOf(pPath0));
                         LOGGER.info("nDiseases = {}", nDiseasesList);
-                        LOGGER.info("refiners = {}", refinersList);
+
                         String phenopacketName = pPath0.toFile().getName();
                         List<TermId> termIdsToRemove = new ArrayList<>();
                         List<TermId> includedIds = new ArrayList<>(phenopacketData.observedHpoTermIds().toList());
@@ -216,7 +211,7 @@ public class BenchmarkCommand extends DifferentialDiagnosisCommand {
                         assert engine != null;
                         List<DifferentialDiagnosis> differentialDiagnoses = engine.run(sample);
 
-                        // Summarize the intial differential diagnosis results.
+                        // Summarize the initial differential diagnosis results.
                         String outFilename = String.join("_",
                                 phenopacketName.replace(".json", ""),
                                 "initial",
@@ -302,7 +297,7 @@ public class BenchmarkCommand extends DifferentialDiagnosisCommand {
 
 
                                         RankMaxo rankMaxo = new RankMaxo(hpoToMaxoTermMap, maxoToHpoTermIdMap, maxoHpoTermProbabilities, diseaseSubsetEngine,
-                                                minimalOntology, ontology, allOrderedDiagnoses);
+                                                ontology, allOrderedDiagnoses);
 
                                         refinementResults = e.getValue().run(sample,
                                                 orderedDiagnoses,
@@ -360,8 +355,8 @@ public class BenchmarkCommand extends DifferentialDiagnosisCommand {
                                                 nDiseasesAbbr, nRepsAbbr, "maxodiff", "results.html");
                                         Path maxodiffResultsHTMLPath = Path.of(String.join(File.separator, outputDir.toString(), outputFilename));
 
-                                        String htmlString = HtmlResults.writeHTMLResults(sample, nDiseases, nRepetitions, resultsList,
-                                                biometadataService, hpoTermCounts, "researcher");
+                                        String htmlString = HtmlResults.writeHTMLResults(sample, nDiseases, hpoDiseases, nRepetitions, resultsList,
+                                                biometadataService, hpoTermCounts, icMicaDict, "researcher");
 
                                         Files.writeString(maxodiffResultsHTMLPath, htmlString);
                                     }

@@ -3,10 +3,12 @@ package org.monarchinitiative.maxodiff.html.results.maxoHpo;
 public class HpoTableCell {
     private final int count;
     private final double opacity;
+    private final float mica;
 
-    public HpoTableCell(int count, double opacity) {
+    public HpoTableCell(int count, double opacity, float mica) {
         this.count = count;
         this.opacity = opacity;
+        this.mica = mica;
     }
 
     public String getCount() {
@@ -18,14 +20,22 @@ public class HpoTableCell {
         return opacity;
     }
 
+    public float getMica() {
+        return mica;
+    }
+
     /** This will be the color of the "square" in the HPO cell */
     public String getStyle() {
-        if (count == 0) { return ""; }
-        double opc = getOpacity() * 0.5;
+        if (count == 0) {
+            float maxMica = 8.343077871169383f;
+            float mica = getMica() / maxMica;
+            return "rgba(0, 191, 255, " + mica + ")";
+        }
+        double opc = getOpacity();
         if (opc < 0.01) {
             opc = 0.01;
         }
-        return "rgba(33, 0, 90, " + opc + ")";
+        return "rgba(255, 165, 0, " + opc + ")";
     }
 
     public boolean isEmpty() {

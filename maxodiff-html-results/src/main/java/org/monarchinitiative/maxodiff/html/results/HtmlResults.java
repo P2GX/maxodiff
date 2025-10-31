@@ -4,35 +4,37 @@ import com.fasterxml.jackson.core.JsonGenerator;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
+import org.monarchinitiative.maxodiff.core.analysis.HTMLFrequencyMap;
 import org.monarchinitiative.maxodiff.core.analysis.HpoFrequency;
 import org.monarchinitiative.maxodiff.core.analysis.refinement.MaxodiffResult;
 import org.monarchinitiative.maxodiff.core.model.Sample;
 import org.monarchinitiative.maxodiff.core.service.BiometadataService;
 import org.monarchinitiative.maxodiff.html.results.maxoDisease.MaxoDiseaseHTML;
 import org.monarchinitiative.maxodiff.html.results.maxoHpo.MaxoHtmlResult;
+import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
 import org.monarchinitiative.phenol.ontology.data.TermId;
+import org.monarchinitiative.phenol.ontology.similarity.TermPair;
 import org.thymeleaf.context.Context;
 import org.thymeleaf.spring6.SpringTemplateEngine;
 import org.thymeleaf.templateresolver.ClassLoaderTemplateResolver;
 
-import java.io.File;
 import java.io.StringWriter;
-import java.nio.file.Files;
-import java.nio.file.Path;
 import java.util.*;
 
 public class HtmlResults {
 
-    public static String writeHTMLResults(Sample sample, int nDiseases, int nRepetitions, List<MaxodiffResult> resultList,
-                                           BiometadataService biometadataService, Map<TermId, List<HpoFrequency>> hpoTermCounts,
-                                          String mode) throws Exception {
+    public static String writeHTMLResults(
+            Sample sample,
+            int nDiseases,
+            HpoDiseases diseases,
+            int nRepetitions,
+            List<MaxodiffResult> resultList,
+            BiometadataService biometadataService,
+            Map<TermId, List<HpoFrequency>> hpoTermCounts,
+            Map<TermPair, Double> icMicaData,
+            String mode) throws Exception {
 
-        ClassLoaderTemplateResolver templateResolver = new ClassLoaderTemplateResolver();
-        templateResolver.setPrefix("templates/");
-        templateResolver.setSuffix(".html");
-        templateResolver.setTemplateMode("HTML");
-        templateResolver.setCharacterEncoding("UTF-8");
-        templateResolver.setCacheable(false);
+        SpringTemplateEngine templateEngine = templateEngine();
 
         String sampleId = sample.id();
         List<String> observedHpoLinks = sample.observedHpoTermIds().stream().map(tid -> hpoLink(tid,biometadataService)).toList();
@@ -40,19 +42,29 @@ public class HtmlResults {
         List<String> excludedHpoLinks = sample.excludedHpoTermIds().stream().map(tid -> hpoLink(tid,biometadataService)).toList();
         String sampleExcludedTermsString = String.join(" ", excludedHpoLinks);
 
-        String resultsString = getHTMLResults(resultList, biometadataService, nDiseases, nRepetitions, hpoTermCounts);
+        HTMLFrequencyMap htmlFrequencyMap = new HTMLFrequencyMap(diseases, icMicaData);
+
+        String resultsString = getHTMLResults(
+                resultList,
+                biometadataService,
+                nDiseases,
+                nRepetitions,
+                hpoTermCounts,
+                htmlFrequencyMap);
         if (mode.equals("clinician")) {
             resultsString = getHTMLMaxoDiseaseResults(resultList, biometadataService);
         }
 
-        MaxodiffHtml maxodiffHtml = new MaxodiffHtml(sampleId, samplePresentTermsString, sampleExcludedTermsString,
-                nDiseases, nRepetitions, resultsString);
+        MaxodiffHtml maxodiffHtml = new MaxodiffHtml(
+                sampleId,
+                samplePresentTermsString,
+                sampleExcludedTermsString,
+                nDiseases,
+                nRepetitions,
+                resultsString);
 
         Context context = new Context();
         context.setVariable("maxodiff", maxodiffHtml);
-
-        SpringTemplateEngine templateEngine = new SpringTemplateEngine();
-        templateEngine.setTemplateResolver(templateResolver);
         return templateEngine.process("maxodiffResults", context);
 
     }
@@ -67,7 +79,9 @@ public class HtmlResults {
                                          int nDiseases,
                                          int nRepetitions,
                                          Map<TermId, List<HpoFrequency>> hpoTermCountMap,
-                                         int idx, SpringTemplateEngine templateEngine) {
+                                         int idx,
+                                         HTMLFrequencyMap htmlFrequencyMap,
+                                         SpringTemplateEngine templateEngine) {
 
         MaxoHtmlResult maxoData = new MaxoHtmlResult(
                 result,
@@ -75,24 +89,38 @@ public class HtmlResults {
                 idx,
                 nDiseases,
                 nRepetitions,
-                biometadataService
+                biometadataService,
+                htmlFrequencyMap
         );
         Context context = new Context();
         context.setVariable("maxoData", maxoData);
         return templateEngine.process("maxoResultBox", context);
     }
 
-    protected static String getHTMLResults(List<MaxodiffResult> resultList, BiometadataService biometadataService,
-                                           int nDiseases, int nRepetitions, Map<TermId, List<HpoFrequency>> hpoTermCounts) throws Exception {
+    /**
+     * @return Spring thymeleaf template engine
+     */
+    static private SpringTemplateEngine templateEngine() {
         ClassLoaderTemplateResolver templateResolver = new ClassLoaderTemplateResolver();
         templateResolver.setPrefix("templates/");
         templateResolver.setSuffix(".html");
         templateResolver.setTemplateMode("HTML");
         templateResolver.setCharacterEncoding("UTF-8");
         templateResolver.setCacheable(false);
-
         SpringTemplateEngine templateEngine = new SpringTemplateEngine();
         templateEngine.setTemplateResolver(templateResolver);
+        return templateEngine;
+    }
+
+
+    protected static String getHTMLResults(
+            List<MaxodiffResult> resultList,
+            BiometadataService biometadataService,
+            int nDiseases,
+            int nRepetitions,
+            Map<TermId, List<HpoFrequency>> hpoTermCounts,
+            HTMLFrequencyMap htmlFrequencyMap) {
+        SpringTemplateEngine templateEngine = templateEngine();
         StringBuilder resultsString = new StringBuilder();
 
         int zeroIdx = resultList.stream()
@@ -101,13 +129,13 @@ public class HtmlResults {
         int nDisplayed = Math.min(resultList.size(), zeroIdx);
         for (MaxodiffResult result : resultList.subList(0, nDisplayed)) {
             int idx = resultList.indexOf(result) + 1;
-           // String html = getHTMLbox(result, biometadataService, nDiseases, nRepetitions, hpoTermCounts, idx);
             String templateHtml = getHTMLboxFromTemplate(result,
                     biometadataService,
                     nDiseases,
                     nRepetitions,
                     hpoTermCounts,
                     idx,
+                    htmlFrequencyMap,
                     templateEngine);
             resultsString.append(templateHtml);
         }
@@ -129,15 +157,7 @@ public class HtmlResults {
     }
 
     protected static String getHTMLMaxoDiseaseResults(List<MaxodiffResult> resultList, BiometadataService biometadataService) throws Exception {
-        ClassLoaderTemplateResolver templateResolver = new ClassLoaderTemplateResolver();
-        templateResolver.setPrefix("templates/");
-        templateResolver.setSuffix(".html");
-        templateResolver.setTemplateMode("HTML");
-        templateResolver.setCharacterEncoding("UTF-8");
-        templateResolver.setCacheable(false);
-
-        SpringTemplateEngine templateEngine = new SpringTemplateEngine();
-        templateEngine.setTemplateResolver(templateResolver);
+        SpringTemplateEngine templateEngine = templateEngine();
         StringBuilder resultsString = new StringBuilder();
 
         int zeroIdx = resultList.stream()

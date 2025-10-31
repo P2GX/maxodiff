@@ -1,5 +1,6 @@
 package org.monarchinitiative.maxodiff.html.results.maxoHpo;
 
+import org.monarchinitiative.maxodiff.core.analysis.HpoFrequency;
 import org.monarchinitiative.maxodiff.core.analysis.refinement.MaxodiffResult;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 
@@ -26,7 +27,8 @@ public class MaxoResultRow {
     public static List<MaxoResultRow> createMaxoResultRows(MaxodiffResult result,
                                                            Map<TermId, String> omimTermMap,
                                                            int nDiseases,
-                                                           List<TermId> orderedDiscoverableHpoList) {
+                                                           List<TermId> orderedDiscoverableHpoList,
+                                                           List<HpoFrequency> hpoFrequenciesMica) {
         List<MaxoResultRow> rows = new ArrayList<>();
         var hpoTermIdRepCtsMap = result.rankMaxoScore().hpoTermIdRepCtsMap();
         Map<TermId, List<Integer>> avgRankChangeMap = result.rankMaxoScore().maxoDiseaseAvgRankChangeMap();
@@ -47,11 +49,19 @@ public class MaxoResultRow {
                 if (ctMap == null) {
                     ctMap = new HashMap<>();
                 }
-                /// TODO WHAT?
-                int ct1 = Optional.ofNullable(ctMap.get(hpoId)).orElse(0);
-                double opacity1 = 1;
-//                        (result.rankMaxoScore().discoverableObservedDescendantHpoTermIds().contains(hpoId) ? 0.5 : 1);
-                cells.add(new HpoTableCell(ct1, opacity1));
+
+                int ct1 = ctMap.getOrDefault(hpoId, 0);
+                float mica = 0f;
+                Optional<HpoFrequency> hpoFrequencyOpt = hpoFrequenciesMica.stream()
+                    .filter(hpoFrequency ->
+                        (hpoFrequency.omimId().equals(omimId.toString()) && hpoFrequency.hpoId().equals(hpoId.toString())))
+                    .findFirst();
+                if (hpoFrequencyOpt.isPresent()) {
+                    mica = hpoFrequencyOpt.get().mica();
+                }
+                float maxMica = 8.343077871169383f;
+                double opacity1 = mica / maxMica;
+                cells.add(new HpoTableCell(ct1, opacity1, mica));
             }
             rows.add(new MaxoResultRow(omimId.getValue(), omimLabel, initialRank, rankChange, nDiseases, cells));
 

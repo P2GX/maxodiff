@@ -19,13 +19,7 @@ public class MaxoHpoTermIdMaps {
             Set<SimpleTerm> maxoTerms = entry.getValue();
             for (SimpleTerm maxoTerm : maxoTerms) {
                 TermId maxoId = maxoTerm.tid();
-                if (!hpoToMaxoTermIdMap.containsKey(hpoId)) {
-                    hpoToMaxoTermIdMap.put(hpoId, new HashSet<>(Collections.singleton(maxoId)));
-                } else {
-                    Set<TermId> maxoIdSet = hpoToMaxoTermIdMap.get(hpoId);
-                    maxoIdSet.add(maxoId);
-                    hpoToMaxoTermIdMap.replace(hpoId, maxoIdSet);
-                }
+                hpoToMaxoTermIdMap.computeIfAbsent(hpoId, k -> new HashSet<>()).add(maxoId);
             }
         }
         return hpoToMaxoTermIdMap;
@@ -43,13 +37,7 @@ public class MaxoHpoTermIdMaps {
             Set<SimpleTerm> maxoTerms = entry.getValue();
             for (SimpleTerm maxoTerm : maxoTerms) {
                 TermId maxoId = maxoTerm.tid();
-                if (!maxoToHpoTermIdMap.containsKey(maxoId)) {
-                    maxoToHpoTermIdMap.put(maxoId, new HashSet<>(Collections.singleton(hpoId)));
-                } else {
-                    Set<TermId> hpoIdSet = maxoToHpoTermIdMap.get(maxoId);
-                    hpoIdSet.add(hpoId);
-                    maxoToHpoTermIdMap.replace(maxoId, hpoIdSet);
-                }
+                maxoToHpoTermIdMap.computeIfAbsent(maxoId, k -> new HashSet<>()).add(hpoId);
             }
         }
         return maxoToHpoTermIdMap;
