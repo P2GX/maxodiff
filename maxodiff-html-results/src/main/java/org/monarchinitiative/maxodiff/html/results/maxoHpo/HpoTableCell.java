@@ -27,7 +27,8 @@ public class HpoTableCell {
     /** This will be the color of the "square" in the HPO cell */
     public String getStyle() {
         if (count == 0) {
-            float mica = getMica();
+            float maxMica = 8.343077871169383f;
+            float mica = getMica() / maxMica;
             return "rgba(0, 191, 255, " + mica + ")";
         }
         double opc = getOpacity();

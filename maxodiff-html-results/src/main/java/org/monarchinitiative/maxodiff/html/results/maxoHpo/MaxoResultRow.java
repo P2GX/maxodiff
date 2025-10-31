@@ -49,9 +49,8 @@ public class MaxoResultRow {
                 if (ctMap == null) {
                     ctMap = new HashMap<>();
                 }
-                /// TODO WHAT?
-                int ct1 = Optional.ofNullable(ctMap.get(hpoId)).orElse(0);
-                double opacity1 = 1;
+
+                int ct1 = ctMap.getOrDefault(hpoId, 0);
                 float mica = 0f;
                 Optional<HpoFrequency> hpoFrequencyOpt = hpoFrequenciesMica.stream()
                     .filter(hpoFrequency ->
@@ -60,6 +59,8 @@ public class MaxoResultRow {
                 if (hpoFrequencyOpt.isPresent()) {
                     mica = hpoFrequencyOpt.get().mica();
                 }
+                float maxMica = 8.343077871169383f;
+                double opacity1 = mica / maxMica;
                 cells.add(new HpoTableCell(ct1, opacity1, mica));
             }
             rows.add(new MaxoResultRow(omimId.getValue(), omimLabel, initialRank, rankChange, nDiseases, cells));
