@@ -203,6 +203,7 @@
 
         <script>
             function addHpoTermToList(listContainer, termMap) {
+                [...listContainer.children].forEach(child => child.remove());
                 for (const item of termMap) {
                     const newItem = document.createElement('li');
                     const newLink = document.createElement('a');
