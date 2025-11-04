@@ -125,7 +125,7 @@ public class HtmlResults {
 
         int zeroIdx = resultList.stream()
                 .filter(result -> result.rankMaxoScore().maxoScore().equals(0.))
-                .findFirst().map(resultList::indexOf).orElse(0);
+                .findFirst().map(resultList::indexOf).orElse(resultList.size());
         int nDisplayed = Math.min(resultList.size(), zeroIdx);
         for (MaxodiffResult result : resultList.subList(0, nDisplayed)) {
             int idx = resultList.indexOf(result) + 1;
