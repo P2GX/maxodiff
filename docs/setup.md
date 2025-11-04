@@ -50,7 +50,7 @@ every pair of terms. It is more efficient to precalculate this using the
 following command. By default, the command will look for the input files ``hp.json``
 and ``phenotype.hpoa`` in the ``data``folder, which is created by the download command.
 ```shell
-java -jar maxodiff-cli/target/maxodiff-cli.jar precalculate-resnik
+java -jar maxodiff-cli/target/maxodiff-cli.jar precompute-resnik
 ```
 On a modern commodity laptop, this command will require a few minutes to complete.
 By default, the output file will be created here. Currently, it occupies 117 Mb.
@@ -67,4 +67,17 @@ The web app can be started as:
 java -jar maxodiff-html/target/maxodiff-html.jar
 ```
 
-By default, the app will serve requests at `http://localhost:8080`.
+By default, the app will serve requests at `http://localhost:8080/maxodiff`.
+
+## Troubleshooting
+
+### Connection refused
+The error Connection refused might be a sign that you need to set proxy settings.
+
+If `./mvnw clean package` produces a connect exception, run `export MAVEN_OPTS="-Dhttp.proxyHost=xxx -Dhttp.proxyPort=8080 -Dhttps.proxyHost=xxx -Dhttps.proxyPort=8080"` (with your own proxy settings) in advance. 
+
+If `java -jar maxodiff-cli/target/maxodiff-cli.jar download`produces a connect exception, try `java -Dhttp.proxyHost=xxx -Dhttp.proxyPort=8080 -Dhttps.proxyHost=xxx -Dhttps.proxyPort=8080 -jar maxodiff-cli/target/maxodiff-cli.jar download` (with your own proxy settings) instead.
+
+### Running out of memory
+
+If `java -jar maxodiff-html/target/maxodiff-html.jar` stalls for a long time at `Loading Maxodiff resources from xxx` before failing, try giving java more heap space (in this example 12GB) with -Xmx12G, i.e. `java -Xmx12G -jar maxodiff-html/target/maxodiff-html.jar`.
