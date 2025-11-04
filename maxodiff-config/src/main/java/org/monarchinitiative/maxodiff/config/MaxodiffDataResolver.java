@@ -26,7 +26,7 @@ public class MaxodiffDataResolver {
 
     private void checkV1Resources() throws MaxodiffDataException {
         boolean error = false;
-        List<Path> requiredFiles = List.of(hpoJson(), hgncCompleteSet(), mim2geneMedgen(), phenotypeAnnotations());
+        List<Path> requiredFiles = List.of(hpoJson(), phenotypeAnnotations());
         for (Path file : requiredFiles) {
             if (!Files.isRegularFile(file)) {
                 LOGGER.error("Missing required file `{}` in `{}`.", file.toFile().getName(), dataDirectory.toAbsolutePath());
@@ -51,14 +51,6 @@ public class MaxodiffDataResolver {
     }
 
     public Path maxoDxAnnots() { return dataDirectory.resolve("maxo_diagnostic_annotations.tsv"); }
-
-    public Path hgncCompleteSet() {
-        return dataDirectory.resolve("hgnc_complete_set.txt");
-    }
-
-    public Path mim2geneMedgen() {
-        return dataDirectory.resolve("mim2gene_medgen");
-    }
 
     public Path phenotypeAnnotations() {
         return dataDirectory.resolve("phenotype.hpoa");
