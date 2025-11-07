@@ -166,8 +166,8 @@ public class BenchmarkCommand extends DifferentialDiagnosisCommand {
                 int nAllMaxoDiscoverablePhenotypes = 7192;//7036;//6170;//5302;
                 double meanNDiscoverablePhenotypesAllMaxoTerms = nAllMaxoTerms / nAllMaxoDiscoverablePhenotypes;
                 int p = 1;
-                int nPhenopackets = 600;//phenopacketPaths.size();
-                for (Path pPath0 : phenopacketPaths.subList(0,nPhenopackets)) {
+                int nPhenopackets = Math.min(phenopacketPaths.size(), 600);
+                for (Path pPath0 : phenopacketPaths.subList(0, nPhenopackets)) {
                     String phenopacketName0 = pPath0.toFile().getName();
                     String outputFilename0 = String.join("_", phenopacketName0, ddEngine,
                                                 String.join("", "n", nDiseasesList.getLast().toString()),
@@ -360,14 +360,6 @@ public class BenchmarkCommand extends DifferentialDiagnosisCommand {
 
                                         Files.writeString(maxodiffResultsHTMLPath, htmlString);
                                     }
-
-                                    if (e.getKey().equals("rank") | e.getKey().equals("ddScore") | e.getKey().equals("ksTest")) {
-                                        break;
-                                    }
-                                }
-
-                                if (e.getKey().equals("ksTest")) {
-                                    break;
                                 }
                             }
                         }

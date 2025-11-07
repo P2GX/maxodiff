@@ -29,13 +29,13 @@ public class HpoTableCell {
         if (count == 0) {
             float maxMica = 8.343077871169383f;
             float mica = getMica() / maxMica;
-            return "rgba(0, 191, 255, " + mica + ")";
+            return "rgba(65, 105, 255, " + mica + ")";
         }
         double opc = getOpacity();
         if (opc < 0.01) {
             opc = 0.01;
         }
-        return "rgba(255, 165, 0, " + opc + ")";
+        return "rgba(220, 20, 60, " + opc + ")";
     }
 
     public boolean isEmpty() {
