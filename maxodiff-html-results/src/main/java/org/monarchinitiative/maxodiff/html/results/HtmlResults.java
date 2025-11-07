@@ -51,9 +51,6 @@ public class HtmlResults {
                 nRepetitions,
                 hpoTermCounts,
                 htmlFrequencyMap);
-        if (mode.equals("clinician")) {
-            resultsString = getHTMLMaxoDiseaseResults(resultList, biometadataService);
-        }
 
         MaxodiffHtml maxodiffHtml = new MaxodiffHtml(
                 sampleId,
@@ -127,6 +124,15 @@ public class HtmlResults {
                 .filter(result -> result.rankMaxoScore().maxoScore().equals(0.))
                 .findFirst().map(resultList::indexOf).orElse(resultList.size());
         int nDisplayed = Math.min(resultList.size(), zeroIdx);
+
+        // Clinician view results: MAxO terms vs. Diseases
+        List<MaxodiffResult> results = resultList.subList(0, nDisplayed);
+        String templateHtml0 = getHTMLMaxoDiseaseBoxFromTemplate(results,
+                biometadataService,
+                templateEngine);
+        resultsString.append(templateHtml0);
+
+        // Researcher view results: HPO terms vs. Diseases
         for (MaxodiffResult result : resultList.subList(0, nDisplayed)) {
             int idx = resultList.indexOf(result) + 1;
             String templateHtml = getHTMLboxFromTemplate(result,
@@ -154,23 +160,6 @@ public class HtmlResults {
         Context context = new Context();
         context.setVariable("maxoDiseaseData", maxoDiseaseData);
         return templateEngine.process("maxoDiseaseResultBox", context);
-    }
-
-    protected static String getHTMLMaxoDiseaseResults(List<MaxodiffResult> resultList, BiometadataService biometadataService) throws Exception {
-        SpringTemplateEngine templateEngine = templateEngine();
-        StringBuilder resultsString = new StringBuilder();
-
-        int zeroIdx = resultList.stream()
-                .filter(result -> result.rankMaxoScore().maxoScore().equals(0.))
-                .findFirst().map(resultList::indexOf).orElse(0);
-        int nDisplayed = Math.min(resultList.size(), zeroIdx);
-        List<MaxodiffResult> results = resultList.subList(0, nDisplayed);
-        String templateHtml = getHTMLMaxoDiseaseBoxFromTemplate(results,
-                biometadataService,
-                templateEngine);
-        resultsString.append(templateHtml);
-
-        return resultsString.toString();
     }
 
     protected static String convertToJson(Object object) throws Exception {
