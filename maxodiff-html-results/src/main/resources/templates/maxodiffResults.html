@@ -1,7 +1,6 @@
 <!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
         "http://www.w3.org/TR/html4/loose.dtd">
 <html lang="en" xmlns="http://www.w3.org/1999/xhtml">
-<link rel="stylesheet" type="text/css" href="/css/style.css"/>
 <head>
     <meta charset="UTF-8">
     <title>maxodiff results</title>
@@ -37,8 +36,8 @@
             background-color: white;
         }
 
-        .hpoCell.emptyCell span {
-            color: gray;
+        .hpoCell .emptyCell span {
+            color: black;
             opacity: 0.5;
             font-size: 1.2em;
         }
@@ -228,6 +227,7 @@
             width: 10px;
             border: none;
             text-align: center;
+            text-overflow: ellipsis;
         }
 
         .countsTable thead tr {
@@ -243,17 +243,8 @@
             text-overflow: ellipsis;
         }
 
-        .countsTable th:nth-child(2),.countsTable td:nth-child(2){
-            border-right: thick;
-            width: 60px;/* ΔR column */
-        }
-
-        .countsTable th:nth-child(3), td:nth-child(3) {
-            width: 20px; /* Spacer column */
-        }
-
-        .countsTable th:nth-child(n+4), td:nth-child(n+4) {
-            width: 40px;
+        .countsTable th:nth-child(n+1), td:nth-child(n+1) {
+            width: 20px;
         }
 
         .deltaR {

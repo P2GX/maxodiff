@@ -6,13 +6,20 @@ import org.monarchinitiative.phenol.base.PhenolRuntimeException;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * This class calculates the ascertainable phenotypes.
- * An \textit{ascertainable phenotype} is defined as a phenotypic feature that is associated with a disease but not
- * currently mentioned in the phenopacket. If we are considering a disease as a differential diagnosis, then it is
- * useful to know if such features are present (this would increase our belief that the disease in question is the
+ * An <i>ascertainable phenotype</i> is defined as a phenotypic feature
+ * that is associated with a disease but not currently mentioned in the
+ * phenopacket. If we are considering a disease as a differential diagnosis,
+ * then it is useful to know if such features are present (this would increase
+ * our belief that the disease in question is the
  * correct diagnosis) or absent (this would decrease our belief).
+ * <p>
+ * Objects of this class offer the function getAscertainablePhenotypeIds
+ * that get the ascertainable phenotypes for a given disease/phenopacket
+ * </p>
  */
 public class AscertainablePhenotypes {
     /**
@@ -21,7 +28,6 @@ public class AscertainablePhenotypes {
     private final HpoDiseases hpoDiseases;
 
     /**
-     *
      * @param hpoDiseases HpoDisease object
      */
     public AscertainablePhenotypes(HpoDiseases hpoDiseases) {
@@ -31,23 +37,22 @@ public class AscertainablePhenotypes {
     /**
      *
      * @param myPpkt Input phenopacket with present and excluded HPO terms
-     * @param targetDiseaseId TermId of the disease of interest
+     * @param diseaseId TermId of the disease of interest
      * @return Ascertainable term Ids: HPO terms that are annotated to the disease, but are not present in the phenopacket.
      * @throws PhenolRuntimeException if that targetDiseaseId is not found.
      */
-    //TODO: use Sample instead of SamplePhenopacket and pass List of diseaseIds separately
-    public Set<TermId> getAscertainablePhenotypeIds(Sample myPpkt, TermId targetDiseaseId) throws PhenolRuntimeException {
-        Set<TermId> existingTerms = new HashSet<>(myPpkt.presentHpoTermIds());
-        existingTerms.addAll(myPpkt.excludedHpoTermIds());
-        Optional<HpoDisease> opt = hpoDiseases.diseaseById(targetDiseaseId);
-        if (opt.isEmpty()) {
-            throw new PhenolRuntimeException("Could not find disease id " + targetDiseaseId.getValue());
-        }
-        HpoDisease disease = opt.get();
-        // Here, we do not care about present or absent. We regard all term annotations as
-        // potentially relevant and worthy to be ascertained by a MAxO-annotated diagnostic method
-        return new HashSet<>(disease.annotationTermIdList().stream()
-                .filter(id -> !existingTerms.contains(id))
-                .toList());
+    public Set<TermId> getAscertainablePhenotypeIds(
+            Sample myPpkt,
+            TermId diseaseId) throws PhenolRuntimeException {
+        HpoDisease disease = hpoDiseases.diseaseById(diseaseId)
+                .orElseThrow(() -> new PhenolRuntimeException("Could not find disease id " + diseaseId.getValue()));
+        Set<TermId> allPkktTerms = myPpkt.allPhenotypesSet();
+        // Ascertainable phenotypes include all terms not currently mentioned
+        // in the phenopacket
+        return disease.annotationTermIdList().stream()
+                .filter(id -> !allPkktTerms.contains(id))
+                .collect(Collectors.toSet());
     }
+
+
 }

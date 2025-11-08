@@ -29,6 +29,7 @@ of Maven prior to build is *not* required.
 
 We can download the resource files needed by maxodiff by running the `download` command
 of the CLI JAR:
+
 ```shell
 java -jar maxodiff-cli/target/maxodiff-cli.jar download
 ```
@@ -37,10 +38,10 @@ The command will download the data files into `data` folder that will be created
 See the command's documentation for more options.
 
 ### MICA dictionary
-To run MaxoDiff with Phenomizer, we must first generate a file that contains the
+To run maxodiff with Phenomizer, we must first generate a file that contains the
 most informative common ancestors for pairs of HPO terms. See the class ``IcMicaDictLoader``.
 
-MaxoDiff uses the Phenomizer algorithm to calculate the differential diagnosis; see
+maxodiff uses the Phenomizer algorithm to calculate the differential diagnosis; see
 the original publication for details:
 [Clinical diagnostics in human genetics with semantic similarity searches in ontologies](https://pubmed.ncbi.nlm.nih.gov/19800049/)
 
@@ -49,11 +50,13 @@ the information content of the most informative common ancestor (MICA) for
 every pair of terms. It is more efficient to precalculate this using the
 following command. By default, the command will look for the input files ``hp.json``
 and ``phenotype.hpoa`` in the ``data``folder, which is created by the download command.
+
 ```shell
 java -jar maxodiff-cli/target/maxodiff-cli.jar precompute-resnik
 ```
 On a modern commodity laptop, this command will require a few minutes to complete.
 By default, the output file will be created here. Currently, it occupies 117 Mb.
+
 ```shell
 data/term-pair-similarity.csv.gz
 ```
@@ -65,6 +68,13 @@ The web app can be started as:
 
 ```shell
 java -jar maxodiff-html/target/maxodiff-html.jar
+```
+
+
+If a Java heap space error occurs, more memory can be allocated by adding VM options:
+
+```shell
+java -Xmx8g -jar maxodiff-html/target/maxodiff-html.jar
 ```
 
 By default, the app will serve requests at `http://localhost:8080/maxodiff`.
@@ -81,3 +91,4 @@ If `java -jar maxodiff-cli/target/maxodiff-cli.jar download`produces a connect e
 ### Running out of memory
 
 If `java -jar maxodiff-html/target/maxodiff-html.jar` stalls for a long time at `Loading Maxodiff resources from xxx` before failing, try giving java more heap space (in this example 12GB) with -Xmx12G, i.e. `java -Xmx12G -jar maxodiff-html/target/maxodiff-html.jar`.
+

@@ -30,8 +30,7 @@ public class RankMaxoTest {
                                          DiseaseModelProbability.ranked(initialDiagnoses));
 
     private static DifferentialDiagnosisEngine ENGINE;
-    private static Ontology ontology = TestResources.hpo();
-    private static MinimalOntology minimalOntology = TestResources.minHpo();
+    private static final Ontology ontology = TestResources.hpo();
 
     @BeforeAll
     public static void setUpBeforeClass() {
@@ -75,8 +74,6 @@ public class RankMaxoTest {
                 TermId.of("HP:0001751")
         );
         List<TermId> excludedTerms = List.of();
-        List<TermId> diseaseIds = List.of(TermId.of("OMIM:615837"));
-
         return Sample.of("sample1", presentTerms, excludedTerms);//, diseaseIds);
     }
 
@@ -89,8 +86,6 @@ public class RankMaxoTest {
                 TermId.of("HP:0008619")
         );
         List<TermId> excludedTerms = List.of();
-        List<TermId> diseaseIds = List.of(TermId.of("OMIM:123456"));
-
         return Sample.of("sample2", presentTerms, excludedTerms);//, diseaseIds);
     }
 
@@ -106,7 +101,7 @@ public class RankMaxoTest {
         Sample s1 = TestResources.getExampleSample();
         Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxoTermMap = TestResources.hpoToMaxo();
         RankMaxo rankMaxo = new RankMaxo(hpoToMaxoTermMap, maxoToHpoTermIdMap, maxoHpoTermProbabilities, ENGINE,
-                minimalOntology, ontology);
+                ontology, initialDiagnoses);
         List<RankMaxoScore> maxoTermRanks = rankMaxo.rankMaxoTerms(s1, 2, diseaseIds);
         System.out.println(maxoTermRanks);
     }

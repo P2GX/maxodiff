@@ -62,7 +62,7 @@ public class ExcludedPhenotypes {
      *  but are not included in the existing phenotypes in the phenopacket.
      */
     public Set<TermId> getExcludedPhenotypes(Sample samplePpkt) {
-        Set<TermId> existingTerms = new HashSet<>(samplePpkt.presentHpoTermIds());
+        Set<TermId> existingTerms = new HashSet<>(samplePpkt.observedHpoTermIds());
         existingTerms.addAll(samplePpkt.excludedHpoTermIds());
         Set<TermId> excludedPhenotypes = new HashSet<>();
         existingTerms.forEach(tid -> excludedPhenotypes.addAll(getExcludedForHpoTerm(tid)));

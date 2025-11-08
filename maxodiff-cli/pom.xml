@@ -7,7 +7,7 @@
     <parent>
         <groupId>org.monarchinitiative.maxodiff</groupId>
         <artifactId>maxodiff</artifactId>
-        <version>0.3.1</version>
+        <version>0.4.0</version>
     </parent>
 
     <artifactId>maxodiff-cli</artifactId>
@@ -66,7 +66,7 @@
         <dependency>
             <groupId>org.monarchinitiative.maxodiff</groupId>
             <artifactId>maxodiff-html-results</artifactId>
-            <version>0.3.1</version>
+            <version>0.4.0</version>
             <scope>compile</scope>
         </dependency>
     </dependencies>

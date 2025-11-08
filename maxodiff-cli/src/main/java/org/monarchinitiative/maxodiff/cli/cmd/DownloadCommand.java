@@ -57,24 +57,13 @@ public class DownloadCommand implements Callable<Integer>{
         return 0;
     }
 
-    private static void downloadLiricalData(Path destinationFolder, boolean overwrite) throws Exception {
-        BioDownloader downloader = BioDownloader.builder(destinationFolder)
-                .overwrite(overwrite)
-                .hpoJson()
-                .hpDiseaseAnnotations()
-                .hgnc()
-                .medgene2MIM()
-                .build();
-        downloader.download();
-    }
+
 
     private static void downloadMaxodiffData(Path destinationFolder, boolean overwrite) throws Exception { 
         BioDownloader downloader = BioDownloader.builder(destinationFolder)
                 .overwrite(overwrite)
                 .hpoJson()
                 .hpDiseaseAnnotations()
-                .hgnc()
-                .medgene2MIM()
                 .maxoJson()
                 .custom("maxo_diagnostic_annotations.tsv", createUrlOrExplode("https://raw.githubusercontent.com/monarch-initiative/maxo-annotations/master/annotations/maxo_diagnostic_annotations.tsv"))
                 .build();

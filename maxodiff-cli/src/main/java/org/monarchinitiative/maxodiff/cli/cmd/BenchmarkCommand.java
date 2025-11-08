@@ -106,10 +106,9 @@ public class BenchmarkCommand extends DifferentialDiagnosisCommand {
         Path hpoaPath = MaxodiffDataResolver.of(maxoDataPath).phenotypeAnnotations();
         HpoDiseases hpoDiseases = loader.load(hpoaPath);
 
-        IcMicaData icMicaData = null;
         String ddEngine = "phenomizer";
         LOGGER.info("Loading icMicaDict...");
-        icMicaData = IcMicaDictLoader.loadIcMicaDict(MaxodiffDataResolver.of(maxoDataPath).icMicaDict());
+        IcMicaData icMicaData = IcMicaDictLoader.loadIcMicaDict(MaxodiffDataResolver.of(maxoDataPath).icMicaDict());
 
         List<Path> phenopacketPaths = new ArrayList<>();
         if (batchDir != null) {
@@ -131,7 +130,6 @@ public class BenchmarkCommand extends DifferentialDiagnosisCommand {
         nDiseasesArg.forEach(nDiseasesList::add);
         List<Integer> nRepetitionsList = new ArrayList<>();
         nRepetitionsArg.forEach(nRepetitionsList::add);
-        List<String> refinersList = new ArrayList<>();
 
         try {
             // Make maxodiffRefiner
@@ -150,9 +148,6 @@ public class BenchmarkCommand extends DifferentialDiagnosisCommand {
 
             Map<String, DiffDiagRefiner> refiners = new HashMap<>();
             refiners.put("MaxoDiff", maxodiffPropsConfiguration.diffDiagRefiner("score"));
-            for (String refiner : refinersList) {
-                refiners.put(refiner, maxodiffPropsConfiguration.diffDiagRefiner(refiner));
-            }
 
             Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxoTermMap = maxodiffPropsConfiguration.maxoAnnotsMap();
 
@@ -167,12 +162,12 @@ public class BenchmarkCommand extends DifferentialDiagnosisCommand {
                 Set<TermId> allMaxoAscertainablePhenotypes = new HashSet<>();
                 long allMaxoAscertainablePhenoypesCalcTime = 0;
                 //7036 phenotypes discoverable by 257 MAxO terms
-                double nAllMaxoTerms = 257;
-                int nAllMaxoDiscoverablePhenotypes = 7036;//6170;//5302;
-                double meanNDiscoverablePhenotypesAllMaxoTerms =  nAllMaxoTerms / nAllMaxoDiscoverablePhenotypes;
+                double nAllMaxoTerms = 313;//257;
+                int nAllMaxoDiscoverablePhenotypes = 7192;//7036;//6170;//5302;
+                double meanNDiscoverablePhenotypesAllMaxoTerms = nAllMaxoTerms / nAllMaxoDiscoverablePhenotypes;
                 int p = 1;
-                int nPhenopackets = phenopacketPaths.size();
-                for (Path pPath0 : phenopacketPaths) {
+                int nPhenopackets = Math.min(phenopacketPaths.size(), 600);
+                for (Path pPath0 : phenopacketPaths.subList(0, nPhenopackets)) {
                     String phenopacketName0 = pPath0.toFile().getName();
                     String outputFilename0 = String.join("_", phenopacketName0, ddEngine,
                                                 String.join("", "n", nDiseasesList.getLast().toString()),
@@ -191,14 +186,14 @@ public class BenchmarkCommand extends DifferentialDiagnosisCommand {
                                 phenopacketData.observedHpoTermIds().toList(),
                                 phenopacketData.excludedHpoTermIds().toList());
 
-                        LOGGER.info(String.valueOf(phenopacketPath));
+                        LOGGER.info(String.valueOf(pPath0));
                         LOGGER.info("nDiseases = {}", nDiseasesList);
-                        LOGGER.info("refiners = {}", refinersList);
+
                         String phenopacketName = pPath0.toFile().getName();
                         List<TermId> termIdsToRemove = new ArrayList<>();
                         List<TermId> includedIds = new ArrayList<>(phenopacketData.observedHpoTermIds().toList());
                         List<TermId> excludedIds = new ArrayList<>(phenopacketData.excludedHpoTermIds().toList());
-                        List<TermId> allSampleHpoTerms = Stream.of(sample.presentHpoTermIds(), sample.excludedHpoTermIds())
+                        List<TermId> allSampleHpoTerms = Stream.of(sample.observedHpoTermIds(), sample.excludedHpoTermIds())
                                 .flatMap(Collection::stream).toList();
                         if (removeIdsFile != null) {
                             termIdsToRemove = getTermIdsToRemove(phenopacketName, removeIdsFile);
@@ -207,7 +202,7 @@ public class BenchmarkCommand extends DifferentialDiagnosisCommand {
                             sample = Sample.of(phenopacketData.sampleId(), includedIds, excludedIds);
                         }
                         if (removeSampleTerms) {
-                            termIdsToRemove = Stream.of(sample.presentHpoTermIds(), sample.excludedHpoTermIds())
+                            termIdsToRemove = Stream.of(sample.observedHpoTermIds(), sample.excludedHpoTermIds())
                                     .flatMap(Collection::stream).toList();
                         }
                         LOGGER.info("{} removed Ids = {}", phenopacketName, termIdsToRemove);
@@ -216,7 +211,7 @@ public class BenchmarkCommand extends DifferentialDiagnosisCommand {
                         assert engine != null;
                         List<DifferentialDiagnosis> differentialDiagnoses = engine.run(sample);
 
-                        // Summarize the intial differential diagnosis results.
+                        // Summarize the initial differential diagnosis results.
                         String outFilename = String.join("_",
                                 phenopacketName.replace(".json", ""),
                                 "initial",
@@ -282,6 +277,9 @@ public class BenchmarkCommand extends DifferentialDiagnosisCommand {
                                     LOGGER.info("{}: {}", e.getKey(), e.getValue());
                                     LOGGER.info("n Diseases = {}, n Repetitions = {}", nDiseases, nRepetitions);
                                     List<DifferentialDiagnosis> orderedDiagnoses = e.getValue().getOrderedDiagnoses(differentialDiagnoses, options);
+                                    List<DifferentialDiagnosis> allOrderedDiagnoses = differentialDiagnoses.stream()
+                                            .sorted(Comparator.comparingDouble(DifferentialDiagnosis::score).reversed())
+                                            .toList();
                                     List<HpoDisease> diseases = e.getValue().getDiseases(orderedDiagnoses);
                                     Map<TermId, List<HpoFrequency>> hpoTermCounts = e.getValue().getHpoTermCounts(diseases);
                                     Map<TermId, Set<TermId>> maxoToHpoTermIdMap = e.getValue().getMaxoToHpoTermIdMap(termIdsToRemove, hpoTermCounts);
@@ -299,7 +297,7 @@ public class BenchmarkCommand extends DifferentialDiagnosisCommand {
 
 
                                         RankMaxo rankMaxo = new RankMaxo(hpoToMaxoTermMap, maxoToHpoTermIdMap, maxoHpoTermProbabilities, diseaseSubsetEngine,
-                                                minimalOntology, ontology);
+                                                ontology, allOrderedDiagnoses);
 
                                         refinementResults = e.getValue().run(sample,
                                                 orderedDiagnoses,
@@ -357,19 +355,11 @@ public class BenchmarkCommand extends DifferentialDiagnosisCommand {
                                                 nDiseasesAbbr, nRepsAbbr, "maxodiff", "results.html");
                                         Path maxodiffResultsHTMLPath = Path.of(String.join(File.separator, outputDir.toString(), outputFilename));
 
-                                        String htmlString = HtmlResults.writeHTMLResults(sample, nDiseases, nRepetitions, resultsList,
-                                                biometadataService, hpoTermCounts, "researcher");
+                                        String htmlString = HtmlResults.writeHTMLResults(sample, nDiseases, hpoDiseases, nRepetitions, resultsList,
+                                                biometadataService, hpoTermCounts, icMicaDict, "researcher");
 
                                         Files.writeString(maxodiffResultsHTMLPath, htmlString);
                                     }
-
-                                    if (e.getKey().equals("rank") | e.getKey().equals("ddScore") | e.getKey().equals("ksTest")) {
-                                        break;
-                                    }
-                                }
-
-                                if (e.getKey().equals("ksTest")) {
-                                    break;
                                 }
                             }
                         }

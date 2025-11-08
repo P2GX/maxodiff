@@ -70,7 +70,13 @@ public class PhenopacketData {
                 .map(TermId::of)
                 .toList();
         return new PhenopacketData(sampleId, observedTerms, excludedTerms, diseaseIds);
+    }
 
+    public Sample getSample() {
+        return Sample.of(
+                sampleId(),
+                observedHpoTermIds().toList(),
+                excludedHpoTermIds().toList());
     }
 
 
