@@ -70,6 +70,7 @@ The web app can be started as:
 java -jar maxodiff-html/target/maxodiff-html.jar
 ```
 
+
 If a Java heap space error occurs, more memory can be allocated by adding VM options:
 
 ```shell
@@ -77,3 +78,17 @@ java -Xmx8g -jar maxodiff-html/target/maxodiff-html.jar
 ```
 
 By default, the app will serve requests at `http://localhost:8080/maxodiff`.
+
+## Troubleshooting
+
+### Connection refused
+The error Connection refused might be a sign that you need to set proxy settings.
+
+If `./mvnw clean package` produces a connect exception, run `export MAVEN_OPTS="-Dhttp.proxyHost=xxx -Dhttp.proxyPort=8080 -Dhttps.proxyHost=xxx -Dhttps.proxyPort=8080"` (with your own proxy settings) in advance. 
+
+If `java -jar maxodiff-cli/target/maxodiff-cli.jar download`produces a connect exception, try `java -Dhttp.proxyHost=xxx -Dhttp.proxyPort=8080 -Dhttps.proxyHost=xxx -Dhttps.proxyPort=8080 -jar maxodiff-cli/target/maxodiff-cli.jar download` (with your own proxy settings) instead.
+
+### Running out of memory
+
+If `java -jar maxodiff-html/target/maxodiff-html.jar` stalls for a long time at `Loading Maxodiff resources from xxx` before failing, try giving java more heap space (in this example 12GB) with -Xmx12G, i.e. `java -Xmx12G -jar maxodiff-html/target/maxodiff-html.jar`.
+
