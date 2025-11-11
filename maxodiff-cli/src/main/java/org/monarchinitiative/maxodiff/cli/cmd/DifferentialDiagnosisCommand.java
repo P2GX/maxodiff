@@ -74,7 +74,7 @@ public class DifferentialDiagnosisCommand extends BaseCommand {
 
     @CommandLine.Option(names = {"--diseaseProbModel"},
             paramLabel = "{ranked}",
-            description = "Disease Probability Model to use for Rank MAxO algorithm (default: ${DEFAULT-VALUE}).")
+            description = "Disease Probability Model to use for Rank MAxO algorithm (\"ranked\", \"softmax\", \"expDecay\". Default: ${DEFAULT-VALUE}).")
     protected String diseaseProbModel = "ranked";
 
     @CommandLine.Option(names = {"-nr", "--nRepetitions"},
@@ -95,7 +95,7 @@ public class DifferentialDiagnosisCommand extends BaseCommand {
         String phenopacketName = phenopacketPath.toFile().getName();
 
         String outputFilename = String.join("_", phenopacketName, "maxodiff", "results.csv");
-        if (! outputDir.toFile().exists()) {
+        if (! outputDir.toFile().isDirectory()) {
             System.err.println("Output directory does not exist: '" + outputDir +
                     "'. Create the directory and rerun this command.");
             return 1;
@@ -104,18 +104,23 @@ public class DifferentialDiagnosisCommand extends BaseCommand {
 
 
         int nRepetitions = nRepetitionsArg;
-        String ddEngine = "phenomizer";
         ScoringMode scoringMode = scoringModeArg.equals("one-sided") ? ScoringMode.ONE_SIDED : ScoringMode.TWO_SIDED;
 
         try (BufferedWriter writer = openOutputFileWriter(maxodiffResultsFilePath); CSVPrinter printer = CSVFormat.DEFAULT.print(writer)) {
-            runSingleMaxodiffAnalysis(phenopacketPath, phenopacketName, nDiseases, nRepetitions, ddEngine, scoringMode, true, printer);
+            runSingleMaxodiffAnalysis(phenopacketPath, phenopacketName, nDiseases, nRepetitions,  scoringMode, true, printer);
         }
 
         return 0;
     }
 
-    protected void runSingleMaxodiffAnalysis(Path phenopacketPath, String phenopacketName, int nDiseases, int nRepetitions,
-                                             String ddEngine, ScoringMode scoringMode, boolean writeOutputFile, CSVPrinter printer) throws Exception {
+    protected void runSingleMaxodiffAnalysis(
+            Path phenopacketPath,
+            String phenopacketName,
+            int nDiseases,
+            int nRepetitions,
+            ScoringMode scoringMode,
+            boolean writeOutputFile,
+            CSVPrinter printer) throws Exception {
 
 
         Path hpoPath = MaxodiffDataResolver.of(maxoDataPath).hpoJson();
@@ -127,14 +132,13 @@ public class DifferentialDiagnosisCommand extends BaseCommand {
         HpoDiseases hpoDiseases = loader.load(hpoaPath);
 
         IcMicaData icMicaData = null;
-        if (ddEngine.equals("phenomizer")) {
-            LOGGER.info("Loading icMicaDict...");
-            try {
-                icMicaData = IcMicaDictLoader.loadIcMicaDict(MaxodiffDataResolver.of(maxoDataPath).icMicaDict());
-            } catch (NoSuchFileException ex) {
-                throw new Exception(String.join(". ", ex.getMessage(), "Run Download command to download the necessary term-pair-similarity file."));
-            }
+        LOGGER.info("Loading icMicaDict...");
+        try {
+            icMicaData = IcMicaDictLoader.loadIcMicaDict(MaxodiffDataResolver.of(maxoDataPath).icMicaDict());
+        } catch (NoSuchFileException ex) {
+            throw new Exception(String.join(". ", ex.getMessage(), "Run Download command to download the necessary term-pair-similarity file."));
         }
+
 
         if (writeOutputFile) {
             printer.printRecord("phenopacket", "disease_id", "maxo_id", "maxo_label",
@@ -160,9 +164,6 @@ public class DifferentialDiagnosisCommand extends BaseCommand {
 
             DiffDiagRefiner maxoDiffRefiner = maxodiffPropsConfiguration.diffDiagRefiner("score");
             BiometadataService biometadataService = maxodiffPropsConfiguration.biometadataService();
-            if (icMicaData == null) {
-                throw new PhenolRuntimeException("No icMicaDict found. Please report to developers");
-            }
             Map<TermPair, Double> icMicaDict = icMicaData.icMicaDict();
             DifferentialDiagnosisEngine engine = new PhenomizerDifferentialDiagnosisEngine(hpoDiseases, icMicaDict, scoringMode);
 
@@ -183,6 +184,7 @@ public class DifferentialDiagnosisCommand extends BaseCommand {
             Map<TermId, Set<TermId>> maxoToHpoTermIdMap = maxoDiffRefiner.getMaxoToHpoTermIdMap(List.of(), hpoTermCounts);
 
             DiseaseModelProbability diseaseModelProbability = null;
+            RankMaxo rankMaxo1 = maxoDiffRefiner.getRankMaxo(allOrderedDiagnoses, initialDiagnoses, engine, maxoToHpoTermIdMap, diseaseProbModel);
             switch (diseaseProbModel) {
                 case "ranked" -> diseaseModelProbability = DiseaseModelProbability.ranked(initialDiagnoses);
                 case "softmax" -> diseaseModelProbability = DiseaseModelProbability.softmax(initialDiagnoses);
@@ -228,7 +230,7 @@ public class DifferentialDiagnosisCommand extends BaseCommand {
                 // write Researcher view HTML results
                 String nDiseasesAbbr = String.join("", "n", String.valueOf(nDiseases));
                 String nRepsAbbr = String.join("", "nr", String.valueOf(nRepetitions));
-                outputFilename = String.join("_", phenopacketName, ddEngine,
+                outputFilename = String.join("_", phenopacketName, 
                         nDiseasesAbbr, nRepsAbbr, "maxodiff", "researcher", "results.html");
                 Path maxodiffResultsHTMLPath = Path.of(String.join(File.separator, outputDir.toString(), outputFilename));
 
@@ -245,7 +247,7 @@ public class DifferentialDiagnosisCommand extends BaseCommand {
                 Files.writeString(maxodiffResultsHTMLPath, htmlString);
 
                 // write Clinician view HTML results
-                String outputFilename1 = String.join("_", phenopacketName, ddEngine,
+                String outputFilename1 = String.join("_", phenopacketName,
                         nDiseasesAbbr, nRepsAbbr, "maxodiff", "clinician", "results.html");
                 Path maxodiffResultsHTMLPath1 = Path.of(String.join(File.separator, outputDir.toString(), outputFilename1));
 
