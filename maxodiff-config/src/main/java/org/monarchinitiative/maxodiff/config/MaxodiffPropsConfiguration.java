@@ -27,7 +27,7 @@ public record MaxodiffPropsConfiguration(MinimalOntology minHpo, Ontology hpo, H
     public static MaxodiffPropsConfiguration createConfig(MaxodiffDataResolver maxodiffDataResolver) throws IOException {
         MinimalOntology minHpo = MinimalOntologyLoader.loadOntology(maxodiffDataResolver.hpoJson().toFile());
         Ontology hpo = OntologyLoader.loadOntology(maxodiffDataResolver.hpoJson().toFile());
-        HpoDiseases diseases = HpoDiseaseLoaders.defaultLoader(minHpo, HpoDiseaseLoaderOptions.defaultOptions()).load(maxodiffDataResolver.phenotypeAnnotations());
+        HpoDiseases diseases = HpoDiseaseLoaders.defaultLoader(minHpo, HpoDiseaseLoaderOptions.defaultOmim()).load(maxodiffDataResolver.phenotypeAnnotations());
         Map<SimpleTerm, Set<SimpleTerm>> maxoAnnotsMap;
         try (BufferedReader reader = Files.newBufferedReader(maxodiffDataResolver.maxoDxAnnots())) {
             maxoAnnotsMap = MaxoDxAnnots.parseHpoToMaxo(reader);

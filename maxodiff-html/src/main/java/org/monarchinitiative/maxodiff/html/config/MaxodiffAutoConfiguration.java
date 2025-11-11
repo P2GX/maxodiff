@@ -135,7 +135,6 @@ public class MaxodiffAutoConfiguration {
 
     @Bean
     public DifferentialDiagnosisEngineService differentialDiagnosisEngineService() {
-        // TODO: make LIRICAL and Exomiser differential diagnosis engine
         Map<String, DifferentialDiagnosisEngine> engines = Map.of();
         return DifferentialDiagnosisEngineServiceImpl.of(engines);
     }

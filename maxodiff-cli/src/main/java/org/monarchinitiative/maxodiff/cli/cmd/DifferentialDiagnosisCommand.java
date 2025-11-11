@@ -121,7 +121,7 @@ public class DifferentialDiagnosisCommand extends BaseCommand {
         Path hpoPath = MaxodiffDataResolver.of(maxoDataPath).hpoJson();
         Ontology ontology = OntologyLoader.loadOntology(hpoPath.toFile());
         MinimalOntology minimalOntology = MinimalOntologyLoader.loadOntology(hpoPath.toFile());
-        HpoDiseaseLoader loader = HpoDiseaseLoaders.defaultLoader(minimalOntology, HpoDiseaseLoaderOptions.defaultOptions());
+        HpoDiseaseLoader loader = HpoDiseaseLoaders.defaultLoader(minimalOntology, HpoDiseaseLoaderOptions.defaultOmim());
 
         Path hpoaPath = MaxodiffDataResolver.of(maxoDataPath).phenotypeAnnotations();
         HpoDiseases hpoDiseases = loader.load(hpoaPath);
