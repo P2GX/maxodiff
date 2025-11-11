@@ -81,13 +81,11 @@ public class MaxodiffController {
                               @RequestParam(value = "excludedHpoTermIds", required = false) String excludedHpoTermIds,
                               @RequestParam(value = "nDiseases", required = false) Integer nDiseases,
                               @RequestParam(value = "nRepetitions", required = false) Integer nRepetitions,
-                              @RequestParam(value = "view", required = false) String view,
                               Model model) throws Exception {
 
         model.addAttribute("sampleId", sampleId);
         model.addAttribute("observedHpoTermIds", observedHpoTermIds);
         model.addAttribute("excludedHpoTermIds", excludedHpoTermIds);
-        model.addAttribute("view", view);
 
         // Sample observed and excluded HPO terms
         List<TermId> observedHpoTermIdsList = (observedHpoTermIds == null | (observedHpoTermIds != null && observedHpoTermIds.isEmpty())) ?
@@ -159,8 +157,7 @@ public class MaxodiffController {
 
             // Map of MAxO term id : List of associated HPO term ids for the subset n diseases. HPO ancestors are removed
             if (model.getAttribute("maxoToHpoTermIdMap") == null || !nDiseases.equals(prevNDiseases)) {
-                List<TermId> termIdsToRemove = List.of();
-                Map<TermId, Set<TermId>> maxoToHpoTermIdMap = diffDiagRefiner.getMaxoToHpoTermIdMap(termIdsToRemove, hpoTermCounts);
+                Map<TermId, Set<TermId>> maxoToHpoTermIdMap = diffDiagRefiner.getMaxoToHpoTermIdMap(hpoTermCounts);
                 model.addAttribute("maxoToHpoTermIdMap", maxoToHpoTermIdMap);
             }
             Map<TermId, Set<TermId>> maxoToHpoTermIdMap = (Map<TermId, Set<TermId>>) model.getAttribute("maxoToHpoTermIdMap");
@@ -181,7 +178,7 @@ public class MaxodiffController {
             // Perform maxodiff refinement
             assert maxoToHpoTermIdMap != null;
             String diseaseProbModel = "ranked";
-            rankMaxo = ((MaxoDiffRefiner) diffDiagRefiner).getRankMaxo(allInitialDiagnoses,
+            rankMaxo = diffDiagRefiner.getRankMaxo(allInitialDiagnoses,
                     initialDiagnoses,
                     diseaseSubsetEngine,
                     maxoToHpoTermIdMap,
@@ -208,8 +205,7 @@ public class MaxodiffController {
                     resultsList,
                     biometadataService,
                     hpoTermCounts,
-                    icMicaDict,
-                    view);
+                    icMicaDict);
             model.addAttribute("htmlTemplateString", htmlString);
             model.addAttribute("showMDresults", true);
         }

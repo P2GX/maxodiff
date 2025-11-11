@@ -162,13 +162,9 @@ public class BaseDiffDiagRefiner implements DiffDiagRefiner {
     }
 
     @Override
-    public Map<TermId, Set<TermId>> getMaxoToHpoTermIdMap(List<TermId> termIdsToRemove,
-                                                          Map<TermId, List<HpoFrequency>> hpoTermCounts) {
+    public Map<TermId, Set<TermId>> getMaxoToHpoTermIdMap(Map<TermId, List<HpoFrequency>> hpoTermCounts) {
 
 
-        // Remove HPO terms if desired
-        termIdsToRemove.forEach(hpoTermCounts::remove);
-//        sample.excludedHpoTermIds().forEach(hpoTermCounts::remove);
         Set<TermId> hpoIds = hpoTermCounts.keySet();
 
         // Get all the MaXo terms that can be used to diagnose the HPO terms, removing ancestors
