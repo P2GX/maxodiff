@@ -92,6 +92,7 @@ public class BenchmarkCommand extends DifferentialDiagnosisCommand {
         OBJECT_MAPPER.enable(SerializationFeature.INDENT_OUTPUT);
         OBJECT_MAPPER.registerModule(new Jdk8Module());
 
+        // Load ontology and hpo diseases
         Ontology ontology = OntologyLoader.loadOntology(MaxodiffDataResolver.of(maxoDataPath).hpoJson().toFile());
         MinimalOntology minimalOntology = MinimalOntologyLoader.loadOntology(MaxodiffDataResolver.of(maxoDataPath).hpoJson().toFile());
         HpoDiseaseLoader loader = HpoDiseaseLoaders.defaultLoader(minimalOntology, HpoDiseaseLoaderOptions.defaultOmim());
@@ -99,10 +100,12 @@ public class BenchmarkCommand extends DifferentialDiagnosisCommand {
         Path hpoaPath = MaxodiffDataResolver.of(maxoDataPath).phenotypeAnnotations();
         HpoDiseases hpoDiseases = loader.load(hpoaPath);
 
+        // Set up Phenomizer engine
         String ddEngine = "phenomizer";
         LOGGER.info("Loading icMicaDict...");
         IcMicaData icMicaData = IcMicaDictLoader.loadIcMicaDict(MaxodiffDataResolver.of(maxoDataPath).icMicaDict());
 
+        // Get phenopacket paths from batch directory, or single phenopacket path if provided instead
         List<Path> phenopacketPaths = new ArrayList<>();
         if (batchDir != null) {
             File folder = new File(batchDir);
@@ -119,6 +122,7 @@ public class BenchmarkCommand extends DifferentialDiagnosisCommand {
         }
         Collections.sort(phenopacketPaths);
 
+        // Make N Diseases and Repetitions lists from ClI arguments
         List<Integer> nDiseasesList = new ArrayList<>();
         nDiseasesArg.forEach(nDiseasesList::add);
         List<Integer> nRepetitionsList = new ArrayList<>();
@@ -157,28 +161,18 @@ public class BenchmarkCommand extends DifferentialDiagnosisCommand {
                 double meanNDiscoverablePhenotypesAllMaxoTerms = 1;
                 boolean computeMaxoAscertainablePhenotypes = true;
                 Path allMaxoAscPhenPath = getAllMaxoAscPhenPath("allMaxoAscPhenotypes");
-                List<Integer> integers = new ArrayList<>();
 
                 // If file with all HPO terms ascertainable by all MAxO terms exists
                 // calculate mean N discoverable phenotypes for all MAxO terms from file header
                 if (Files.exists(allMaxoAscPhenPath)) {
                     computeMaxoAscertainablePhenotypes = false;
-                    File allAscPhenFile = allMaxoAscPhenPath.toFile();
-                    try (BufferedReader reader = new BufferedReader(new FileReader(allAscPhenFile))) {
-                        String headerLine = reader.readLine(); // Read the first line
-                        Pattern integerPattern = Pattern.compile("\\d+");
-                        Matcher integerMatcher = integerPattern.matcher(headerLine);
-                        while (integerMatcher.find()) {
-                            integers.add(Integer.parseInt(integerMatcher.group()));
-                        }
-                        double nAllMaxoTerms = integers.get(1); //313;//257;
-                        nAllMaxoDiscoverablePhenotypes = integers.get(0); //7192;//7036;//6170;//5302;
-                        meanNDiscoverablePhenotypesAllMaxoTerms = nAllMaxoTerms / nAllMaxoDiscoverablePhenotypes;
-                    }
+                    List<Double> nDiscPhens = calculateNDiscPhenotypesFromFile(allMaxoAscPhenPath);
+                    nAllMaxoDiscoverablePhenotypes = (int) nDiscPhens.get(0).doubleValue();
+                    meanNDiscoverablePhenotypesAllMaxoTerms = nDiscPhens.get(1);
                 }
 
                 int p = 1;
-                int nPhenopackets = Math.min(phenopacketPaths.size(), 6);
+                int nPhenopackets = Math.min(phenopacketPaths.size(), 600);
                 for (Path pPath0 : phenopacketPaths.subList(0, nPhenopackets)) {
                     String phenopacketName0 = pPath0.toFile().getName();
                     String outputFilename0 = String.join("_", phenopacketName0, ddEngine,
@@ -233,22 +227,12 @@ public class BenchmarkCommand extends DifferentialDiagnosisCommand {
                                     refiner, allMaxoTerms,
                                     sample, allMaxoAscertainablePhenotypes);
                             computeMaxoAscertainablePhenotypes = false;
-
-                            File allAscPhenFile = allMaxoAscPhenPath.toFile();
-                            try (BufferedReader reader = new BufferedReader(new FileReader(allAscPhenFile))) {
-                                String headerLine = reader.readLine(); // Read the first line
-                                Pattern integerPattern = Pattern.compile("\\d+");
-                                Matcher integerMatcher = integerPattern.matcher(headerLine);
-                                while (integerMatcher.find()) {
-                                    integers.add(Integer.parseInt(integerMatcher.group()));
-                                }
-                                double nAllMaxoTerms = integers.get(1); //313;//257;
-                                nAllMaxoDiscoverablePhenotypes = integers.get(0); //7192;//7036;//6170;//5302;
-                                meanNDiscoverablePhenotypesAllMaxoTerms = nAllMaxoTerms / nAllMaxoDiscoverablePhenotypes;
-                            }
+                            List<Double> nDiscPhens = calculateNDiscPhenotypesFromFile(allMaxoAscPhenPath);
+                            nAllMaxoDiscoverablePhenotypes = (int) nDiscPhens.get(0).doubleValue();
+                            meanNDiscoverablePhenotypesAllMaxoTerms = nDiscPhens.get(1);
                         }
 
-                        List<TermId> termIdsToRemove = new ArrayList<>();
+
                         for (int nDiseases : nDiseasesList) {
                             // Get n diseases subset of initial diagnoses
                             List<DifferentialDiagnosis> initialDiagnosesNDiseases = allOrderedDiagnoses.subList(0, nDiseases);
@@ -260,73 +244,32 @@ public class BenchmarkCommand extends DifferentialDiagnosisCommand {
                                     diseaseModelProbability);
 
                             for (int nRepetitions : nRepetitionsList) {
+                                // Make refinement options
                                 RefinementOptions options = RefinementOptions.of(nDiseases, nRepetitions);
                                 LOGGER.info("{}: {}", refinerName, refiner);
                                 LOGGER.info("ppkt = {}, n Diseases = {}, n Repetitions = {}", phenopacketName, nDiseases, nRepetitions);
 
                                 List<HpoDisease> diseases = refiner.getDiseases(initialDiagnosesNDiseases);
                                 Map<TermId, List<HpoFrequency>> hpoTermCounts = refiner.getHpoTermCounts(diseases);
-                                Map<TermId, Set<TermId>> maxoToHpoTermIdMap = refiner.getMaxoToHpoTermIdMap(termIdsToRemove, hpoTermCounts);
+                                Map<TermId, Set<TermId>> maxoToHpoTermIdMap = refiner.getMaxoToHpoTermIdMap(hpoTermCounts);
 
                                 DifferentialDiagnosisEngine diseaseSubsetEngine = engine;
 
+                                RefinementResults refinementResults = getValidationResults(hpoToMaxoTermMap,
+                                        maxoToHpoTermIdMap, maxoHpoTermProbabilities,
+                                        diseaseSubsetEngine, ontology, allOrderedDiagnoses, refiner, sample,
+                                        initialDiagnosesNDiseases, options, hpoTermCounts);
 
-                                RankMaxo rankMaxo = new RankMaxo(hpoToMaxoTermMap, maxoToHpoTermIdMap,
-                                        maxoHpoTermProbabilities, diseaseSubsetEngine,
-                                        ontology, allOrderedDiagnoses);
-
-                                RefinementResults refinementResults = refiner.run(sample,
-                                        initialDiagnosesNDiseases,
-                                        options,
-                                        rankMaxo,
-                                        hpoTermCounts,
-                                        maxoToHpoTermIdMap);
-
-
+                                // Sort refinement results and write to files
                                 List<MaxodiffResult> resultsList = new ArrayList<>(refinementResults.maxodiffResults().stream().toList());
                                 resultsList.sort(Comparator.<MaxodiffResult>comparingDouble(mr -> mr.rankMaxoScore().maxoScore()).reversed());
-                                String fileName = String.join("_",
-                                        phenopacketName.replace(".json", ""),
-                                        "n" + nDiseases,
-                                        "nr" + nRepetitions,
-                                        refinerName + ".json");
-                                Path maxodiffResultsFilePath = Path.of(String.join(File.separator, outputDir.toString(), fileName));
-                                writeToJsonFile(maxodiffResultsFilePath, refinementResults);
 
-                                // Test new validation procedure
-                                // Get highest score MAxO term id
-                                MaxodiffResult topResult = resultsList.getFirst();
-                                TermId topMaxoId = topResult.rankMaxoScore().maxoId();
+                                writeValidationCSVResults(phenopacketName, refinerName, options, refinementResults,
+                                        resultsList, biometadataService, meanNDiscoverablePhenotypesAllMaxoTerms,
+                                        nAllMaxoDiscoverablePhenotypes, allSampleHpoTerms, printer);
 
-                                String maxScoreTermLabel = biometadataService.maxoLabel(topMaxoId.toString()).orElse("unknown");
-                                double maxScoreValue = topResult.rankMaxoScore().maxoScore(); //maxoTermScore().scoreDiff();
-
-                                LOGGER.info("{}: n Diseases = {}, n Repetitions = {}", refinerName, nDiseases, nRepetitions);
-
-                                LOGGER.info("Max Score: {} ({}) = {}", topMaxoId, maxScoreTermLabel, maxScoreValue);
-
-                                LOGGER.info("Getting Top Maxo Ascertainable Phenotypes...");
-
-                                Set<TermId> topMaxoAscertainablePhenotypes = topResult.rankMaxoScore().discoverableObservedHpoTermIds();//maxoHpoTermProbabilities.getDiscoverableByMaxoHpoTerms(sample, topMaxoId, maxoToHpoTermIdMap);
-
-                                double diff = topMaxoAscertainablePhenotypes.size() - meanNDiscoverablePhenotypesAllMaxoTerms;
-
-                                writeResults(phenopacketName, allSampleHpoTerms, allSampleHpoTerms.size(), nDiseases, nRepetitions,
-                                        topMaxoId.toString(), maxScoreTermLabel, maxScoreValue, nAllMaxoDiscoverablePhenotypes,
-                                        topMaxoAscertainablePhenotypes, topMaxoAscertainablePhenotypes.size(),
-                                        meanNDiscoverablePhenotypesAllMaxoTerms, diff,
-                                        refinerName, printer);
-
-                                String nDiseasesAbbr = String.join("", "n", String.valueOf(nDiseases));
-                                String nRepsAbbr = String.join("", "nr", String.valueOf(nRepetitions));
-                                String outputFilename = String.join("_", phenopacketName, ddEngine,
-                                        nDiseasesAbbr, nRepsAbbr, "maxodiff", "results.html");
-                                Path maxodiffResultsHTMLPath = Path.of(String.join(File.separator, outputDir.toString(), outputFilename));
-
-                                String htmlString = HtmlResults.writeHTMLResults(sample, nDiseases, hpoDiseases, nRepetitions, resultsList,
-                                        biometadataService, hpoTermCounts, icMicaDict, "researcher");
-
-                                Files.writeString(maxodiffResultsHTMLPath, htmlString);
+                                writeValidationHTMLResults(phenopacketName, options, ddEngine, sample, hpoDiseases,
+                                        biometadataService, hpoTermCounts, icMicaDict, resultsList);
                             }
                         }
 
@@ -345,6 +288,124 @@ public class BenchmarkCommand extends DifferentialDiagnosisCommand {
         }
 
         return 0;
+    }
+
+    private RefinementResults getValidationResults(Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxoTermMap,
+                                      Map<TermId, Set<TermId>> maxoToHpoTermIdMap,
+                                      MaxoHpoTermProbabilities maxoHpoTermProbabilities,
+                                      DifferentialDiagnosisEngine diseaseSubsetEngine,
+                                      Ontology ontology,
+                                      List<DifferentialDiagnosis> allOrderedDiagnoses,
+                                      DiffDiagRefiner refiner,
+                                      Sample sample,
+                                      List<DifferentialDiagnosis> initialDiagnosesNDiseases,
+                                      RefinementOptions options,
+                                      Map<TermId, List<HpoFrequency>> hpoTermCounts) throws Exception {
+
+        // Perform maxodiff refinement
+        RankMaxo rankMaxo = new RankMaxo(hpoToMaxoTermMap, maxoToHpoTermIdMap,
+                maxoHpoTermProbabilities, diseaseSubsetEngine,
+                ontology, allOrderedDiagnoses);
+
+        RefinementResults refinementResults = refiner.run(sample,
+                initialDiagnosesNDiseases,
+                options,
+                rankMaxo,
+                hpoTermCounts,
+                maxoToHpoTermIdMap);
+
+        return refinementResults;
+    }
+
+    private void writeValidationCSVResults(String phenopacketName,
+                                           String refinerName,
+                                           RefinementOptions options,
+                                           RefinementResults refinementResults,
+                                           List<MaxodiffResult> resultsList,
+                                           BiometadataService biometadataService,
+                                           double meanNDiscoverablePhenotypesAllMaxoTerms,
+                                           int nAllMaxoDiscoverablePhenotypes,
+                                           List<TermId> allSampleHpoTerms,
+                                           CSVPrinter printer) throws IOException {
+
+
+        String fileName = String.join("_",
+                phenopacketName.replace(".json", ""),
+                "n" + options.nDiseases(),
+                "nr" + options.nRepetitions(),
+                refinerName + ".json");
+        Path maxodiffResultsFilePath = Path.of(String.join(File.separator, outputDir.toString(), fileName));
+        writeToJsonFile(maxodiffResultsFilePath, refinementResults);
+
+        // Test new validation procedure
+        // Get highest score MAxO term id
+        MaxodiffResult topResult = resultsList.getFirst();
+        TermId topMaxoId = topResult.rankMaxoScore().maxoId();
+
+        String maxScoreTermLabel = biometadataService.maxoLabel(topMaxoId.toString()).orElse("unknown");
+        double maxScoreValue = topResult.rankMaxoScore().maxoScore(); //maxoTermScore().scoreDiff();
+
+        LOGGER.info("{}: n Diseases = {}, n Repetitions = {}", refinerName, options.nDiseases(), options.nRepetitions());
+
+        LOGGER.info("Max Score: {} ({}) = {}", topMaxoId, maxScoreTermLabel, maxScoreValue);
+
+        LOGGER.info("Getting Top Maxo Ascertainable Phenotypes...");
+
+        // Get top MAxO result top ascertainable phenotypes
+        Set<TermId> topMaxoAscertainablePhenotypes = topResult.rankMaxoScore().discoverableObservedHpoTermIds();//maxoHpoTermProbabilities.getDiscoverableByMaxoHpoTerms(sample, topMaxoId, maxoToHpoTermIdMap);
+
+        double diff = topMaxoAscertainablePhenotypes.size() - meanNDiscoverablePhenotypesAllMaxoTerms;
+
+        // Write Benchmark results summary file
+        writeResults(phenopacketName, allSampleHpoTerms, allSampleHpoTerms.size(), options.nDiseases(), options.nRepetitions(),
+                topMaxoId.toString(), maxScoreTermLabel, maxScoreValue, nAllMaxoDiscoverablePhenotypes,
+                topMaxoAscertainablePhenotypes, topMaxoAscertainablePhenotypes.size(),
+                meanNDiscoverablePhenotypesAllMaxoTerms, diff,
+                refinerName, printer);
+    }
+
+    private void writeValidationHTMLResults(String phenopacketName,
+                                            RefinementOptions options,
+                                            String ddEngine,
+                                            Sample sample,
+                                            HpoDiseases hpoDiseases,
+                                            BiometadataService biometadataService,
+                                            Map<TermId, List<HpoFrequency>> hpoTermCounts,
+                                            Map<TermPair, Double> icMicaDict,
+                                            List<MaxodiffResult> resultsList) throws Exception {
+
+        // Write HTML results
+        String nDiseasesAbbr = String.join("", "n", String.valueOf(options.nDiseases()));
+        String nRepsAbbr = String.join("", "nr", String.valueOf(options.nRepetitions()));
+        String outputFilename = String.join("_", phenopacketName, ddEngine,
+                nDiseasesAbbr, nRepsAbbr, "maxodiff", "results.html");
+        Path maxodiffResultsHTMLPath = Path.of(String.join(File.separator, outputDir.toString(), outputFilename));
+
+        String htmlString = HtmlResults.writeHTMLResults(sample, options.nDiseases(), hpoDiseases, options.nRepetitions(), resultsList,
+                biometadataService, hpoTermCounts, icMicaDict);
+
+        Files.writeString(maxodiffResultsHTMLPath, htmlString);
+    }
+
+    private List<Double> calculateNDiscPhenotypesFromFile(Path allMaxoAscPhenPath) throws IOException {
+        double nAllMaxoDiscoverablePhenotypes = 1;
+        double meanNDiscoverablePhenotypesAllMaxoTerms = 1;
+        File allAscPhenFile = allMaxoAscPhenPath.toFile();
+        List<Integer> integers = new ArrayList<>();
+        try (BufferedReader reader = new BufferedReader(new FileReader(allAscPhenFile))) {
+            String headerLine = reader.readLine(); // Read the first line
+            Pattern integerPattern = Pattern.compile("\\d+");
+            Matcher integerMatcher = integerPattern.matcher(headerLine);
+            while (integerMatcher.find()) {
+                integers.add(Integer.parseInt(integerMatcher.group()));
+            }
+            double nAllMaxoTerms = integers.get(1); //313;//257;
+            nAllMaxoDiscoverablePhenotypes = integers.get(0); //7192;//7036;//6170;//5302;
+            meanNDiscoverablePhenotypesAllMaxoTerms = nAllMaxoTerms / nAllMaxoDiscoverablePhenotypes;
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        return List.of(nAllMaxoDiscoverablePhenotypes, meanNDiscoverablePhenotypesAllMaxoTerms);
     }
 
     private Path getAllMaxoAscPhenPath(String pathNameAddition) {
@@ -472,7 +533,7 @@ public class BenchmarkCommand extends DifferentialDiagnosisCommand {
                 .toList();
         List<HpoDisease> diseases = refiner.getDiseases(orderedDiagnoses);
         Map<TermId, List<HpoFrequency>> hpoTermCounts = refiner.getHpoTermCounts(diseases);
-        Map<TermId, Set<TermId>> fullMaxoToHpoTermIdMap = refiner.getMaxoToHpoTermIdMap(List.of(), hpoTermCounts);
+        Map<TermId, Set<TermId>> fullMaxoToHpoTermIdMap = refiner.getMaxoToHpoTermIdMap(hpoTermCounts);
 
         int m = 1;
         int nMaxoTerms = allMaxoTerms.size();

@@ -31,8 +31,7 @@ public class HtmlResults {
             List<MaxodiffResult> resultList,
             BiometadataService biometadataService,
             Map<TermId, List<HpoFrequency>> hpoTermCounts,
-            Map<TermPair, Double> icMicaData,
-            String mode) throws Exception {
+            Map<TermPair, Double> icMicaData) throws Exception {
 
         SpringTemplateEngine templateEngine = templateEngine();
 
