@@ -3,6 +3,8 @@ package org.monarchinitiative.maxodiff.config.impl;
 import org.monarchinitiative.maxodiff.config.MaxoDiffLoader;
 import org.monarchinitiative.maxodiff.config.MaxodiffDataException;
 import org.monarchinitiative.maxodiff.config.MaxodiffDataResolver;
+import org.monarchinitiative.maxodiff.phenomizer.IcMicaData;
+import org.monarchinitiative.maxodiff.phenomizer.IcMicaDictLoader;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
 import org.monarchinitiative.phenol.annotations.io.hpo.HpoDiseaseLoader;
 import org.monarchinitiative.phenol.annotations.io.hpo.HpoDiseaseLoaderOptions;
@@ -49,6 +51,16 @@ public class MaxoDiffFileLoader implements MaxoDiffLoader {
         Path hpoaPath = resolver.phenotypeAnnotations();
         try {
             return loader.load(hpoaPath);
+        } catch (IOException e) {
+            LOGGER.error(e.getMessage(),e);
+            throw new MaxodiffDataException(e.getMessage());
+        }
+    }
+
+    @Override
+    public IcMicaData icMicaData() throws MaxodiffDataException {
+        try {
+            return IcMicaDictLoader.loadIcMicaDict(resolver.icMicaDict());
         } catch (IOException e) {
             LOGGER.error(e.getMessage(),e);
             throw new MaxodiffDataException(e.getMessage());
