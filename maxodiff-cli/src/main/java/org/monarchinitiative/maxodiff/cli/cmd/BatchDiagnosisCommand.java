@@ -27,6 +27,8 @@ import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.*;
 
+import static org.monarchinitiative.maxodiff.cli.cmd.DifferentialDiagnosisCommand.openOutputFileWriter;
+
 
 /**
  * Perform Differential Diagnosis calculations
@@ -35,7 +37,7 @@ import java.util.*;
 @CommandLine.Command(name = "batch", aliases = {"b"},
         mixinStandardHelpOptions = true,
         description = "batch maxodiff analysis")
-public class BatchDiagnosisCommand extends DifferentialDiagnosisCommand {
+public class BatchDiagnosisCommand extends BaseCommand {
     private static final Logger LOGGER = LoggerFactory.getLogger(DifferentialDiagnosisCommand.class);
 
     @CommandLine.Option(names = {"-B", "--batchDir"},
@@ -46,12 +48,22 @@ public class BatchDiagnosisCommand extends DifferentialDiagnosisCommand {
             split=",",
             arity = "1..*",
             description = "Comma-separated list of n diseases to include in differential diagnosis.")
-    protected List<Integer> nDiseasesArg;
+    protected List<Integer> nDiseasesArg = List.of(20);
+
     @CommandLine.Option(names = {"-NR", "--nRepetitionsList"},
             split=",",
             arity = "1..*",
             description = "Comma-separated list of n repetitions to include in differential diagnosis.")
-    protected List<Integer> nRepetitionsArg;
+    protected List<Integer> nRepetitionsArg = List.of(100);
+
+    @CommandLine.Option(
+            names = {"-m", "--maxoData"},
+            description = "Path to maxo data directory (default: ${DEFAULT-VALUE}).")
+    protected Path maxoDataPath = Path.of("data");
+
+    @CommandLine.Option(names = {"-O", "--outputDirectory"},
+            description = "Where to write the results files (default: ${DEFAULT-VALUE}).")
+    protected Path outputDir = Path.of(".");
 
     public static Map<String, List<Object>> resultsMap;
 
@@ -78,6 +90,7 @@ public class BatchDiagnosisCommand extends DifferentialDiagnosisCommand {
         List<Integer> nRepetitionsList = new ArrayList<>();
         nRepetitionsArg.forEach(nRepetitionsList::add);
 
+
         Path maxodiffResultsFilePath = Path.of(String.join(File.separator, outputDir.toString(), "maxodiff_results.csv"));
         MaxoDiffLoader mdloader =  MaxoDiffLoader.fileLoader(maxoDataPath);
         HpoDiseases hpoDiseases = mdloader.hpoDiseases();
@@ -89,39 +102,46 @@ public class BatchDiagnosisCommand extends DifferentialDiagnosisCommand {
         BiometadataService biometadataService = maxodiffPropsConfiguration.biometadataService();
         Map<TermPair, Double> icMicaDict = icMicaData.icMicaDict();
         DifferentialDiagnosisEngine engine = new PhenomizerDifferentialDiagnosisEngine(hpoDiseases, icMicaDict);
-        MaxodiffAnalysisRunner runner = new MaxodiffAnalysisRunner(this.nDiseases,
-                this.nRepetitions,
-                engine,
-                maxoDiffRefiner,
-                biometadataService);
-
-        try (BufferedWriter writer = openOutputFileWriter(maxodiffResultsFilePath); CSVPrinter printer = CSVFormat.DEFAULT.print(writer)) {
-            printer.printRecord("phenopacket", "disease_id", "maxo_id", "maxo_label",
-                    "n_diseases", "disease_ids", "n_repetitions", "score"); // header
-            Map<String, MaxoDiffAnalysisResultRow> resultsMap = new HashMap<>();
-            for (Path phenopacketPath : phenopacketPaths) {
-                for (int nDiseases : nDiseasesList) {
-                    for (int nRepetitions : nRepetitionsList) {
+        Map<String, MaxoDiffAnalysisResultRow> resultsMap = new HashMap<>();
+        try (BufferedWriter writer = openOutputFileWriter(maxodiffResultsFilePath);
+             CSVPrinter printer = CSVFormat.DEFAULT.print(writer)) {
+            printer.printRecord(MaxoDiffAnalysisResultRow.headerFields());
+            int nTotal = phenopacketPaths.size() * nRepetitionsArg.size() * nDiseasesList.size();
+            int c = 0;
+            for (int nDiseases : nDiseasesList) {
+                for (int nRepetitions : nRepetitionsList) {
+                    MaxodiffAnalysisRunner runner = new MaxodiffAnalysisRunner(nDiseases,
+                            nRepetitions,
+                            engine,
+                            maxoDiffRefiner,
+                            biometadataService);
+                    for (Path phenopacketPath : phenopacketPaths) {
                         try {
-
                             String phenopacketFileName = phenopacketPath.toFile().getName();
-                            ScoringMode scoringMode = ScoringMode.ONE_SIDED;
                             PhenopacketData phenopacketData = PhenopacketData.readPhenopacketData(phenopacketPath);
-                            MaxoDiffAnalysisResultRow maxoDiffAnalysisResultRow = runner.batchAnalysis(phenopacketData);
-                            resultsMap.put(phenopacketFileName, maxoDiffAnalysisResultRow);
-                            System.out.println("BatchCmd resultsMap = " + resultsMap);
+                            MaxoDiffAnalysisResultRow row = runner.batchAnalysis(phenopacketData);
+                            printer.printRecord(row.getFields());
+                            c++;
+                            updateProgress(c, nTotal);
                         } catch (Exception ex) {
                             System.out.println(ex.getMessage());
                         }
                     }
                 }
             }
-            printer.printRecord(MaxoDiffAnalysisResultRow.headerFields());
-            for (var row: resultsMap.values()) {
-                printer.printRecord(row.getFields());
-            }
         }
         return 0;
+    }
+
+    private int lastPercent = -1;
+    private void updateProgress(int pkt, int total) {
+        int percent = (int) ((pkt * 100) / total);
+        if (percent != lastPercent) {
+            lastPercent = percent;
+            int filled = percent / 2; // 50 chars for 100%
+            System.out.print("Finished ppkt: [" + "=".repeat(filled) + " ".repeat(50 - filled) + "] " + percent + "%\r");
+            if (percent == 100) System.out.println();
+        }
     }
 
 }

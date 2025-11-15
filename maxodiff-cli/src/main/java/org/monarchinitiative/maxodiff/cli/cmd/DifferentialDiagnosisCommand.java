@@ -60,9 +60,7 @@ public class DifferentialDiagnosisCommand extends BaseCommand {
             description = "Where to write the results files (default: ${DEFAULT-VALUE}).")
     protected Path outputDir = Path.of(".");
 
-    @CommandLine.Option(names = {"-n", "--nDiseases"},
-            description = "Number of diseases to include in the differential diagnosis.")
-    protected Integer nDiseases = 20;
+
 
     @CommandLine.Option(names = {"--diseaseProbModel"},
             paramLabel = "{ranked}",
