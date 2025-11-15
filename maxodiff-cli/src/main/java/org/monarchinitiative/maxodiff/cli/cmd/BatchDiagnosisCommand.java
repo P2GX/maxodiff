@@ -105,9 +105,8 @@ public class BatchDiagnosisCommand extends DifferentialDiagnosisCommand {
                                 String diseaseIds = diseaseIdsList.get(j).toString();
                                 int nRepetitionsValue = Integer.parseInt(nRepList.get(j).toString());
                                 double maxScoreValue = Double.parseDouble(maxScoreValues.get(j).toString());
-
-                                writeResults(phenopacketName, diseaseId, maxScoreMaxoTermId, maxScoreTermLabel,
-                                        topNDiseases, diseaseIds, nRepetitionsValue, maxScoreValue, printer);
+                                printer.printRecord(phenopacketName, diseaseId, maxScoreValues, maxScoreTermLabel,
+                                        topNDiseases, diseaseIds, nRepetitionsValue, maxScoreValue);
                             }
                         } catch (Exception ex) {
                             System.out.println(ex.getMessage());

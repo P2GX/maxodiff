@@ -2,9 +2,9 @@ package org.monarchinitiative.maxodiff.cli.cmd;
 
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
+import org.monarchinitiative.maxodiff.config.MaxoDiffLoader;
 import org.monarchinitiative.maxodiff.config.MaxodiffDataResolver;
 import org.monarchinitiative.maxodiff.config.MaxodiffPropsConfiguration;
-import org.monarchinitiative.maxodiff.core.SimpleTerm;
 import org.monarchinitiative.maxodiff.core.analysis.*;
 import org.monarchinitiative.maxodiff.core.analysis.refinement.DiffDiagRefiner;
 import org.monarchinitiative.maxodiff.core.analysis.refinement.MaxodiffResult;
@@ -20,14 +20,7 @@ import org.monarchinitiative.maxodiff.phenomizer.PhenomizerDifferentialDiagnosis
 import org.monarchinitiative.maxodiff.phenomizer.ScoringMode;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDisease;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
-import org.monarchinitiative.phenol.annotations.io.hpo.HpoDiseaseLoader;
-import org.monarchinitiative.phenol.annotations.io.hpo.HpoDiseaseLoaderOptions;
-import org.monarchinitiative.phenol.annotations.io.hpo.HpoDiseaseLoaders;
-import org.monarchinitiative.phenol.base.PhenolRuntimeException;
-import org.monarchinitiative.phenol.io.MinimalOntologyLoader;
-import org.monarchinitiative.phenol.io.OntologyLoader;
 import org.monarchinitiative.phenol.ontology.data.MinimalOntology;
-import org.monarchinitiative.phenol.ontology.data.Ontology;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 import org.monarchinitiative.phenol.ontology.similarity.TermPair;
 import org.slf4j.Logger;
@@ -43,24 +36,24 @@ import java.util.zip.GZIPOutputStream;
 
 
 /**
- * Perform Differential Diagnosis calculations
+ * This command performs the maxodiff algorithm for a single phenopacket.
  */
 @CommandLine.Command(
         name = "analyze",
         aliases = {"a"},
         mixinStandardHelpOptions = true,
-        description = "Run MAxO-Diff Analysis for one Phenopacket")
+        description = "Analyze one Phenopacket")
 public class DifferentialDiagnosisCommand extends BaseCommand {
     private static final Logger LOGGER = LoggerFactory.getLogger(DifferentialDiagnosisCommand.class);
 
     @CommandLine.Option(
-            names = {"-m", "--maxooData"},
+            names = {"-m", "--maxoData"},
             description = "Path to maxo data directory (default: ${DEFAULT-VALUE}).")
     protected Path maxoDataPath = Path.of("data");
 
     @CommandLine.Option(
             names = {"-p", "--phenopacket"},
-            required = false,
+            required = true,
             description = "Path to phenopacket JSON file.")
     protected Path phenopacketPath;
 
@@ -79,7 +72,7 @@ public class DifferentialDiagnosisCommand extends BaseCommand {
 
     @CommandLine.Option(names = {"-nr", "--nRepetitions"},
             description = "Number of repetitions for running differential diagnosis.")
-    protected Integer nRepetitionsArg = 100;
+    protected Integer nRepetitions = 100;
 
     @CommandLine.Option(names = {"-s", "--scoringMode"},
             paramLabel = "{one-sided, two-sided}",
@@ -102,8 +95,6 @@ public class DifferentialDiagnosisCommand extends BaseCommand {
         }
         Path maxodiffResultsFilePath = Path.of(String.join(File.separator, outputDir.toString(), outputFilename));
 
-
-        int nRepetitions = nRepetitionsArg;
         ScoringMode scoringMode = scoringModeArg.equals("one-sided") ? ScoringMode.ONE_SIDED : ScoringMode.TWO_SIDED;
 
         try (BufferedWriter writer = openOutputFileWriter(maxodiffResultsFilePath); CSVPrinter printer = CSVFormat.DEFAULT.print(writer)) {
@@ -121,15 +112,10 @@ public class DifferentialDiagnosisCommand extends BaseCommand {
                                              boolean writeOutputFile,
                                              CSVPrinter printer) throws Exception {
 
-
         // Load ontology and hpo diseases
-        Path hpoPath = MaxodiffDataResolver.of(maxoDataPath).hpoJson();
-        MinimalOntology minimalOntology = MinimalOntologyLoader.loadOntology(hpoPath.toFile());
-        HpoDiseaseLoader loader = HpoDiseaseLoaders.defaultLoader(minimalOntology, HpoDiseaseLoaderOptions.defaultOmim());
-
-        Path hpoaPath = MaxodiffDataResolver.of(maxoDataPath).phenotypeAnnotations();
-        HpoDiseases hpoDiseases = loader.load(hpoaPath);
-
+        MaxoDiffLoader mdloader =  MaxoDiffLoader.fileLoader(maxoDataPath);
+        MinimalOntology minimalOntology = mdloader.hpo();
+        HpoDiseases hpoDiseases = mdloader.hpoDiseases();
         // Set up Phenomizer engine
         IcMicaData icMicaData = null;
         LOGGER.info("Loading icMicaDict...");
@@ -241,10 +227,8 @@ public class DifferentialDiagnosisCommand extends BaseCommand {
 
             BatchDiagnosisCommand.setResultsMap(resultsMap);
         } catch (Exception ex) {
-            ex.printStackTrace();
-            System.out.println(ex.getMessage());
-            resultsMap = new HashMap<>();
-            BatchDiagnosisCommand.setResultsMap(resultsMap);
+            LOGGER.error(ex.getMessage(), ex);
+            return;
         }
         System.out.println("Wrote output to " + outputFilename);
     }
@@ -295,10 +279,9 @@ public class DifferentialDiagnosisCommand extends BaseCommand {
 
 
         if (writeOutputFile) {
-            writeResults(phenopacketName, diseaseId, TermId.of(maxScoreMaxoTermId), maxScoreTermLabel,
-                    topNDiseases, diseaseIds.toString(), options.nRepetitions(), maxScoreValue, printer);
-
-            // write HTML results
+            printer.printRecord(phenopacketName, diseaseId, maxScoreMaxoTermId, maxScoreTermLabel,
+                    topNDiseases, diseaseIds.toString(), options.nRepetitions(), maxScoreValue);
+                       // write HTML results
             Path maxodiffResultsHTMLPath = Path.of(String.join(File.separator, outputDir.toString(), outputFilename));
 
             String htmlString = HtmlResults.writeHTMLResults(
@@ -320,36 +303,6 @@ public class DifferentialDiagnosisCommand extends BaseCommand {
         return outputPath.toFile().getName().endsWith(".gz")
                 ? new BufferedWriter(new OutputStreamWriter(new GZIPOutputStream(Files.newOutputStream(outputPath))))
                 : Files.newBufferedWriter(outputPath);
-    }
-
-
-
-    /**
-     * Write results of a single maxodiff analysis into the provided {@code printer}.
-     */
-    protected static void writeResults(String phenopacketName,
-                                     TermId diseaseId,
-                                     TermId maxoId,
-                                     String maxoLabel,
-                                     int topNdiseases,
-                                     String diseaseIds,
-                                     int nRepetitions,
-                                     double score,
-                                     CSVPrinter printer) {
-
-        try {
-            printer.print(phenopacketName);
-            printer.print(diseaseId);
-            printer.print(maxoId);
-            printer.print(maxoLabel);
-            printer.print(topNdiseases);
-            printer.print(diseaseIds);
-            printer.print(nRepetitions);
-            printer.print(score);
-            printer.println();
-        } catch (IOException e) {
-            LOGGER.error("Error writing results for {}: {}", diseaseId, e.getMessage(), e);
-        }
     }
 
 
