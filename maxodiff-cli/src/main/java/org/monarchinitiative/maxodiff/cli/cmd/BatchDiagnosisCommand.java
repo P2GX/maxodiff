@@ -2,8 +2,21 @@ package org.monarchinitiative.maxodiff.cli.cmd;
 
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
+import org.monarchinitiative.maxodiff.config.MaxoDiffLoader;
+import org.monarchinitiative.maxodiff.config.MaxodiffDataResolver;
+import org.monarchinitiative.maxodiff.config.MaxodiffPropsConfiguration;
+import org.monarchinitiative.maxodiff.core.MaxoDiffAnalysisResultRow;
+import org.monarchinitiative.maxodiff.core.MaxodiffAnalysisRunner;
+import org.monarchinitiative.maxodiff.core.analysis.refinement.DiffDiagRefiner;
+import org.monarchinitiative.maxodiff.core.diffdg.DifferentialDiagnosisEngine;
+import org.monarchinitiative.maxodiff.core.model.PhenopacketData;
+import org.monarchinitiative.maxodiff.core.service.BiometadataService;
+import org.monarchinitiative.maxodiff.phenomizer.IcMicaData;
+import org.monarchinitiative.maxodiff.phenomizer.PhenomizerDifferentialDiagnosisEngine;
 import org.monarchinitiative.maxodiff.phenomizer.ScoringMode;
+import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
 import org.monarchinitiative.phenol.ontology.data.TermId;
+import org.monarchinitiative.phenol.ontology.similarity.TermPair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import picocli.CommandLine;
@@ -14,6 +27,8 @@ import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.*;
 
+import static org.monarchinitiative.maxodiff.cli.cmd.DifferentialDiagnosisCommand.openOutputFileWriter;
+
 
 /**
  * Perform Differential Diagnosis calculations
@@ -22,7 +37,7 @@ import java.util.*;
 @CommandLine.Command(name = "batch", aliases = {"b"},
         mixinStandardHelpOptions = true,
         description = "batch maxodiff analysis")
-public class BatchDiagnosisCommand extends DifferentialDiagnosisCommand {
+public class BatchDiagnosisCommand extends BaseCommand {
     private static final Logger LOGGER = LoggerFactory.getLogger(DifferentialDiagnosisCommand.class);
 
     @CommandLine.Option(names = {"-B", "--batchDir"},
@@ -30,17 +45,25 @@ public class BatchDiagnosisCommand extends DifferentialDiagnosisCommand {
     protected String batchDir;
 
     @CommandLine.Option(names = {"-N", "--nDiseasesList"},
-//            required = true,
             split=",",
             arity = "1..*",
             description = "Comma-separated list of n diseases to include in differential diagnosis.")
-    protected List<Integer> nDiseasesArg;
+    protected List<Integer> nDiseasesArg = List.of(20);
+
     @CommandLine.Option(names = {"-NR", "--nRepetitionsList"},
-//            required = true,
             split=",",
             arity = "1..*",
             description = "Comma-separated list of n repetitions to include in differential diagnosis.")
-    protected List<Integer> nRepetitionsArg;
+    protected List<Integer> nRepetitionsArg = List.of(100);
+
+    @CommandLine.Option(
+            names = {"-m", "--maxoData"},
+            description = "Path to maxo data directory (default: ${DEFAULT-VALUE}).")
+    protected Path maxoDataPath = Path.of("data");
+
+    @CommandLine.Option(names = {"-O", "--outputDirectory"},
+            description = "Where to write the results files (default: ${DEFAULT-VALUE}).")
+    protected Path outputDir = Path.of(".");
 
     public static Map<String, List<Object>> resultsMap;
 
@@ -67,48 +90,39 @@ public class BatchDiagnosisCommand extends DifferentialDiagnosisCommand {
         List<Integer> nRepetitionsList = new ArrayList<>();
         nRepetitionsArg.forEach(nRepetitionsList::add);
 
+
         Path maxodiffResultsFilePath = Path.of(String.join(File.separator, outputDir.toString(), "maxodiff_results.csv"));
+        MaxoDiffLoader mdloader =  MaxoDiffLoader.fileLoader(maxoDataPath);
+        HpoDiseases hpoDiseases = mdloader.hpoDiseases();
+        IcMicaData icMicaData = mdloader.icMicaData();
+        MaxodiffDataResolver maxodiffDataResolver = MaxodiffDataResolver.of(maxoDataPath);
+        MaxodiffPropsConfiguration maxodiffPropsConfiguration = MaxodiffPropsConfiguration.createConfig(maxodiffDataResolver);
 
-        try (BufferedWriter writer = openOutputFileWriter(maxodiffResultsFilePath); CSVPrinter printer = CSVFormat.DEFAULT.print(writer)) {
-            printer.printRecord("phenopacket", "disease_id", "maxo_id", "maxo_label",
-                    "n_diseases", "disease_ids", "n_repetitions", "score"); // header
-
-            for (Path phenopacketPath : phenopacketPaths) {
-                for (int nDiseases : nDiseasesList) {
-                    for (int nRepetitions : nRepetitionsList) {
+        DiffDiagRefiner maxoDiffRefiner = maxodiffPropsConfiguration.diffDiagRefiner("score");
+        BiometadataService biometadataService = maxodiffPropsConfiguration.biometadataService();
+        Map<TermPair, Double> icMicaDict = icMicaData.icMicaDict();
+        DifferentialDiagnosisEngine engine = new PhenomizerDifferentialDiagnosisEngine(hpoDiseases, icMicaDict);
+        Map<String, MaxoDiffAnalysisResultRow> resultsMap = new HashMap<>();
+        try (BufferedWriter writer = openOutputFileWriter(maxodiffResultsFilePath);
+             CSVPrinter printer = CSVFormat.DEFAULT.print(writer)) {
+            printer.printRecord(MaxoDiffAnalysisResultRow.headerFields());
+            int nTotal = phenopacketPaths.size() * nRepetitionsArg.size() * nDiseasesList.size();
+            int c = 0;
+            for (int nDiseases : nDiseasesList) {
+                for (int nRepetitions : nRepetitionsList) {
+                    MaxodiffAnalysisRunner runner = new MaxodiffAnalysisRunner(nDiseases,
+                            nRepetitions,
+                            engine,
+                            maxoDiffRefiner,
+                            biometadataService);
+                    for (Path phenopacketPath : phenopacketPaths) {
                         try {
-
                             String phenopacketFileName = phenopacketPath.toFile().getName();
-                            ScoringMode scoringMode = ScoringMode.ONE_SIDED;
-
-                            runSingleMaxodiffAnalysis(phenopacketPath, phenopacketFileName, nDiseases, nRepetitions, scoringMode, false, printer);
-
-
-                            Map<String, List<Object>> resultsMap = getResultsMap();
-
-                            System.out.println("BatchCmd resultsMap = " + resultsMap);
-
-                            List<Object> phenopacketNames = resultsMap.get("phenopacketName");
-                            List<Object> diseaseIdList = resultsMap.get("diseaseId");
-                            List<Object> maxScoreMaxoTermIds = resultsMap.get("maxScoreMaxoTermId");
-                            List<Object> maxScoreTermLabels = resultsMap.get("maxScoreTermLabel");
-                            List<Object> topNDiseasesList = resultsMap.get("topNDiseases");
-                            List<Object> diseaseIdsList = resultsMap.get("diseaseIds");
-                            List<Object> nRepList = resultsMap.get("nRepetitions");
-                            List<Object> maxScoreValues = resultsMap.get("maxScoreValue");
-                            for (int j = 0; j < phenopacketNames.size(); j++) {
-                                String phenopacketName = phenopacketNames.get(j).toString();
-                                TermId diseaseId = TermId.of(diseaseIdList.get(j).toString());
-                                TermId maxScoreMaxoTermId = TermId.of(maxScoreMaxoTermIds.get(j).toString());
-                                String maxScoreTermLabel = maxScoreTermLabels.get(j).toString();
-                                int topNDiseases = Integer.parseInt(topNDiseasesList.get(j).toString());
-                                String diseaseIds = diseaseIdsList.get(j).toString();
-                                int nRepetitionsValue = Integer.parseInt(nRepList.get(j).toString());
-                                double maxScoreValue = Double.parseDouble(maxScoreValues.get(j).toString());
-
-                                writeResults(phenopacketName, diseaseId, maxScoreMaxoTermId, maxScoreTermLabel,
-                                        topNDiseases, diseaseIds, nRepetitionsValue, maxScoreValue, printer);
-                            }
+                            PhenopacketData phenopacketData = PhenopacketData.readPhenopacketData(phenopacketPath);
+                            MaxoDiffAnalysisResultRow row = runner.batchAnalysis(phenopacketData);
+                            printer.printRecord(row.getFields());
+                            c++;
+                            updateProgress(c, nTotal);
                         } catch (Exception ex) {
                             System.out.println(ex.getMessage());
                         }
@@ -116,20 +130,18 @@ public class BatchDiagnosisCommand extends DifferentialDiagnosisCommand {
                 }
             }
         }
-
         return 0;
     }
 
-
-    protected static void setResultsMap(Map<String, List<Object>> results) {
-        resultsMap = results;
+    private int lastPercent = -1;
+    private void updateProgress(int pkt, int total) {
+        int percent = (int) ((pkt * 100) / total);
+        if (percent != lastPercent) {
+            lastPercent = percent;
+            int filled = percent / 2; // 50 chars for 100%
+            System.out.print("Finished ppkt: [" + "=".repeat(filled) + " ".repeat(50 - filled) + "] " + percent + "%\r");
+            if (percent == 100) System.out.println();
+        }
     }
-
-
-    protected Map<String, List<Object>> getResultsMap() {
-        return resultsMap;
-    }
-
-
 
 }

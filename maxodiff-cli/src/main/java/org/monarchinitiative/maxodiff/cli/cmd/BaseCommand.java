@@ -43,6 +43,12 @@ abstract class BaseCommand implements Callable<Integer> {
             names={"-d","--data"},
             description ="directory to download data (default: ${DEFAULT-VALUE})"
     )
+    protected Path maxoDataPath = Path.of("data");
+
+    @CommandLine.Option(names = {"-n", "--nDiseases"},
+            description = "Number of diseases to include in the differential diagnosis.")
+    protected Integer nDiseases = 20;
+
     public Path datadir= Path.of("data");
 
 
