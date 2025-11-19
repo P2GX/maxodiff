@@ -2,9 +2,12 @@ package org.monarchinitiative.maxodiff.cli.cmd;
 
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
+import org.monarchinitiative.maxodiff.config.MaxoDiffLoader;
 import org.monarchinitiative.maxodiff.config.MaxodiffDataResolver;
 import org.monarchinitiative.maxodiff.config.MaxodiffPropsConfiguration;
-import org.monarchinitiative.maxodiff.core.SimpleTerm;
+import org.monarchinitiative.maxodiff.core.MaxoDiffAnalysisResultRow;
+import org.monarchinitiative.maxodiff.core.MaxodiffAnalysisResult;
+import org.monarchinitiative.maxodiff.core.MaxodiffAnalysisRunner;
 import org.monarchinitiative.maxodiff.core.analysis.*;
 import org.monarchinitiative.maxodiff.core.analysis.refinement.DiffDiagRefiner;
 import org.monarchinitiative.maxodiff.core.analysis.refinement.MaxodiffResult;
@@ -15,19 +18,9 @@ import org.monarchinitiative.maxodiff.html.results.HtmlResults;
 import org.monarchinitiative.maxodiff.core.model.*;
 import org.monarchinitiative.maxodiff.core.service.BiometadataService;
 import org.monarchinitiative.maxodiff.phenomizer.IcMicaData;
-import org.monarchinitiative.maxodiff.phenomizer.IcMicaDictLoader;
 import org.monarchinitiative.maxodiff.phenomizer.PhenomizerDifferentialDiagnosisEngine;
 import org.monarchinitiative.maxodiff.phenomizer.ScoringMode;
-import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDisease;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
-import org.monarchinitiative.phenol.annotations.io.hpo.HpoDiseaseLoader;
-import org.monarchinitiative.phenol.annotations.io.hpo.HpoDiseaseLoaderOptions;
-import org.monarchinitiative.phenol.annotations.io.hpo.HpoDiseaseLoaders;
-import org.monarchinitiative.phenol.base.PhenolRuntimeException;
-import org.monarchinitiative.phenol.io.MinimalOntologyLoader;
-import org.monarchinitiative.phenol.io.OntologyLoader;
-import org.monarchinitiative.phenol.ontology.data.MinimalOntology;
-import org.monarchinitiative.phenol.ontology.data.Ontology;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 import org.monarchinitiative.phenol.ontology.similarity.TermPair;
 import org.slf4j.Logger;
@@ -36,25 +29,24 @@ import picocli.CommandLine;
 
 import java.io.*;
 import java.nio.file.Files;
-import java.nio.file.NoSuchFileException;
 import java.nio.file.Path;
 import java.util.*;
 import java.util.zip.GZIPOutputStream;
 
 
 /**
- * Perform Differential Diagnosis calculations
+ * This command performs the maxodiff algorithm for a single phenopacket.
  */
 @CommandLine.Command(
         name = "analyze",
         aliases = {"a"},
         mixinStandardHelpOptions = true,
-        description = "Run MAxO-Diff Analysis for one Phenopacket")
+        description = "Analyze one Phenopacket")
 public class DifferentialDiagnosisCommand extends BaseCommand {
     private static final Logger LOGGER = LoggerFactory.getLogger(DifferentialDiagnosisCommand.class);
 
     @CommandLine.Option(
-            names = {"-m", "--maxooData"},
+            names = {"-m", "--maxoData"},
             description = "Path to maxo data directory (default: ${DEFAULT-VALUE}).")
     protected Path maxoDataPath = Path.of("data");
 
@@ -68,18 +60,16 @@ public class DifferentialDiagnosisCommand extends BaseCommand {
             description = "Where to write the results files (default: ${DEFAULT-VALUE}).")
     protected Path outputDir = Path.of(".");
 
-    @CommandLine.Option(names = {"-n", "--nDiseases"},
-            description = "Number of diseases to include in the differential diagnosis.")
-    protected Integer nDiseases = 20;
+
 
     @CommandLine.Option(names = {"--diseaseProbModel"},
             paramLabel = "{ranked}",
-            description = "Disease Probability Model to use for Rank MAxO algorithm (default: ${DEFAULT-VALUE}).")
+            description = "Disease Probability Model to use for Rank MAxO algorithm (\"ranked\", \"softmax\", \"expDecay\". Default: ${DEFAULT-VALUE}).")
     protected String diseaseProbModel = "ranked";
 
     @CommandLine.Option(names = {"-nr", "--nRepetitions"},
             description = "Number of repetitions for running differential diagnosis.")
-    protected Integer nRepetitionsArg = 100;
+    protected Integer nRepetitions = 100;
 
     @CommandLine.Option(names = {"-s", "--scoringMode"},
             paramLabel = "{one-sided, two-sided}",
@@ -92,239 +82,128 @@ public class DifferentialDiagnosisCommand extends BaseCommand {
             System.err.println("Could not find phenopacket file: " + phenopacketPath);
             return 1;
         }
-        String phenopacketName = phenopacketPath.toFile().getName();
-
-        String outputFilename = String.join("_", phenopacketName, "maxodiff", "results.csv");
-        if (! outputDir.toFile().exists()) {
-            System.err.println("Output directory does not exist: '" + outputDir +
-                    "'. Create the directory and rerun this command.");
+        try {
+            return runSingleMaxodiffAnalysis(phenopacketPath);
+        } catch (Exception e) {
+            LOGGER.error(e.getMessage(), e);
             return 1;
         }
-        Path maxodiffResultsFilePath = Path.of(String.join(File.separator, outputDir.toString(), outputFilename));
 
 
-        int nRepetitions = nRepetitionsArg;
-        String ddEngine = "phenomizer";
-        ScoringMode scoringMode = scoringModeArg.equals("one-sided") ? ScoringMode.ONE_SIDED : ScoringMode.TWO_SIDED;
 
-        try (BufferedWriter writer = openOutputFileWriter(maxodiffResultsFilePath); CSVPrinter printer = CSVFormat.DEFAULT.print(writer)) {
-            runSingleMaxodiffAnalysis(phenopacketPath, phenopacketName, nDiseases, nRepetitions, ddEngine, scoringMode, true, printer);
-        }
-
-        return 0;
     }
 
-    protected void runSingleMaxodiffAnalysis(Path phenopacketPath, String phenopacketName, int nDiseases, int nRepetitions,
-                                             String ddEngine, ScoringMode scoringMode, boolean writeOutputFile, CSVPrinter printer) throws Exception {
+    protected int runSingleMaxodiffAnalysis(Path phenopacketPath) throws Exception {
+        String phenopacketName = phenopacketPath.toFile().getName();
+        // Load ontology and hpo diseases
+        MaxoDiffLoader mdloader =  MaxoDiffLoader.fileLoader(maxoDataPath);
+        HpoDiseases hpoDiseases = mdloader.hpoDiseases();
+        IcMicaData icMicaData = mdloader.icMicaData();
 
-
-        Path hpoPath = MaxodiffDataResolver.of(maxoDataPath).hpoJson();
-        Ontology ontology = OntologyLoader.loadOntology(hpoPath.toFile());
-        MinimalOntology minimalOntology = MinimalOntologyLoader.loadOntology(hpoPath.toFile());
-        HpoDiseaseLoader loader = HpoDiseaseLoaders.defaultLoader(minimalOntology, HpoDiseaseLoaderOptions.defaultOptions());
-
-        Path hpoaPath = MaxodiffDataResolver.of(maxoDataPath).phenotypeAnnotations();
-        HpoDiseases hpoDiseases = loader.load(hpoaPath);
-
-        IcMicaData icMicaData = null;
-        if (ddEngine.equals("phenomizer")) {
-            LOGGER.info("Loading icMicaDict...");
-            try {
-                icMicaData = IcMicaDictLoader.loadIcMicaDict(MaxodiffDataResolver.of(maxoDataPath).icMicaDict());
-            } catch (NoSuchFileException ex) {
-                throw new Exception(String.join(". ", ex.getMessage(), "Run Download command to download the necessary term-pair-similarity file."));
-            }
-        }
-
-        if (writeOutputFile) {
-            printer.printRecord("phenopacket", "disease_id", "maxo_id", "maxo_label",
-                    "n_diseases", "disease_ids", "n_repetitions", "score"); // header
-        }
-
-        Map<String, List<Object>> resultsMap = new HashMap<>();
-
-        resultsMap.put("phenopacketName", new ArrayList<>());
-        resultsMap.put("diseaseId", new ArrayList<>());
-        resultsMap.put("maxScoreMaxoTermId", new ArrayList<>());
-        resultsMap.put("maxScoreTermLabel", new ArrayList<>());
-        resultsMap.put("topNDiseases", new ArrayList<>());
-        resultsMap.put("diseaseIds", new ArrayList<>());
-        resultsMap.put("nRepetitions", new ArrayList<>());
-        resultsMap.put("maxScoreValue", new ArrayList<>());
-
-
-        String outputFilename = null;
         try {
+            // Make maxodiffRefiner
             MaxodiffDataResolver maxodiffDataResolver = MaxodiffDataResolver.of(maxoDataPath);
             MaxodiffPropsConfiguration maxodiffPropsConfiguration = MaxodiffPropsConfiguration.createConfig(maxodiffDataResolver);
 
             DiffDiagRefiner maxoDiffRefiner = maxodiffPropsConfiguration.diffDiagRefiner("score");
             BiometadataService biometadataService = maxodiffPropsConfiguration.biometadataService();
-            if (icMicaData == null) {
-                throw new PhenolRuntimeException("No icMicaDict found. Please report to developers");
-            }
-            Map<TermPair, Double> icMicaDict = icMicaData.icMicaDict();
-            DifferentialDiagnosisEngine engine = new PhenomizerDifferentialDiagnosisEngine(hpoDiseases, icMicaDict, scoringMode);
 
+            // Configure Phenomizer engine
+            Map<TermPair, Double> icMicaDict = icMicaData.icMicaDict();
+            DifferentialDiagnosisEngine engine = new PhenomizerDifferentialDiagnosisEngine(hpoDiseases, icMicaDict);
+
+            // Read phenopacket data and make sample
             PhenopacketData phenopacketData = PhenopacketData.readPhenopacketData(phenopacketPath);
             Sample sample = phenopacketData.getSample();
-            List<DifferentialDiagnosis> differentialDiagnoses = engine.run(sample);
-            // Get List of Refinement results: maxo term scores and frequencies
-            RefinementOptions options = RefinementOptions.of(nDiseases, nRepetitions);
-            List<DifferentialDiagnosis> orderedDiagnoses = maxoDiffRefiner.getOrderedDiagnoses(differentialDiagnoses, options);
-            List<DifferentialDiagnosis> allOrderedDiagnoses = differentialDiagnoses.stream()
-                    .sorted(Comparator.comparingDouble(DifferentialDiagnosis::score).reversed())
-                    .toList();
-            List<HpoDisease> diseases = maxoDiffRefiner.getDiseases(orderedDiagnoses);
-            Map<TermId, List<HpoFrequency>> hpoTermCounts = maxoDiffRefiner.getHpoTermCounts(diseases);
 
-            List<DifferentialDiagnosis> initialDiagnoses = orderedDiagnoses.subList(0, nDiseases);
-            Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxoTermMap = maxodiffPropsConfiguration.maxoAnnotsMap();
-            Map<TermId, Set<TermId>> maxoToHpoTermIdMap = maxoDiffRefiner.getMaxoToHpoTermIdMap(List.of(), hpoTermCounts);
+            MaxodiffAnalysisRunner runner = new MaxodiffAnalysisRunner(this.nDiseases,
+                    this.nRepetitions,
+                    engine,
+                    maxoDiffRefiner,
+                    biometadataService);
 
-            DiseaseModelProbability diseaseModelProbability = null;
-            switch (diseaseProbModel) {
-                case "ranked" -> diseaseModelProbability = DiseaseModelProbability.ranked(initialDiagnoses);
-                case "softmax" -> diseaseModelProbability = DiseaseModelProbability.softmax(initialDiagnoses);
-                case "expDecay" -> diseaseModelProbability = DiseaseModelProbability.exponentialDecay(initialDiagnoses);
+            boolean writeCsvFile = false;
+            if (writeCsvFile) {
+                MaxoDiffAnalysisResultRow row = runner.batchAnalysis(phenopacketData);
+                writeCsvResults(sample.id(), row);
+            } else {
+                MaxodiffAnalysisResult maxoResult = runner.analyzeSample(phenopacketData);
+                List<MaxodiffResult> resultsList = maxoResult.results();
+                // Take the MaXo term that has the highest score
+                MaxodiffResult topResult = resultsList.getFirst();
+                String maxScoreMaxoTermId = topResult.rankMaxoScore().maxoId().toString();
+                String maxScoreTermLabel = biometadataService.maxoLabel(maxScoreMaxoTermId).orElse("unknown");
+                double maxScoreValue = topResult.rankMaxoScore().maxoScore();
+                System.out.println("Max Score: " + maxScoreMaxoTermId + " (" + maxScoreTermLabel + ")" + " = " + maxScoreValue);
+
+                writeHtmlResults(resultsList, biometadataService,
+                    outputDir, sample, hpoDiseases, maxoResult.hpoTermCounts(),
+                    icMicaDict);
+
             }
 
-            MaxoHpoTermProbabilities maxoHpoTermProbabilities =
-                    new MaxoHpoTermProbabilities(hpoDiseases,
-                            hpoToMaxoTermMap,
-                            initialDiagnoses,
-                            diseaseModelProbability);
 
-            LOGGER.info("Running Maxodiff calculation...");
-            RankMaxo rankMaxo = new RankMaxo(hpoToMaxoTermMap, maxoToHpoTermIdMap, maxoHpoTermProbabilities, engine,
-                     ontology, allOrderedDiagnoses);
-
-            RefinementResults refinementResults = maxoDiffRefiner.run(sample,
-                    orderedDiagnoses,
-                    options,
-                    rankMaxo,
-                    hpoTermCounts,
-                    maxoToHpoTermIdMap);
-            List<MaxodiffResult> resultsList = new ArrayList<>(refinementResults.maxodiffResults().stream().toList());
-            resultsList.sort(Comparator.<MaxodiffResult>comparingDouble(mr -> mr.rankMaxoScore().maxoScore()).reversed());
-
-            TermId diseaseId = phenopacketData.diseaseIds().getFirst();
-            // Take the MaXo term that has the highest score
-            MaxodiffResult topResult = resultsList.getFirst();
-            String maxScoreMaxoTermId = topResult.rankMaxoScore().maxoId().toString();
-            String maxScoreTermLabel = biometadataService.maxoLabel(maxScoreMaxoTermId).orElse("unknown");
-            double maxScoreValue = topResult.rankMaxoScore().maxoScore();
-
-            System.out.println();
-            System.out.println("Max Score: " + maxScoreMaxoTermId + " (" + maxScoreTermLabel + ")" + " = " + maxScoreValue);
-
-            Set<TermId> diseaseIds = topResult.rankMaxoScore().maxoOmimTermIds();
-            int topNDiseases = diseaseIds.size();
-
-            if (writeOutputFile) {
-                writeResults(phenopacketName, diseaseId, TermId.of(maxScoreMaxoTermId), maxScoreTermLabel,
-                        topNDiseases, diseaseIds.toString(), nRepetitions, maxScoreValue, printer);
-
-                // write Researcher view HTML results
-                String nDiseasesAbbr = String.join("", "n", String.valueOf(nDiseases));
-                String nRepsAbbr = String.join("", "nr", String.valueOf(nRepetitions));
-                outputFilename = String.join("_", phenopacketName, ddEngine,
-                        nDiseasesAbbr, nRepsAbbr, "maxodiff", "researcher", "results.html");
-                Path maxodiffResultsHTMLPath = Path.of(String.join(File.separator, outputDir.toString(), outputFilename));
-
-                String htmlString = HtmlResults.writeHTMLResults(
-                        sample,
-                        nDiseases,
-                        hpoDiseases,
-                        nRepetitions,
-                        resultsList,
-                        biometadataService,
-                        hpoTermCounts,
-                        icMicaDict,
-                        "researcher");
-                Files.writeString(maxodiffResultsHTMLPath, htmlString);
-
-                // write Clinician view HTML results
-                String outputFilename1 = String.join("_", phenopacketName, ddEngine,
-                        nDiseasesAbbr, nRepsAbbr, "maxodiff", "clinician", "results.html");
-                Path maxodiffResultsHTMLPath1 = Path.of(String.join(File.separator, outputDir.toString(), outputFilename1));
-
-                String htmlString1 = HtmlResults.writeHTMLResults(sample, nDiseases, hpoDiseases, nRepetitions, resultsList,
-                        biometadataService, hpoTermCounts, icMicaDict,"clinician");
-                Files.writeString(maxodiffResultsHTMLPath1, htmlString1);
-            }
-
-            List<Object> phenopacketNames = resultsMap.get("phenopacketName");
-            phenopacketNames.add(phenopacketName);
-            List<Object> diseaseIdList = resultsMap.get("diseaseId");
-            diseaseIdList.add(diseaseId);
-            List<Object> maxScoreMaxoTermIds = resultsMap.get("maxScoreMaxoTermId");
-            maxScoreMaxoTermIds.add(maxScoreMaxoTermId);
-            List<Object> maxScoreTermLabels = resultsMap.get("maxScoreTermLabel");
-            maxScoreTermLabels.add(maxScoreTermLabel);
-            List<Object> topNDiseasesList = resultsMap.get("topNDiseases");
-            topNDiseasesList.add(topNDiseases);
-            List<Object> diseaseIdsList = resultsMap.get("diseaseIds");
-            diseaseIdsList.add(diseaseIds);
-            List<Object> nRepList = resultsMap.get("nRepetitions");
-            nRepList.add(nRepetitions);
-            List<Object> maxScoreValues = resultsMap.get("maxScoreValue");
-            maxScoreValues.add(maxScoreValue);
-
-            resultsMap.replace("phenopacketName", phenopacketNames);
-            resultsMap.replace("diseaseId", diseaseIdList);
-            resultsMap.replace("maxScoreMaxoTermId", maxScoreMaxoTermIds);
-            resultsMap.replace("maxScoreTermLabel", maxScoreTermLabels);
-            resultsMap.replace("topNDiseases", topNDiseasesList);
-            resultsMap.replace("diseaseIds", diseaseIdsList);
-            resultsMap.replace("nRepetitions", nRepList);
-            resultsMap.replace("maxScoreValue", maxScoreValues);
-
-            BatchDiagnosisCommand.setResultsMap(resultsMap);
+           // BatchDiagnosisCommand.setResultsMap(resultsMap);
         } catch (Exception ex) {
-            ex.printStackTrace();
-            System.out.println(ex.getMessage());
-            resultsMap = new HashMap<>();
-            BatchDiagnosisCommand.setResultsMap(resultsMap);
+            LOGGER.error(ex.getMessage(), ex);
+            return 1;
         }
-        System.out.println("Wrote output to " + outputFilename);
+        return 0;
     }
 
+
+    private int writeCsvResults(String phenopacketName, MaxoDiffAnalysisResultRow row)  {
+        String outputFilename = String.join("_", phenopacketName, "maxodiff", "results.csv");
+        if (!outputDir.toFile().isDirectory()) {
+            System.err.println("Output directory does not exist: '" + outputDir +
+                    "'. Create the directory and rerun this command.");
+            return 1;
+        }
+        Path maxodiffResultsFilePath = Path.of(String.join(File.separator, outputDir.toString(), outputFilename));
+        try (BufferedWriter writer = openOutputFileWriter(maxodiffResultsFilePath);
+             CSVPrinter printer = CSVFormat.DEFAULT.print(writer)) {
+            printer.printRecord(MaxoDiffAnalysisResultRow.headerFields());
+            printer.printRecord(row.getFields());
+        } catch (IOException e) {
+            LOGGER.error(e.getMessage(), e);
+            return 1;
+        }
+
+        System.out.println("Wrote output to " + outputFilename);
+        return 0;
+    }
+
+    private void writeHtmlResults(List<MaxodiffResult> resultsList,
+                                  BiometadataService biometadataService,
+                                  Path outputDir,
+                                  Sample sample,
+                                  HpoDiseases hpoDiseases,
+                                  Map<TermId, List<HpoFrequency>> hpoTermCounts,
+                                  Map<TermPair, Double> icMicaDict) throws Exception {
+        String nDiseasesAbbr = String.join("", "n", String.valueOf(this.nDiseases));
+        String nRepsAbbr = String.join("", "nr", String.valueOf(this.nRepetitions));
+       String outputFilename = String.join("_", sample.id(),
+                nDiseasesAbbr, nRepsAbbr, "maxodiff", "results.html");
+            Path maxodiffResultsHTMLPath = Path.of(String.join(File.separator, outputDir.toString(), outputFilename));
+
+            String htmlString = HtmlResults.writeHTMLResults(
+                    sample,
+                    this.nDiseases,
+                    hpoDiseases,
+                    this.nRepetitions,
+                    resultsList,
+                    biometadataService,
+                    hpoTermCounts,
+                    icMicaDict);
+
+            Files.writeString(maxodiffResultsHTMLPath, htmlString);
+            LOGGER.info("Wrote HTML file to {}", maxodiffResultsHTMLPath);
+        }
 
     protected static BufferedWriter openOutputFileWriter(Path outputPath) throws IOException {
         return outputPath.toFile().getName().endsWith(".gz")
                 ? new BufferedWriter(new OutputStreamWriter(new GZIPOutputStream(Files.newOutputStream(outputPath))))
                 : Files.newBufferedWriter(outputPath);
-    }
-
-
-
-    /**
-     * Write results of a single maxodiff analysis into the provided {@code printer}.
-     */
-    protected static void writeResults(String phenopacketName,
-                                     TermId diseaseId,
-                                     TermId maxoId,
-                                     String maxoLabel,
-                                     int topNdiseases,
-                                     String diseaseIds,
-                                     int nRepetitions,
-                                     double score,
-                                     CSVPrinter printer) {
-
-        try {
-            printer.print(phenopacketName);
-            printer.print(diseaseId);
-            printer.print(maxoId);
-            printer.print(maxoLabel);
-            printer.print(topNdiseases);
-            printer.print(diseaseIds);
-            printer.print(nRepetitions);
-            printer.print(score);
-            printer.println();
-        } catch (IOException e) {
-            LOGGER.error("Error writing results for {}: {}", diseaseId, e.getMessage(), e);
-        }
     }
 
 

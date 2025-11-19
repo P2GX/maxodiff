@@ -6,10 +6,7 @@ import org.apache.commons.csv.CSVRecord;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 import org.monarchinitiative.phenol.ontology.similarity.TermPair;
 
-import java.io.BufferedReader;
-import java.io.IOException;
-import java.io.InputStreamReader;
-import java.io.Reader;
+import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
@@ -57,11 +54,54 @@ public class IcMicaDictLoader {
      * @param path path to a CSV file.
      */
     public static IcMicaData loadIcMicaDict(Path path) throws IOException {
-        try (BufferedReader reader = path.toFile().getName().endsWith(".gz")
-                ? new BufferedReader(new InputStreamReader(new GZIPInputStream(Files.newInputStream(path))))
-                : Files.newBufferedReader(path)
+        long fileSize = Files.size(path);
+
+        try (InputStream inputStream = Files.newInputStream(path);
+             ProgressInputStream progressStream = new ProgressInputStream(inputStream, fileSize);
+             InputStream decompressed = path.toFile().getName().endsWith(".gz")
+                     ? new GZIPInputStream(progressStream)
+                     : progressStream;
+             BufferedReader reader = new BufferedReader(new InputStreamReader(decompressed))
         ) {
             return loadIcMicaDict(reader);
+        }
+    }
+
+    // Simple progress tracker
+    private static class ProgressInputStream extends FilterInputStream {
+        private final long total;
+        private long bytesRead = 0;
+        private int lastPercent = -1;
+
+        protected ProgressInputStream(InputStream in, long total) {
+            super(in);
+            this.total = total;
+            System.out.print("Loading information content dictionary: [" + " ".repeat(50) + "] 0%\r");
+        }
+
+        @Override
+        public int read() throws IOException {
+            int b = super.read();
+            if (b != -1) updateProgress(1);
+            return b;
+        }
+
+        @Override
+        public int read(byte[] b, int off, int len) throws IOException {
+            int count = super.read(b, off, len);
+            if (count > 0) updateProgress(count);
+            return count;
+        }
+
+        private void updateProgress(int bytes) {
+            bytesRead += bytes;
+            int percent = (int) ((bytesRead * 100) / total);
+            if (percent != lastPercent) {
+                lastPercent = percent;
+                int filled = percent / 2; // 50 chars for 100%
+                System.out.print("Loading: [" + "=".repeat(filled) + " ".repeat(50 - filled) + "] " + percent + "%\r");
+                if (percent == 100) System.out.println();
+            }
         }
     }
 
@@ -85,7 +125,7 @@ public class IcMicaDictLoader {
             TermPair pair = TermPair.asymmetric(a, b);
             icMicaDict.put(pair, icMica);
         }
-
+        System.out.println("Finished loading information content dictionary");
         return new IcMicaData(icMicaDict, metadata);
     }
 
