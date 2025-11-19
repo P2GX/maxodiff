@@ -37,6 +37,8 @@ java -jar maxodiff-cli/target/maxodiff-cli.jar download
 The command will download the data files into `data` folder that will be created in the current working directory.
 See the command's documentation for more options.
 
+This command will automatically create the MICA dictionary with the latest downloaded files.
+
 ### MICA dictionary
 To run maxodiff with Phenomizer, we must first generate a file that contains the
 most informative common ancestors for pairs of HPO terms. See the class ``IcMicaDictLoader``.
@@ -50,6 +52,9 @@ the information content of the most informative common ancestor (MICA) for
 every pair of terms. It is more efficient to precalculate this using the
 following command. By default, the command will look for the input files ``hp.json``
 and ``phenotype.hpoa`` in the ``data``folder, which is created by the download command.
+
+The file will have been generated automatically by the download command. If you would like to regenerate the file, please enter the following command.
+
 
 ```shell
 java -jar maxodiff-cli/target/maxodiff-cli.jar precompute-resnik
@@ -92,3 +97,26 @@ If `java -jar maxodiff-cli/target/maxodiff-cli.jar download`produces a connect e
 
 If `java -jar maxodiff-html/target/maxodiff-html.jar` stalls for a long time at `Loading Maxodiff resources from xxx` before failing, try giving java more heap space (in this example 12GB) with -Xmx12G, i.e. `java -Xmx12G -jar maxodiff-html/target/maxodiff-html.jar`.
 
+## Port already in use
+
+If you try to start the Webserver and see an error like this:
+
+```bash
+***************************
+APPLICATION FAILED TO START
+***************************
+
+Description:
+
+Web server failed to start. Port 8080 was already in use.
+```
+
+Then enter the following (adjust the port if needed)
+
+```bash
+lsof -i :8080
+``` 
+This will indicate the process id of the process (<PID>) that is running on the port. Stop this process, e.g., 
+```bash
+kill -9 <PID>
+```

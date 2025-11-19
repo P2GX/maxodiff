@@ -31,3 +31,6 @@ venv/
 
 # Jupyter Notebook
 .ipynb_checkpoints
+.DS_Store
+maxodiff_results.csv
+term-pair-similarity.csv.gz
