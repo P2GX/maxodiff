@@ -158,8 +158,7 @@
             <h1>Sample Input</h1>
 
             <label for="file">Upload Phenopacket File: </label>
-            <input type="file" id="fileInput" name="file"/>
-            <button type="button" onclick="uploadFile()">Upload File</button>
+            <input type="file" id="fileInput" name="file" onchange="uploadFile()"/>
             <p></p>
 
             <h2>Sample parameters:</h2>
@@ -223,9 +222,6 @@
                 .then(data => {
     <!--                document.getElementById('phenopacketName').textContent = data.phenopacketName;-->
                     document.querySelector('[name="id"]').value = data.id || '';
-                    console.log(data)
-                    console.log(document.querySelector('[name="observedHpoTermIds"]'))
-                    console.log(document.querySelector('[name="excludedHpoTermIds"]'))
                     document.querySelector('[name="observedHpoTermIds"]').value = data.observedHpoTermIds || '';
                     document.querySelector('[name="excludedHpoTermIds"]').value = data.excludedHpoTermIds || '';
 
@@ -237,6 +233,8 @@
                     addHpoTermToList(excludedHpoTermsListContainer, excludedHpoTermsMap);
                 })
                 .catch(error => console.error("Upload error:", error));
+
+                startTask();
 
                 const submitButton = document.getElementById('submitButton');
                 submitButton.disabled = false;
@@ -250,11 +248,17 @@
                 <tbody>
                 <tr>
                     <td>N Diseases:</td>
-                    <td><input style="width:90%" type="number" min="0" th:max="${totalNDiseases}" th:value="${nDiseases} ?: 20" name="nDiseases" id="nDiseases"/></td>
+                    <td><select th:value="${nDiseases}" name="nDiseases" id="nDiseases">
+                        <option th:selected="${nDiseases} == 20 ? selected" value="20">20</option>
+                        <option th:selected="${nDiseases} == 40 ? selected" value="40">40</option></select></td>
                 </tr>
                 <tr>
                     <td>N Repetitions:</td>
-                    <td><input style="width:90%" type="number" min="0" th:max="100" th:value="${nRepetitions} ?: 10" name="nRepetitions" id="nRepetitions"/></td>
+                    <td><select th:value="${nRepetitions}" name="nRepetitions" id="nRepetitions">
+                        <option th:selected="${nRepetitions} == 20 ? selected" value="20">20</option>
+                        <option th:selected="${nRepetitions} == 40 ? selected" value="40">40</option>
+                        <option th:selected="${nRepetitions} == 60 ? selected" value="60">60</option>
+                        <option th:selected="${nRepetitions} == 100 ? selected" value="100">100</option></select></td>
                 </tr>
                 </tbody>
             </table>
