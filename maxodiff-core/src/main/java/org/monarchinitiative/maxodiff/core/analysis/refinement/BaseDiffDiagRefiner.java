@@ -50,7 +50,8 @@ public class BaseDiffDiagRefiner implements DiffDiagRefiner {
                 .map(DifferentialDiagnosis::diseaseId)
                 .collect(Collectors.toCollection(LinkedHashSet::new));
 
-        List<RankMaxoScore> maxoTermRanks = rankMaxo.rankMaxoTerms(sample, options.nRepetitions(), initialDiagnosesIds);
+        List<RankMaxoScore> maxoTermRanks = rankMaxo.rankMaxoTerms(sample, options.nRepetitions(),
+                                                                    initialDiagnosesIds);
         for (RankMaxoScore rankMaxoScore : maxoTermRanks) {
             TermId maxoId = rankMaxoScore.maxoId();
             double scoreDiff = rankMaxoScore.maxoScore();
@@ -91,7 +92,7 @@ public class BaseDiffDiagRefiner implements DiffDiagRefiner {
 
 
         return new RankMaxo(hpoToMaxoTermMap, maxoToHpoTermIdMap, maxoHpoTermProbabilities, engine,
-                hpo, allInitialDiagnoses);
+                hpo, allInitialDiagnoses, initialDiagnoses);
     }
 
     //TODO: handle possible multiple differential diagnoses with same termId

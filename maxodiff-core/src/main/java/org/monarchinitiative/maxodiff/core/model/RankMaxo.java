@@ -25,6 +25,7 @@ public class RankMaxo {
     RankMaxoProgress rankMaxoProgress;
     private final Ontology ontology;
     private final List<DifferentialDiagnosis> allInitialDiagnoses;
+    private final List<DifferentialDiagnosis> initialDiagnoses;
 
     /**
      * The {@code RankMaxo} ranks MAxO terms and returns results in descending order by score.
@@ -45,13 +46,15 @@ public class RankMaxo {
                     MaxoHpoTermProbabilities maxoHpoTermProbabilities,
                     DifferentialDiagnosisEngine engine,
                     Ontology hpo,
-                    List<DifferentialDiagnosis> allInitialDiagnoses) {
+                    List<DifferentialDiagnosis> allInitialDiagnoses,
+                    List<DifferentialDiagnosis> initialDiagnoses) {
         this.hpoToMaxoTermMap = hpoToMaxoTermMap;
         this.maxoToHpoTermIdMap = maxoToHpoTermIdMap;
         this.maxoHpoTermProbabilities = maxoHpoTermProbabilities;
         this.engine = engine;
         this.ontology = hpo;
         this.allInitialDiagnoses = allInitialDiagnoses;
+        this.initialDiagnoses = initialDiagnoses;
     }
 
     /**
@@ -61,7 +64,8 @@ public class RankMaxo {
      * @param diseaseIds Set of top n OMIM disease Ids to use for analysis.
      * @return Map of MAxO scores sorted in descending order by score
      */
-    public List<RankMaxoScore> rankMaxoTerms(Sample ppkt, int nRepetitions, Set<TermId> diseaseIds) throws Exception {
+    public List<RankMaxoScore> rankMaxoTerms(Sample ppkt, int nRepetitions,
+                                             Set<TermId> diseaseIds) throws Exception {
 
         Set<TermId> sampleHpoIds = new HashSet<>();
         sampleHpoIds.addAll(ppkt.observedHpoTermIds());
@@ -89,7 +93,8 @@ public class RankMaxo {
             int finalMaxoIdx = maxoIdx;
             tasks.add(() -> {
                 NewEvaluateMaxoTerm evaluateMaxoTerm = new NewEvaluateMaxoTerm(maxoHpoDiseaseRank, nRepetitions, ppkt,
-                                                                            engine, maxoHpoTermProbabilities, diseaseIds);
+                                                                            engine, maxoHpoTermProbabilities,
+                                                                            initialDiagnoses, diseaseIds);
                 double done = completedTasks.incrementAndGet();
                 rankMaxoProgress.updateProgress(maxoId, done);
                 if (JpsChecker.isMainClassRunning("org.monarchinitiative.maxodiff.cli.Main")) {
