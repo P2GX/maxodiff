@@ -188,7 +188,7 @@ public class NewEvaluateMaxoTerm implements Callable<RankMaxoScore> {
     private Set<TermId> extractDiseaseIds(List<DifferentialDiagnosis> diagnoses) {
         return diagnoses.stream()
                 .map(DifferentialDiagnosis::diseaseId)
-                .collect(Collectors.toSet());
+                .collect(Collectors.toCollection(LinkedHashSet::new));
     }
 
     /** Compute average changes in disease ranks between the initial disease rankings and the MAxO disease rankings.

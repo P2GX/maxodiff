@@ -150,7 +150,7 @@ public class BenchmarkCommand extends DifferentialDiagnosisCommand {
             try (BufferedWriter writer = openWriter(outputName); CSVPrinter printer = CSVFormat.DEFAULT.print(writer)) {
                 printer.printRecord("phenopacket", "all_sample_ids", "n_sample_ids", "n_diseases", "n_repetitions",
                         "maxo_id", "maxo_label", "maxo_final_score", "maxo_final_random_spike_original_diagnosis",
-                        "spiked_diagnosis",
+                        "spiked_diagnosis", "spiked_diagnosis_idx",
                         "n_all_maxo_hpo_ids", "top_maxo_hpo_ids", "n_top_maxo_hpo_ids", "mean_n_disc_phen", "diff",
                         "refiner_type"); // header
 
@@ -291,7 +291,7 @@ public class BenchmarkCommand extends DifferentialDiagnosisCommand {
 
                                     writeValidationCSVResults(phenopacketName, refinerName, options, refinementResults,
                                             refinementResultsRandom, writeOriginalJson, originalDiagnosis.diseaseId(),
-                                            newFileName,
+                                            d+1, newFileName,
                                             resultsList, biometadataService, meanNDiscoverablePhenotypesAllMaxoTerms,
                                             nAllMaxoDiscoverablePhenotypes, allSampleHpoTerms, printer);
 
@@ -353,6 +353,7 @@ public class BenchmarkCommand extends DifferentialDiagnosisCommand {
                                            RefinementResults refinementResultsRandom,
                                            boolean writeOriginalJson,
                                            TermId originalDiseaseId,
+                                           int originalDiseaseIdx,
                                            String newName,
                                            List<MaxodiffResult> resultsList,
                                            BiometadataService biometadataService,
@@ -405,9 +406,9 @@ public class BenchmarkCommand extends DifferentialDiagnosisCommand {
         double diff = topMaxoAscertainablePhenotypes.size() - meanNDiscoverablePhenotypesAllMaxoTerms;
 
         // Write Benchmark results summary file
-        writeResults(phenopacketName, allSampleHpoTerms, allSampleHpoTerms.size(), options.nDiseases(), options.nRepetitions(),
-                topMaxoId.toString(), maxScoreTermLabel, maxScoreValue, maxScoreValueRandom, originalDiseaseId,
-                nAllMaxoDiscoverablePhenotypes,
+        writeResults(phenopacketName, allSampleHpoTerms, allSampleHpoTerms.size(), options.nDiseases(),
+                options.nRepetitions(), topMaxoId.toString(), maxScoreTermLabel, maxScoreValue, maxScoreValueRandom,
+                originalDiseaseId, originalDiseaseIdx, nAllMaxoDiscoverablePhenotypes,
                 topMaxoAscertainablePhenotypes, topMaxoAscertainablePhenotypes.size(),
                 meanNDiscoverablePhenotypesAllMaxoTerms, diff,
                 refinerName, printer);
@@ -494,6 +495,7 @@ public class BenchmarkCommand extends DifferentialDiagnosisCommand {
                                      double maxoFinalScore,
                                      double maxoFinalScoreRandom,
                                      TermId originalDiseaseId,
+                                     int originalDiseaseIdx,
                                      int nAllMaxoHpoTerms,
                                      Set<TermId> topMaxoHpoTerms,
                                      int nTopMaxoHpoTerms,
@@ -513,6 +515,7 @@ public class BenchmarkCommand extends DifferentialDiagnosisCommand {
             printer.print(maxoFinalScore);
             printer.print(maxoFinalScoreRandom);
             printer.print(originalDiseaseId);
+            printer.print(originalDiseaseIdx);
             printer.print(nAllMaxoHpoTerms);
             printer.print(topMaxoHpoTerms);
             printer.print(nTopMaxoHpoTerms);
