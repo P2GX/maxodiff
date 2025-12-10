@@ -12,7 +12,7 @@ public interface MaxoDiffLoader {
     MinimalOntology hpo();
     HpoDiseases hpoDiseases() throws MaxodiffDataException;
     IcMicaData icMicaData() throws MaxodiffDataException;
-    public static MaxoDiffLoader fileLoader(Path maxoPAth) throws MaxodiffDataException {
+    static MaxoDiffLoader fileLoader(Path maxoPAth) throws MaxodiffDataException {
         return new MaxoDiffFileLoader(maxoPAth);
     }
 }

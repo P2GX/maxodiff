@@ -10,9 +10,12 @@ import java.util.*;
 
 public class MaxoDiffRefiner extends BaseDiffDiagRefiner {
 
-    public MaxoDiffRefiner(HpoDiseases hpoDiseases, Map<TermId, Set<TermId>> fullHpoToMaxoTermIdMap,
-                           Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxoTermMap, MinimalOntology minHpo, Ontology hpo) {
-        super(hpoDiseases, fullHpoToMaxoTermIdMap, hpoToMaxoTermMap, minHpo, hpo);
+    public MaxoDiffRefiner(
+            HpoDiseases hpoDiseases,
+            Map<TermId, Set<TermId>> fullHpoToMaxoTermIdMap,
+            Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxoTermMap,
+            Ontology hpo) {
+        super(hpoDiseases, fullHpoToMaxoTermIdMap, hpoToMaxoTermMap, hpo);
     }
 
 }

@@ -18,18 +18,15 @@ public class BaseDiffDiagRefiner implements DiffDiagRefiner {
     private final HpoDiseases hpoDiseases;
     private final Map<TermId, Set<TermId>> fullHpoToMaxoTermIdMap;
     private final Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxoTermMap;
-    private final MinimalOntology minHpo;
     private final Ontology hpo;
 
     public BaseDiffDiagRefiner(HpoDiseases hpoDiseases,
                                Map<TermId, Set<TermId>> fullHpoToMaxoTermIdMap,
                                Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxoTermMap,
-                               MinimalOntology minHpo,
                                Ontology hpo) {
         this.hpoDiseases = hpoDiseases;
         this.fullHpoToMaxoTermIdMap = fullHpoToMaxoTermIdMap;
         this.hpoToMaxoTermMap = hpoToMaxoTermMap;
-        this.minHpo = minHpo;
         this.hpo = hpo;
     }
 
