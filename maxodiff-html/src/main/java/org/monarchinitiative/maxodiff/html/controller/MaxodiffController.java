@@ -211,7 +211,9 @@ public class MaxodiffController {
                     resultsList,
                     biometadataService,
                     hpoTermCounts,
-                    icMicaDict);
+                    icMicaDict,
+                    Path.of(""),
+                    false);
             model.addAttribute("htmlTemplateString", htmlString);
             model.addAttribute("showMDresults", true);
         }

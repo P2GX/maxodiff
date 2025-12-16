@@ -600,20 +600,20 @@
 </head>
 
 <body style="font-family: Arial, Helvetica, sans-serif;">
-<h1 th:text="${maxodiff.sampleResultsTitle}"></h1>
+<h1 id="sampleResultsTitle" th:text="${maxodiff.sampleResultsTitle}"></h1>
 <table class="resultsTable">
     <tbody>
         <tr>
-            <td class="narrow-column">Observed HPO Terms:</td><td class="wide-column" th:utext="${maxodiff.samplePresentHpoIds}">Present HPO Ids</td>
+            <td class="narrow-column">Observed HPO Terms:</td><td id="samplePresentHpoIds" class="wide-column" th:utext="${maxodiff.samplePresentHpoIds}">Present HPO Ids</td>
         </tr>
         <tr class="spaced-row">
-            <td class="narrow-column">Excluded HPO Terms:</td><td class="wide-column" th:utext="${maxodiff.sampleExcludedHpoIds}">Excluded HPO Ids</td>
+            <td class="narrow-column">Excluded HPO Terms:</td><td id="sampleExcludedHpoIds" class="wide-column" th:utext="${maxodiff.sampleExcludedHpoIds}">Excluded HPO Ids</td>
         </tr>
         <tr class="spaced-row">
-            <td class="narrow-column">Diseases:</td><td class="wide-column" th:text="${maxodiff.nDiseases}">n Diseases</td>
+            <td class="narrow-column">Diseases:</td><td id="nDiseases" class="wide-column" th:text="${maxodiff.nDiseases}">n Diseases</td>
         </tr>
         <tr>
-            <td class="narrow-column">Simulations:</td><td class="wide-column" th:text="${maxodiff.nSimulations}">n Simulations</td>
+            <td class="narrow-column">Simulations:</td><td id="nSimulations" class="wide-column" th:text="${maxodiff.nSimulations}">n Simulations</td>
         </tr>
     </tbody>
 </table>
