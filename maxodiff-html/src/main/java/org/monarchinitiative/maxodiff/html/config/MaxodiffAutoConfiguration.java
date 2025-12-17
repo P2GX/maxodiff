@@ -130,7 +130,7 @@ public class MaxodiffAutoConfiguration {
             Map<TermId, Set<TermId>> hpoToMaxoIdMap,
             Map<SimpleTerm, Set<SimpleTerm>> maxoAnnotsMap) {
 
-        return new MaxoDiffRefiner(hpoDiseases, hpoToMaxoIdMap, maxoAnnotsMap, minHpo, hpo);
+        return new MaxoDiffRefiner(hpoDiseases, hpoToMaxoIdMap, maxoAnnotsMap, hpo);
     }
 
     @Bean

@@ -41,8 +41,6 @@ public class MaxodiffController {
 
     private DiffDiagRefiner diffDiagRefiner;
 
-    private final MinimalOntology minHpo;
-
     private final Ontology hpo;
 
     private final HpoDiseases hpoDiseases;
@@ -59,7 +57,6 @@ public class MaxodiffController {
             IcMicaData icMicaData,
             BiometadataService biometadataService,
             DiffDiagRefiner diffDiagRefiner,
-            MinimalOntology minHpo,
             Ontology hpo,
             HpoDiseases hpoDiseases,
             Map<TermId, Set<TermId>> hpoToMaxoIdMap,
@@ -68,7 +65,6 @@ public class MaxodiffController {
         this.icMicaData = icMicaData;
         this.biometadataService = biometadataService;
         this.diffDiagRefiner = diffDiagRefiner;
-        this.minHpo = minHpo;
         this.hpo = hpo;
         this.hpoDiseases = hpoDiseases;
         this.hpoToMaxoIdMap = hpoToMaxoIdMap;
@@ -130,7 +126,7 @@ public class MaxodiffController {
         model.addAttribute("differentialDiagnoses", differentialDiagnoses);
 
         // Maxodiff refiner
-        diffDiagRefiner = new MaxoDiffRefiner(hpoDiseases, hpoToMaxoIdMap, hpoToMaxoTermMap, minHpo, hpo);
+        diffDiagRefiner = new MaxoDiffRefiner(hpoDiseases, hpoToMaxoIdMap, hpoToMaxoTermMap, hpo);
 
         // maxodiff analysis parameters: n diseases to use and n simulations to run
         Integer prevNDiseases = (Integer) model.getAttribute("nDiseases");
