@@ -149,8 +149,8 @@ public class BenchmarkCommand extends DifferentialDiagnosisCommand {
 
             try (BufferedWriter writer = openWriter(outputName); CSVPrinter printer = CSVFormat.DEFAULT.print(writer)) {
                 printer.printRecord("phenopacket", "all_sample_ids", "n_sample_ids", "n_diseases", "n_repetitions",
-                        "maxo_id", "maxo_label", "maxo_final_score", "maxo_final_random_spike_original_diagnosis",
-                        "spiked_diagnosis", "spiked_diagnosis_idx",
+                        "maxo_id", "maxo_label", "maxo_final_score", "maxo_final_score_random_spike_original_diagnosis",
+                        "spiked_diagnosis", "spiked_diagnosis_idx", "n_avg_rank_change_1st", "n_maxo_terms", "%_avg_rank_change_1st",
                         "n_all_maxo_hpo_ids", "top_maxo_hpo_ids", "n_top_maxo_hpo_ids", "mean_n_disc_phen", "diff",
                         "refiner_type"); // header
 
@@ -269,13 +269,17 @@ public class BenchmarkCommand extends DifferentialDiagnosisCommand {
                                 Collections.shuffle(allInitialDiagnosesCopy);
                                 List<DifferentialDiagnosis> initialDiagnosesNDiseasesRandom = allInitialDiagnosesCopy.subList(0, options.nDiseases());
 
+                                boolean writeRandomJson = false;
+                                if (p < 5) {
+                                    writeRandomJson = true;
+                                }
                                 for (int d=0; d<initialDiagnosesNDiseases.size(); d++) {
                                     DifferentialDiagnosis originalDiagnosis = initialDiagnosesNDiseases.get(d);
                                     LOGGER.info("spike disease " + (d+1));
                                     LOGGER.info(originalDiagnosis.diseaseId().toString());
                                     String newFileName = "random_spike_disease_" + (d+1) + ".json";
                                     boolean writeOriginalJson = false;
-                                    if (d == 0) {
+                                    if (writeRandomJson && d == 0) {
                                         writeOriginalJson = true;
                                     }
                                     List<DifferentialDiagnosis> spikedNDiagnoses = new ArrayList<>(initialDiagnosesNDiseasesRandom);
@@ -290,8 +294,8 @@ public class BenchmarkCommand extends DifferentialDiagnosisCommand {
 
 
                                     writeValidationCSVResults(phenopacketName, refinerName, options, refinementResults,
-                                            refinementResultsRandom, writeOriginalJson, originalDiagnosis.diseaseId(),
-                                            d+1, newFileName,
+                                            refinementResultsRandom, writeOriginalJson, writeRandomJson,
+                                            originalDiagnosis.diseaseId(),d+1, newFileName,
                                             resultsList, biometadataService, meanNDiscoverablePhenotypesAllMaxoTerms,
                                             nAllMaxoDiscoverablePhenotypes, allSampleHpoTerms, printer);
 
@@ -352,6 +356,7 @@ public class BenchmarkCommand extends DifferentialDiagnosisCommand {
                                            RefinementResults refinementResults,
                                            RefinementResults refinementResultsRandom,
                                            boolean writeOriginalJson,
+                                           boolean writeRandomJson,
                                            TermId originalDiseaseId,
                                            int originalDiseaseIdx,
                                            String newName,
@@ -374,13 +379,15 @@ public class BenchmarkCommand extends DifferentialDiagnosisCommand {
         }
 
 
-        String fileNameRandom = String.join("_",
-                phenopacketName.replace(".json", ""),
-                "n" + options.nDiseases(),
-                "nr" + options.nRepetitions(),
-                newName);
-        Path maxodiffResultsFilePathRandom = Path.of(String.join(File.separator, outputDir.toString(), fileNameRandom));
-        writeToJsonFile(maxodiffResultsFilePathRandom, refinementResultsRandom);
+        if (writeRandomJson) {
+            String fileNameRandom = String.join("_",
+                    phenopacketName.replace(".json", ""),
+                    "n" + options.nDiseases(),
+                    "nr" + options.nRepetitions(),
+                    newName);
+            Path maxodiffResultsFilePathRandom = Path.of(String.join(File.separator, outputDir.toString(), fileNameRandom));
+            writeToJsonFile(maxodiffResultsFilePathRandom, refinementResultsRandom);
+        }
 
         // Test new validation procedure
         // Get highest score MAxO term id
@@ -393,6 +400,12 @@ public class BenchmarkCommand extends DifferentialDiagnosisCommand {
         MaxodiffResult topResultRandom = refinementResultsRandom.maxodiffResults().stream()
                 .filter(mr -> mr.rankMaxoScore().maxoId().equals(topMaxoId)).toList().getFirst();
         double maxScoreValueRandom = topResultRandom.rankMaxoScore().maxoScore();
+
+        int nMaxoTerms = refinementResultsRandom.maxodiffResults().size();
+        int nAvgRankChange1st = (int) refinementResultsRandom.maxodiffResults().stream()
+                .map(MaxodiffResult::rankMaxoScore).map(RankMaxoScore::maxoDiseaseAvgRankChangeMap)
+                .filter(avgRankChangeMap ->
+                        avgRankChangeMap.keySet().stream().toList().indexOf(originalDiseaseId) == 0).count();
 
         LOGGER.info("{}: n Diseases = {}, n Repetitions = {}", refinerName, options.nDiseases(), options.nRepetitions());
 
@@ -408,7 +421,7 @@ public class BenchmarkCommand extends DifferentialDiagnosisCommand {
         // Write Benchmark results summary file
         writeResults(phenopacketName, allSampleHpoTerms, allSampleHpoTerms.size(), options.nDiseases(),
                 options.nRepetitions(), topMaxoId.toString(), maxScoreTermLabel, maxScoreValue, maxScoreValueRandom,
-                originalDiseaseId, originalDiseaseIdx, nAllMaxoDiscoverablePhenotypes,
+                originalDiseaseId, originalDiseaseIdx, nAvgRankChange1st, nMaxoTerms, nAllMaxoDiscoverablePhenotypes,
                 topMaxoAscertainablePhenotypes, topMaxoAscertainablePhenotypes.size(),
                 meanNDiscoverablePhenotypesAllMaxoTerms, diff,
                 refinerName, printer);
@@ -496,6 +509,8 @@ public class BenchmarkCommand extends DifferentialDiagnosisCommand {
                                      double maxoFinalScoreRandom,
                                      TermId originalDiseaseId,
                                      int originalDiseaseIdx,
+                                     int nAvgRankChange1st,
+                                     int nMaxoTerms,
                                      int nAllMaxoHpoTerms,
                                      Set<TermId> topMaxoHpoTerms,
                                      int nTopMaxoHpoTerms,
@@ -503,6 +518,8 @@ public class BenchmarkCommand extends DifferentialDiagnosisCommand {
                                      double diff,
                                      String refinerType,
                                      CSVPrinter printer) {
+
+        double percent = ((double) nAvgRankChange1st / (double) nMaxoTerms) * 100.0;
 
         try {
             printer.print(phenopacketName);
@@ -516,6 +533,9 @@ public class BenchmarkCommand extends DifferentialDiagnosisCommand {
             printer.print(maxoFinalScoreRandom);
             printer.print(originalDiseaseId);
             printer.print(originalDiseaseIdx);
+            printer.print(nAvgRankChange1st);
+            printer.print(nMaxoTerms);
+            printer.print(percent);
             printer.print(nAllMaxoHpoTerms);
             printer.print(topMaxoHpoTerms);
             printer.print(nTopMaxoHpoTerms);
