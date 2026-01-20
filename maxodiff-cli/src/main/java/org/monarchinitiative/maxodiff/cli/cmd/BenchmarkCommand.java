@@ -269,6 +269,7 @@ public class BenchmarkCommand extends DifferentialDiagnosisCommand {
                                 Collections.shuffle(allInitialDiagnosesCopy);
                                 List<DifferentialDiagnosis> initialDiagnosesNDiseasesRandom = allInitialDiagnosesCopy.subList(0, options.nDiseases());
 
+                                boolean writeOriginalJson = false;
                                 boolean writeRandomJson = false;
                                 if (p < 5) {
                                     writeRandomJson = true;
@@ -278,7 +279,7 @@ public class BenchmarkCommand extends DifferentialDiagnosisCommand {
                                     LOGGER.info("spike disease " + (d+1));
                                     LOGGER.info(originalDiagnosis.diseaseId().toString());
                                     String newFileName = "random_spike_disease_" + (d+1) + ".json";
-                                    boolean writeOriginalJson = false;
+
                                     if (writeRandomJson && d == 0) {
                                         writeOriginalJson = true;
                                     }

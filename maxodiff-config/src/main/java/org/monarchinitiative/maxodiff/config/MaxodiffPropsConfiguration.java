@@ -3,6 +3,7 @@ package org.monarchinitiative.maxodiff.config;
 import org.monarchinitiative.maxodiff.core.SimpleTerm;
 import org.monarchinitiative.maxodiff.core.analysis.refinement.*;
 import org.monarchinitiative.maxodiff.core.io.MaxoDxAnnots;
+import org.monarchinitiative.maxodiff.core.model.GeneralMaxoTerms;
 import org.monarchinitiative.maxodiff.core.service.BiometadataService;
 import org.monarchinitiative.maxodiff.core.service.BiometadataServiceImpl;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
@@ -28,10 +29,19 @@ public record MaxodiffPropsConfiguration(MinimalOntology minHpo, Ontology hpo, H
         MinimalOntology minHpo = MinimalOntologyLoader.loadOntology(maxodiffDataResolver.hpoJson().toFile());
         Ontology hpo = OntologyLoader.loadOntology(maxodiffDataResolver.hpoJson().toFile());
         HpoDiseases diseases = HpoDiseaseLoaders.defaultLoader(minHpo, HpoDiseaseLoaderOptions.defaultOmim()).load(maxodiffDataResolver.phenotypeAnnotations());
+        // Map of HPO Id : Set of MAxO Ids
         Map<SimpleTerm, Set<SimpleTerm>> maxoAnnotsMap;
         try (BufferedReader reader = Files.newBufferedReader(maxodiffDataResolver.maxoDxAnnots())) {
             maxoAnnotsMap = MaxoDxAnnots.parseHpoToMaxo(reader);
         }
+        Map<TermId, String> generalMaxoTermsMap = GeneralMaxoTerms.getGeneralMaxoTerms();
+        Set<SimpleTerm> generalMaxoTerms = new HashSet<>();
+        generalMaxoTermsMap.entrySet().forEach(entry ->
+                generalMaxoTerms.add(new SimpleTerm(entry.getKey(), entry.getValue())));
+        for (Set<SimpleTerm> mterms : maxoAnnotsMap.values()) {
+            mterms.removeAll(generalMaxoTerms);
+        }
+
         BiometadataService biometadataService = BiometadataServiceImpl.of(minHpo, diseases, maxoAnnotsMap);
         return new MaxodiffPropsConfiguration(minHpo, hpo, diseases, maxoAnnotsMap, biometadataService);
     }
