@@ -1,9 +1,5 @@
 package org.monarchinitiative.maxodiff.cli.cmd;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.ObjectWriter;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
 
@@ -43,9 +39,10 @@ import java.nio.file.attribute.BasicFileAttributes;
 import java.util.*;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
-import java.util.stream.Collectors;
 import java.util.stream.Stream;
 import java.util.zip.GZIPOutputStream;
+
+import static org.monarchinitiative.maxodiff.core.io.JsonFileWriter.writeToJsonFile;
 
 
 /**
@@ -57,8 +54,6 @@ import java.util.zip.GZIPOutputStream;
         description = "benchmark maxodiff analysis")
 public class BenchmarkCommand extends DifferentialDiagnosisCommand {
     private static final Logger LOGGER = LoggerFactory.getLogger(DifferentialDiagnosisCommand.class);
-
-    private static ObjectMapper OBJECT_MAPPER;
 
     @CommandLine.Option(names = {"-B", "--batchDir"},
             description = "Path to directory containing phenopackets.")
@@ -87,10 +82,6 @@ public class BenchmarkCommand extends DifferentialDiagnosisCommand {
 
     @Override
     public Integer execute() throws Exception {
-
-        OBJECT_MAPPER = new ObjectMapper();
-        OBJECT_MAPPER.enable(SerializationFeature.INDENT_OUTPUT);
-        OBJECT_MAPPER.registerModule(new Jdk8Module());
 
         // Load ontology and hpo diseases
         Ontology ontology = OntologyLoader.loadOntology(MaxodiffDataResolver.of(maxoDataPath).hpoJson().toFile());
@@ -382,7 +373,7 @@ public class BenchmarkCommand extends DifferentialDiagnosisCommand {
         Path maxodiffResultsHTMLPath = Path.of(String.join(File.separator, outputDir.toString(), outputFilename));
 
         String htmlString = HtmlResults.writeHTMLResults(sample, options.nDiseases(), hpoDiseases, options.nRepetitions(), resultsList,
-                biometadataService, hpoTermCounts, icMicaDict);
+                biometadataService, hpoTermCounts, icMicaDict, outputDir, false);
 
         Files.writeString(maxodiffResultsHTMLPath, htmlString);
     }
@@ -414,12 +405,6 @@ public class BenchmarkCommand extends DifferentialDiagnosisCommand {
         String outPath = outputName.toAbsolutePath().toString();
         String allMaxoAscPhenPathStr = outPath.replace(outputFileNameStr, allMaxoAscPhenFileName);
         return Path.of(allMaxoAscPhenPathStr);
-    }
-
-
-    public void writeToJsonFile(Path filePath, RefinementResults results) throws IOException {
-        ObjectWriter writer = OBJECT_MAPPER.writerWithDefaultPrettyPrinter();
-        writer.writeValue(new File(filePath.toString()), results);
     }
 
 

@@ -134,6 +134,12 @@ public class MaxodiffController {
 
         // maxodiff analysis parameters: n diseases to use and n simulations to run
         Integer prevNDiseases = (Integer) model.getAttribute("nDiseases");
+        if (nDiseases == null) {
+            nDiseases = 20;
+        }
+        if (nRepetitions == null) {
+            nRepetitions = 20;
+        }
         model.addAttribute("nDiseases", nDiseases);
         model.addAttribute("nRepetitions", nRepetitions);
 
@@ -205,7 +211,9 @@ public class MaxodiffController {
                     resultsList,
                     biometadataService,
                     hpoTermCounts,
-                    icMicaDict);
+                    icMicaDict,
+                    Path.of(""),
+                    false);
             model.addAttribute("htmlTemplateString", htmlString);
             model.addAttribute("showMDresults", true);
         }
@@ -214,7 +222,7 @@ public class MaxodiffController {
 
     /** This is a flag indicating that the next step is to run the MAxOdiff analysis */
     private boolean shouldMaxoAnalysisBeRun(Sample sample, List<DifferentialDiagnosis> differentialDiagnoses, Integer nDiseases, Integer nRepetitions) {
-        return sample != null && differentialDiagnoses != null && nDiseases != null && nRepetitions != null;
+        return sample != null && differentialDiagnoses != null && !differentialDiagnoses.isEmpty() && nDiseases != null && nRepetitions != null;
     }
 
     @GetMapping("progress1")

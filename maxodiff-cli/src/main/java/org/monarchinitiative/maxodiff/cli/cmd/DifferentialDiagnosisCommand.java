@@ -60,6 +60,12 @@ public class DifferentialDiagnosisCommand extends BaseCommand {
             description = "Where to write the results files (default: ${DEFAULT-VALUE}).")
     protected Path outputDir = Path.of(".");
 
+    @CommandLine.Option(
+            names={"-j", "--writeJson"},
+            description = "Write HTML output to JSON files (default: ${DEFAULT-VALUE})"
+    )
+    public boolean writeJson;
+
 
 
     @CommandLine.Option(names = {"--diseaseProbModel"},
@@ -194,7 +200,9 @@ public class DifferentialDiagnosisCommand extends BaseCommand {
                     resultsList,
                     biometadataService,
                     hpoTermCounts,
-                    icMicaDict);
+                    icMicaDict,
+                    outputDir,
+                    this.writeJson);
 
             Files.writeString(maxodiffResultsHTMLPath, htmlString);
             LOGGER.info("Wrote HTML file to {}", maxodiffResultsHTMLPath);
