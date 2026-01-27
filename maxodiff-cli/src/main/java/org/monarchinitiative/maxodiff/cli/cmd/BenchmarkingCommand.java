@@ -166,7 +166,8 @@ public class BenchmarkingCommand extends DifferentialDiagnosisCommand {
         double maxoFinalScore = initialResults.getFirst().rankMaxoScore().maxoScore();
         BenchmarkProcedure procedure = BenchmarkProcedure.SpikedInRandomization;
         int nMaxo = initialResults.size();
-        return new BenchmarkResult(ppktId, nDiseases, nRepetitions, topMaxo, maxoFinalScore, procedure, nMaxo, );
+        /// TODO ADD DISDEASE IDX
+        return new BenchmarkResult(ppktId, nDiseases, nRepetitions, topMaxo, maxoFinalScore, procedure, nMaxo, 42);
     }
 
 
