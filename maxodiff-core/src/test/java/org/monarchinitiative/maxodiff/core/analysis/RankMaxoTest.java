@@ -100,7 +100,7 @@ public class RankMaxoTest {
         Sample s1 = TestResources.getExampleSample();
         Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxoTermMap = TestResources.hpoToMaxo();
         RankMaxo rankMaxo = new RankMaxo(hpoToMaxoTermMap, maxoToHpoTermIdMap, maxoHpoTermProbabilities, ENGINE,
-                ontology, initialDiagnoses);
+                ontology, initialDiagnoses, initialDiagnoses);
         List<RankMaxoScore> maxoTermRanks = rankMaxo.rankMaxoTerms(s1, 2, diseaseIds);
         System.out.println(maxoTermRanks);
     }

@@ -4,6 +4,8 @@ import org.monarchinitiative.maxodiff.core.diffdg.DifferentialDiagnosisEngine;
 import org.monarchinitiative.maxodiff.core.model.*;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDisease;
 import org.monarchinitiative.phenol.ontology.data.TermId;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.concurrent.Callable;
@@ -12,12 +14,15 @@ import java.util.stream.Stream;
 
 public class NewEvaluateMaxoTerm implements Callable<RankMaxoScore> {
 
+    private static final Logger LOGGER = LoggerFactory.getLogger(NewEvaluateMaxoTerm.class);
+
     private final MaxoHpoDiseaseRank maxoHpoDiseaseRank;
     private final int nRepetitions;
     private final Sample ppkt;
     private final DifferentialDiagnosisEngine engine;
     private final MaxoHpoTermProbabilities maxoHpoTermProbabilities;
     private final Set<TermId> diseaseIds;
+    private final List<DifferentialDiagnosis> initialDiagnoses;
 
     public NewEvaluateMaxoTerm(
             MaxoHpoDiseaseRank maxoHpoDiseaseRank,
@@ -25,6 +30,7 @@ public class NewEvaluateMaxoTerm implements Callable<RankMaxoScore> {
             Sample ppkt,
             DifferentialDiagnosisEngine engine,
             MaxoHpoTermProbabilities maxoHpoTermProbabilities,
+            List<DifferentialDiagnosis> initialDiagnoses,
             Set<TermId> diseaseIds) {
         this.maxoHpoDiseaseRank = maxoHpoDiseaseRank;
         this.nRepetitions = nRepetitions;
@@ -32,6 +38,7 @@ public class NewEvaluateMaxoTerm implements Callable<RankMaxoScore> {
         this.engine = engine;
         this.maxoHpoTermProbabilities = maxoHpoTermProbabilities;
         this.diseaseIds = diseaseIds;
+        this.initialDiagnoses = initialDiagnoses;
     }
 
     @Override
@@ -45,7 +52,6 @@ public class NewEvaluateMaxoTerm implements Callable<RankMaxoScore> {
         List<Double> probabilities = new ArrayList<>(hpoToProbabilityMap.values());
 
         // Run simulations and calculate final scores
-        List<DifferentialDiagnosis> initialDiagnoses = maxoHpoTermProbabilities.getInitialDiagnoses();
         List<List<DifferentialDiagnosis>> newMaxoDiagnosesList = new ArrayList<>();
         List<Double> scores = new ArrayList<>();
         Set<TermId> simulatedHpoIdSet = new HashSet<>();
@@ -182,7 +188,7 @@ public class NewEvaluateMaxoTerm implements Callable<RankMaxoScore> {
     private Set<TermId> extractDiseaseIds(List<DifferentialDiagnosis> diagnoses) {
         return diagnoses.stream()
                 .map(DifferentialDiagnosis::diseaseId)
-                .collect(Collectors.toSet());
+                .collect(Collectors.toCollection(LinkedHashSet::new));
     }
 
     /** Compute average changes in disease ranks between the initial disease rankings and the MAxO disease rankings.

@@ -153,6 +153,10 @@ public class MaxoHpoDiseaseRank {
         return maxoId;
     }
 
+    public List<DifferentialDiagnosis> getInitialDiagnoses() {
+        return initialDiagnoses;
+    }
+
     public List<Integer> getSampledHpoCounts(int total) {
 
         List<Integer> result = new ArrayList<>();

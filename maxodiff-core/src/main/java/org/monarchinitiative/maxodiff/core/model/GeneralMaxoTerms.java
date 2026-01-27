@@ -1,7 +1,6 @@
 package org.monarchinitiative.maxodiff.core.model;
 
 import org.monarchinitiative.phenol.ontology.data.TermId;
-
 import java.util.HashMap;
 import java.util.Map;
 
@@ -24,14 +23,14 @@ public class GeneralMaxoTerms {
     public static Map<TermId, String> getGeneralMaxoTerms() {
         if (generalMaxoTerms == null) {
             generalMaxoTerms = new HashMap<>();
-            generalMaxoTerms.put(clinicalAssessment, "clinical Assessment");
-            generalMaxoTerms.put(medicalAction, "medical Action");
+
+            generalMaxoTerms.put(clinicalAssessment, "clinical assessment");
+            generalMaxoTerms.put(medicalAction, "medical action");
             generalMaxoTerms.put(medicalHistoryTaking, "medical history taking");
             generalMaxoTerms.put(magneticResonanceImagingProcedure, "magnetic resonance imaging procedure");
             generalMaxoTerms.put(clinicalBiopsy, "clinical biopsy");
             generalMaxoTerms.put(clinicalCoreNeedleBiopsy, "clinical core needle biopsy");
         }
         return generalMaxoTerms;
-
     }
 }

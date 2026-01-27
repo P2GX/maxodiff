@@ -38,7 +38,6 @@ public record MaxodiffPropsConfiguration(MinimalOntology minHpo, Ontology hpo, H
         Set<SimpleTerm> generalMaxoTerms = new HashSet<>();
         generalMaxoTermsMap.entrySet().forEach(entry ->
                 generalMaxoTerms.add(new SimpleTerm(entry.getKey(), entry.getValue())));
-
         for (Set<SimpleTerm> mterms : maxoAnnotsMap.values()) {
             mterms.removeAll(generalMaxoTerms);
         }
