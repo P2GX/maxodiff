@@ -19,6 +19,7 @@ public class Main implements Callable<Integer> {
                 .addSubcommand("analyze", new DifferentialDiagnosisCommand())
                 .addSubcommand("batch", new BatchDiagnosisCommand())
                 .addSubcommand("benchmark", new BenchmarkCommand())
+                .addSubcommand("benchmarking", new BenchmarkingCommand())
                 .addSubcommand("precompute-resnik", new PrecomputeResnikMapCommand())
                 ;
         cline.setToggleBooleanFlags(false);

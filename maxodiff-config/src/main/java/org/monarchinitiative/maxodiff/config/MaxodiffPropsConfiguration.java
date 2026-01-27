@@ -21,9 +21,11 @@ import java.nio.file.Files;
 import java.util.*;
 
 
-public record MaxodiffPropsConfiguration(MinimalOntology minHpo, Ontology hpo, HpoDiseases hpoDiseases,
-                                         Map<SimpleTerm, Set<SimpleTerm>> maxoAnnotsMap,
-                                         BiometadataService biometadataService) {
+public record MaxodiffPropsConfiguration(
+        Ontology hpo,
+        HpoDiseases hpoDiseases,
+        Map<SimpleTerm, Set<SimpleTerm>> maxoAnnotsMap,
+        BiometadataService biometadataService) {
 
     public static MaxodiffPropsConfiguration createConfig(MaxodiffDataResolver maxodiffDataResolver) throws IOException {
         MinimalOntology minHpo = MinimalOntologyLoader.loadOntology(maxodiffDataResolver.hpoJson().toFile());
@@ -43,11 +45,10 @@ public record MaxodiffPropsConfiguration(MinimalOntology minHpo, Ontology hpo, H
         }
 
         BiometadataService biometadataService = BiometadataServiceImpl.of(minHpo, diseases, maxoAnnotsMap);
-        return new MaxodiffPropsConfiguration(minHpo, hpo, diseases, maxoAnnotsMap, biometadataService);
+        return new MaxodiffPropsConfiguration(hpo, diseases, maxoAnnotsMap, biometadataService);
     }
 
-    public DiffDiagRefiner diffDiagRefiner(String refiner) {
-
+    public DiffDiagRefiner diffDiagRefiner() {
         Map<TermId, Set<TermId>> hpoToMaxoIdMap = new HashMap<>();
         for (Map.Entry<SimpleTerm, Set<SimpleTerm>> entry : maxoAnnotsMap.entrySet()) {
             TermId hpoId = entry.getKey().tid();
@@ -55,16 +56,7 @@ public record MaxodiffPropsConfiguration(MinimalOntology minHpo, Ontology hpo, H
             maxoAnnotsMap.get(entry.getKey()).forEach(t -> maxoIds.add(t.tid()));
             hpoToMaxoIdMap.put(hpoId, maxoIds);
         }
-//        if (dummy) {
-//            return new DummyDiffDiagRefiner(hpoDiseases, hpoToMaxoIdMap, hpo);
-//        } else {
-//            return new MaxoDiffRefiner(hpoDiseases, hpoToMaxoIdMap, hpo);
-//        }
-        DiffDiagRefiner diffDiagRefiner = null;
+        return new BaseDiffDiagRefiner(hpoDiseases, hpoToMaxoIdMap, maxoAnnotsMap, hpo);
 
-        if (refiner.equals("score")) {
-            diffDiagRefiner = new BaseDiffDiagRefiner(hpoDiseases, hpoToMaxoIdMap, maxoAnnotsMap, hpo);
-        }
-        return diffDiagRefiner;
     }
 }

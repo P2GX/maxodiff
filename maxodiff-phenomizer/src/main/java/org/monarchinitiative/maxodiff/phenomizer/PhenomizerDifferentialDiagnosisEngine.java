@@ -21,21 +21,13 @@ public class PhenomizerDifferentialDiagnosisEngine implements DifferentialDiagno
 
     public PhenomizerDifferentialDiagnosisEngine(
             HpoDiseases diseases,
-            Map<TermPair, Double> termPairToIc,
-            ScoringMode scoringMode
-    ) {
+            Map<TermPair, Double> termPairToIc) {
         this.diseases = diseases;
         this.termPairToIc = termPairToIc;
         this.diseaseToPresentAnnotationCount = countPresentAnnotations(diseases);
-        this.scoringMode = scoringMode;
+        this.scoringMode = ScoringMode.ONE_SIDED;
     }
 
-    public PhenomizerDifferentialDiagnosisEngine(
-            HpoDiseases diseases,
-            Map<TermPair, Double> termPairToIc
-    ) {
-        this(diseases, termPairToIc, ScoringMode.ONE_SIDED);
-    }
 
     private static Map<TermId, Integer> countPresentAnnotations(HpoDiseases diseases) {
         return diseases.stream().collect(Collectors.toUnmodifiableMap(HpoDisease::id, d -> Math.toIntExact(d.presentAnnotationsStream().count())));

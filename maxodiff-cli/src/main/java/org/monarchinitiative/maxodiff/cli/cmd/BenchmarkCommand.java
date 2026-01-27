@@ -135,13 +135,12 @@ public class BenchmarkCommand extends DifferentialDiagnosisCommand {
             BiometadataService biometadataService = maxodiffPropsConfiguration.biometadataService();
 
             // Configure Phenomizer engine
-            ScoringMode scoringMode = scoringModeArg.equals("one-sided") ? ScoringMode.ONE_SIDED : ScoringMode.TWO_SIDED;
             Map<TermPair, Double> icMicaDict = icMicaData.icMicaDict();
-            DifferentialDiagnosisEngine engine = new PhenomizerDifferentialDiagnosisEngine(hpoDiseases, icMicaDict, scoringMode);
+            DifferentialDiagnosisEngine engine = new PhenomizerDifferentialDiagnosisEngine(hpoDiseases, icMicaDict);
 
             // Configure maxodiff refiner
             String refinerName = "MaxoDiff";
-            DiffDiagRefiner refiner = maxodiffPropsConfiguration.diffDiagRefiner("score");
+            DiffDiagRefiner refiner = maxodiffPropsConfiguration.diffDiagRefiner();
 
             // HPO : MAxO term map
             Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxoTermMap = maxodiffPropsConfiguration.maxoAnnotsMap();

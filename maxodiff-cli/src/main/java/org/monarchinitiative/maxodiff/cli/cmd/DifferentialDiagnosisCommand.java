@@ -71,11 +71,6 @@ public class DifferentialDiagnosisCommand extends BaseCommand {
             description = "Number of repetitions for running differential diagnosis.")
     protected Integer nRepetitions = 100;
 
-    @CommandLine.Option(names = {"-s", "--scoringMode"},
-            paramLabel = "{one-sided, two-sided}",
-            description = "Phenomizer scoring mode (default: ${DEFAULT-VALUE}).")
-    protected String scoringModeArg = "one-sided";
-
     @Override
     public Integer execute() throws Exception {
         if (!Files.exists(phenopacketPath)) {
