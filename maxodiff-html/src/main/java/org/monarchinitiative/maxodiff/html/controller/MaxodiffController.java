@@ -114,7 +114,7 @@ public class MaxodiffController {
             throw new Exception("Phenomizer necessary MICA information content is empty. Run Download command to download the necessary term-pair-similarity file.");
         }
         // Phenomizer differential diagnosis engine
-        phenomizerDifferentialDxEngine = new PhenomizerDifferentialDiagnosisEngine(hpoDiseases, icMicaDict, scoringMode);
+        phenomizerDifferentialDxEngine = new PhenomizerDifferentialDiagnosisEngine(hpoDiseases, icMicaDict);
         model.addAttribute("icMicaDict", icMicaDict);
 
         if (sample != null && sample.id() != null) {

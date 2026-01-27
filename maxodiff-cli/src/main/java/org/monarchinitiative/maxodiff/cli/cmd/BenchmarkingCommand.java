@@ -65,11 +65,11 @@ public class BenchmarkingCommand extends DifferentialDiagnosisCommand {
     private static final Logger LOGGER = LoggerFactory.getLogger(BenchmarkingCommand.class);
 
 
-    @CommandLine.Option(names = {"-ND", "--nDiseases"},
+    @CommandLine.Option(names = {"-ND", "--NDiseases"},
             description = "Number of diseases to include in differential diagnosis.")
-    protected int nDiseases = 40;
+    protected int nDiseases = 20;
 
-    @CommandLine.Option(names = {"-NR", "--nRepetitions"},
+    @CommandLine.Option(names = {"-NR", "--NRepetitions"},
             description = "Numbers of repetitions for running differential diagnosis.")
     protected int nRepetitions = 80;
 
@@ -84,7 +84,6 @@ public class BenchmarkingCommand extends DifferentialDiagnosisCommand {
 
     private DifferentialDiagnosisEngine phenomizer;
 
-    private MaxodiffDataResolver maxodiffDataResolver;
     private MaxodiffPropsConfiguration maxodiffPropsConfiguration ;
     private DiffDiagRefiner refiner;
     private HpoDiseases hpoDiseases;
@@ -92,6 +91,10 @@ public class BenchmarkingCommand extends DifferentialDiagnosisCommand {
 
     @Override
     public Integer execute() throws Exception {
+
+        MaxodiffDataResolver maxodiffDataResolver = MaxodiffDataResolver.of(maxoDataPath);
+        this.maxodiffPropsConfiguration = MaxodiffPropsConfiguration.createConfig(maxodiffDataResolver);
+        this.refiner = maxodiffPropsConfiguration.diffDiagRefiner();
 
         Ontology ontology = OntologyLoader.loadOntology(MaxodiffDataResolver.of(maxoDataPath).hpoJson().toFile());
         HpoDiseaseLoader loader = HpoDiseaseLoaders.defaultLoader(ontology, HpoDiseaseLoaderOptions.defaultOmim());
@@ -102,11 +105,34 @@ public class BenchmarkingCommand extends DifferentialDiagnosisCommand {
         this.phenomizer = new PhenomizerDifferentialDiagnosisEngine(hpoDiseases, icMicaDict);
         this.refinementOptions = RefinementOptions.of(nDiseases, nRepetitions);
 
-        if (this.phenopacketPath != null || this.phenopacketPath.toFile().isFile()) {
+        if (this.phenopacketPath != null && this.phenopacketPath.toFile().isFile()) {
             List<BenchmarkResult> results = runOnePPkt(this.phenopacketPath);
-            outputResultList(results);
-        } else if (this.ppktDir != null || this.ppktDir.toFile().isDirectory()) {
-            System.out.println("IMPLEMENT");
+            outputResultList(results, true, false);
+        } else if (this.ppktDir != null && this.ppktDir.toFile().isDirectory()) {
+            List<Path> phenopacketPaths = new ArrayList<>();
+            File folder = new File(ppktDir.toUri());
+            File[] files = folder.listFiles();
+            assert files != null;
+            for (File file : files) {
+                BasicFileAttributes basicFileAttributes = Files.readAttributes(file.toPath(), BasicFileAttributes.class);
+                if (basicFileAttributes.isRegularFile() && !basicFileAttributes.isDirectory() && !file.getName().startsWith(".")) {
+                    phenopacketPaths.add(file.toPath());
+                }
+            }
+
+            for (Path ppktPath : phenopacketPaths.subList(0,4)) {
+                int ppktIdx = phenopacketPaths.indexOf(ppktPath);
+                int ppktN = ppktIdx + 1;
+                int nPpkts = phenopacketPaths.size();
+                float percent = (((float) ppktN) / nPpkts) * 100;
+                boolean writeHeader = false;
+                List<BenchmarkResult> results = runOnePPkt(ppktPath);
+                if (ppktIdx == 0) {
+                    writeHeader = true;
+                }
+                outputResultList(results, writeHeader, true);
+                LOGGER.info("Finished {} of {} phenopackets. ({}% complete)", ppktN, nPpkts, percent);
+            }
         } else {
             System.err.println("[ERROR] No phenopacket path or directory provided.");
             System.err.println("[ERROR] Provide path to Phenopacket json file using -p/--phenopacket.");
@@ -124,9 +150,11 @@ public class BenchmarkingCommand extends DifferentialDiagnosisCommand {
         return 0;
     }
 
-    private void outputResultList(List<BenchmarkResult> results) {
-        try (BufferedWriter bw = new BufferedWriter(new FileWriter(this.outputName.toFile()))) {
-            bw.write(BenchmarkResult.getHeaderLine() + "\n");
+    private void outputResultList(List<BenchmarkResult> results, boolean writeHeader, boolean append) {
+        try (BufferedWriter bw = new BufferedWriter(new FileWriter(this.outputName.toFile(), append))) {
+            if (writeHeader) {
+                bw.write(BenchmarkResult.getHeaderLine() + "\n");
+            }
             for (BenchmarkResult result : results) {
                 bw.write(result.getRow() + "\n");
             }
@@ -149,10 +177,10 @@ public class BenchmarkingCommand extends DifferentialDiagnosisCommand {
             List<MaxodiffResult> initialResults = benchmarker.standardRun();
             for (int i = 0; i < nDiseases; i++) {
                 List<MaxodiffResult> randomizedResults = benchmarker.spikedRandomizer(i);
-                BenchmarkResult bres = getBenchmarkResult(ppktId, initialResults, randomizedResults);
+                BenchmarkResult bres = getBenchmarkResult(ppktId, i, initialResults, randomizedResults);
                 resultList.add(bres);
             }
-            LOGGER.info("Finished benchmark.");
+            LOGGER.info("Finished benchmark of {}.", ppktPath);
         } catch (Exception ex) {
             System.out.println(ex.getMessage());
         }
@@ -160,14 +188,23 @@ public class BenchmarkingCommand extends DifferentialDiagnosisCommand {
     }
 
 
-    /* TODO - ADD STUFF NEEDED FOR BENCHMRKING */
-    private BenchmarkResult getBenchmarkResult(String ppktId, List<MaxodiffResult> initialResults, List<MaxodiffResult> randomizedResults) {
+
+    private BenchmarkResult getBenchmarkResult(String ppktId,
+                                               int spikedIdx,
+                                               List<MaxodiffResult> initialResults,
+                                               List<MaxodiffResult> randomizedResults) {
+
         TermId topMaxo = initialResults.getFirst().rankMaxoScore().maxoId();
         double maxoFinalScore = initialResults.getFirst().rankMaxoScore().maxoScore();
+        List<MaxodiffResult> topResultRandomList = randomizedResults.stream()
+                .filter(mr -> mr.rankMaxoScore().maxoId().equals(topMaxo)).toList();
+        int topMaxoRandomIdx = topResultRandomList.isEmpty() ? -1 : randomizedResults.indexOf(topResultRandomList.getFirst()) + 1;
+        double maxScoreValueRandom = topResultRandomList.isEmpty() ? -1.0 : topResultRandomList.getFirst().rankMaxoScore().maxoScore();
         BenchmarkProcedure procedure = BenchmarkProcedure.SpikedInRandomization;
         int nMaxo = initialResults.size();
-        /// TODO ADD DISDEASE IDX
-        return new BenchmarkResult(ppktId, nDiseases, nRepetitions, topMaxo, maxoFinalScore, procedure, nMaxo, 42);
+        int nMaxoRandom = randomizedResults.size();
+        return new BenchmarkResult(ppktId, nDiseases, nRepetitions, topMaxo, maxoFinalScore,
+                procedure, topMaxoRandomIdx, maxScoreValueRandom, nMaxo, nMaxoRandom, spikedIdx);
     }
 
 
