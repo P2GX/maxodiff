@@ -120,7 +120,7 @@ public class BenchmarkingCommand extends DifferentialDiagnosisCommand {
                 }
             }
 
-            for (Path ppktPath : phenopacketPaths.subList(0,4)) {
+            for (Path ppktPath : phenopacketPaths) {
                 int ppktIdx = phenopacketPaths.indexOf(ppktPath);
                 int ppktN = ppktIdx + 1;
                 int nPpkts = phenopacketPaths.size();
