@@ -1,12 +1,13 @@
 package org.monarchinitiative.maxodiff.html.config;
 
+import org.monarchinitiative.maxodiff.core.analysis.refinement.BaseDiffDiagRefiner;
 import org.monarchinitiative.maxodiff.core.diffdg.DifferentialDiagnosisEngine;
 import org.monarchinitiative.maxodiff.core.io.MaxoDxAnnots;
 import org.monarchinitiative.maxodiff.config.MaxodiffDataException;
 import org.monarchinitiative.maxodiff.core.SimpleTerm;
 import org.monarchinitiative.maxodiff.core.analysis.refinement.DiffDiagRefiner;
-import org.monarchinitiative.maxodiff.core.analysis.refinement.MaxoDiffRefiner;
 import org.monarchinitiative.maxodiff.config.MaxodiffDataResolver;
+import org.monarchinitiative.maxodiff.core.model.GeneralMaxoTerms;
 import org.monarchinitiative.maxodiff.core.service.BiometadataService;
 import org.monarchinitiative.maxodiff.core.service.BiometadataServiceImpl;
 import org.monarchinitiative.maxodiff.html.service.DifferentialDiagnosisEngineService;
@@ -84,7 +85,15 @@ public class MaxodiffAutoConfiguration {
     public Map<SimpleTerm, Set<SimpleTerm>> maxoAnnotsMap(MaxodiffDataResolver maxodiffDataResolver) throws IOException {
         LOGGER.debug("Loading MAxO annotations from {}", maxodiffDataResolver.maxoDxAnnots().toAbsolutePath());
         try (BufferedReader reader = Files.newBufferedReader(maxodiffDataResolver.maxoDxAnnots())) {
-            return MaxoDxAnnots.parseHpoToMaxo(reader);
+            Map<SimpleTerm, Set<SimpleTerm>> maxoAnnotsMap = MaxoDxAnnots.parseHpoToMaxo(reader);
+            Map<TermId, String> generalMaxoTermsMap = GeneralMaxoTerms.getGeneralMaxoTerms();
+            Set<SimpleTerm> generalMaxoTerms = new HashSet<>();
+            generalMaxoTermsMap.entrySet().forEach(entry ->
+                    generalMaxoTerms.add(new SimpleTerm(entry.getKey(), entry.getValue())));
+            for (Set<SimpleTerm> mterms : maxoAnnotsMap.values()) {
+                mterms.removeAll(generalMaxoTerms);
+            }
+            return maxoAnnotsMap;
         }
     }
 
@@ -130,7 +139,7 @@ public class MaxodiffAutoConfiguration {
             Map<TermId, Set<TermId>> hpoToMaxoIdMap,
             Map<SimpleTerm, Set<SimpleTerm>> maxoAnnotsMap) {
 
-        return new MaxoDiffRefiner(hpoDiseases, hpoToMaxoIdMap, maxoAnnotsMap, minHpo, hpo);
+        return new BaseDiffDiagRefiner(hpoDiseases, hpoToMaxoIdMap, maxoAnnotsMap, hpo);
     }
 
     @Bean

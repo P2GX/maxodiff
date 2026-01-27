@@ -21,9 +21,7 @@ public class GeneralMaxoTerms {
     private static Map<TermId, String> generalMaxoTerms = null;
 
     public static Map<TermId, String> getGeneralMaxoTerms() {
-
         if (generalMaxoTerms == null) {
-
             generalMaxoTerms = new HashMap<>();
 
             generalMaxoTerms.put(clinicalAssessment, "clinical assessment");
@@ -33,8 +31,6 @@ public class GeneralMaxoTerms {
             generalMaxoTerms.put(clinicalBiopsy, "clinical biopsy");
             generalMaxoTerms.put(clinicalCoreNeedleBiopsy, "clinical core needle biopsy");
         }
-
         return generalMaxoTerms;
-
     }
 }

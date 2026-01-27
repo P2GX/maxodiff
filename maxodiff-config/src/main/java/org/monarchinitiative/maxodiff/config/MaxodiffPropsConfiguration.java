@@ -63,7 +63,7 @@ public record MaxodiffPropsConfiguration(MinimalOntology minHpo, Ontology hpo, H
         DiffDiagRefiner diffDiagRefiner = null;
 
         if (refiner.equals("score")) {
-            diffDiagRefiner = new MaxoDiffRefiner(hpoDiseases, hpoToMaxoIdMap, maxoAnnotsMap, minHpo, hpo);
+            diffDiagRefiner = new BaseDiffDiagRefiner(hpoDiseases, hpoToMaxoIdMap, maxoAnnotsMap, hpo);
         }
         return diffDiagRefiner;
     }
