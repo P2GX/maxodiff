@@ -96,7 +96,7 @@ public class BatchDiagnosisCommand extends BaseCommand {
         MaxodiffDataResolver maxodiffDataResolver = MaxodiffDataResolver.of(maxoDataPath);
         MaxodiffPropsConfiguration maxodiffPropsConfiguration = MaxodiffPropsConfiguration.createConfig(maxodiffDataResolver);
 
-        DiffDiagRefiner maxoDiffRefiner = maxodiffPropsConfiguration.diffDiagRefiner("score");
+        DiffDiagRefiner maxoDiffRefiner = maxodiffPropsConfiguration.diffDiagRefiner();
         BiometadataService biometadataService = maxodiffPropsConfiguration.biometadataService();
         Map<TermPair, Double> icMicaDict = icMicaData.icMicaDict();
         DifferentialDiagnosisEngine engine = new PhenomizerDifferentialDiagnosisEngine(hpoDiseases, icMicaDict);

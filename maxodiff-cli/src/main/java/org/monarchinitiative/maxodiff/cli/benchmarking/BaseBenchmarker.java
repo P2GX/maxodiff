@@ -84,7 +84,7 @@ public class BaseBenchmarker {
         LOGGER.info(String.valueOf(phenopacketPath));
         LOGGER.info("nDiseases = {}", nDiseases);
         List<DifferentialDiagnosis> differentialDiagnoses = phenomizer.run(sample);
-        differentialDiagnoses.sort(Comparator.comparingDouble(DifferentialDiagnosis::score).reversed());
+//        differentialDiagnoses.sort(Comparator.comparingDouble(DifferentialDiagnosis::score).reversed());
         return differentialDiagnoses;
     }
 
@@ -130,9 +130,9 @@ public class BaseBenchmarker {
      * @return
      * @throws Exception
      */
-    public List<MaxodiffResult> spikedRandomizer(int diseaseIndex ) throws Exception {
+    public List<MaxodiffResult> spikedRandomizer(int diseaseIndex) throws Exception {
         List<DifferentialDiagnosis> diseaseTopNList = getTopNInitialDiffDiagList();
-        List<DifferentialDiagnosis> shuffledDiagnoses = getCompleteInitialDiffDiagList();
+        List<DifferentialDiagnosis> shuffledDiagnoses = new ArrayList<>(getCompleteInitialDiffDiagList());
         Collections.shuffle(shuffledDiagnoses);
         List<DifferentialDiagnosis> initialDiagnosesNDiseasesRandom = shuffledDiagnoses.subList(0, nDiseases);
         DifferentialDiagnosis originalDiagnosis = diseaseTopNList.get(diseaseIndex);

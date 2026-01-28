@@ -100,7 +100,7 @@ public class DifferentialDiagnosisCommand extends BaseCommand {
             MaxodiffDataResolver maxodiffDataResolver = MaxodiffDataResolver.of(maxoDataPath);
             MaxodiffPropsConfiguration maxodiffPropsConfiguration = MaxodiffPropsConfiguration.createConfig(maxodiffDataResolver);
 
-            DiffDiagRefiner maxoDiffRefiner = maxodiffPropsConfiguration.diffDiagRefiner("score");
+            DiffDiagRefiner maxoDiffRefiner = maxodiffPropsConfiguration.diffDiagRefiner();
             BiometadataService biometadataService = maxodiffPropsConfiguration.biometadataService();
 
             // Configure Phenomizer engine
