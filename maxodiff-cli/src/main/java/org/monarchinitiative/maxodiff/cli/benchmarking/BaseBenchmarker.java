@@ -124,7 +124,7 @@ public class BaseBenchmarker {
 
     /**
      * Take the diagnosis that was at rank diseaseIndex after the initial phenomizer run, shuffle the entire
-     * List of HPO Diseases and choose nDiseases of these (e.g. nDiseases=20), and then spike theabove disease
+     * List of HPO Diseases and choose nDiseases of these (e.g. nDiseases=20), and then spike the above disease
      * at rank nDiseases
      * @param diseaseIndex
      * @return
@@ -138,6 +138,36 @@ public class BaseBenchmarker {
         DifferentialDiagnosis originalDiagnosis = diseaseTopNList.get(diseaseIndex);
         LOGGER.info("spike disease {} (index {})", originalDiagnosis.diseaseId().toString(), (diseaseIndex + 1));
         initialDiagnosesNDiseasesRandom.set(initialDiagnosesNDiseasesRandom.size() - 1, originalDiagnosis);
+
+        List<HpoDisease> diseases = refiner.getDiseases(initialDiagnosesNDiseasesRandom);
+        Map<TermId, List<HpoFrequency>> hpoTermCounts = refiner.getHpoTermCounts(diseases);
+        Map<TermId, Set<TermId>> maxoToHpoTermIdMap = refiner.getMaxoToHpoTermIdMap(hpoTermCounts);
+
+        RankMaxo rankMaxo = new RankMaxo(hpoToMaxoTermMap, maxoToHpoTermIdMap,
+                maxoHpoTermProbabilities, phenomizer,
+                ontology, getCompleteInitialDiffDiagList(), initialDiagnosesNDiseasesRandom);
+        RefinementResults refinementResults = refiner.run(sample,
+                initialDiagnosesNDiseasesRandom,
+                new RefinementOptions(nDiseases, nRepetitions),
+                rankMaxo,
+                hpoTermCounts,
+                maxoToHpoTermIdMap);
+
+        return refinementResults.maxodiffResults().stream()
+                .sorted(Comparator.comparingDouble((MaxodiffResult mr) -> mr.rankMaxoScore().maxoScore()).reversed())
+                .toList();
+    }
+
+    /**
+     * Shuffle the entire list of HPO Diseases and choose nDiseases of these (e.g. nDiseases=20),
+     * and then run refiner again
+     * @return
+     * @throws Exception
+     */
+    public List<MaxodiffResult> shuffledRandomizer() throws Exception {
+        List<DifferentialDiagnosis> shuffledDiagnoses = new ArrayList<>(getCompleteInitialDiffDiagList());
+        Collections.shuffle(shuffledDiagnoses);
+        List<DifferentialDiagnosis> initialDiagnosesNDiseasesRandom = shuffledDiagnoses.subList(0, nDiseases);
 
         List<HpoDisease> diseases = refiner.getDiseases(initialDiagnosesNDiseasesRandom);
         Map<TermId, List<HpoFrequency>> hpoTermCounts = refiner.getHpoTermCounts(diseases);

@@ -1,40 +1,22 @@
 package org.monarchinitiative.maxodiff.cli.cmd;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
-import com.fasterxml.jackson.databind.ObjectWriter;
-import com.fasterxml.jackson.databind.SerializationFeature;
-import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
-import org.apache.commons.csv.CSVFormat;
-import org.apache.commons.csv.CSVPrinter;
 import org.monarchinitiative.maxodiff.cli.benchmarking.BaseBenchmarker;
 import org.monarchinitiative.maxodiff.cli.benchmarking.BenchmarkProcedure;
 import org.monarchinitiative.maxodiff.cli.benchmarking.BenchmarkResult;
 import org.monarchinitiative.maxodiff.config.MaxodiffDataResolver;
 import org.monarchinitiative.maxodiff.config.MaxodiffPropsConfiguration;
-import org.monarchinitiative.maxodiff.core.SimpleTerm;
-import org.monarchinitiative.maxodiff.core.analysis.HpoFrequency;
-import org.monarchinitiative.maxodiff.core.analysis.MaxoHpoTermIdMaps;
-import org.monarchinitiative.maxodiff.core.analysis.RankMaxoScore;
 import org.monarchinitiative.maxodiff.core.analysis.refinement.DiffDiagRefiner;
 import org.monarchinitiative.maxodiff.core.analysis.refinement.MaxodiffResult;
 import org.monarchinitiative.maxodiff.core.analysis.refinement.RefinementOptions;
-import org.monarchinitiative.maxodiff.core.analysis.refinement.RefinementResults;
 import org.monarchinitiative.maxodiff.core.diffdg.DifferentialDiagnosisEngine;
-import org.monarchinitiative.maxodiff.core.model.*;
-import org.monarchinitiative.maxodiff.core.service.BiometadataService;
-import org.monarchinitiative.maxodiff.html.results.HtmlResults;
 import org.monarchinitiative.maxodiff.phenomizer.IcMicaData;
 import org.monarchinitiative.maxodiff.phenomizer.IcMicaDictLoader;
 import org.monarchinitiative.maxodiff.phenomizer.PhenomizerDifferentialDiagnosisEngine;
-import org.monarchinitiative.maxodiff.phenomizer.ScoringMode;
-import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDisease;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
 import org.monarchinitiative.phenol.annotations.io.hpo.HpoDiseaseLoader;
 import org.monarchinitiative.phenol.annotations.io.hpo.HpoDiseaseLoaderOptions;
 import org.monarchinitiative.phenol.annotations.io.hpo.HpoDiseaseLoaders;
-import org.monarchinitiative.phenol.io.MinimalOntologyLoader;
 import org.monarchinitiative.phenol.io.OntologyLoader;
-import org.monarchinitiative.phenol.ontology.data.MinimalOntology;
 import org.monarchinitiative.phenol.ontology.data.Ontology;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 import org.monarchinitiative.phenol.ontology.similarity.TermPair;
@@ -45,13 +27,8 @@ import picocli.CommandLine;
 import java.io.*;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.StandardOpenOption;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.*;
-import java.util.regex.Matcher;
-import java.util.regex.Pattern;
-import java.util.stream.Stream;
-import java.util.zip.GZIPOutputStream;
 
 
 /**
@@ -106,7 +83,7 @@ public class BenchmarkingCommand extends DifferentialDiagnosisCommand {
         this.refinementOptions = RefinementOptions.of(nDiseases, nRepetitions);
 
         if (this.phenopacketPath != null && this.phenopacketPath.toFile().isFile()) {
-            List<BenchmarkResult> results = runOnePPkt(this.phenopacketPath);
+            List<BenchmarkResult> results = runShuffleOnePPkt(this.phenopacketPath);
             outputResultList(results, true, false);
         } else if (this.ppktDir != null && this.ppktDir.toFile().isDirectory()) {
             List<Path> phenopacketPaths = new ArrayList<>();
@@ -126,7 +103,7 @@ public class BenchmarkingCommand extends DifferentialDiagnosisCommand {
                 int nPpkts = phenopacketPaths.size();
                 float percent = (((float) ppktN) / nPpkts) * 100;
                 boolean writeHeader = false;
-                List<BenchmarkResult> results = runOnePPkt(ppktPath);
+                List<BenchmarkResult> results = runShuffleOnePPkt(ppktPath);
                 if (ppktIdx == 0) {
                     writeHeader = true;
                 }
@@ -137,13 +114,6 @@ public class BenchmarkingCommand extends DifferentialDiagnosisCommand {
             System.err.println("[ERROR] No phenopacket path or directory provided.");
             System.err.println("[ERROR] Provide path to Phenopacket json file using -p/--phenopacket.");
             System.err.println("[ERROR] Provide path to a directory of Phenopacket json files using --ppktdir.");
-            return 1;
-        }
-
-        // Get phenopacket paths from batch directory, or single phenopacket path if provided instead
-        if (this.phenopacketPath == null || !this.phenopacketPath.toFile().exists()) {
-            System.err.println("[ERROR] No phenopacket path provided.");
-            System.err.println("[ERROR] Provide path to Phenopacket json file using -p/--phenopacket.");
             return 1;
         }
 
@@ -164,7 +134,7 @@ public class BenchmarkingCommand extends DifferentialDiagnosisCommand {
     }
 
 
-    private List<BenchmarkResult> runOnePPkt(Path ppktPath) throws Exception {
+    private List<BenchmarkResult> runSpikeOnePPkt(Path ppktPath) {
         List<BenchmarkResult> resultList = new ArrayList<>();
         try {
             BaseBenchmarker benchmarker = new BaseBenchmarker(ppktPath,
@@ -177,7 +147,7 @@ public class BenchmarkingCommand extends DifferentialDiagnosisCommand {
             List<MaxodiffResult> initialResults = benchmarker.standardRun();
             for (int i = 0; i < nDiseases; i++) {
                 List<MaxodiffResult> randomizedResults = benchmarker.spikedRandomizer(i);
-                BenchmarkResult bres = getBenchmarkResult(ppktId, i, initialResults, randomizedResults);
+                BenchmarkResult bres = getSpikedBenchmarkResult(ppktId, i, initialResults, randomizedResults);
                 resultList.add(bres);
             }
             LOGGER.info("Finished benchmark of {}.", ppktPath);
@@ -188,23 +158,69 @@ public class BenchmarkingCommand extends DifferentialDiagnosisCommand {
     }
 
 
+    private List<BenchmarkResult> runShuffleOnePPkt(Path ppktPath) {
+        List<BenchmarkResult> resultList = new ArrayList<>();
+        try {
+            BaseBenchmarker benchmarker = new BaseBenchmarker(ppktPath,
+                    refinementOptions,
+                    this.phenomizer,
+                    this.hpoDiseases,
+                    maxodiffPropsConfiguration,
+                    refiner);
+            String ppktId = benchmarker.getSample().id();
+            List<MaxodiffResult> initialResults = benchmarker.standardRun();
+            TermId topMaxo = initialResults.getFirst().rankMaxoScore().maxoId();
+            List<Double> topRandomScores = new ArrayList<>();
+            for (int i=0; i<50; i++) {
+                List<MaxodiffResult> randomizedResults = benchmarker.shuffledRandomizer();
+                List<MaxodiffResult> topResultRandomList = randomizedResults.stream()
+                              .filter(mr -> mr.rankMaxoScore().maxoId().equals(topMaxo)).toList();
+                double maxScoreValueRandom = topResultRandomList.isEmpty() ? 0.0 : topResultRandomList.getFirst().rankMaxoScore().maxoScore();
+                topRandomScores.add(maxScoreValueRandom);
+                if (i % 10 == 0) {
+                    LOGGER.info("Finished index " + i);
+                }
+            }
+            double avgTopRandomScore = topRandomScores.stream().mapToDouble(Double::valueOf).average().orElse(0);
+            BenchmarkResult bres = getShuffledBenchmarkResult(ppktId, initialResults, avgTopRandomScore);
+            resultList.add(bres);
+            LOGGER.info("Finished benchmark of {}.", ppktPath);
+        } catch (Exception ex) {
+            System.out.println(ex.getMessage());
+        }
+        return resultList;
+    }
 
-    private BenchmarkResult getBenchmarkResult(String ppktId,
-                                               int spikedIdx,
-                                               List<MaxodiffResult> initialResults,
-                                               List<MaxodiffResult> randomizedResults) {
+
+
+    private BenchmarkResult getSpikedBenchmarkResult(String ppktId,
+                                                     int spikedIdx,
+                                                     List<MaxodiffResult> initialResults,
+                                                     List<MaxodiffResult> randomizedResults) {
 
         TermId topMaxo = initialResults.getFirst().rankMaxoScore().maxoId();
         double maxoFinalScore = initialResults.getFirst().rankMaxoScore().maxoScore();
         List<MaxodiffResult> topResultRandomList = randomizedResults.stream()
                 .filter(mr -> mr.rankMaxoScore().maxoId().equals(topMaxo)).toList();
         int topMaxoRandomIdx = topResultRandomList.isEmpty() ? -1 : randomizedResults.indexOf(topResultRandomList.getFirst()) + 1;
-        double maxScoreValueRandom = topResultRandomList.isEmpty() ? -1.0 : topResultRandomList.getFirst().rankMaxoScore().maxoScore();
+        double maxScoreValueRandom = topResultRandomList.isEmpty() ? 0.0 : topResultRandomList.getFirst().rankMaxoScore().maxoScore();
         BenchmarkProcedure procedure = BenchmarkProcedure.SpikedInRandomization;
         int nMaxo = initialResults.size();
         int nMaxoRandom = randomizedResults.size();
         return new BenchmarkResult(ppktId, nDiseases, nRepetitions, topMaxo, maxoFinalScore,
                 procedure, topMaxoRandomIdx, maxScoreValueRandom, nMaxo, nMaxoRandom, spikedIdx);
+    }
+
+    private BenchmarkResult getShuffledBenchmarkResult(String ppktId,
+                                                     List<MaxodiffResult> initialResults,
+                                                     double avgTopScoreRandom) {
+
+        TermId topMaxo = initialResults.getFirst().rankMaxoScore().maxoId();
+        double maxoFinalScore = initialResults.getFirst().rankMaxoScore().maxoScore();
+        BenchmarkProcedure procedure = BenchmarkProcedure.ShuffledRandomization;
+        int nMaxo = initialResults.size();
+        return new BenchmarkResult(ppktId, nDiseases, nRepetitions, topMaxo, maxoFinalScore,
+                procedure, -1, avgTopScoreRandom, nMaxo, -1, -1);
     }
 
 
