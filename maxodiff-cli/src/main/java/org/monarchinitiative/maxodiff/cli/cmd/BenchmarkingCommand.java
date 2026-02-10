@@ -29,6 +29,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.*;
+import java.util.concurrent.ForkJoinPool;
+import java.util.stream.IntStream;
 
 
 /**
@@ -171,15 +173,28 @@ public class BenchmarkingCommand extends DifferentialDiagnosisCommand {
             List<MaxodiffResult> initialResults = benchmarker.standardRun();
             TermId topMaxo = initialResults.getFirst().rankMaxoScore().maxoId();
             List<Double> topRandomScores = new ArrayList<>();
-            for (int i=0; i<50; i++) {
-                List<MaxodiffResult> randomizedResults = benchmarker.shuffledRandomizer();
-                List<MaxodiffResult> topResultRandomList = randomizedResults.stream()
-                              .filter(mr -> mr.rankMaxoScore().maxoId().equals(topMaxo)).toList();
-                double maxScoreValueRandom = topResultRandomList.isEmpty() ? 0.0 : topResultRandomList.getFirst().rankMaxoScore().maxoScore();
-                topRandomScores.add(maxScoreValueRandom);
-                if (i % 10 == 0) {
-                    LOGGER.info("Finished index " + i);
-                }
+            int parallelism = 4;
+            ForkJoinPool customThreadPool = new ForkJoinPool(parallelism);
+            try {
+                customThreadPool.submit(() ->
+                    IntStream.range(0, 50).parallel().forEach(i -> {
+                        List<MaxodiffResult> randomizedResults = null;
+                        try {
+                            randomizedResults = benchmarker.shuffledRandomizer();
+                        } catch (Exception e) {
+                            throw new RuntimeException(e);
+                        }
+                        List<MaxodiffResult> topResultRandomList = randomizedResults.stream()
+                                .filter(mr -> mr.rankMaxoScore().maxoId().equals(topMaxo)).toList();
+                        double maxScoreValueRandom = topResultRandomList.isEmpty() ? 0.0 : topResultRandomList.getFirst().rankMaxoScore().maxoScore();
+                        topRandomScores.add(maxScoreValueRandom);
+                        if (i % 10 == 0) {
+                            LOGGER.info("Finished index " + i);
+                        }
+                    })
+                ).get();
+            } finally {
+                customThreadPool.shutdown();
             }
             double avgTopRandomScore = topRandomScores.stream().mapToDouble(Double::valueOf).average().orElse(0);
             BenchmarkResult bres = getShuffledBenchmarkResult(ppktId, initialResults, avgTopRandomScore);
