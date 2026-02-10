@@ -1,7 +1,6 @@
 package org.monarchinitiative.maxodiff.cli.benchmarking;
 
 
-import org.monarchinitiative.phenol.ontology.data.Term;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 
 import java.util.List;
