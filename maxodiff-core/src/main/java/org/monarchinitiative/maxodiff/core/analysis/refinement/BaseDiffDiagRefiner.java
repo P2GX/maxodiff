@@ -4,6 +4,7 @@ import org.monarchinitiative.maxodiff.core.SimpleTerm;
 import org.monarchinitiative.maxodiff.core.analysis.*;
 import org.monarchinitiative.maxodiff.core.diffdg.DifferentialDiagnosisEngine;
 import org.monarchinitiative.maxodiff.core.model.*;
+import org.monarchinitiative.maxodiff.core.service.BiometadataService;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDisease;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
 import org.monarchinitiative.phenol.ontology.data.Ontology;
@@ -66,6 +67,27 @@ public class BaseDiffDiagRefiner implements DiffDiagRefiner {
         }
         // Return RefinementResults object, which contains the list of MaxodiffResult objects.
         return new RefinementResultsImpl(maxodiffResultsList);
+    }
+
+    @Override
+    public List<RankedMaxoResult> runNew(Sample sample,
+                                         Collection<DifferentialDiagnosis> differentialDiagnoses,
+                                         RefinementOptions options,
+                                         RankMaxo rankMaxo,
+                                         Map<TermId, List<HpoFrequency>> hpoTermCounts,
+                                         Map<TermId, Set<TermId>> maxoToHpoTermIdMap,
+                                         BiometadataService biometadataService) throws Exception {
+
+        Collection<MaxodiffResultNew> maxodiffResultsList = new ArrayList<>();
+        List<DifferentialDiagnosis> initialDiagnoses = differentialDiagnoses.stream()
+                .toList().subList(0, options.nDiseases());
+
+        Set<TermId> initialDiagnosesIds = initialDiagnoses.stream()
+                .map(DifferentialDiagnosis::diseaseId)
+                .collect(Collectors.toCollection(LinkedHashSet::new));
+
+        return rankMaxo.rankMaxoTermsNew(sample, options.nRepetitions(),
+                initialDiagnosesIds, biometadataService);
     }
 
     public RankMaxo getRankMaxo(List<DifferentialDiagnosis> allInitialDiagnoses,

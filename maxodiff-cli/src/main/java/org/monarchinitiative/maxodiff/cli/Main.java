@@ -17,6 +17,7 @@ public class Main implements Callable<Integer> {
                 //.addSubcommand("maxodiff", new MaxodiffCommand())
                 .addSubcommand("download", new DownloadCommand())
                 .addSubcommand("analyze", new DifferentialDiagnosisCommand())
+                .addSubcommand("analyze1", new DDxCommand())
                 .addSubcommand("batch", new BatchDiagnosisCommand())
                 .addSubcommand("benchmark", new BenchmarkCommand())
                 .addSubcommand("benchmarking", new BenchmarkingCommand())

@@ -184,6 +184,7 @@ public class BenchmarkingCommand extends DifferentialDiagnosisCommand {
                         } catch (Exception e) {
                             throw new RuntimeException(e);
                         }
+                        //TODO: compare total Information Content for Maxo Terms instead of scores
                         List<MaxodiffResult> topResultRandomList = randomizedResults.stream()
                                 .filter(mr -> mr.rankMaxoScore().maxoId().equals(topMaxo)).toList();
                         double maxScoreValueRandom = topResultRandomList.isEmpty() ? 0.0 : topResultRandomList.getFirst().rankMaxoScore().maxoScore();
