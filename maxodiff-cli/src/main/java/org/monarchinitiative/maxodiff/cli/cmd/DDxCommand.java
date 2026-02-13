@@ -14,6 +14,7 @@ import org.monarchinitiative.maxodiff.core.analysis.RankedMaxoResult;
 import org.monarchinitiative.maxodiff.core.analysis.refinement.DiffDiagRefiner;
 import org.monarchinitiative.maxodiff.core.analysis.refinement.MaxodiffResult;
 import org.monarchinitiative.maxodiff.core.diffdg.DifferentialDiagnosisEngine;
+import org.monarchinitiative.maxodiff.core.io.JsonFileWriter;
 import org.monarchinitiative.maxodiff.core.model.PhenopacketData;
 import org.monarchinitiative.maxodiff.core.model.Sample;
 import org.monarchinitiative.maxodiff.core.service.BiometadataService;
@@ -135,6 +136,11 @@ public class DDxCommand extends BaseCommand {
                 double maxScoreValue = topResult.maxoScore();
                 System.out.println("Max Score: " + maxScoreMaxoTerm + " = " + maxScoreValue);
                 System.out.println(topResult);
+
+                String jsonFilename = String.join("_", sample.id(),
+                        nDiseases.toString(), nRepetitions.toString(), "maxodiff_results", ".json");
+                Path jsonPath = Path.of(String.join(File.separator, outputDir.toString(), jsonFilename));
+                JsonFileWriter.writeToJsonFile(jsonPath, resultsList);
 
 //                writeHtmlResults(resultsList, biometadataService,
 //                    outputDir, sample, hpoDiseases, maxoResult.hpoTermCounts(),

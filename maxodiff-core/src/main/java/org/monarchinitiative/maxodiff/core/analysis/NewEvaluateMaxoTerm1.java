@@ -331,9 +331,9 @@ public class NewEvaluateMaxoTerm1 implements Callable<RankedMaxoResult> {
         // Step 5: construct final result
         return new RankedMaxoResult(
                 maxoTerm,
+                meanScore,
                 rankedOmimTermList,
                 countedHpoTerms,
-                meanScore,
                 frequencies
         );
     }

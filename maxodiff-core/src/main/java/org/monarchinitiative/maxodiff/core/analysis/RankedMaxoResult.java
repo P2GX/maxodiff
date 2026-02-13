@@ -13,20 +13,12 @@ import java.util.List;
  */
 public record RankedMaxoResult(
         SimpleTerm maxoTerm,
+        double maxoScore,
         List<RankedOmimTerm> rankedOmimTermList,
         List<CountedHpoTerm> hpoTermIds,
-        double maxoScore,
         List<HpoFrequency> frequencies) {
 
 
 
 }
 
-
-/*
-        List<DifferentialDiagnosis> maxoDiagnoses, -- PROB NOT NEEDED
-        Map<TermId, Map<TermId, Integer>> hpoTermIdRepCtsMap,
-
-        int minRankChange,
-        int maxRankChange) {
- */
