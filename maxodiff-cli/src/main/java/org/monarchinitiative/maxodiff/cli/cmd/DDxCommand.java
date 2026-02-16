@@ -6,15 +6,13 @@ import org.monarchinitiative.maxodiff.config.MaxoDiffLoader;
 import org.monarchinitiative.maxodiff.config.MaxodiffDataResolver;
 import org.monarchinitiative.maxodiff.config.MaxodiffPropsConfiguration;
 import org.monarchinitiative.maxodiff.core.MaxoDiffAnalysisResultRow;
-import org.monarchinitiative.maxodiff.core.MaxodiffAnalysisResult;
-import org.monarchinitiative.maxodiff.core.MaxodiffAnalysisRunner;
 import org.monarchinitiative.maxodiff.core.MaxodiffAnalysisRunner1;
 import org.monarchinitiative.maxodiff.core.analysis.HpoFrequency;
 import org.monarchinitiative.maxodiff.core.analysis.RankedMaxoResult;
 import org.monarchinitiative.maxodiff.core.analysis.refinement.DiffDiagRefiner;
 import org.monarchinitiative.maxodiff.core.analysis.refinement.MaxodiffResult;
 import org.monarchinitiative.maxodiff.core.diffdg.DifferentialDiagnosisEngine;
-import org.monarchinitiative.maxodiff.core.io.JsonFileWriter;
+import org.monarchinitiative.maxodiff.core.io.JsonWriter;
 import org.monarchinitiative.maxodiff.core.model.PhenopacketData;
 import org.monarchinitiative.maxodiff.core.model.Sample;
 import org.monarchinitiative.maxodiff.core.service.BiometadataService;
@@ -131,16 +129,14 @@ public class DDxCommand extends BaseCommand {
                 List<RankedMaxoResult> resultsList = runner.analyzeSample(phenopacketData);
                 // Take the MaXo term that has the highest score
                 RankedMaxoResult topResult = resultsList.getFirst();
-                // TODO: put results into records that can be converted to JSON and read by HTML
                 String maxScoreMaxoTerm = topResult.maxoTerm().toString();
                 double maxScoreValue = topResult.maxoScore();
                 System.out.println("Max Score: " + maxScoreMaxoTerm + " = " + maxScoreValue);
-                System.out.println(topResult);
 
                 String jsonFilename = String.join("_", sample.id(),
                         nDiseases.toString(), nRepetitions.toString(), "maxodiff_results", ".json");
                 Path jsonPath = Path.of(String.join(File.separator, outputDir.toString(), jsonFilename));
-                JsonFileWriter.writeToJsonFile(jsonPath, resultsList);
+                JsonWriter.writeToJsonFile(jsonPath, resultsList);
 
 //                writeHtmlResults(resultsList, biometadataService,
 //                    outputDir, sample, hpoDiseases, maxoResult.hpoTermCounts(),
