@@ -66,6 +66,7 @@ public class NewEvaluateMaxoTerm1 implements Callable<RankedMaxoResult> {
             // Sample and count simulated HPO terms
             int nHpos = nHposToSample.get(i);
             simulatedHpoIdSet.addAll(selectKWeightedHpoTerms(hpoIds, probabilities, nHpos));
+//            simulatedHpoIdSet = new HashSet<>(selectKWeightedHpoTerms(hpoIds, probabilities, nHpos));
             simulatedHpoIdSet.forEach(hpoId -> simulatedHpoCountSet.merge(hpoId, 1, Integer::sum));
 
             Sample newSample = getNewSample(ppkt, simulatedHpoIdSet);

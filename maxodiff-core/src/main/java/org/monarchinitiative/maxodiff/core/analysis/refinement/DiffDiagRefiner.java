@@ -33,11 +33,9 @@ public interface DiffDiagRefiner {
     ) throws Exception;
 
     List<RankedMaxoResult> runNew(Sample sample,
-                                  Collection<DifferentialDiagnosis> differentialDiagnoses,
+                                  Set<TermId> initialDiagnosesIds,
                                   RefinementOptions options,
                                   RankMaxo rankMaxo,
-                                  Map<TermId, List<HpoFrequency>> hpoTermCounts,
-                                  Map<TermId, Set<TermId>> maxoToHpoTermIdMap,
                                   BiometadataService biometadataService
     ) throws Exception;
 

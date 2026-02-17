@@ -89,17 +89,18 @@ public class MaxodiffAnalysisRunner1 {
                 .toList();
 
         List<DifferentialDiagnosis> initialDiagnoses = orderedDiagnoses.subList(0, options.nDiseases());
+        Set<TermId> initialDiagnosesIds = initialDiagnoses.stream()
+                .map(DifferentialDiagnosis::diseaseId)
+                .collect(Collectors.toCollection(LinkedHashSet::new));
         Map<TermId, Set<TermId>> maxoToHpoTermIdMap = maxoDiffRefiner.getMaxoToHpoTermIdMap(hpoTermCounts);
 
         String diseaseProbModel = "ranked"; // TODO -- Can we make this an enum?
         RankMaxo rankMaxo = maxoDiffRefiner.getRankMaxo(allOrderedDiagnoses, initialDiagnoses, engine, maxoToHpoTermIdMap, diseaseProbModel);
 
         return maxoDiffRefiner.runNew(sample,
-                orderedDiagnoses,
+                initialDiagnosesIds,
                 options,
                 rankMaxo,
-                hpoTermCounts,
-                maxoToHpoTermIdMap,
                 biometadataService);
     }
 
