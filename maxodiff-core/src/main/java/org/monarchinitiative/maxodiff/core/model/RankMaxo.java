@@ -1,9 +1,8 @@
 package org.monarchinitiative.maxodiff.core.model;
 
-import org.checkerframework.checker.units.qual.C;
 import org.monarchinitiative.maxodiff.core.JpsChecker;
 import org.monarchinitiative.maxodiff.core.ProgessBar;
-import org.monarchinitiative.maxodiff.core.SimpleTerm;
+import org.monarchinitiative.maxodiff.core.SimpleTermOld;
 import org.monarchinitiative.maxodiff.core.analysis.*;
 import org.monarchinitiative.maxodiff.core.diffdg.DifferentialDiagnosisEngine;
 import org.monarchinitiative.maxodiff.core.service.BiometadataService;
@@ -18,7 +17,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class RankMaxo {
     private final static Logger LOGGER = LoggerFactory.getLogger(RankMaxo.class);
-    private final Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxoTermMap;
+    private final Map<SimpleTermOld, Set<SimpleTermOld>> hpoToMaxoTermMap;
     private final Map<TermId, Set<TermId>> maxoToHpoTermIdMap;
     private final MaxoHpoTermProbabilities maxoHpoTermProbabilities;
     private final DifferentialDiagnosisEngine engine;
@@ -42,7 +41,7 @@ public class RankMaxo {
      * @author Martha Beckwith
      * @since 1.0
      */
-    public RankMaxo(Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxoTermMap,
+    public RankMaxo(Map<SimpleTermOld, Set<SimpleTermOld>> hpoToMaxoTermMap,
                     Map<TermId, Set<TermId>> maxoToHpoTermIdMap,
                     MaxoHpoTermProbabilities maxoHpoTermProbabilities,
                     DifferentialDiagnosisEngine engine,

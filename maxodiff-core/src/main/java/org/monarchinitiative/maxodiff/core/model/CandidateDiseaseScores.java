@@ -1,6 +1,6 @@
 package org.monarchinitiative.maxodiff.core.model;
 
-import org.monarchinitiative.maxodiff.core.SimpleTerm;
+import org.monarchinitiative.maxodiff.core.SimpleTermOld;
 import org.monarchinitiative.maxodiff.core.analysis.MaxoDDResults;
 import org.monarchinitiative.maxodiff.core.analysis.MaxoHpoTermIdMaps;
 import org.monarchinitiative.maxodiff.core.diffdg.DifferentialDiagnosisEngine;
@@ -38,7 +38,7 @@ public class CandidateDiseaseScores {
     public MaxoDDResults getScoresForMaxoTerm(Sample ppkt, TermId maxoId,
                                               DifferentialDiagnosisEngine engine,
                                               Set<TermId> diseaseIds,
-                                              Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxoTermMap) {
+                                              Map<SimpleTermOld, Set<SimpleTermOld>> hpoToMaxoTermMap) {
         Set<TermId> observed = new HashSet<>(Set.of());
         Set<TermId> excluded = new HashSet<>(Set.of());
 

@@ -1,7 +1,7 @@
 package org.monarchinitiative.maxodiff.cli.benchmarking;
 
 import org.monarchinitiative.maxodiff.config.MaxodiffPropsConfiguration;
-import org.monarchinitiative.maxodiff.core.SimpleTerm;
+import org.monarchinitiative.maxodiff.core.SimpleTermOld;
 import org.monarchinitiative.maxodiff.core.analysis.HpoFrequency;
 import org.monarchinitiative.maxodiff.core.analysis.RankedMaxoResult;
 import org.monarchinitiative.maxodiff.core.analysis.refinement.DiffDiagRefiner;
@@ -31,10 +31,10 @@ public class BaseBenchmarker {
     private final int nRepetitions;
     private final DifferentialDiagnosisEngine phenomizer;
     private final HpoDiseases hpoDiseases;
-    private final Map<SimpleTerm, Set<SimpleTerm>> hpoTermToMaxoTermSetMap;
+    private final Map<SimpleTermOld, Set<SimpleTermOld>> hpoTermToMaxoTermSetMap;
     private final DiffDiagRefiner refiner;
     private final Ontology ontology;
-    private final Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxoTermMap;
+    private final Map<SimpleTermOld, Set<SimpleTermOld>> hpoToMaxoTermMap;
 
     public List<DifferentialDiagnosis> getCompleteInitialDiffDiagList() {
         return completeInitialDiffDiagList;

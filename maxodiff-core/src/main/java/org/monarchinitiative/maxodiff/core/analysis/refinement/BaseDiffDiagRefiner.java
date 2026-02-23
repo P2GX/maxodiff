@@ -1,6 +1,6 @@
 package org.monarchinitiative.maxodiff.core.analysis.refinement;
 
-import org.monarchinitiative.maxodiff.core.SimpleTerm;
+import org.monarchinitiative.maxodiff.core.SimpleTermOld;
 import org.monarchinitiative.maxodiff.core.analysis.*;
 import org.monarchinitiative.maxodiff.core.diffdg.DifferentialDiagnosisEngine;
 import org.monarchinitiative.maxodiff.core.model.*;
@@ -17,12 +17,12 @@ public class BaseDiffDiagRefiner implements DiffDiagRefiner {
 
     private final HpoDiseases hpoDiseases;
     private final Map<TermId, Set<TermId>> fullHpoToMaxoTermIdMap;
-    private final Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxoTermMap;
+    private final Map<SimpleTermOld, Set<SimpleTermOld>> hpoToMaxoTermMap;
     private final Ontology hpo;
 
     public BaseDiffDiagRefiner(HpoDiseases hpoDiseases,
                                Map<TermId, Set<TermId>> fullHpoToMaxoTermIdMap,
-                               Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxoTermMap,
+                               Map<SimpleTermOld, Set<SimpleTermOld>> hpoToMaxoTermMap,
                                Ontology hpo) {
         this.hpoDiseases = hpoDiseases;
         this.fullHpoToMaxoTermIdMap = fullHpoToMaxoTermIdMap;

@@ -1,7 +1,7 @@
 package org.monarchinitiative.maxodiff.core.analysis;
 
 import org.junit.jupiter.api.Test;
-import org.monarchinitiative.maxodiff.core.SimpleTerm;
+import org.monarchinitiative.maxodiff.core.SimpleTermOld;
 import org.monarchinitiative.maxodiff.core.TestResources;
 import org.monarchinitiative.maxodiff.core.model.DifferentialDiagnosis;
 import org.monarchinitiative.maxodiff.core.model.DiseaseModelProbability;
@@ -19,7 +19,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class MaxoHpoTermProbabilitiesTest {
 
     private final static HpoDiseases hpoDiseases = TestResources.hpoDiseases();
-    private final static Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxoTermMap = TestResources.hpoToMaxo();
+    private final static Map<SimpleTermOld, Set<SimpleTermOld>> hpoToMaxoTermMap = TestResources.hpoToMaxo();
     private final static List<DifferentialDiagnosis> initialDiagnoses = TestResources.getExampleDiagnoses().stream().toList(); //top K diagnoses only
     private final static DiseaseModelProbability diseaseModelProbability = DiseaseModelProbability.ranked(initialDiagnoses);
     private final static Sample samplePhenopacket = TestResources.getExampleSample();
@@ -35,7 +35,7 @@ public class MaxoHpoTermProbabilitiesTest {
 
     @Test
     public void testMaxoTermBenefitIds() {
-        Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxoTermMap = TestResources.hpoToMaxo();
+        Map<SimpleTermOld, Set<SimpleTermOld>> hpoToMaxoTermMap = TestResources.hpoToMaxo();
         Map<TermId, Set<TermId>> maxoToHpoTermIdMap = MaxoHpoTermIdMaps.getMaxoToHpoTermIdMap(hpoToMaxoTermMap);
         TermId maxoId = TermId.of("MAXO:0035006"); //Foot radiography
         Set<TermId> maxoBenefitIds = MAXO_HPO_TERM_PROBABILITIES.getDiscoverableByMaxoHpoTerms(samplePhenopacket, maxoId, maxoToHpoTermIdMap);

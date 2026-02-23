@@ -1,0 +1,31 @@
+<!DOCTYPE html>
+<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <title>Title</title>
+</head>
+<body>
+
+<div class="container">
+    <div class="section-box">
+        <h2 th:text="|${maxoData.index()}) ${maxoData.maxoId()}: ${maxoData.maxoLabel()}|">Header</h2>
+        <div class="stats-row">
+            <div class="stat-item">
+                <div class="stat-label">ΔScore</div>
+                <div class="stat-value stat-delta" th:text="${maxoData.deltaScore()}">8.49</div>
+            </div>
+
+            <div class="stat-item">
+                <div class="stat-label">N Diseases</div>
+                <div class="stat-value stat-diseases" th:utext="${maxoData.nDiseases()}">20</div>
+            </div>
+
+            <div class="stat-item">
+                <div class="stat-label">N Observed HPO Terms</div>
+                <div class="stat-value stat-terms" th:utext="${maxoData.nObservedHpoTerms()}">2</div>
+            </div>
+        </div>
+    </div>
+</div>
+</body>
+</html>
