@@ -153,9 +153,9 @@ public class DDxCommand extends BaseCommand {
                 MdMetadata mdMetadata = new MdMetadata(ppktSample.id(), this.nDiseases, this.nRepetitions,
                         ppktSample.observedHpoTerms(), ppktSample.excludedHpoTerms());
 
-                String headerHtml = TleafHeader.writeHTMLResults(mdMetadata);
+                String headerHtml = TleafHeader.writeHTMLResults(mdMetadata, resultsList);
 
-                Path maxodiffResultsHTMLPath = Path.of(String.join(File.separator, outputDir.toString(), "header.html"));
+                Path maxodiffResultsHTMLPath = Path.of(String.join(File.separator, outputDir.toString(), "mdResults.html"));
 
                 Files.writeString(maxodiffResultsHTMLPath, headerHtml);
                 LOGGER.info("Wrote HTML file to {}", maxodiffResultsHTMLPath);
