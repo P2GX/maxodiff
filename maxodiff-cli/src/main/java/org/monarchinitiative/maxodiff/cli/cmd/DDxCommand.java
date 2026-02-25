@@ -68,6 +68,10 @@ public class DDxCommand extends BaseCommand {
             description = "Where to write the results files (default: ${DEFAULT-VALUE}).")
     protected Path outputDir = Path.of(".");
 
+    @CommandLine.Option(names = {"-j", "--json"},
+        description = "output results to JSON file")
+    private boolean outputJson = false;
+
 
     @CommandLine.Option(names = {"--csv"},
             description = "Output results as CSV.")
@@ -147,11 +151,19 @@ public class DDxCommand extends BaseCommand {
 
                 String jsonFilename = String.join("_", sample.id(),
                         nDiseases.toString(), nRepetitions.toString(), "maxodiff_results", ".json");
-                Path jsonPath = Path.of(String.join(File.separator, outputDir.toString(), jsonFilename));
-                JsonWriter.writeToJsonFile(jsonPath, resultsList);
+                if(outputJson) {
+                    Path jsonPath = Path.of(String.join(File.separator, outputDir.toString(), jsonFilename));
+                    JsonWriter.writeToJsonFile(jsonPath, resultsList);
+                    LOGGER.info("Wrote JSON file to {}.", jsonPath);
+                    return 0;
+                }
 
-                MdMetadata mdMetadata = new MdMetadata(ppktSample.id(), this.nDiseases, this.nRepetitions,
-                        ppktSample.observedHpoTerms(), ppktSample.excludedHpoTerms());
+                MdMetadata mdMetadata = new MdMetadata(ppktSample.id(),
+                        this.nDiseases,
+                        this.nRepetitions,
+                        ppktSample.observedHpoTerms(),
+                        ppktSample.excludedHpoTerms(),
+                        resultsList);
 
                 String headerHtml = TleafHeader.writeHTMLResults(mdMetadata, resultsList);
 

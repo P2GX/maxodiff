@@ -76,21 +76,15 @@ java -jar maxodiff-cli.jar download
 
 This step should take 10-20 seconds. It will show status messages along the way and finish with the message "Download is complete!".
 The HPO files are updated about 6 times a year. This command can be used to update the downloaded files if the ``-w`` (or ``--overwrite``) flag is passed.
+This command automatically creates the similarity files (Resnik) for the Phenomizer analysis.
 
-Now we need to initialize the similarity files for the Phenomizer analysis.
+The command can be run separately if needed.
 
 ```bash
 java -jar maxodiff-cli.jar precompute-resnik
-``` 
+```
 
-
-Here there is a bug. For some reason, this step works for me if I start it from IntelliJ, but not from the command line.
-For now, I am going to finish this tutorial as if this step worked, but we need to fix this!
-
-!!! danger "🚨 TODO"
-    <span class="todo-pulse">java.lang.ArrayIndexOutOfBoundsException: Index 1 out of bounds for length 1</span>
-
-This command, which will take about 10-20 minutes to run, creates the file
+This command, which will take about 2-3 minutes to run, creates the file
 ``term-pair-similarity.csv.gz`` in the ``data`` subfolder (This subfolder was created by the download command and is
 the place where the other data files are kept).
 
