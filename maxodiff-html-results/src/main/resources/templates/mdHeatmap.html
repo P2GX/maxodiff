@@ -25,6 +25,61 @@
                 <div class="stat-value stat-terms" th:utext="${maxoData.nObservedHpoTerms()}">2</div>
             </div>
         </div>
+
+        <table class="countsTable">
+            <thead>
+            <tr>
+                <th></th>
+                <!-- Loop over HPO terms-->
+                <th th:each="entry : ${maxoData.hpoHeaders}" class="vertical-header">
+                    <a th:href="|https://hpo.jax.org/browse/term/${entry.termId}|">
+                        <div th:text="${entry.termLabel}"></div>
+                    </a>
+                </th>
+            </tr>
+            </thead>
+            <!-- the following is the N Repetitions row -->
+            <tr>
+                <td>Observed in</td>
+                <!-- Loop over repetition cells -->
+                <td th:each="cell : ${maxoData.repetitionCells}"
+                    class="repetitionCell"
+                >
+                    <div class="repetitionColorBox" th:style="'background:' + ${cell.background}">
+                        <span th:text="${cell.count}">0</span>
+                    </div>
+                    <div class="tooltip">
+                        <div class="tooltip-header" th:text="${cell.toolTipHeader}">Header</div>
+                        <div class="tooltip-subheader">Annotation frequency</div>
+                        <ul  class="tooltip-list">
+                            <li th:each="item: ${cell.toolTipItems}">
+                                <span th:text="${item.hpo}">HPO Term</span>:
+                                <strong th:text="${item.percentage}">0%</strong>
+                            </li>
+                        </ul>
+                    </div>
+                </td>
+            </tr>
+            <!-- Now add one row for each of the diseases -->
+            <tr th:each="row : ${maxoData.resultRows}">
+                <!-- 1st column: OMIM label with link -->
+                <td>
+                    <a th:href="|https://www.omim.org/entry/${row.omimIdDigits}|"
+                       th:text="${row.omimLabel}"></a>
+                </td>
+
+                <!-- Remaining columns: loop over HPO table cells -->
+                <th:block th:each="cell : ${row.getCells}">
+                    <td class="parentCell">
+                        <div class="hpoCell"
+                             th:classappend="${cell.empty} ? ' emptyCell'"
+                             th:style="'background:' + ${cell.style}">
+                            <span th:text="${#numbers.formatDecimal(cell.mica, 1, 2)}"></span>
+                        </div>
+                    </td>
+                </th:block>
+            </tr>
+        </table>
     </div>
 </div>
 </body>

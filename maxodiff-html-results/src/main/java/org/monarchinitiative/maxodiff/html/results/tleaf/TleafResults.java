@@ -1,22 +1,23 @@
 package org.monarchinitiative.maxodiff.html.results.tleaf;
 
+import org.monarchinitiative.maxodiff.core.analysis.HTMLFrequencyMap;
 import org.monarchinitiative.maxodiff.core.analysis.MdMetadata;
 import org.monarchinitiative.maxodiff.core.analysis.RankedMaxoResult;
-import org.monarchinitiative.maxodiff.core.analysis.SimpleTerm;
 
-import org.monarchinitiative.maxodiff.html.results.maxoDisease.MaxoDiseaseHTML;
 import org.monarchinitiative.maxodiff.html.results.maxoDisease.MdDiseaseHTML;
+import org.monarchinitiative.maxodiff.html.results.maxoHpo.MdHtmlResult;
 import org.thymeleaf.context.Context;
 import org.thymeleaf.spring6.SpringTemplateEngine;
 import org.thymeleaf.templateresolver.ClassLoaderTemplateResolver;
 
 import java.util.List;
 
-public class TleafHeader {
+public class TleafResults {
 
     public static String writeHTMLResults(
             MdMetadata mdMetadata,
-            List<RankedMaxoResult> resultList) throws Exception {
+            List<RankedMaxoResult> resultList,
+            HTMLFrequencyMap  htmlFrequencyMap) throws Exception {
 
         SpringTemplateEngine templateEngine = templateEngine();
 
@@ -32,13 +33,36 @@ public class TleafHeader {
         String mdHeader = templateEngine.process("mdHeader", context);
         context.setVariable("mdHeader", mdHeader);
 
-        // Disease : MAxO result box
-        MdDiseaseHTML mdDiseaseData = new MdDiseaseHTML(resultList);
+        int zeroIdx = resultList.stream()
+                .filter(result -> result.maxoScore() == 0.)
+                .findFirst().map(resultList::indexOf).orElse(resultList.size());
+        int nDisplayed = Math.min(resultList.size(), zeroIdx);
+        List<RankedMaxoResult> results = resultList.subList(0, nDisplayed);
+
+        // Disease : MAxO term result box
+        MdDiseaseHTML mdDiseaseData = new MdDiseaseHTML(results);
         context.setVariable("maxoDiseaseData", mdDiseaseData);
 
         String mdDiseaseBox = templateEngine.process("mdDiseaseBox", context);
         context.setVariable("mdDiseaseBox", mdDiseaseBox);
 
+        // Disease : MAxO HPO result box
+        StringBuilder resultsString = new StringBuilder();
+        for (RankedMaxoResult result : results) {
+            int idx = resultList.indexOf(result) + 1;
+            MdHtmlResult maxoData = new MdHtmlResult(
+                    result,
+                    idx,
+                    mdMetadata.nDiseases(),
+                    mdMetadata.nRepetitions(),
+                    htmlFrequencyMap
+            );
+            context.setVariable("maxoData", maxoData);
+            String mdHeatmap = templateEngine.process("mdHeatmap", context);
+            resultsString.append(mdHeatmap);
+        }
+
+        context.setVariable("maxoResults", resultsString);
         return templateEngine.process("mdResults", context);
 
     }

@@ -7,10 +7,7 @@ import org.monarchinitiative.maxodiff.config.MaxodiffDataResolver;
 import org.monarchinitiative.maxodiff.config.MaxodiffPropsConfiguration;
 import org.monarchinitiative.maxodiff.core.MaxoDiffAnalysisResultRow;
 import org.monarchinitiative.maxodiff.core.MaxodiffAnalysisRunner1;
-import org.monarchinitiative.maxodiff.core.analysis.HpoFrequency;
-import org.monarchinitiative.maxodiff.core.analysis.MdMetadata;
-import org.monarchinitiative.maxodiff.core.analysis.RankedMaxoResult;
-import org.monarchinitiative.maxodiff.core.analysis.SimpleTerm;
+import org.monarchinitiative.maxodiff.core.analysis.*;
 import org.monarchinitiative.maxodiff.core.analysis.refinement.DiffDiagRefiner;
 import org.monarchinitiative.maxodiff.core.analysis.refinement.MaxodiffResult;
 import org.monarchinitiative.maxodiff.core.diffdg.DifferentialDiagnosisEngine;
@@ -20,7 +17,7 @@ import org.monarchinitiative.maxodiff.core.model.PpktSample;
 import org.monarchinitiative.maxodiff.core.model.Sample;
 import org.monarchinitiative.maxodiff.core.service.BiometadataService;
 import org.monarchinitiative.maxodiff.html.results.HtmlResults;
-import org.monarchinitiative.maxodiff.html.results.tleaf.TleafHeader;
+import org.monarchinitiative.maxodiff.html.results.tleaf.TleafResults;
 import org.monarchinitiative.maxodiff.phenomizer.IcMicaData;
 import org.monarchinitiative.maxodiff.phenomizer.PhenomizerDifferentialDiagnosisEngine;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
@@ -153,7 +150,9 @@ public class DDxCommand extends BaseCommand {
                 MdMetadata mdMetadata = new MdMetadata(ppktSample.id(), this.nDiseases, this.nRepetitions,
                         ppktSample.observedHpoTerms(), ppktSample.excludedHpoTerms());
 
-                String headerHtml = TleafHeader.writeHTMLResults(mdMetadata, resultsList);
+                HTMLFrequencyMap htmlFrequencyMap = new HTMLFrequencyMap(hpoDiseases, icMicaData.icMicaDict());
+
+                String headerHtml = TleafResults.writeHTMLResults(mdMetadata, resultsList, htmlFrequencyMap);
 
                 Path maxodiffResultsHTMLPath = Path.of(String.join(File.separator, outputDir.toString(), "mdResults.html"));
 
