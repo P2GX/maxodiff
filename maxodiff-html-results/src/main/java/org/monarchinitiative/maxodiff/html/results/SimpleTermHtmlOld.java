@@ -1,6 +1,6 @@
 package org.monarchinitiative.maxodiff.html.results;
 
-public record SimpleTerm(
+public record SimpleTermHtmlOld(
         String termId,
         String termLabel
 ) {

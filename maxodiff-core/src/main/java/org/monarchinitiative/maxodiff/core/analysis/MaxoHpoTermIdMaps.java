@@ -1,6 +1,6 @@
 package org.monarchinitiative.maxodiff.core.analysis;
 
-import org.monarchinitiative.maxodiff.core.SimpleTerm;
+import org.monarchinitiative.maxodiff.core.SimpleTermOld;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 
 import java.util.*;
@@ -12,12 +12,12 @@ public class MaxoHpoTermIdMaps {
      * @param hpoToMaxoTermMap Map of HPO terms : Set of associated MAxO terms created using maxo_diagnostic_annotations file.
      * @return Map of HPO TermIds : Set of associated MAxO TermIds
      */
-    public static Map<TermId, Set<TermId>> getHpoToMaxoTermIdMap(Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxoTermMap) {
+    public static Map<TermId, Set<TermId>> getHpoToMaxoTermIdMap(Map<SimpleTermOld, Set<SimpleTermOld>> hpoToMaxoTermMap) {
         Map<TermId, Set<TermId>> hpoToMaxoTermIdMap = new HashMap<>();
-        for (Map.Entry<SimpleTerm, Set<SimpleTerm>> entry : hpoToMaxoTermMap.entrySet()) {
+        for (Map.Entry<SimpleTermOld, Set<SimpleTermOld>> entry : hpoToMaxoTermMap.entrySet()) {
             TermId hpoId = entry.getKey().tid();
-            Set<SimpleTerm> maxoTerms = entry.getValue();
-            for (SimpleTerm maxoTerm : maxoTerms) {
+            Set<SimpleTermOld> maxoTerms = entry.getValue();
+            for (SimpleTermOld maxoTerm : maxoTerms) {
                 TermId maxoId = maxoTerm.tid();
                 hpoToMaxoTermIdMap.computeIfAbsent(hpoId, k -> new HashSet<>()).add(maxoId);
             }
@@ -30,12 +30,12 @@ public class MaxoHpoTermIdMaps {
      * @param hpoToMaxoTermMap Map of HPO terms : Set of associated MAxO terms created using maxo_diagnostic_annotations file.
      * @return Map of MAxO TermIds : Set of associated HPO TermIds
      */
-    public static Map<TermId, Set<TermId>> getMaxoToHpoTermIdMap(Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxoTermMap) {
+    public static Map<TermId, Set<TermId>> getMaxoToHpoTermIdMap(Map<SimpleTermOld, Set<SimpleTermOld>> hpoToMaxoTermMap) {
         Map<TermId, Set<TermId>> maxoToHpoTermIdMap = new HashMap<>();
-        for (Map.Entry<SimpleTerm, Set<SimpleTerm>> entry : hpoToMaxoTermMap.entrySet()) {
+        for (Map.Entry<SimpleTermOld, Set<SimpleTermOld>> entry : hpoToMaxoTermMap.entrySet()) {
             TermId hpoId = entry.getKey().tid();
-            Set<SimpleTerm> maxoTerms = entry.getValue();
-            for (SimpleTerm maxoTerm : maxoTerms) {
+            Set<SimpleTermOld> maxoTerms = entry.getValue();
+            for (SimpleTermOld maxoTerm : maxoTerms) {
                 TermId maxoId = maxoTerm.tid();
                 maxoToHpoTermIdMap.computeIfAbsent(maxoId, k -> new HashSet<>()).add(hpoId);
             }

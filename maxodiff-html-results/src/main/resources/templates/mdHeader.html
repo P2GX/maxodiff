@@ -600,28 +600,35 @@
 </head>
 
 <body style="font-family: Arial, Helvetica, sans-serif;">
-<h1 th:text="${maxodiff.sampleResultsTitle}"></h1>
+<h1 th:text="${ppktId}"></h1>
 <table class="resultsTable">
     <tbody>
-    <tr>
-        <td class="narrow-column">Observed HPO Terms:</td><td class="wide-column" th:utext="${maxodiff.samplePresentHpoIds}">Present HPO Ids</td>
-    </tr>
-    <tr class="spaced-row">
-        <td class="narrow-column">Excluded HPO Terms:</td><td class="wide-column" th:utext="${maxodiff.sampleExcludedHpoIds}">Excluded HPO Ids</td>
-    </tr>
-    <tr class="spaced-row">
-        <td class="narrow-column">Diseases:</td><td class="wide-column" th:text="${maxodiff.nDiseases}">n Diseases</td>
-    </tr>
-    <tr>
-        <td class="narrow-column">Simulations:</td><td class="wide-column" th:text="${maxodiff.nSimulations}">n Simulations</td>
-    </tr>
+        <tr class="spaced-row">
+            <td class="narrow-column">Observed HPO Terms:</td>
+            <td th:each="term : ${observedHpoTerms}" class="wide-column">
+                <a th:href="|https://hpo.jax.org/browse/term/${term.termId}|" target="_blank"
+                   th:text="${term.termLabel}">
+                </a>
+            </td>
+        </tr>
+        <tr class="spaced-row">
+            <td class="narrow-column">Excluded HPO Terms:</td>
+            <td th:each="term : ${excludedHpoTerms}" class="wide-column">
+                <a th:href="|https://hpo.jax.org/browse/term/${term.termId}|" target="_blank"
+                   th:text="${term.termLabel}">
+                </a>
+            </td>
+        </tr>
+        <tr class="spaced-row">
+            <td class="narrow-column">Diseases:</td><td class="wide-column" th:text="${nDiseases}">n Diseases</td>
+        </tr>
+        <tr>
+            <td class="narrow-column">Simulations:</td><td class="wide-column" th:text="${nRepetitions}">n Simulations</td>
+        </tr>
     </tbody>
 </table>
-
-<h1>Prioritized Diagnostic Investigations</h1>
-
-<div th:utext="${maxodiff.resultsString}">results</div>
 
 
 </body>
 </html>
+

@@ -9,7 +9,7 @@ import org.apache.commons.csv.CSVPrinter;
 
 import org.monarchinitiative.maxodiff.config.MaxodiffDataResolver;
 import org.monarchinitiative.maxodiff.config.MaxodiffPropsConfiguration;
-import org.monarchinitiative.maxodiff.core.SimpleTerm;
+import org.monarchinitiative.maxodiff.core.SimpleTermOld;
 import org.monarchinitiative.maxodiff.core.analysis.*;
 import org.monarchinitiative.maxodiff.core.analysis.refinement.*;
 import org.monarchinitiative.maxodiff.core.diffdg.DifferentialDiagnosisEngine;
@@ -19,7 +19,6 @@ import org.monarchinitiative.maxodiff.core.service.BiometadataService;
 import org.monarchinitiative.maxodiff.phenomizer.IcMicaData;
 import org.monarchinitiative.maxodiff.phenomizer.IcMicaDictLoader;
 import org.monarchinitiative.maxodiff.phenomizer.PhenomizerDifferentialDiagnosisEngine;
-import org.monarchinitiative.maxodiff.phenomizer.ScoringMode;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDisease;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
 import org.monarchinitiative.phenol.annotations.io.hpo.HpoDiseaseLoader;
@@ -143,7 +142,7 @@ public class BenchmarkCommand extends DifferentialDiagnosisCommand {
             DiffDiagRefiner refiner = maxodiffPropsConfiguration.diffDiagRefiner();
 
             // HPO : MAxO term map
-            Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxoTermMap = maxodiffPropsConfiguration.maxoAnnotsMap();
+            Map<SimpleTermOld, Set<SimpleTermOld>> hpoToMaxoTermMap = maxodiffPropsConfiguration.maxoAnnotsMap();
 
             try (BufferedWriter writer = openWriter(outputName); CSVPrinter printer = CSVFormat.DEFAULT.print(writer)) {
                 printer.printRecord("phenopacket", "all_sample_ids", "n_sample_ids", "n_diseases", "n_repetitions",
@@ -322,7 +321,7 @@ public class BenchmarkCommand extends DifferentialDiagnosisCommand {
         return 0;
     }
 
-    private RefinementResults getValidationResults(Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxoTermMap,
+    private RefinementResults getValidationResults(Map<SimpleTermOld, Set<SimpleTermOld>> hpoToMaxoTermMap,
                                       Map<TermId, Set<TermId>> maxoToHpoTermIdMap,
                                       MaxoHpoTermProbabilities maxoHpoTermProbabilities,
                                       DifferentialDiagnosisEngine diseaseSubsetEngine,
@@ -589,7 +588,7 @@ public class BenchmarkCommand extends DifferentialDiagnosisCommand {
     }
 
     private void computeAllMaxoAscertainablePhenotypes(HpoDiseases hpoDiseases,
-                                                       Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxoTermMap,
+                                                       Map<SimpleTermOld, Set<SimpleTermOld>> hpoToMaxoTermMap,
                                                        List<DifferentialDiagnosis> differentialDiagnoses,
                                                        DiseaseModelProbability diseaseModelProbability,
                                                        DiffDiagRefiner refiner,

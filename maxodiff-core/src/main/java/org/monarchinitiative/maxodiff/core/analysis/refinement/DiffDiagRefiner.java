@@ -1,10 +1,12 @@
 package org.monarchinitiative.maxodiff.core.analysis.refinement;
 
 import org.monarchinitiative.maxodiff.core.analysis.HpoFrequency;
+import org.monarchinitiative.maxodiff.core.analysis.RankedMaxoResult;
 import org.monarchinitiative.maxodiff.core.diffdg.DifferentialDiagnosisEngine;
 import org.monarchinitiative.maxodiff.core.model.DifferentialDiagnosis;
 import org.monarchinitiative.maxodiff.core.model.RankMaxo;
 import org.monarchinitiative.maxodiff.core.model.Sample;
+import org.monarchinitiative.maxodiff.core.service.BiometadataService;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDisease;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
 import org.monarchinitiative.phenol.ontology.data.TermId;
@@ -30,6 +32,12 @@ public interface DiffDiagRefiner {
                           Map<TermId, Set<TermId>> maxoToHpoTermIdMap
     ) throws Exception;
 
+    List<RankedMaxoResult> runNew(Sample sample,
+                                  Set<TermId> initialDiagnosesIds,
+                                  RefinementOptions options,
+                                  RankMaxo rankMaxo,
+                                  BiometadataService biometadataService
+    ) throws Exception;
 
     List<DifferentialDiagnosis> getOrderedDiagnoses(Collection<DifferentialDiagnosis> originalDifferentialDiagnoses,
                                                     RefinementOptions options);

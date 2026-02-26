@@ -1,6 +1,6 @@
 package org.monarchinitiative.maxodiff.core.model;
 
-import org.monarchinitiative.maxodiff.core.SimpleTerm;
+import org.monarchinitiative.maxodiff.core.SimpleTermOld;
 import org.monarchinitiative.maxodiff.core.analysis.MaxoHpoTermIdMaps;
 import org.monarchinitiative.phenol.annotations.base.Ratio;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDisease;
@@ -17,7 +17,7 @@ public class MaxoHpoTermProbabilities {
     private final Map<TermId, Set<TermId>> maxoToHpoTermIdMap;
     private final DiscoverablePhenotypes discoverablePhenotypes;
 
-    public MaxoHpoTermProbabilities(HpoDiseases hpoDiseases, Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxoTermMap,
+    public MaxoHpoTermProbabilities(HpoDiseases hpoDiseases, Map<SimpleTermOld, Set<SimpleTermOld>> hpoToMaxoTermMap,
                                     List<DifferentialDiagnosis> initialDiagnoses, DiseaseModelProbability diseaseModelProbability) {
         this.hpoDiseases = hpoDiseases;
         this.initialDiagnoses = initialDiagnoses;

@@ -5,10 +5,15 @@ import org.monarchinitiative.maxodiff.cli.benchmarking.BenchmarkProcedure;
 import org.monarchinitiative.maxodiff.cli.benchmarking.BenchmarkResult;
 import org.monarchinitiative.maxodiff.config.MaxodiffDataResolver;
 import org.monarchinitiative.maxodiff.config.MaxodiffPropsConfiguration;
+import org.monarchinitiative.maxodiff.core.analysis.CountedHpoTerm;
+import org.monarchinitiative.maxodiff.core.analysis.Frequencies;
+import org.monarchinitiative.maxodiff.core.analysis.RankedMaxoResult;
 import org.monarchinitiative.maxodiff.core.analysis.refinement.DiffDiagRefiner;
 import org.monarchinitiative.maxodiff.core.analysis.refinement.MaxodiffResult;
 import org.monarchinitiative.maxodiff.core.analysis.refinement.RefinementOptions;
 import org.monarchinitiative.maxodiff.core.diffdg.DifferentialDiagnosisEngine;
+import org.monarchinitiative.maxodiff.core.io.PhenopacketImporter;
+import org.monarchinitiative.maxodiff.core.model.PhenopacketData;
 import org.monarchinitiative.maxodiff.phenomizer.IcMicaData;
 import org.monarchinitiative.maxodiff.phenomizer.IcMicaDictLoader;
 import org.monarchinitiative.maxodiff.phenomizer.PhenomizerDifferentialDiagnosisEngine;
@@ -20,16 +25,19 @@ import org.monarchinitiative.phenol.io.OntologyLoader;
 import org.monarchinitiative.phenol.ontology.data.Ontology;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 import org.monarchinitiative.phenol.ontology.similarity.TermPair;
+import org.phenopackets.schema.v2.Phenopacket;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import picocli.CommandLine;
 
 import java.io.*;
+import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.*;
 import java.util.concurrent.ForkJoinPool;
+import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 
@@ -63,7 +71,7 @@ public class BenchmarkingCommand extends DifferentialDiagnosisCommand {
 
     private DifferentialDiagnosisEngine phenomizer;
 
-    private MaxodiffPropsConfiguration maxodiffPropsConfiguration ;
+    private MaxodiffPropsConfiguration maxodiffPropsConfiguration;
     private DiffDiagRefiner refiner;
     private HpoDiseases hpoDiseases;
     private RefinementOptions refinementOptions;
@@ -84,8 +92,11 @@ public class BenchmarkingCommand extends DifferentialDiagnosisCommand {
         this.phenomizer = new PhenomizerDifferentialDiagnosisEngine(hpoDiseases, icMicaDict);
         this.refinementOptions = RefinementOptions.of(nDiseases, nRepetitions);
 
+        File icFile = new File("/Users/beckwm/IdeaProjects/maxodiff/data/term-to-ic.csv");
+        Map<String, Double> termToIcMap = getTermToIcMap(icFile);
+
         if (this.phenopacketPath != null && this.phenopacketPath.toFile().isFile()) {
-            List<BenchmarkResult> results = runShuffleOnePPkt(this.phenopacketPath);
+            List<BenchmarkResult> results = runShuffleOnePPkt(this.phenopacketPath, termToIcMap);
             outputResultList(results, true, false);
         } else if (this.ppktDir != null && this.ppktDir.toFile().isDirectory()) {
             List<Path> phenopacketPaths = new ArrayList<>();
@@ -105,7 +116,7 @@ public class BenchmarkingCommand extends DifferentialDiagnosisCommand {
                 int nPpkts = phenopacketPaths.size();
                 float percent = (((float) ppktN) / nPpkts) * 100;
                 boolean writeHeader = false;
-                List<BenchmarkResult> results = runShuffleOnePPkt(ppktPath);
+                List<BenchmarkResult> results = runShuffleOnePPkt(ppktPath, termToIcMap);
                 if (ppktIdx == 0) {
                     writeHeader = true;
                 }
@@ -160,7 +171,7 @@ public class BenchmarkingCommand extends DifferentialDiagnosisCommand {
     }
 
 
-    private List<BenchmarkResult> runShuffleOnePPkt(Path ppktPath) {
+    private List<BenchmarkResult> runShuffleOnePPkt(Path ppktPath, Map<String, Double> termToIcMap) {
         List<BenchmarkResult> resultList = new ArrayList<>();
         try {
             BaseBenchmarker benchmarker = new BaseBenchmarker(ppktPath,
@@ -170,23 +181,31 @@ public class BenchmarkingCommand extends DifferentialDiagnosisCommand {
                     maxodiffPropsConfiguration,
                     refiner);
             String ppktId = benchmarker.getSample().id();
-            List<MaxodiffResult> initialResults = benchmarker.standardRun();
-            TermId topMaxo = initialResults.getFirst().rankMaxoScore().maxoId();
+            List<RankedMaxoResult> initialResults = benchmarker.standardRun(maxodiffPropsConfiguration.biometadataService());
+            String topMaxo = initialResults.getFirst().maxoTerm().termId();
             List<Double> topRandomScores = new ArrayList<>();
-            int parallelism = 4;
+            int parallelism = 8;
             ForkJoinPool customThreadPool = new ForkJoinPool(parallelism);
             try {
                 customThreadPool.submit(() ->
                     IntStream.range(0, 50).parallel().forEach(i -> {
-                        List<MaxodiffResult> randomizedResults = null;
+                        List<RankedMaxoResult> randomizedResults = null;
                         try {
-                            randomizedResults = benchmarker.shuffledRandomizer();
+                            randomizedResults = benchmarker.shuffledRandomizer(maxodiffPropsConfiguration.biometadataService());
                         } catch (Exception e) {
                             throw new RuntimeException(e);
                         }
-                        List<MaxodiffResult> topResultRandomList = randomizedResults.stream()
-                                .filter(mr -> mr.rankMaxoScore().maxoId().equals(topMaxo)).toList();
-                        double maxScoreValueRandom = topResultRandomList.isEmpty() ? 0.0 : topResultRandomList.getFirst().rankMaxoScore().maxoScore();
+                        //TODO: compare total Information Content for Maxo Terms instead of scores
+                        List<RankedMaxoResult> topResultRandomList = randomizedResults.stream()
+                                .filter(mr -> mr.maxoTerm().termId().equals(topMaxo)).toList();
+
+                        List<CountedHpoTerm> ctHpoTerms = topResultRandomList.isEmpty() ? new ArrayList<>() :
+                            topResultRandomList.getFirst().hpoTermIds();
+                        List<String> discHpoIds = ctHpoTerms.isEmpty() ? new ArrayList<>() :
+                                ctHpoTerms.stream().map(ctTerm -> ctTerm.hpoTerm().termId()).toList();
+//
+                        double maxScoreValueRandom = discHpoIds.isEmpty() ? 0.0 :
+                                discHpoIds.stream().mapToDouble(termToIcMap::get).sum();
                         topRandomScores.add(maxScoreValueRandom);
                         if (i % 10 == 0) {
                             LOGGER.info("Finished index " + i);
@@ -196,12 +215,13 @@ public class BenchmarkingCommand extends DifferentialDiagnosisCommand {
             } finally {
                 customThreadPool.shutdown();
             }
+            System.out.println(topRandomScores);
             double avgTopRandomScore = topRandomScores.stream().mapToDouble(Double::valueOf).average().orElse(0);
-            BenchmarkResult bres = getShuffledBenchmarkResult(ppktId, initialResults, avgTopRandomScore);
+            BenchmarkResult bres = getShuffledBenchmarkResult(ppktId, initialResults, avgTopRandomScore, termToIcMap);
             resultList.add(bres);
             LOGGER.info("Finished benchmark of {}.", ppktPath);
         } catch (Exception ex) {
-            System.out.println(ex.getMessage());
+            ex.printStackTrace();
         }
         return resultList;
     }
@@ -226,16 +246,66 @@ public class BenchmarkingCommand extends DifferentialDiagnosisCommand {
                 procedure, topMaxoRandomIdx, maxScoreValueRandom, nMaxo, nMaxoRandom, spikedIdx);
     }
 
-    private BenchmarkResult getShuffledBenchmarkResult(String ppktId,
-                                                     List<MaxodiffResult> initialResults,
-                                                     double avgTopScoreRandom) {
+    private BenchmarkResult getShuffledBenchmarkResultOld(String ppktId,
+                                                       List<RankedMaxoResult> initialResults,
+                                                       double avgTopScoreRandom,
+                                                       Map<TermId, Double> termToIcMap) {
 
-        TermId topMaxo = initialResults.getFirst().rankMaxoScore().maxoId();
-        double maxoFinalScore = initialResults.getFirst().rankMaxoScore().maxoScore();
+        TermId topMaxo = TermId.of(initialResults.getFirst().maxoTerm().termId());
+        double maxoFinalScore = initialResults.getFirst().maxoScore();
         BenchmarkProcedure procedure = BenchmarkProcedure.ShuffledRandomization;
         int nMaxo = initialResults.size();
         return new BenchmarkResult(ppktId, nDiseases, nRepetitions, topMaxo, maxoFinalScore,
                 procedure, -1, avgTopScoreRandom, nMaxo, -1, -1);
+    }
+
+    private BenchmarkResult getShuffledBenchmarkResult(String ppktId,
+                                                       List<RankedMaxoResult> initialResults,
+                                                       double avgTopScoreRandom,
+                                                       Map<String, Double> termToIcMap) {
+
+        TermId topMaxo = TermId.of(initialResults.getFirst().maxoTerm().termId());
+//        double maxoFinalScore = initialResults.getFirst().rankMaxoScore().maxoScore();
+        List<CountedHpoTerm> ctHpoTerms = initialResults.isEmpty() ? new ArrayList<>() :
+                initialResults.getFirst().hpoTermIds();
+        List<String> discHpoIds = ctHpoTerms.isEmpty() ? new ArrayList<>() :
+                ctHpoTerms.stream().map(ctTerm -> ctTerm.hpoTerm().termId()).toList();
+//
+        double maxoFinalScore = discHpoIds.isEmpty() ? 0.0 :
+                discHpoIds.stream().mapToDouble(termToIcMap::get).sum();
+        System.out.println("standard run results:");
+//        System.out.println("initial " + initialResults.getFirst().rankMaxoScore().initialOmimTermIds());
+//        System.out.println("maxo " + initialResults.getFirst().rankMaxoScore().maxoOmimTermIds());
+        System.out.println(discHpoIds + " IC Sum = " + maxoFinalScore);
+        BenchmarkProcedure procedure = BenchmarkProcedure.ShuffledRandomization;
+        int nMaxo = initialResults.size();
+        return new BenchmarkResult(ppktId, nDiseases, nRepetitions, topMaxo, maxoFinalScore,
+                procedure, -1, avgTopScoreRandom, nMaxo, -1, -1);
+    }
+
+    private Map<String, Double> getTermToIcMap(File icFile) {
+        Map<String, Double> termToIcMap = new HashMap<>();
+        try (
+            FileInputStream fis = new FileInputStream(icFile);
+            InputStreamReader isr = new InputStreamReader(fis, StandardCharsets.UTF_8);
+            BufferedReader br = new BufferedReader(isr)
+        ) {
+            String line;
+            // Read lines until readLine() returns null (end of stream)
+            while ((line = br.readLine()) != null) {
+                if (line.startsWith("HP:")) {
+                    String[] split = line.split(",");
+                    String tid = split[0];
+                    Double ic = Double.parseDouble(split[1]);
+                    termToIcMap.put(tid, ic);
+                }
+
+            }
+        } catch (IOException e) {
+            System.err.println("Error reading file: " + e.getMessage());
+        }
+
+        return termToIcMap;
     }
 
 

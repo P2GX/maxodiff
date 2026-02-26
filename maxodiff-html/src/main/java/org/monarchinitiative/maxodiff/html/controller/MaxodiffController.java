@@ -1,6 +1,6 @@
 package org.monarchinitiative.maxodiff.html.controller;
 
-import org.monarchinitiative.maxodiff.core.SimpleTerm;
+import org.monarchinitiative.maxodiff.core.SimpleTermOld;
 import org.monarchinitiative.maxodiff.core.analysis.HpoFrequency;
 import org.monarchinitiative.maxodiff.core.analysis.refinement.*;
 import org.monarchinitiative.maxodiff.core.diffdg.DifferentialDiagnosisEngine;
@@ -15,7 +15,6 @@ import org.monarchinitiative.maxodiff.phenomizer.PhenomizerDifferentialDiagnosis
 import org.monarchinitiative.maxodiff.phenomizer.ScoringMode;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDisease;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
-import org.monarchinitiative.phenol.ontology.data.MinimalOntology;
 import org.monarchinitiative.phenol.ontology.data.Ontology;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 import org.monarchinitiative.phenol.ontology.similarity.TermPair;
@@ -30,7 +29,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @Controller("/maxodiff")
 public class MaxodiffController {
@@ -47,7 +45,7 @@ public class MaxodiffController {
 
     private final Map<TermId, Set<TermId>> hpoToMaxoIdMap;
 
-    private final Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxoTermMap;
+    private final Map<SimpleTermOld, Set<SimpleTermOld>> hpoToMaxoTermMap;
 
     private RankMaxo rankMaxo;
 
@@ -60,7 +58,7 @@ public class MaxodiffController {
             Ontology hpo,
             HpoDiseases hpoDiseases,
             Map<TermId, Set<TermId>> hpoToMaxoIdMap,
-            Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxoTermMap
+            Map<SimpleTermOld, Set<SimpleTermOld>> hpoToMaxoTermMap
     ) {
         this.icMicaData = icMicaData;
         this.biometadataService = biometadataService;
