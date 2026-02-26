@@ -7,6 +7,7 @@ import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import org.monarchinitiative.maxodiff.core.analysis.HTMLFrequencyMap;
 import org.monarchinitiative.maxodiff.core.analysis.HpoFrequency;
 import org.monarchinitiative.maxodiff.core.analysis.refinement.MaxodiffResult;
+import org.monarchinitiative.maxodiff.core.io.JsonFileWriter;
 import org.monarchinitiative.maxodiff.core.model.Sample;
 import org.monarchinitiative.maxodiff.core.service.BiometadataService;
 import org.monarchinitiative.maxodiff.html.results.maxoDisease.MaxoDiseaseHTML;
@@ -18,7 +19,10 @@ import org.thymeleaf.context.Context;
 import org.thymeleaf.spring6.SpringTemplateEngine;
 import org.thymeleaf.templateresolver.ClassLoaderTemplateResolver;
 
+import java.io.File;
+import java.io.IOException;
 import java.io.StringWriter;
+import java.nio.file.Path;
 import java.util.*;
 
 public class HtmlResults {
@@ -31,7 +35,9 @@ public class HtmlResults {
             List<MaxodiffResult> resultList,
             BiometadataService biometadataService,
             Map<TermId, List<HpoFrequency>> hpoTermCounts,
-            Map<TermPair, Double> icMicaData) throws Exception {
+            Map<TermPair, Double> icMicaData,
+            Path outputDir,
+            boolean writeJson) throws Exception {
 
         SpringTemplateEngine templateEngine = templateEngine();
 
@@ -46,10 +52,13 @@ public class HtmlResults {
         String resultsString = getHTMLResults(
                 resultList,
                 biometadataService,
+                sample,
                 nDiseases,
                 nRepetitions,
                 hpoTermCounts,
-                htmlFrequencyMap);
+                htmlFrequencyMap,
+                outputDir,
+                writeJson);
 
         MaxodiffHtml maxodiffHtml = new MaxodiffHtml(
                 sampleId,
@@ -58,6 +67,18 @@ public class HtmlResults {
                 nDiseases,
                 nRepetitions,
                 resultsString);
+
+        if (writeJson) {
+            String htmlJsonString = HtmlToJson.convertHtmlToJson(maxodiffHtml);
+
+            String nDiseasesAbbr = String.join("", "n", String.valueOf(nDiseases));
+            String nRepsAbbr = String.join("", "nr", String.valueOf(nRepetitions));
+            String outputFilename = String.join("_", sample.id(),
+                    nDiseasesAbbr, nRepsAbbr, "maxodiff", "html.json");
+            Path maxodiffHtmlJsonPath = Path.of(String.join(File.separator, outputDir.toString(), outputFilename));
+
+            JsonFileWriter.writeToJsonFile(maxodiffHtmlJsonPath, htmlJsonString);
+        }
 
         Context context = new Context();
         context.setVariable("maxodiff", maxodiffHtml);
@@ -72,12 +93,15 @@ public class HtmlResults {
 
     static String getHTMLboxFromTemplate(MaxodiffResult result,
                                          BiometadataService biometadataService,
+                                         Sample sample,
                                          int nDiseases,
                                          int nRepetitions,
                                          Map<TermId, List<HpoFrequency>> hpoTermCountMap,
                                          int idx,
                                          HTMLFrequencyMap htmlFrequencyMap,
-                                         SpringTemplateEngine templateEngine) {
+                                         SpringTemplateEngine templateEngine,
+                                         Path outputDir,
+                                         boolean writeJson) throws IOException {
 
         MaxoHtmlResult maxoData = new MaxoHtmlResult(
                 result,
@@ -88,6 +112,20 @@ public class HtmlResults {
                 biometadataService,
                 htmlFrequencyMap
         );
+
+        if (writeJson) {
+            String htmlResultsJsonString = HtmlToJson.convertHtmlResultsToJson(maxoData);
+
+            String nDiseasesAbbr = String.join("", "n", String.valueOf(nDiseases));
+            String nRepsAbbr = String.join("", "nr", String.valueOf(nRepetitions));
+
+            String outputFilename = String.join("_", sample.id(),
+                    nDiseasesAbbr, nRepsAbbr, "maxodiff", "html", "researcher", "results.json");
+            Path maxodiffHtmlJsonPath = Path.of(String.join(File.separator, outputDir.toString(), outputFilename));
+
+            JsonFileWriter.writeToJsonFile(maxodiffHtmlJsonPath, htmlResultsJsonString);
+        }
+
         Context context = new Context();
         context.setVariable("maxoData", maxoData);
         return templateEngine.process("old/maxoResultBox", context);
@@ -112,10 +150,13 @@ public class HtmlResults {
     protected static String getHTMLResults(
             List<MaxodiffResult> resultList,
             BiometadataService biometadataService,
+            Sample sample,
             int nDiseases,
             int nRepetitions,
             Map<TermId, List<HpoFrequency>> hpoTermCounts,
-            HTMLFrequencyMap htmlFrequencyMap) {
+            HTMLFrequencyMap htmlFrequencyMap,
+            Path outputDir,
+            boolean writeJson) throws IOException {
         SpringTemplateEngine templateEngine = templateEngine();
         StringBuilder resultsString = new StringBuilder();
 
@@ -128,7 +169,12 @@ public class HtmlResults {
         List<MaxodiffResult> results = resultList.subList(0, nDisplayed);
         String templateHtml0 = getHTMLMaxoDiseaseBoxFromTemplate(results,
                 biometadataService,
-                templateEngine);
+                templateEngine,
+                sample,
+                nDiseases,
+                nRepetitions,
+                outputDir,
+                writeJson);
         resultsString.append(templateHtml0);
 
         // Researcher view results: HPO terms vs. Diseases
@@ -136,12 +182,15 @@ public class HtmlResults {
             int idx = resultList.indexOf(result) + 1;
             String templateHtml = getHTMLboxFromTemplate(result,
                     biometadataService,
+                    sample,
                     nDiseases,
                     nRepetitions,
                     hpoTermCounts,
                     idx,
                     htmlFrequencyMap,
-                    templateEngine);
+                    templateEngine,
+                    outputDir,
+                    writeJson);
             resultsString.append(templateHtml);
         }
 
@@ -150,12 +199,32 @@ public class HtmlResults {
 
     static String getHTMLMaxoDiseaseBoxFromTemplate(List<MaxodiffResult> results,
                                                     BiometadataService biometadataService,
-                                                    SpringTemplateEngine templateEngine) {
+                                                    SpringTemplateEngine templateEngine,
+                                                    Sample sample,
+                                                    int nDiseases,
+                                                    int nRepetitions,
+                                                    Path outputDir,
+                                                    boolean writeJson) throws IOException {
 
         MaxoDiseaseHTML maxoDiseaseData = new MaxoDiseaseHTML(
                 results,
                 biometadataService
         );
+
+        if (writeJson) {
+            String htmlDiseaseJsonString = HtmlToJson.convertDiseaseHtmlToJson(maxoDiseaseData);
+
+            String nDiseasesAbbr = String.join("", "n", String.valueOf(nDiseases));
+            String nRepsAbbr = String.join("", "nr", String.valueOf(nRepetitions));
+
+            String outputFilename = String.join("_", sample.id(),
+                    nDiseasesAbbr, nRepsAbbr, "maxodiff", "html", "clinician", "results.json");
+            Path maxodiffHtmlJsonPath = Path.of(String.join(File.separator, outputDir.toString(), outputFilename));
+
+            JsonFileWriter.writeToJsonFile(maxodiffHtmlJsonPath, htmlDiseaseJsonString);
+        }
+
+
         Context context = new Context();
         context.setVariable("maxoDiseaseData", maxoDiseaseData);
         return templateEngine.process("old/maxoDiseaseResultBox", context);
