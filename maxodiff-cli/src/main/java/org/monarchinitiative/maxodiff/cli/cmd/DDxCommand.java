@@ -171,10 +171,6 @@ public class DDxCommand extends BaseCommand {
                 Files.writeString(maxodiffResultsHTMLPath, headerHtml);
                 LOGGER.info("Wrote HTML file to {}", maxodiffResultsHTMLPath);
 
-//                writeHtmlResults(resultsList, biometadataService,
-//                    outputDir, sample, hpoDiseases, maxoResult.hpoTermCounts(),
-//                    icMicaDict);
-
             }
 
 
@@ -206,33 +202,6 @@ public class DDxCommand extends BaseCommand {
 
         System.out.println("Wrote output to " + outputFilename);
         return 0;
-    }
-
-    private void writeHtmlResults(List<MaxodiffResult> resultsList,
-                                  BiometadataService biometadataService,
-                                  Path outputDir,
-                                  Sample sample,
-                                  HpoDiseases hpoDiseases,
-                                  Map<TermId, List<HpoFrequency>> hpoTermCounts,
-                                  Map<TermPair, Double> icMicaDict) throws Exception {
-        String nDiseasesAbbr = String.join("", "n", String.valueOf(this.nDiseases));
-        String nRepsAbbr = String.join("", "nr", String.valueOf(this.nRepetitions));
-        String outputFilename = String.join("_", sample.id(),
-            nDiseasesAbbr, nRepsAbbr, "maxodiff", "results1.html");
-        Path maxodiffResultsHTMLPath = Path.of(String.join(File.separator, outputDir.toString(), outputFilename));
-
-        String htmlString = HtmlResults.writeHTMLResults(
-                sample,
-                this.nDiseases,
-                hpoDiseases,
-                this.nRepetitions,
-                resultsList,
-                biometadataService,
-                hpoTermCounts,
-                icMicaDict);
-
-        Files.writeString(maxodiffResultsHTMLPath, htmlString);
-        LOGGER.info("Wrote HTML file to {}", maxodiffResultsHTMLPath);
     }
 
     protected static BufferedWriter openOutputFileWriter(Path outputPath) throws IOException {
