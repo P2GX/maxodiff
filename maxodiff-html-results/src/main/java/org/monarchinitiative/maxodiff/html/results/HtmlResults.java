@@ -90,7 +90,7 @@ public class HtmlResults {
         );
         Context context = new Context();
         context.setVariable("maxoData", maxoData);
-        return templateEngine.process("maxoResultBox", context);
+        return templateEngine.process("old/maxoResultBox", context);
     }
 
     /**
@@ -158,7 +158,7 @@ public class HtmlResults {
         );
         Context context = new Context();
         context.setVariable("maxoDiseaseData", maxoDiseaseData);
-        return templateEngine.process("maxoDiseaseResultBox", context);
+        return templateEngine.process("old/maxoDiseaseResultBox", context);
     }
 
     protected static String convertToJson(Object object) throws Exception {

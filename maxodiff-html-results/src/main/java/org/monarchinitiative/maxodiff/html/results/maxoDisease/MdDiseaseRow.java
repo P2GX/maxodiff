@@ -39,7 +39,8 @@ public class MdDiseaseRow {
             String tooltipHeader = "MAxO Term Score";
             List<MaxoDiseaseCellTooltipItem> tooltipItems = new ArrayList<>();
             for (RankedMaxoResult result : results) {
-                String firstMaxoDiseaseId = result.frequencies().getFirst().omimId();
+                if (!result.frequencies().isEmpty()) {
+                    String firstMaxoDiseaseId = result.frequencies().getFirst().omimId();
                     if (firstMaxoDiseaseId.equals(omimId)) {
                         String maxoLabel = result.maxoTerm().termLabel();
                         score = result.maxoScore();
@@ -47,8 +48,9 @@ public class MdDiseaseRow {
                     } else {
                         score = 0.;
                     }
-                double opacity = score / topScore;
-                cells.add(new MdDiseaseTableCell(score, opacity, tooltipHeader, tooltipItems));
+                    double opacity = score / topScore;
+                    cells.add(new MdDiseaseTableCell(score, opacity, tooltipHeader, tooltipItems));
+                }
             }
             rows.add(new MdDiseaseRow(omimId, omimLabel, score, topScore, cells));
 
