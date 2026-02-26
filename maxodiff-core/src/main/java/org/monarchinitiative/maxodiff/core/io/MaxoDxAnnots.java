@@ -1,6 +1,6 @@
 package org.monarchinitiative.maxodiff.core.io;
 
-import org.monarchinitiative.maxodiff.core.SimpleTerm;
+import org.monarchinitiative.maxodiff.core.SimpleTermOld;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 
 import java.io.*;
@@ -17,8 +17,8 @@ public class MaxoDxAnnots {
      * @deprecated use {@link #parseMaxoToHpo(BufferedReader)} instead
      */
     @Deprecated
-    public static Map<SimpleTerm, Set<SimpleTerm>> parseHpoToMaxo(BufferedReader reader) throws IOException {
-        Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxo = new HashMap<>();
+    public static Map<SimpleTermOld, Set<SimpleTermOld>> parseHpoToMaxo(BufferedReader reader) throws IOException {
+        Map<SimpleTermOld, Set<SimpleTermOld>> hpoToMaxo = new HashMap<>();
 
         String line;
         while ((line = reader.readLine()) != null) {
@@ -31,12 +31,12 @@ public class MaxoDxAnnots {
             }
             TermId hpoid = TermId.of(fields[0]);
             String hpoLabel = fields[1];
-            SimpleTerm hterm = new SimpleTerm(hpoid, hpoLabel);
+            SimpleTermOld hterm = new SimpleTermOld(hpoid, hpoLabel);
             String predicate = fields[2];
             if (predicate.equals("is_observable_through")) {
                 TermId maxoId = TermId.of(fields[3]);
                 String maxoLabel = fields[4];
-                SimpleTerm mterm = new SimpleTerm(maxoId, maxoLabel);
+                SimpleTermOld mterm = new SimpleTermOld(maxoId, maxoLabel);
                 hpoToMaxo.computeIfAbsent(hterm, whatever -> new HashSet<>()).add(mterm);
             } else if (predicate.equals("is_prenatally_observable_through")) {
                 continue; // skip prenatal for this analysis
@@ -48,8 +48,8 @@ public class MaxoDxAnnots {
         return hpoToMaxo;
     }
 
-    public static Map<SimpleTerm, Set<SimpleTerm>> parseMaxoToHpo(BufferedReader reader) throws IOException {
-        Map<SimpleTerm, Set<SimpleTerm>> maxoToHpo = new HashMap<>();
+    public static Map<SimpleTermOld, Set<SimpleTermOld>> parseMaxoToHpo(BufferedReader reader) throws IOException {
+        Map<SimpleTermOld, Set<SimpleTermOld>> maxoToHpo = new HashMap<>();
 
         String line;
         while ((line = reader.readLine()) != null) {
@@ -62,12 +62,12 @@ public class MaxoDxAnnots {
             }
             TermId hpoid = TermId.of(fields[0]);
             String hpoLabel = fields[1];
-            SimpleTerm hterm = new SimpleTerm(hpoid, hpoLabel);
+            SimpleTermOld hterm = new SimpleTermOld(hpoid, hpoLabel);
             String predicate = fields[2];
             if (predicate.equals("is_observable_through")) {
                 TermId maxoId = TermId.of(fields[3]);
                 String maxoLabel = fields[4];
-                SimpleTerm mterm = new SimpleTerm(maxoId, maxoLabel);
+                SimpleTermOld mterm = new SimpleTermOld(maxoId, maxoLabel);
                 maxoToHpo.computeIfAbsent(mterm, whatever -> new HashSet<>()).add(hterm);
             } else if (predicate.equals("is_prenatally_observable_through")) {
                 continue; // skip prenatal for this analysis

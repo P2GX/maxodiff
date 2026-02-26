@@ -1,6 +1,6 @@
 package org.monarchinitiative.maxodiff.html.controller;
 
-import org.monarchinitiative.maxodiff.core.SimpleTerm;
+import org.monarchinitiative.maxodiff.core.SimpleTermOld;
 import org.monarchinitiative.maxodiff.core.analysis.HpoFrequency;
 import org.monarchinitiative.maxodiff.core.analysis.refinement.*;
 import org.monarchinitiative.maxodiff.core.diffdg.DifferentialDiagnosisEngine;
@@ -15,7 +15,6 @@ import org.monarchinitiative.maxodiff.phenomizer.PhenomizerDifferentialDiagnosis
 import org.monarchinitiative.maxodiff.phenomizer.ScoringMode;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDisease;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
-import org.monarchinitiative.phenol.ontology.data.MinimalOntology;
 import org.monarchinitiative.phenol.ontology.data.Ontology;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 import org.monarchinitiative.phenol.ontology.similarity.TermPair;
@@ -30,7 +29,6 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 @Controller("/maxodiff")
 public class MaxodiffController {
@@ -41,15 +39,13 @@ public class MaxodiffController {
 
     private DiffDiagRefiner diffDiagRefiner;
 
-    private final MinimalOntology minHpo;
-
     private final Ontology hpo;
 
     private final HpoDiseases hpoDiseases;
 
     private final Map<TermId, Set<TermId>> hpoToMaxoIdMap;
 
-    private final Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxoTermMap;
+    private final Map<SimpleTermOld, Set<SimpleTermOld>> hpoToMaxoTermMap;
 
     private RankMaxo rankMaxo;
 
@@ -59,16 +55,14 @@ public class MaxodiffController {
             IcMicaData icMicaData,
             BiometadataService biometadataService,
             DiffDiagRefiner diffDiagRefiner,
-            MinimalOntology minHpo,
             Ontology hpo,
             HpoDiseases hpoDiseases,
             Map<TermId, Set<TermId>> hpoToMaxoIdMap,
-            Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxoTermMap
+            Map<SimpleTermOld, Set<SimpleTermOld>> hpoToMaxoTermMap
     ) {
         this.icMicaData = icMicaData;
         this.biometadataService = biometadataService;
         this.diffDiagRefiner = diffDiagRefiner;
-        this.minHpo = minHpo;
         this.hpo = hpo;
         this.hpoDiseases = hpoDiseases;
         this.hpoToMaxoIdMap = hpoToMaxoIdMap;
@@ -118,7 +112,7 @@ public class MaxodiffController {
             throw new Exception("Phenomizer necessary MICA information content is empty. Run Download command to download the necessary term-pair-similarity file.");
         }
         // Phenomizer differential diagnosis engine
-        phenomizerDifferentialDxEngine = new PhenomizerDifferentialDiagnosisEngine(hpoDiseases, icMicaDict, scoringMode);
+        phenomizerDifferentialDxEngine = new PhenomizerDifferentialDiagnosisEngine(hpoDiseases, icMicaDict);
         model.addAttribute("icMicaDict", icMicaDict);
 
         if (sample != null && sample.id() != null) {
@@ -130,7 +124,7 @@ public class MaxodiffController {
         model.addAttribute("differentialDiagnoses", differentialDiagnoses);
 
         // Maxodiff refiner
-        diffDiagRefiner = new MaxoDiffRefiner(hpoDiseases, hpoToMaxoIdMap, hpoToMaxoTermMap, minHpo, hpo);
+        diffDiagRefiner = new BaseDiffDiagRefiner(hpoDiseases, hpoToMaxoIdMap, hpoToMaxoTermMap, hpo);
 
         // maxodiff analysis parameters: n diseases to use and n simulations to run
         Integer prevNDiseases = (Integer) model.getAttribute("nDiseases");

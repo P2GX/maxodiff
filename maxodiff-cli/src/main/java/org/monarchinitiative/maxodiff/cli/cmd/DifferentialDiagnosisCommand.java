@@ -11,15 +11,12 @@ import org.monarchinitiative.maxodiff.core.MaxodiffAnalysisRunner;
 import org.monarchinitiative.maxodiff.core.analysis.*;
 import org.monarchinitiative.maxodiff.core.analysis.refinement.DiffDiagRefiner;
 import org.monarchinitiative.maxodiff.core.analysis.refinement.MaxodiffResult;
-import org.monarchinitiative.maxodiff.core.analysis.refinement.RefinementOptions;
-import org.monarchinitiative.maxodiff.core.analysis.refinement.RefinementResults;
 import org.monarchinitiative.maxodiff.core.diffdg.DifferentialDiagnosisEngine;
 import org.monarchinitiative.maxodiff.html.results.HtmlResults;
 import org.monarchinitiative.maxodiff.core.model.*;
 import org.monarchinitiative.maxodiff.core.service.BiometadataService;
 import org.monarchinitiative.maxodiff.phenomizer.IcMicaData;
 import org.monarchinitiative.maxodiff.phenomizer.PhenomizerDifferentialDiagnosisEngine;
-import org.monarchinitiative.maxodiff.phenomizer.ScoringMode;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 import org.monarchinitiative.phenol.ontology.similarity.TermPair;
@@ -52,7 +49,7 @@ public class DifferentialDiagnosisCommand extends BaseCommand {
 
     @CommandLine.Option(
             names = {"-p", "--phenopacket"},
-            required = true,
+            required = false,
             description = "Path to phenopacket JSON file.")
     protected Path phenopacketPath;
 
@@ -67,6 +64,9 @@ public class DifferentialDiagnosisCommand extends BaseCommand {
     public boolean writeJson;
 
 
+    @CommandLine.Option(names = {"--csv"},
+            description = "Output results as CSV.")
+    private boolean writeCsv = false;
 
     @CommandLine.Option(names = {"--diseaseProbModel"},
             paramLabel = "{ranked}",
@@ -76,11 +76,6 @@ public class DifferentialDiagnosisCommand extends BaseCommand {
     @CommandLine.Option(names = {"-nr", "--nRepetitions"},
             description = "Number of repetitions for running differential diagnosis.")
     protected Integer nRepetitions = 100;
-
-    @CommandLine.Option(names = {"-s", "--scoringMode"},
-            paramLabel = "{one-sided, two-sided}",
-            description = "Phenomizer scoring mode (default: ${DEFAULT-VALUE}).")
-    protected String scoringModeArg = "one-sided";
 
     @Override
     public Integer execute() throws Exception {
@@ -111,7 +106,7 @@ public class DifferentialDiagnosisCommand extends BaseCommand {
             MaxodiffDataResolver maxodiffDataResolver = MaxodiffDataResolver.of(maxoDataPath);
             MaxodiffPropsConfiguration maxodiffPropsConfiguration = MaxodiffPropsConfiguration.createConfig(maxodiffDataResolver);
 
-            DiffDiagRefiner maxoDiffRefiner = maxodiffPropsConfiguration.diffDiagRefiner("score");
+            DiffDiagRefiner maxoDiffRefiner = maxodiffPropsConfiguration.diffDiagRefiner();
             BiometadataService biometadataService = maxodiffPropsConfiguration.biometadataService();
 
             // Configure Phenomizer engine
@@ -127,9 +122,7 @@ public class DifferentialDiagnosisCommand extends BaseCommand {
                     engine,
                     maxoDiffRefiner,
                     biometadataService);
-
-            boolean writeCsvFile = false;
-            if (writeCsvFile) {
+            if (writeCsv) {
                 MaxoDiffAnalysisResultRow row = runner.batchAnalysis(phenopacketData);
                 writeCsvResults(sample.id(), row);
             } else {

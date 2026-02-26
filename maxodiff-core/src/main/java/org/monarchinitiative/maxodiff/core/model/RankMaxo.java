@@ -2,10 +2,10 @@ package org.monarchinitiative.maxodiff.core.model;
 
 import org.monarchinitiative.maxodiff.core.JpsChecker;
 import org.monarchinitiative.maxodiff.core.ProgessBar;
-import org.monarchinitiative.maxodiff.core.SimpleTerm;
+import org.monarchinitiative.maxodiff.core.SimpleTermOld;
 import org.monarchinitiative.maxodiff.core.analysis.*;
 import org.monarchinitiative.maxodiff.core.diffdg.DifferentialDiagnosisEngine;
-import org.monarchinitiative.phenol.ontology.data.MinimalOntology;
+import org.monarchinitiative.maxodiff.core.service.BiometadataService;
 import org.monarchinitiative.phenol.ontology.data.Ontology;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 import org.slf4j.Logger;
@@ -17,7 +17,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class RankMaxo {
     private final static Logger LOGGER = LoggerFactory.getLogger(RankMaxo.class);
-    private final Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxoTermMap;
+    private final Map<SimpleTermOld, Set<SimpleTermOld>> hpoToMaxoTermMap;
     private final Map<TermId, Set<TermId>> maxoToHpoTermIdMap;
     private final MaxoHpoTermProbabilities maxoHpoTermProbabilities;
     private final DifferentialDiagnosisEngine engine;
@@ -25,6 +25,7 @@ public class RankMaxo {
     RankMaxoProgress rankMaxoProgress;
     private final Ontology ontology;
     private final List<DifferentialDiagnosis> allInitialDiagnoses;
+    private final List<DifferentialDiagnosis> initialDiagnoses;
 
     /**
      * The {@code RankMaxo} ranks MAxO terms and returns results in descending order by score.
@@ -40,18 +41,20 @@ public class RankMaxo {
      * @author Martha Beckwith
      * @since 1.0
      */
-    public RankMaxo(Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxoTermMap,
+    public RankMaxo(Map<SimpleTermOld, Set<SimpleTermOld>> hpoToMaxoTermMap,
                     Map<TermId, Set<TermId>> maxoToHpoTermIdMap,
                     MaxoHpoTermProbabilities maxoHpoTermProbabilities,
                     DifferentialDiagnosisEngine engine,
                     Ontology hpo,
-                    List<DifferentialDiagnosis> allInitialDiagnoses) {
+                    List<DifferentialDiagnosis> allInitialDiagnoses,
+                    List<DifferentialDiagnosis> initialDiagnoses) {
         this.hpoToMaxoTermMap = hpoToMaxoTermMap;
         this.maxoToHpoTermIdMap = maxoToHpoTermIdMap;
         this.maxoHpoTermProbabilities = maxoHpoTermProbabilities;
         this.engine = engine;
         this.ontology = hpo;
         this.allInitialDiagnoses = allInitialDiagnoses;
+        this.initialDiagnoses = initialDiagnoses;
     }
 
     /**
@@ -61,7 +64,8 @@ public class RankMaxo {
      * @param diseaseIds Set of top n OMIM disease Ids to use for analysis.
      * @return Map of MAxO scores sorted in descending order by score
      */
-    public List<RankMaxoScore> rankMaxoTerms(Sample ppkt, int nRepetitions, Set<TermId> diseaseIds) throws Exception {
+    public List<RankMaxoScore> rankMaxoTerms(Sample ppkt, int nRepetitions,
+                                             Set<TermId> diseaseIds) throws Exception {
 
         Set<TermId> sampleHpoIds = new HashSet<>();
         sampleHpoIds.addAll(ppkt.observedHpoTermIds());
@@ -84,12 +88,14 @@ public class RankMaxo {
                     .maxoId(maxoId)
                     .sample(ppkt)
                     .nDiagnoses(500)
+                    .maxoLabel("Maxo label")
                     .build();
             rankMaxoProgress = new RankMaxoProgress(maxoToHpoTermIdMap.size());
             int finalMaxoIdx = maxoIdx;
             tasks.add(() -> {
                 NewEvaluateMaxoTerm evaluateMaxoTerm = new NewEvaluateMaxoTerm(maxoHpoDiseaseRank, nRepetitions, ppkt,
-                                                                            engine, maxoHpoTermProbabilities, diseaseIds);
+                                                                            engine, maxoHpoTermProbabilities,
+                                                                            initialDiagnoses, diseaseIds);
                 double done = completedTasks.incrementAndGet();
                 rankMaxoProgress.updateProgress(maxoId, done);
                 if (JpsChecker.isMainClassRunning("org.monarchinitiative.maxodiff.cli.Main")) {
@@ -114,6 +120,72 @@ public class RankMaxo {
 
         return results.stream()
                 .sorted(Comparator.comparing(RankMaxoScore :: maxoScore).reversed())
+                .toList();
+    }
+
+    /**
+     *
+     * @param ppkt Input phenopacket with present and excluded HPO terms.
+     * @param nRepetitions number of times to calculate scores for each MAxO term.
+     * @param diseaseIds Set of top n OMIM disease Ids to use for analysis.
+     * @return Map of MAxO scores sorted in descending order by score
+     */
+    public List<RankedMaxoResult> rankMaxoTermsNew(Sample ppkt, int nRepetitions,
+                                                   Set<TermId> diseaseIds, BiometadataService biometadataService) throws Exception {
+
+        Set<TermId> sampleHpoIds = new HashSet<>();
+        sampleHpoIds.addAll(ppkt.observedHpoTermIds());
+        sampleHpoIds.addAll(ppkt.excludedHpoTermIds());
+
+        AscertainablePhenotypes ascertainablePhenotypes = new AscertainablePhenotypes(maxoHpoTermProbabilities.getHpoDiseases());
+        Map<TermId, Set<TermId>> fullMaxoToHpoTermIdMap = maxoHpoTermProbabilities.getMaxoToHpoTermIdMap();
+
+        int numThreads = Runtime.getRuntime().availableProcessors() - 1;
+        ExecutorService executor = Executors.newFixedThreadPool(numThreads);
+        AtomicInteger completedTasks = new AtomicInteger(0);
+        List<Callable<RankedMaxoResult>> tasks = new ArrayList<>();
+        int maxoIdx = 0;
+        ProgessBar pb = new ProgessBar(maxoIdx, maxoToHpoTermIdMap.size());
+        for (TermId maxoId : maxoToHpoTermIdMap.keySet()) {
+            MaxoHpoDiseaseRank maxoHpoDiseaseRank = MaxoHpoDiseaseRank.Builder.builder()
+                    .initialDiagnoses(allInitialDiagnoses)
+                    .ascertainablePhenotypes(ascertainablePhenotypes)
+                    .maxoToHpoTermIdMap(fullMaxoToHpoTermIdMap)
+                    .maxoId(maxoId)
+                    .sample(ppkt)
+                    .nDiagnoses(500)
+                    .maxoLabel(biometadataService.maxoLabel(maxoId.toString()).get())
+                    .build();
+            rankMaxoProgress = new RankMaxoProgress(maxoToHpoTermIdMap.size());
+            int finalMaxoIdx = maxoIdx;
+            tasks.add(() -> {
+                NewEvaluateMaxoTerm1 evaluateMaxoTerm = new NewEvaluateMaxoTerm1(maxoHpoDiseaseRank, nRepetitions, ppkt,
+                        engine, maxoHpoTermProbabilities,
+                        initialDiagnoses, diseaseIds, biometadataService);
+                double done = completedTasks.incrementAndGet();
+                rankMaxoProgress.updateProgress(maxoId, done);
+                if (JpsChecker.isMainClassRunning("org.monarchinitiative.maxodiff.cli.Main")) {
+                    pb.print(finalMaxoIdx);
+                }
+                return evaluateMaxoTerm.call();
+            });
+            maxoIdx++;
+        }
+
+        List<Future<RankedMaxoResult>> futures = executor.invokeAll(tasks);
+
+        List<RankedMaxoResult> results = new ArrayList<>();
+        for (Future<RankedMaxoResult> future : futures) {
+            try {
+                results.add(future.get()); // blocks until the result is available
+            } catch (InterruptedException | ExecutionException e) {
+                LOGGER.error(e.getMessage());
+            }
+        }
+        executor.shutdown();
+
+        return results.stream()
+                .sorted(Comparator.comparing(RankedMaxoResult :: maxoScore).reversed())
                 .toList();
     }
 

@@ -5,11 +5,9 @@ import org.monarchinitiative.maxodiff.core.analysis.HpoFrequency;
 import org.monarchinitiative.maxodiff.core.analysis.RankMaxoScore;
 import org.monarchinitiative.maxodiff.core.analysis.refinement.MaxodiffResult;
 import org.monarchinitiative.maxodiff.core.service.BiometadataService;
-import org.monarchinitiative.maxodiff.html.results.HtmlResults;
-import org.monarchinitiative.maxodiff.html.results.SimpleTerm;
+import org.monarchinitiative.maxodiff.html.results.SimpleTermHtmlOld;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
 import org.monarchinitiative.phenol.ontology.data.TermId;
-import org.monarchinitiative.phenol.ontology.similarity.TermPair;
 
 import java.util.*;
 
@@ -119,11 +117,11 @@ public class MaxoHtmlResult {
         return this.maxodiffResult.rankMaxoScore().discoverableObservedHpoTermIds().size();
     }
 
-    public List<SimpleTerm> getHpoHeaders() {
-        List<SimpleTerm> hpoTerms = new ArrayList<>();
+    public List<SimpleTermHtmlOld> getHpoHeaders() {
+        List<SimpleTermHtmlOld> hpoTerms = new ArrayList<>();
         for (TermId termId : orderedDiscoverableHpoList) {
             String label = hpoTermsMap.getOrDefault(termId, "N/A");
-            hpoTerms.add(new SimpleTerm(termId.getValue(), label));
+            hpoTerms.add(new SimpleTermHtmlOld(termId.getValue(), label));
         }
         return hpoTerms;
     }

@@ -1,14 +1,12 @@
 package org.monarchinitiative.maxodiff.core.analysis.refinement;
 
-import org.monarchinitiative.maxodiff.core.analysis.refinement.RefinementOptionsImpl;
+public record RefinementOptions (
+        int nDiseases,
+        int nRepetitions) {
 
-public interface RefinementOptions {
-
-    static RefinementOptions of(int nDiseases, int nRepetitions) {
-        return new RefinementOptionsImpl(nDiseases, nRepetitions);
+    static public RefinementOptions of(int nDiseases, int nRepetitions) {
+        return new RefinementOptions(nDiseases, nRepetitions);
     }
 
-    int nDiseases();
-    int nRepetitions();
 
 }

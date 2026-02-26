@@ -1,7 +1,6 @@
 package org.monarchinitiative.maxodiff.core.analysis.impl;
 
 import org.monarchinitiative.maxodiff.core.analysis.DiseaseTermCount;
-import org.monarchinitiative.maxodiff.core.analysis.HTMLFrequencyMap;
 import org.monarchinitiative.maxodiff.core.analysis.HpoFrequency;
 import org.monarchinitiative.phenol.annotations.base.Ratio;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDisease;

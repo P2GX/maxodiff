@@ -36,7 +36,7 @@ public class TestResources {
     private static volatile Ontology ONTOLOGY;
     private static volatile MinimalOntology MINIMAL_ONTOLOGY;
     private static volatile HpoDiseases HPO_DISEASES;
-    private static volatile Map<SimpleTerm, Set<SimpleTerm>> HPO_2_MAXO;
+    private static volatile Map<SimpleTermOld, Set<SimpleTermOld>> HPO_2_MAXO;
 
     public static HpoDiseases hpoDiseases() {
         if (HPO_DISEASES == null) {
@@ -88,7 +88,7 @@ public class TestResources {
         return MINIMAL_ONTOLOGY;
     }
 
-    public static Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxo() {
+    public static Map<SimpleTermOld, Set<SimpleTermOld>> hpoToMaxo() {
         if (HPO_2_MAXO == null) {
             synchronized (TestResources.class) {
                 if (HPO_2_MAXO == null) {
@@ -103,8 +103,8 @@ public class TestResources {
         return HPO_2_MAXO;
     }
 
-    public static Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxoToy() {
-        Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxoToy = new HashMap<>();
+    public static Map<SimpleTermOld, Set<SimpleTermOld>> hpoToMaxoToy() {
+        Map<SimpleTermOld, Set<SimpleTermOld>> hpoToMaxoToy = new HashMap<>();
         List<TermId> hpoIdSubset = List.of(
             TermId.of("HP:0006739"),
             TermId.of("HP:0002863"),
@@ -117,9 +117,9 @@ public class TestResources {
                 TermId.of("HP:0001873")
         );
 
-        for (Map.Entry<SimpleTerm, Set<SimpleTerm>> entry : hpoToMaxo().entrySet()) {
-            SimpleTerm hpoTerm = entry.getKey();
-            Set<SimpleTerm> maxoTerms = entry.getValue();
+        for (Map.Entry<SimpleTermOld, Set<SimpleTermOld>> entry : hpoToMaxo().entrySet()) {
+            SimpleTermOld hpoTerm = entry.getKey();
+            Set<SimpleTermOld> maxoTerms = entry.getValue();
             for (TermId hpoId : hpoIdSubset) {
                 if (hpoTerm.tid().equals(hpoId)) {
                     hpoToMaxoToy.put(hpoTerm, maxoTerms);

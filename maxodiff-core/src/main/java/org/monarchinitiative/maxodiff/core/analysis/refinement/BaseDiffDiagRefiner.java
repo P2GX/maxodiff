@@ -1,12 +1,12 @@
 package org.monarchinitiative.maxodiff.core.analysis.refinement;
 
-import org.monarchinitiative.maxodiff.core.SimpleTerm;
+import org.monarchinitiative.maxodiff.core.SimpleTermOld;
 import org.monarchinitiative.maxodiff.core.analysis.*;
 import org.monarchinitiative.maxodiff.core.diffdg.DifferentialDiagnosisEngine;
 import org.monarchinitiative.maxodiff.core.model.*;
+import org.monarchinitiative.maxodiff.core.service.BiometadataService;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDisease;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
-import org.monarchinitiative.phenol.ontology.data.MinimalOntology;
 import org.monarchinitiative.phenol.ontology.data.Ontology;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 
@@ -17,19 +17,16 @@ public class BaseDiffDiagRefiner implements DiffDiagRefiner {
 
     private final HpoDiseases hpoDiseases;
     private final Map<TermId, Set<TermId>> fullHpoToMaxoTermIdMap;
-    private final Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxoTermMap;
-    private final MinimalOntology minHpo;
+    private final Map<SimpleTermOld, Set<SimpleTermOld>> hpoToMaxoTermMap;
     private final Ontology hpo;
 
     public BaseDiffDiagRefiner(HpoDiseases hpoDiseases,
                                Map<TermId, Set<TermId>> fullHpoToMaxoTermIdMap,
-                               Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxoTermMap,
-                               MinimalOntology minHpo,
+                               Map<SimpleTermOld, Set<SimpleTermOld>> hpoToMaxoTermMap,
                                Ontology hpo) {
         this.hpoDiseases = hpoDiseases;
         this.fullHpoToMaxoTermIdMap = fullHpoToMaxoTermIdMap;
         this.hpoToMaxoTermMap = hpoToMaxoTermMap;
-        this.minHpo = minHpo;
         this.hpo = hpo;
     }
 
@@ -50,7 +47,8 @@ public class BaseDiffDiagRefiner implements DiffDiagRefiner {
                 .map(DifferentialDiagnosis::diseaseId)
                 .collect(Collectors.toCollection(LinkedHashSet::new));
 
-        List<RankMaxoScore> maxoTermRanks = rankMaxo.rankMaxoTerms(sample, options.nRepetitions(), initialDiagnosesIds);
+        List<RankMaxoScore> maxoTermRanks = rankMaxo.rankMaxoTerms(sample, options.nRepetitions(),
+                                                                    initialDiagnosesIds);
         for (RankMaxoScore rankMaxoScore : maxoTermRanks) {
             TermId maxoId = rankMaxoScore.maxoId();
             double scoreDiff = rankMaxoScore.maxoScore();
@@ -69,6 +67,18 @@ public class BaseDiffDiagRefiner implements DiffDiagRefiner {
         }
         // Return RefinementResults object, which contains the list of MaxodiffResult objects.
         return new RefinementResultsImpl(maxodiffResultsList);
+    }
+
+    @Override
+    public List<RankedMaxoResult> runNew(Sample sample,
+                                         Set<TermId> initialDiagnosesIds,
+                                         RefinementOptions options,
+                                         RankMaxo rankMaxo,
+                                         BiometadataService biometadataService) throws Exception {
+
+
+        return rankMaxo.rankMaxoTermsNew(sample, options.nRepetitions(),
+                initialDiagnosesIds, biometadataService);
     }
 
     public RankMaxo getRankMaxo(List<DifferentialDiagnosis> allInitialDiagnoses,
@@ -91,7 +101,7 @@ public class BaseDiffDiagRefiner implements DiffDiagRefiner {
 
 
         return new RankMaxo(hpoToMaxoTermMap, maxoToHpoTermIdMap, maxoHpoTermProbabilities, engine,
-                hpo, allInitialDiagnoses);
+                hpo, allInitialDiagnoses, initialDiagnoses);
     }
 
     //TODO: handle possible multiple differential diagnoses with same termId

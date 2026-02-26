@@ -33,6 +33,8 @@ public class MaxoHpoDiseaseRank {
     private final Set<TermId> allMaxoAscertainedHpoIds;
     /** The MAXO term ID representing the diagnostic test being analyzed. */
     private final TermId maxoId;
+    /** The MAXO label of the diagnostic test */
+    private final String maxoLabel;
 
     /** List of counts of ascertainable HPO terms per disease. */
     List<Integer> ascertainedHpoCountList = new ArrayList<>();
@@ -45,20 +47,23 @@ public class MaxoHpoDiseaseRank {
     /**
      * Construct a {@code MaxoHpoDiseaseRank} instance.
      *
-     * @param initialDiagnoses            the initial Phenomizer-prioritized list of {@link DifferentialDiagnosis}
-     * @param ascertainablePhenotypes     helper for retrieving ascertainable phenotypes for a given disease and sample
-     * @param maxoToHpoTermIdMap          map of MAXO term IDs to the corresponding sets of HPO term IDs they can ascertain
-     * @param maxoId                      the MAXO term being evaluated
+     * @param initialDiagnoses        the initial Phenomizer-prioritized list of {@link DifferentialDiagnosis}
+     * @param ascertainablePhenotypes helper for retrieving ascertainable phenotypes for a given disease and sample
+     * @param maxoToHpoTermIdMap      map of MAXO term IDs to the corresponding sets of HPO term IDs they can ascertain
+     * @param maxoId                  the MAXO term being evaluated
+     * @param maxoLabel               the MAXO term label
      */
     public MaxoHpoDiseaseRank(List<DifferentialDiagnosis> initialDiagnoses,
                               AscertainablePhenotypes ascertainablePhenotypes,
                               Map<TermId, Set<TermId>> maxoToHpoTermIdMap,
                               TermId maxoId,
                               Sample sample,
-                              int nDiagnoses) {
+                              int nDiagnoses,
+                              String maxoLabel) {
         this.initialDiagnoses = initialDiagnoses;
         this.ascertainablePhenotypes = ascertainablePhenotypes;
         this.maxoId = maxoId;
+        this.maxoLabel = maxoLabel;
         this.allMaxoAscertainedHpoIds = maxoToHpoTermIdMap.get(maxoId);
         makeAscertainedHpoCountListAndRankMap(sample, nDiagnoses);
         makeHpoToProbabilityMap(sample);
@@ -153,6 +158,14 @@ public class MaxoHpoDiseaseRank {
         return maxoId;
     }
 
+    public String getMaxoLabel() {
+        return maxoLabel;
+    }
+
+    public List<DifferentialDiagnosis> getInitialDiagnoses() {
+        return initialDiagnoses;
+    }
+
     public List<Integer> getSampledHpoCounts(int total) {
 
         List<Integer> result = new ArrayList<>();
@@ -197,6 +210,7 @@ public class MaxoHpoDiseaseRank {
         private TermId maxoId = null;
         private Integer nDiagnoses = null;
         private Sample sample;
+        private String maxoLabel;
 
 
         public Builder initialDiagnoses(List<DifferentialDiagnosis> initialDiagnoses) {
@@ -229,6 +243,11 @@ public class MaxoHpoDiseaseRank {
             return this;
         }
 
+        public Builder maxoLabel(String maxoLabel) {
+            this.maxoLabel = maxoLabel;
+            return this;
+        }
+
         /** @return a new {@link Builder} instance for {@link MaxoHpoDiseaseRank} */
         public static Builder builder() {
             return new Builder();
@@ -245,6 +264,7 @@ public class MaxoHpoDiseaseRank {
             Objects.requireNonNull(ascertainablePhenotypes, "ascertainablePhenotypes must not be null");
             Objects.requireNonNull(maxoToHpoTermIdMap, "maxoToHpoTermIdMap must not be null");
             Objects.requireNonNull(maxoId, "maxoId must not be null");
+            Objects.requireNonNull(maxoLabel, "maxoLabel must not be null");
             Objects.requireNonNull(nDiagnoses, "nDiagnoses must not be null");
             Objects.requireNonNull(sample, "sample must not be null");
             return new MaxoHpoDiseaseRank(this.initialDiagnoses,
@@ -252,7 +272,8 @@ public class MaxoHpoDiseaseRank {
                     this.maxoToHpoTermIdMap,
                     this.maxoId,
                     this.sample,
-                    this.nDiagnoses);
+                    this.nDiagnoses,
+                    this.maxoLabel);
         }
     }
 }

@@ -1,6 +1,6 @@
 package org.monarchinitiative.maxodiff.core.service;
 
-import org.monarchinitiative.maxodiff.core.SimpleTerm;
+import org.monarchinitiative.maxodiff.core.SimpleTermOld;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDisease;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
 import org.monarchinitiative.phenol.ontology.data.MinimalOntology;
@@ -19,13 +19,13 @@ public class BiometadataServiceImpl implements BiometadataService {
     private final Map<TermId, String> hpoTermsMap;
     private final Map<TermId, String> diseaseTermsMap;
 
-    public static BiometadataServiceImpl of(MinimalOntology hpo, HpoDiseases hpoDiseases, Map<SimpleTerm, Set<SimpleTerm>> maxoAnnotsMap) {
+    public static BiometadataServiceImpl of(MinimalOntology hpo, HpoDiseases hpoDiseases, Map<SimpleTermOld, Set<SimpleTermOld>> maxoAnnotsMap) {
         Map<TermId, String> hpoToLabel = hpo.getTerms().stream().collect(Collectors.toMap(Term::id, Term::getName));
         Map<TermId, String> diseaseToLabel = hpoDiseases.hpoDiseases().collect(Collectors.toMap(HpoDisease::id, HpoDisease::diseaseName));
         // Note, we assume that there are no MAxO terms with identical ids but different labels.
         Map<String, String> maxoTermsMap = maxoAnnotsMap.values().stream()
                 .flatMap(Collection::stream).distinct()
-                .collect(Collectors.toMap(t -> t.tid().getValue(), SimpleTerm::label));
+                .collect(Collectors.toMap(t -> t.tid().getValue(), SimpleTermOld::label));
         return new BiometadataServiceImpl(maxoTermsMap, hpoToLabel, diseaseToLabel);
     }
 
