@@ -32,44 +32,6 @@ public class BaseDiffDiagRefiner implements DiffDiagRefiner {
 
 
     @Override
-    public RefinementResults run(Sample sample,
-                                 Collection<DifferentialDiagnosis> differentialDiagnoses,
-                                 RefinementOptions options,
-                                 RankMaxo rankMaxo,
-                                 Map<TermId, List<HpoFrequency>> hpoTermCounts,
-                                 Map<TermId, Set<TermId>> maxoToHpoTermIdMap) throws Exception {
-
-        List<MaxodiffResult> maxodiffResultsList = new ArrayList<>();
-        List<DifferentialDiagnosis> initialDiagnoses = differentialDiagnoses.stream()
-                .toList().subList(0, options.nDiseases());
-
-        Set<TermId> initialDiagnosesIds = initialDiagnoses.stream()
-                .map(DifferentialDiagnosis::diseaseId)
-                .collect(Collectors.toCollection(LinkedHashSet::new));
-
-        List<RankMaxoScore> maxoTermRanks = rankMaxo.rankMaxoTerms(sample, options.nRepetitions(),
-                                                                    initialDiagnosesIds);
-        for (RankMaxoScore rankMaxoScore : maxoTermRanks) {
-            TermId maxoId = rankMaxoScore.maxoId();
-            double scoreDiff = rankMaxoScore.maxoScore();
-            Set<TermId> diseaseIds = new LinkedHashSet<>();
-            List<DifferentialDiagnosis> differentialDiagnosisModels = new ArrayList<>(differentialDiagnoses);
-            differentialDiagnosisModels.sort(Comparator.comparingDouble(DifferentialDiagnosis::score).reversed());
-            differentialDiagnosisModels.forEach(d -> diseaseIds.add(d.diseaseId()));
-            Set<TermId> hpoTermIds = maxoToHpoTermIdMap.get(maxoId);
-
-            // Get HPO frequency records
-            List<Frequencies> frequencies = getFrequencyRecords(rankMaxoScore.initialOmimTermIds(),
-                    hpoTermIds, hpoTermCounts);
-            // Make MaxodiffResult for the MAXO term
-            MaxodiffResult maxodiffResult = new MaxodiffResultImpl(rankMaxoScore, frequencies);
-            maxodiffResultsList.add(maxodiffResult);
-        }
-        // Return RefinementResults object, which contains the list of MaxodiffResult objects.
-        return new RefinementResultsImpl(maxodiffResultsList);
-    }
-
-    @Override
     public List<RankedMaxoResult> runNew(Sample sample,
                                          Set<TermId> initialDiagnosesIds,
                                          RefinementOptions options,

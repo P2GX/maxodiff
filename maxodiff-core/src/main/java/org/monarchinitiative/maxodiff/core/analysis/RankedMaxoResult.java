@@ -17,8 +17,6 @@ public record RankedMaxoResult(
         List<RankedOmimTerm> rankedOmimTermList,
         List<CountedHpoTerm> hpoTermIds,
         List<HpoFrequency> frequencies) {
-    //TODO: go back to original list of all frequencies per disease row: with count, calculated mica frequency,
-    // make new JSON object to be read in for HTML formatting
 
 
 

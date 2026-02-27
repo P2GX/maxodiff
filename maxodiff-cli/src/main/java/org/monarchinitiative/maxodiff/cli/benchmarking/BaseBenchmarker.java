@@ -5,9 +5,7 @@ import org.monarchinitiative.maxodiff.core.SimpleTermOld;
 import org.monarchinitiative.maxodiff.core.analysis.HpoFrequency;
 import org.monarchinitiative.maxodiff.core.analysis.RankedMaxoResult;
 import org.monarchinitiative.maxodiff.core.analysis.refinement.DiffDiagRefiner;
-import org.monarchinitiative.maxodiff.core.analysis.refinement.MaxodiffResult;
 import org.monarchinitiative.maxodiff.core.analysis.refinement.RefinementOptions;
-import org.monarchinitiative.maxodiff.core.analysis.refinement.RefinementResults;
 import org.monarchinitiative.maxodiff.core.diffdg.DifferentialDiagnosisEngine;
 import org.monarchinitiative.maxodiff.core.model.*;
 import org.monarchinitiative.maxodiff.core.service.BiometadataService;
@@ -99,32 +97,6 @@ public class BaseBenchmarker {
                 diseaseModelProbability);
     }
 
-
-    public List<MaxodiffResult> standardRun() throws Exception {
-        RefinementOptions options = RefinementOptions.of(nDiseases, nRepetitions);
-        LOGGER.info("ppkt = {}, n Diseases = {}, n Repetitions = {}", this.phenopacketPath.toFile().getName(), nDiseases, nRepetitions);
-        List<DifferentialDiagnosis> topNinitialDiffDiagList = getTopNInitialDiffDiagList();
-        List<HpoDisease> diseases = refiner.getDiseases(topNinitialDiffDiagList);
-        Map<TermId, List<HpoFrequency>> hpoTermCounts = refiner.getHpoTermCounts(diseases);
-        Map<TermId, Set<TermId>> maxoToHpoTermIdMap = refiner.getMaxoToHpoTermIdMap(hpoTermCounts);
-
-        RankMaxo rankMaxo = new RankMaxo(hpoToMaxoTermMap, maxoToHpoTermIdMap,
-                maxoHpoTermProbabilities, phenomizer,
-                ontology, getCompleteInitialDiffDiagList(), topNinitialDiffDiagList);
-
-        RefinementResults refinementResults = refiner.run(sample,
-                completeInitialDiffDiagList,
-                options,
-                rankMaxo,
-                hpoTermCounts,
-                maxoToHpoTermIdMap);
-
-        // Sort refinement results and write to files
-        List<MaxodiffResult> resultsList = new ArrayList<>(refinementResults.maxodiffResults().stream().toList());
-        resultsList.sort(Comparator.<MaxodiffResult>comparingDouble(mr -> mr.rankMaxoScore().maxoScore()).reversed());
-        return resultsList;
-    }
-
     public List<RankedMaxoResult> standardRun(BiometadataService biometadataService) throws Exception {
         RefinementOptions options = RefinementOptions.of(nDiseases, nRepetitions);
         LOGGER.info("ppkt = {}, n Diseases = {}, n Repetitions = {}", this.phenopacketPath.toFile().getName(), nDiseases, nRepetitions);
@@ -157,7 +129,7 @@ public class BaseBenchmarker {
      * @return
      * @throws Exception
      */
-    public List<MaxodiffResult> spikedRandomizer(int diseaseIndex) throws Exception {
+    public List<RankedMaxoResult> spikedRandomizer(int diseaseIndex, BiometadataService biometadataService) throws Exception {
         List<DifferentialDiagnosis> diseaseTopNList = getTopNInitialDiffDiagList();
         List<DifferentialDiagnosis> shuffledDiagnoses = new ArrayList<>(getCompleteInitialDiffDiagList());
         Collections.shuffle(shuffledDiagnoses);
@@ -165,6 +137,9 @@ public class BaseBenchmarker {
         DifferentialDiagnosis originalDiagnosis = diseaseTopNList.get(diseaseIndex);
         LOGGER.info("spike disease {} (index {})", originalDiagnosis.diseaseId().toString(), (diseaseIndex + 1));
         initialDiagnosesNDiseasesRandom.set(initialDiagnosesNDiseasesRandom.size() - 1, originalDiagnosis);
+        Set<TermId> topNInitialDiagnosesIdsRandom = initialDiagnosesNDiseasesRandom.stream()
+                .map(DifferentialDiagnosis::diseaseId)
+                .collect(Collectors.toCollection(LinkedHashSet::new));
 
         List<HpoDisease> diseases = refiner.getDiseases(initialDiagnosesNDiseasesRandom);
         Map<TermId, List<HpoFrequency>> hpoTermCounts = refiner.getHpoTermCounts(diseases);
@@ -173,16 +148,13 @@ public class BaseBenchmarker {
         RankMaxo rankMaxo = new RankMaxo(hpoToMaxoTermMap, maxoToHpoTermIdMap,
                 maxoHpoTermProbabilities, phenomizer,
                 ontology, getCompleteInitialDiffDiagList(), initialDiagnosesNDiseasesRandom);
-        RefinementResults refinementResults = refiner.run(sample,
-                initialDiagnosesNDiseasesRandom,
+        List<RankedMaxoResult> refinementResults = refiner.runNew(sample,
+                topNInitialDiagnosesIdsRandom,
                 new RefinementOptions(nDiseases, nRepetitions),
                 rankMaxo,
-                hpoTermCounts,
-                maxoToHpoTermIdMap);
+                biometadataService);
 
-        return refinementResults.maxodiffResults().stream()
-                .sorted(Comparator.comparingDouble((MaxodiffResult mr) -> mr.rankMaxoScore().maxoScore()).reversed())
-                .toList();
+        return refinementResults;
     }
 
     /**
@@ -191,31 +163,6 @@ public class BaseBenchmarker {
      * @return
      * @throws Exception
      */
-    public List<MaxodiffResult> shuffledRandomizer() throws Exception {
-        List<DifferentialDiagnosis> shuffledDiagnoses = new ArrayList<>(getCompleteInitialDiffDiagList());
-        Collections.shuffle(shuffledDiagnoses);
-        List<DifferentialDiagnosis> initialDiagnosesNDiseasesRandom = shuffledDiagnoses.subList(0, nDiseases);
-
-        List<HpoDisease> diseases = refiner.getDiseases(initialDiagnosesNDiseasesRandom);
-        //TODO: refactor to only use HpoFrequency object to make this easier
-        Map<TermId, List<HpoFrequency>> hpoTermCounts = refiner.getHpoTermCounts(diseases);
-        Map<TermId, Set<TermId>> maxoToHpoTermIdMap = refiner.getMaxoToHpoTermIdMap(hpoTermCounts);
-
-        RankMaxo rankMaxo = new RankMaxo(hpoToMaxoTermMap, maxoToHpoTermIdMap,
-                maxoHpoTermProbabilities, phenomizer,
-                ontology, getCompleteInitialDiffDiagList(), initialDiagnosesNDiseasesRandom);
-        RefinementResults refinementResults = refiner.run(sample,
-                initialDiagnosesNDiseasesRandom,
-                new RefinementOptions(nDiseases, nRepetitions),
-                rankMaxo,
-                hpoTermCounts,
-                maxoToHpoTermIdMap);
-
-        return refinementResults.maxodiffResults().stream()
-                .sorted(Comparator.comparingDouble((MaxodiffResult mr) -> mr.rankMaxoScore().maxoScore()).reversed())
-                .toList();
-    }
-
     public List<RankedMaxoResult> shuffledRandomizer(BiometadataService biometadataService) throws Exception {
         List<DifferentialDiagnosis> shuffledDiagnoses = new ArrayList<>(getCompleteInitialDiffDiagList());
         Collections.shuffle(shuffledDiagnoses);

@@ -6,14 +6,8 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
-import org.monarchinitiative.maxodiff.core.analysis.refinement.MaxodiffResult;
-import org.monarchinitiative.maxodiff.core.analysis.refinement.RefinementResults;
-import org.monarchinitiative.phenol.ontology.data.TermId;
-
 import java.io.StringWriter;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.hamcrest.Matchers.equalTo;
@@ -34,56 +28,69 @@ public class RefinementResultsJsonDumpTest {
         StringWriter writer = new StringWriter();
         JsonGenerator generator = OBJECT_MAPPER.createGenerator(writer);
 
-        RefinementResults results = createResults();
+        List<RankedMaxoResult> results = createResults();
 
         generator.writeObject(results);
 
         String expected = """
-                {
-                  "maxodiffResults" : [ {
-                    "rankMaxoScore" : {
-                      "maxoId" : "MAXO:123",
-                      "initialOmimTermIds" : [ "OMIM:256000" ],
-                      "maxoOmimTermIds" : [ "OMIM:128000" ],
-                      "discoverableObservedHpoTermIds" : [ ],
-                      "chosenHpoTermCtsMap" : { },
-                      "maxoScore" : 2.0,
-                      "maxoDiagnoses" : [ ],
-                      "hpoTermIdRepCtsMap" : { },
-                      "maxoDiseaseAvgRankChangeMap" : { },
-                      "minRankChange" : 0,
-                      "maxRankChange" : 0
+                [ {
+                  "maxoTerm" : {
+                    "termId" : "MAXO:123",
+                    "termLabel" : "MAXO Label 123"
+                  },
+                  "maxoScore" : 2.0,
+                  "rankedOmimTermList" : [ {
+                    "omimTerm" : {
+                      "termId" : "OMIM:256000",
+                      "termLabel" : "OMIM 256 Label"
                     },
-                    "frequencies" : [ {
-                      "hpoId" : "HP:123",
-                      "frequencies" : [ 1.0, 4.6, 8.19 ]
-                    } ]
+                    "initialRank" : 5,
+                    "averageRank" : 1.0
+                  }, {
+                    "omimTerm" : {
+                      "termId" : "OMIM:128000",
+                      "termLabel" : "OMIM 128 Label"
+                    },
+                    "initialRank" : 4,
+                    "averageRank" : 2.0
+                  } ],
+                  "hpoTermIds" : [ {
+                    "hpoTerm" : {
+                      "termId" : "HPO:123000",
+                      "termLabel" : "HPO 123 Label"
+                    },
+                    "count" : 50
+                  }, {
+                    "hpoTerm" : {
+                      "termId" : "HPO:425000",
+                      "termLabel" : "HPO 425 Label"
+                    },
+                    "count" : 85
+                  } ],
+                  "frequencies" : [ {
+                    "omimId" : "OMIM:256000",
+                    "hpoId" : "HPO:123000",
+                    "count" : 10,
+                    "frequency" : 0.5,
+                    "mica" : 5.3
+                  }, {
+                    "omimId" : "OMIM:128000",
+                    "hpoId" : "HPO:425000",
+                    "count" : 20,
+                    "frequency" : 0.75,
+                    "mica" : 10.6
                   } ]
-                }""";
+                } ]""";
         assertThat(writer.toString().replaceAll("\r", ""), equalTo(expected));
     }
 
-    private static RefinementResults createResults() {
-        return RefinementResults.of(
-                List.of(
-                        MaxodiffResult.of(
-                                new RankMaxoScore(
-                                        TermId.of("MAXO:123"),
-                                        Set.of(TermId.of("OMIM:256000")),
-                                        Set.of(TermId.of("OMIM:128000")),
-                                        Set.of(),
-                                        Map.of(),
-                                        2.,
-                                        List.of(),
-                                        Map.of(),
-                                        Map.of(),
-                                        0,
-                                        0
-                                ),
-                                List.of(
-                                        new Frequencies(TermId.of("HP:123"), List.of(1.f, 4.6f, 8.19f))
-                                )
+    private static List<RankedMaxoResult> createResults() {
+        return List.of(new RankedMaxoResult(new SimpleTerm("MAXO:123", "MAXO Label 123"),
+                        2.,
+                        List.of(new RankedOmimTerm(new SimpleTerm("OMIM:256000", "OMIM 256 Label"), 5, 1), new RankedOmimTerm(new SimpleTerm("OMIM:128000", "OMIM 128 Label"), 4,2)),
+                        List.of(new CountedHpoTerm(new SimpleTerm("HPO:123000", "HPO 123 Label"), 50), new CountedHpoTerm(new SimpleTerm("HPO:425000", "HPO 425 Label"), 85)),
+                        List.of(new HpoFrequency("OMIM:256000", "HPO:123000", 10, 0.5f, 5.3f), new HpoFrequency("OMIM:128000", "HPO:425000", 20, 0.75f, 10.6f))
                         )
-                ));
+        );
     }
 }
