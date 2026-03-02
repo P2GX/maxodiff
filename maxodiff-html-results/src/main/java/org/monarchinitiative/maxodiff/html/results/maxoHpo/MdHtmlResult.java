@@ -1,9 +1,6 @@
 package org.monarchinitiative.maxodiff.html.results.maxoHpo;
 
 import org.monarchinitiative.maxodiff.core.analysis.*;
-import org.monarchinitiative.maxodiff.core.analysis.refinement.MaxodiffResult;
-import org.monarchinitiative.maxodiff.core.service.BiometadataService;
-import org.monarchinitiative.maxodiff.html.results.SimpleTermHtmlOld;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 

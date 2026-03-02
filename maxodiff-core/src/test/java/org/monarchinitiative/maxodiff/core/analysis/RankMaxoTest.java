@@ -88,21 +88,6 @@ public class RankMaxoTest {
         return Sample.of("sample2", presentTerms, excludedTerms);//, diseaseIds);
     }
 
-    /**
-     * This tests ranking MAxO terms
-     */
-    // Skip this test because it doesn't compile on push
-    @Test
-    @Disabled
-    public void testRankMaxoTerms() throws Exception {
-        Set<TermId> diseaseIds = initialDiagnoses.stream()
-                .map(DifferentialDiagnosis::diseaseId).collect(Collectors.toSet());
-        Sample s1 = TestResources.getExampleSample();
-        Map<SimpleTermOld, Set<SimpleTermOld>> hpoToMaxoTermMap = TestResources.hpoToMaxo();
-        RankMaxo rankMaxo = new RankMaxo(hpoToMaxoTermMap, maxoToHpoTermIdMap, maxoHpoTermProbabilities, ENGINE,
-                ontology, initialDiagnoses, initialDiagnoses);
-        List<RankMaxoScore> maxoTermRanks = rankMaxo.rankMaxoTerms(s1, 2, diseaseIds);
-        System.out.println(maxoTermRanks);
-    }
+
 
 }

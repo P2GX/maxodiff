@@ -1,7 +1,6 @@
 package org.monarchinitiative.maxodiff.html.results.maxoHpo;
 
 import org.monarchinitiative.maxodiff.core.analysis.*;
-import org.monarchinitiative.maxodiff.core.analysis.refinement.MaxodiffResult;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 
 import java.util.*;
@@ -10,11 +9,11 @@ public class MdResultRow {
     private final String omimId;
     private final String omimLabel;
     private final int initialRank;
-    private final int rankChange;
+    private final float rankChange;
     private final int nDiseases;
     private final List<HpoTableCell> cells;
 
-    public MdResultRow(String omimId, String omimLabel, int initialRank, int rankChange, int nDiseases, List<HpoTableCell> cells) {
+    public MdResultRow(String omimId, String omimLabel, int initialRank, float rankChange, int nDiseases, List<HpoTableCell> cells) {
         this.omimId = omimId;
         this.omimLabel = omimLabel;
         this.initialRank = initialRank;
@@ -34,7 +33,7 @@ public class MdResultRow {
             String omimId = omimTerm.omimTerm().termId();
             String omimLabel = omimTerm.omimTerm().termLabel();
             int initialRank = omimTerm.initialRank();
-            int averageRank = omimTerm.averageRank();
+            float averageRank = omimTerm.averageRank();
             List<HpoTableCell> cells = new ArrayList<>();
             for (CountedHpoTerm hpoTerm : result.hpoTermIds()) {
                 String hpoId = hpoTerm.hpoTerm().termId();
@@ -83,7 +82,7 @@ public class MdResultRow {
         return initialRank;
     }
 
-    public int getRankChange() {
+    public float getRankChange() {
         return rankChange;
     }
 

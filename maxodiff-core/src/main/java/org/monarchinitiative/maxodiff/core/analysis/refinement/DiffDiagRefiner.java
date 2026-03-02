@@ -24,14 +24,6 @@ import java.util.Set;
  */
 public interface DiffDiagRefiner {
 
-    RefinementResults run(Sample sample,
-                          Collection<DifferentialDiagnosis> differentialDiagnoses,
-                          RefinementOptions options,
-                          RankMaxo rankMaxo,
-                          Map<TermId, List<HpoFrequency>> hpoTermCounts,
-                          Map<TermId, Set<TermId>> maxoToHpoTermIdMap
-    ) throws Exception;
-
     List<RankedMaxoResult> runNew(Sample sample,
                                   Set<TermId> initialDiagnosesIds,
                                   RefinementOptions options,

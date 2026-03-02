@@ -605,16 +605,18 @@
     <tbody>
         <tr class="spaced-row">
             <td class="narrow-column">Observed HPO Terms:</td>
-            <td th:each="term : ${observedHpoTerms}" class="wide-column">
-                <a th:href="|https://hpo.jax.org/browse/term/${term.termId}|" target="_blank"
+            <td class="wide-column">
+                <a th:each="term : ${observedHpoTerms}"
+                   th:href="|https://hpo.jax.org/browse/term/${term.termId}|" target="_blank"
                    th:text="${term.termLabel}">
                 </a>
             </td>
         </tr>
         <tr class="spaced-row">
             <td class="narrow-column">Excluded HPO Terms:</td>
-            <td th:each="term : ${excludedHpoTerms}" class="wide-column">
-                <a th:href="|https://hpo.jax.org/browse/term/${term.termId}|" target="_blank"
+            <td class="wide-column">
+                <a th:each="term : ${excludedHpoTerms}"
+                   th:href="|https://hpo.jax.org/browse/term/${term.termId}|" target="_blank"
                    th:text="${term.termLabel}">
                 </a>
             </td>

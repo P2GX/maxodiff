@@ -1,8 +1,6 @@
 package org.monarchinitiative.maxodiff.html.results.maxoDisease;
 
 import org.monarchinitiative.maxodiff.core.analysis.RankedMaxoResult;
-import org.monarchinitiative.maxodiff.core.analysis.refinement.MaxodiffResult;
-import org.monarchinitiative.maxodiff.core.service.BiometadataService;
 
 public class MdDiseaseColumnHeaderCell {
 
