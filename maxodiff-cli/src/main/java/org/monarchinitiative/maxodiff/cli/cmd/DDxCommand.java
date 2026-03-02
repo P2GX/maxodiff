@@ -40,8 +40,8 @@ import java.util.zip.GZIPOutputStream;
  * This command performs the maxodiff algorithm for a single phenopacket.
  */
 @CommandLine.Command(
-        name = "analyze1",
-        aliases = {"a1"},
+        name = "analyze",
+        aliases = {"A"},
         mixinStandardHelpOptions = true,
         description = "Analyze one Phenopacket")
 public class DDxCommand extends BaseCommand {

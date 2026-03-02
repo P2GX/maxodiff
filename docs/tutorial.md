@@ -100,6 +100,13 @@ The CLI version of maxodiff can be run with default values using the analyze com
 java -jar maxodiff-cli/target/maxodiff-cli.jar analyze -p <path to phenopacket file> 
 ```
 
+To have the program output a JSON file with the results instead of the HTML file, use the above command but add a ``-j/--json``.
+
+```bash
+java -jar maxodiff-cli/target/maxodiff-cli.jar analyze -p <path to phenopacket file> -j 
+```
+
+
 # Server
 We can start a local server as follows. First download the files as mentioned above.
 Then enter

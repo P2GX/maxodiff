@@ -16,9 +16,9 @@ import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class NewEvaluateMaxoTerm1 implements Callable<RankedMaxoResult> {
+public class MaxoTermEvaluator implements Callable<RankedMaxoResult> {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(NewEvaluateMaxoTerm1.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(MaxoTermEvaluator.class);
 
     private final MaxoHpoDiseaseRank maxoHpoDiseaseRank;
     private final int nRepetitions;
@@ -29,7 +29,7 @@ public class NewEvaluateMaxoTerm1 implements Callable<RankedMaxoResult> {
     private final List<DifferentialDiagnosis> initialDiagnoses;
     private final BiometadataService biometadataService;
 
-    public NewEvaluateMaxoTerm1(
+    public MaxoTermEvaluator(
             MaxoHpoDiseaseRank maxoHpoDiseaseRank,
             int nRepetitions,
             Sample ppkt,

@@ -93,7 +93,7 @@ public class RankMaxo {
             rankMaxoProgress = new RankMaxoProgress(maxoToHpoTermIdMap.size());
             int finalMaxoIdx = maxoIdx;
             tasks.add(() -> {
-                NewEvaluateMaxoTerm1 evaluateMaxoTerm = new NewEvaluateMaxoTerm1(maxoHpoDiseaseRank, nRepetitions, ppkt,
+                MaxoTermEvaluator evaluateMaxoTerm = new MaxoTermEvaluator(maxoHpoDiseaseRank, nRepetitions, ppkt,
                         engine, maxoHpoTermProbabilities,
                         initialDiagnoses, diseaseIds, biometadataService);
                 double done = completedTasks.incrementAndGet();
