@@ -26,6 +26,21 @@
             </div>
         </div>
 
+        <table>
+            <tbody>
+            <tr>
+                <td><div th:id="'TornadoBarChartContainer_' + ${maxoData.index}" style="height:500px; width:1600px; border: 1px solid black"></div></td>
+            </tr>
+            </tbody>
+        </table>
+        <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+        <script th:inline="javascript">
+            var rankedOmimTerms = [[${maxoData.getRankedOmimTermList}]];
+            var nDiseases = [[${maxoData.nDiseases}]];
+            var chartIdx = [[${maxoData.index}]]
+        </script>
+        <script type="text/javascript" th:src="@{src/main/resources/static/js/TornadoBarChart.js}"></script>
+
         <table class="countsTable">
             <thead>
             <tr>

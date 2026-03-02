@@ -17,7 +17,7 @@ public class MdHtmlResult {
     private final String maxoLabel;
     private final Map<TermId, String> hpoTermsMap;
 
-    private final RankedMaxoResult rankedMaxoResultResult;
+    private final RankedMaxoResult rankedMaxoResult;
     private final MdRepetitionRow repetitionRow;
     private final List<MdResultRow> resultRows;
 
@@ -33,7 +33,7 @@ public class MdHtmlResult {
         this.index = idx;
         this.maxoId = result.maxoTerm().termId();
         this.maxoLabel = result.maxoTerm().termLabel();
-        this.rankedMaxoResultResult = result;
+        this.rankedMaxoResult = result;
 
         List<HpoFrequency> hpoFrequenciesMica = new ArrayList<>();
         for (HpoFrequency hpoFrequency : result.frequencies()) {
@@ -71,19 +71,23 @@ public class MdHtmlResult {
     }
     /** The expected change in rank score if the indicated MAxO investigation is applied */
     public String deltaScore() {
-        return String.format("%.1f",this.rankedMaxoResultResult.maxoScore());
+        return String.format("%.1f",this.rankedMaxoResult.maxoScore());
     }
 
     public double nDiseases() {
-        return this.rankedMaxoResultResult.rankedOmimTermList().size();
+        return this.rankedMaxoResult.rankedOmimTermList().size();
     }
 
     public int nObservedHpoTerms() {
-        return this.rankedMaxoResultResult.hpoTermIds().size();
+        return this.rankedMaxoResult.hpoTermIds().size();
     }
 
     public List<SimpleTerm> getHpoHeaders() {
-        return this.rankedMaxoResultResult.hpoTermIds().stream().map(CountedHpoTerm::hpoTerm).collect(Collectors.toList());
+        return this.rankedMaxoResult.hpoTermIds().stream().map(CountedHpoTerm::hpoTerm).collect(Collectors.toList());
+    }
+
+    public List<RankedOmimTerm> getRankedOmimTermList() {
+        return this.rankedMaxoResult.rankedOmimTermList().stream().toList();
     }
 
 
