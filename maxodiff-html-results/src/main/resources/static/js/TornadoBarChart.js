@@ -4,7 +4,7 @@ var nDiseases = nDiseases
 var idx = chartIdx;
 
 var tornadoBarChart = document.getElementById('TornadoBarChartContainer_' + idx);
-console.log("TornadoBarChart = " + tornadoBarChart);
+//console.log("TornadoBarChart = " + tornadoBarChart);
 
 var minRankChange = -(nDiseases - 1)
 var maxRankChange = nDiseases - 1
@@ -82,6 +82,21 @@ var options = {
         title: {
           text: 'Average Rank Change'
         },
+      },
+      tooltip: {
+        y: {
+            formatter: function(value, { series, seriesIndex, dataPointIndex, w }) {
+              var seriesName = 'Decline';
+              var value = series[seriesIndex][dataPointIndex];
+              var rankChange = value;
+              if (rankChange < 0) {
+                  seriesName = 'Improve'
+                  value = -rankChange;
+              }
+
+              return seriesName + " by " + value;
+            }
+        }
       }
 };
 
