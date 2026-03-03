@@ -16,9 +16,9 @@ import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
-public class NewEvaluateMaxoTerm1 implements Callable<RankedMaxoResult> {
+public class MaxoTermEvaluator implements Callable<RankedMaxoResult> {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(NewEvaluateMaxoTerm1.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(MaxoTermEvaluator.class);
 
     private final MaxoHpoDiseaseRank maxoHpoDiseaseRank;
     private final int nRepetitions;
@@ -29,7 +29,7 @@ public class NewEvaluateMaxoTerm1 implements Callable<RankedMaxoResult> {
     private final List<DifferentialDiagnosis> initialDiagnoses;
     private final BiometadataService biometadataService;
 
-    public NewEvaluateMaxoTerm1(
+    public MaxoTermEvaluator(
             MaxoHpoDiseaseRank maxoHpoDiseaseRank,
             int nRepetitions,
             Sample ppkt,
@@ -176,7 +176,7 @@ public class NewEvaluateMaxoTerm1 implements Callable<RankedMaxoResult> {
 
         for (TermId omimId : diseaseIds) {
             String omimIdStr = omimId.getValue();
-            String omimLabel = biometadataService.diseaseLabel(TermId.of(omimIdStr)).get();
+            String omimLabel = biometadataService.diseaseLabel(omimId).orElse("unknown");
             SimpleTerm omimTerm = new SimpleTerm(omimIdStr, omimLabel);
             int initialRank = findRank(initialDiagnoses, omimId);
 
@@ -215,20 +215,13 @@ public class NewEvaluateMaxoTerm1 implements Callable<RankedMaxoResult> {
 
         List<CountedHpoTerm> result = new ArrayList<>();
 
-        for (TermId omimId : diseaseIds) {
-            Optional<HpoDisease> opt = maxoHpoTermProbabilities.getHpoDiseases().diseaseById(omimId);
-            if (opt.isEmpty()) continue;
-
-            List<TermId> annotatedHpoIds = opt.get().annotationTermIdList();
-
-            for (TermId hpoId : chosenHpoIds) {
-                if (annotatedHpoIds.contains(hpoId)) {
-                    String hpoIdStr = hpoId.getValue();
-                    String hpoLabel = biometadataService.hpoLabel(TermId.of(hpoIdStr)).get();
-                    SimpleTerm hpoTerm = new SimpleTerm(hpoIdStr, hpoLabel);
-                    CountedHpoTerm countedHpoTerm = new CountedHpoTerm(hpoTerm, chosenHpoTermCountsMap.get(hpoId));
-                    result.add(countedHpoTerm);
-                }
+        for (TermId hpoId : chosenHpoIds) {
+            String hpoIdStr = hpoId.getValue();
+            String hpoLabel = biometadataService.hpoLabel(hpoId).orElse("unknown");
+            SimpleTerm hpoTerm = new SimpleTerm(hpoIdStr, hpoLabel);
+            CountedHpoTerm countedHpoTerm = new CountedHpoTerm(hpoTerm, chosenHpoTermCountsMap.get(hpoId));
+            if (!result.contains(countedHpoTerm)) {
+                result.add(countedHpoTerm);
             }
         }
 

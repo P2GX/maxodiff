@@ -4,13 +4,9 @@ import org.monarchinitiative.maxodiff.core.analysis.CountedHpoTerm;
 import org.monarchinitiative.maxodiff.core.analysis.HpoFrequency;
 import org.monarchinitiative.maxodiff.core.analysis.RankedMaxoResult;
 import org.monarchinitiative.maxodiff.core.analysis.RankedOmimTerm;
-import org.monarchinitiative.maxodiff.core.analysis.refinement.MaxodiffResult;
-import org.monarchinitiative.phenol.ontology.data.TermId;
 
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
-import java.util.Map;
 
 /** Compute data for the N Repetitions row */
 public class MdRepetitionRow {

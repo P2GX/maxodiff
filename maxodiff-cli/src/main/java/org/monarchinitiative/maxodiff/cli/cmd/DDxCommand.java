@@ -9,19 +9,16 @@ import org.monarchinitiative.maxodiff.core.MaxoDiffAnalysisResultRow;
 import org.monarchinitiative.maxodiff.core.MaxodiffAnalysisRunner1;
 import org.monarchinitiative.maxodiff.core.analysis.*;
 import org.monarchinitiative.maxodiff.core.analysis.refinement.DiffDiagRefiner;
-import org.monarchinitiative.maxodiff.core.analysis.refinement.MaxodiffResult;
 import org.monarchinitiative.maxodiff.core.diffdg.DifferentialDiagnosisEngine;
 import org.monarchinitiative.maxodiff.core.io.JsonWriter;
 import org.monarchinitiative.maxodiff.core.model.PhenopacketData;
 import org.monarchinitiative.maxodiff.core.model.PpktSample;
 import org.monarchinitiative.maxodiff.core.model.Sample;
 import org.monarchinitiative.maxodiff.core.service.BiometadataService;
-import org.monarchinitiative.maxodiff.html.results.HtmlResults;
 import org.monarchinitiative.maxodiff.html.results.tleaf.TleafResults;
 import org.monarchinitiative.maxodiff.phenomizer.IcMicaData;
 import org.monarchinitiative.maxodiff.phenomizer.PhenomizerDifferentialDiagnosisEngine;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
-import org.monarchinitiative.phenol.ontology.data.TermId;
 import org.monarchinitiative.phenol.ontology.similarity.TermPair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -43,8 +40,8 @@ import java.util.zip.GZIPOutputStream;
  * This command performs the maxodiff algorithm for a single phenopacket.
  */
 @CommandLine.Command(
-        name = "analyze1",
-        aliases = {"a1"},
+        name = "analyze",
+        aliases = {"A"},
         mixinStandardHelpOptions = true,
         description = "Analyze one Phenopacket")
 public class DDxCommand extends BaseCommand {
@@ -148,7 +145,7 @@ public class DDxCommand extends BaseCommand {
 
                 String jsonFilename = String.join("_", sample.id(),
                         nDiseases.toString(), nRepetitions.toString(), "maxodiff_results", ".json");
-                if(outputJson) {
+                if (outputJson) {
                     Path jsonPath = Path.of(String.join(File.separator, outputDir.toString(), jsonFilename));
                     JsonWriter.writeToJsonFile(jsonPath, resultsList);
                     LOGGER.info("Wrote JSON file to {}.", jsonPath);

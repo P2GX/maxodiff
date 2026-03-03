@@ -1,15 +1,12 @@
 package org.monarchinitiative.maxodiff.html.controller;
 
 import org.monarchinitiative.maxodiff.core.SimpleTermOld;
-import org.monarchinitiative.maxodiff.core.analysis.HpoFrequency;
+import org.monarchinitiative.maxodiff.core.analysis.*;
 import org.monarchinitiative.maxodiff.core.analysis.refinement.*;
 import org.monarchinitiative.maxodiff.core.diffdg.DifferentialDiagnosisEngine;
-import org.monarchinitiative.maxodiff.core.model.DifferentialDiagnosis;
-import org.monarchinitiative.maxodiff.core.model.PhenopacketData;
-import org.monarchinitiative.maxodiff.core.model.RankMaxo;
-import org.monarchinitiative.maxodiff.core.model.Sample;
+import org.monarchinitiative.maxodiff.core.model.*;
 import org.monarchinitiative.maxodiff.core.service.BiometadataService;
-import org.monarchinitiative.maxodiff.html.results.HtmlResults;
+import org.monarchinitiative.maxodiff.html.results.tleaf.TleafResults;
 import org.monarchinitiative.maxodiff.phenomizer.IcMicaData;
 import org.monarchinitiative.maxodiff.phenomizer.PhenomizerDifferentialDiagnosisEngine;
 import org.monarchinitiative.maxodiff.phenomizer.ScoringMode;
@@ -94,9 +91,14 @@ public class MaxodiffController {
                 .toList();
 
         // Sample object
-        Sample sample = Sample.of(sampleId,
-                observedHpoTermIdsList,
-                excludedHpoTermIdsList);
+        Sample sample = Sample.of(sampleId, observedHpoTermIdsList, excludedHpoTermIdsList);
+        List<SimpleTerm> observedSampleTerms = new ArrayList<>();
+        List<SimpleTerm> excludedSampleTerms = new ArrayList<>();
+        observedHpoTermIdsList.forEach(tid ->
+                observedSampleTerms.add(new SimpleTerm(tid.getValue(), biometadataService.hpoLabel(tid).orElse("n/a"))));
+        excludedHpoTermIdsList.forEach(tid ->
+                excludedSampleTerms.add(new SimpleTerm(tid.getValue(), biometadataService.hpoLabel(tid).orElse("n/a"))));
+        PpktSample ppktSample = new PpktSample(sampleId, observedSampleTerms, excludedSampleTerms);
         model.addAttribute("sample", sample);
 
         DifferentialDiagnosisEngine phenomizerDifferentialDxEngine = null;
@@ -162,16 +164,17 @@ public class MaxodiffController {
             }
             Map<TermId, Set<TermId>> maxoToHpoTermIdMap = (Map<TermId, Set<TermId>>) model.getAttribute("maxoToHpoTermIdMap");
 
-            RefinementResults refinementResults;
             DifferentialDiagnosisEngine diseaseSubsetEngine;
             assert orderedDiagnoses != null;
             List<DifferentialDiagnosis> initialDiagnoses = orderedDiagnoses.stream().toList()
                     .subList(0, options.nDiseases());
+            Set<TermId> initialDiagnosesIds = initialDiagnoses.stream()
+                    .map(DifferentialDiagnosis::diseaseId)
+                    .collect(Collectors.toCollection(LinkedHashSet::new));
             int totalNDiseases = differentialDiagnoses.size();
             RefinementOptions allDiseasesOptions = RefinementOptions.of(totalNDiseases, nRepetitions);
             List<DifferentialDiagnosis> allInitialDiagnoses = diffDiagRefiner.getOrderedDiagnoses(differentialDiagnoses, allDiseasesOptions);
             List<HpoDisease> allDiseases = diffDiagRefiner.getDiseases(allInitialDiagnoses);
-            Map<TermId, List<HpoFrequency>> allHpoTermCounts = diffDiagRefiner.getHpoTermCounts(allDiseases);
 
             diseaseSubsetEngine = phenomizerDifferentialDxEngine;
 
@@ -183,31 +186,24 @@ public class MaxodiffController {
                     diseaseSubsetEngine,
                     maxoToHpoTermIdMap,
                     diseaseProbModel);
-            refinementResults = diffDiagRefiner.run(sample,
-                    orderedDiagnoses,
+            List<RankedMaxoResult> resultsList = diffDiagRefiner.runNew(sample,
+                    initialDiagnosesIds,
                     options,
                     rankMaxo,
-                    allHpoTermCounts,
-                    maxoToHpoTermIdMap);
-
-
-            // Sort list of refinement results in order of decreasing score
-            List<MaxodiffResult> resultsList = new ArrayList<>(refinementResults.maxodiffResults());
-            resultsList.sort(Comparator.<MaxodiffResult>comparingDouble(mr -> mr.rankMaxoScore().maxoScore()).reversed());
+                    biometadataService);
 
 
             // Write final results to HTML
-            String htmlString = HtmlResults.writeHTMLResults(
-                    sample,
+            MdMetadata mdMetadata = new MdMetadata(ppktSample.id(),
                     nDiseases,
-                    hpoDiseases,
                     nRepetitions,
-                    resultsList,
-                    biometadataService,
-                    hpoTermCounts,
-                    icMicaDict,
-                    Path.of(""),
-                    false);
+                    ppktSample.observedHpoTerms(),
+                    ppktSample.excludedHpoTerms(),
+                    resultsList);
+
+            HTMLFrequencyMap htmlFrequencyMap = new HTMLFrequencyMap(hpoDiseases, icMicaData.icMicaDict());
+
+            String htmlString = TleafResults.writeHTMLResults(mdMetadata, resultsList, htmlFrequencyMap);
             model.addAttribute("htmlTemplateString", htmlString);
             model.addAttribute("showMDresults", true);
         }

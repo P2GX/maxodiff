@@ -6,14 +6,10 @@ import org.monarchinitiative.maxodiff.cli.benchmarking.BenchmarkResult;
 import org.monarchinitiative.maxodiff.config.MaxodiffDataResolver;
 import org.monarchinitiative.maxodiff.config.MaxodiffPropsConfiguration;
 import org.monarchinitiative.maxodiff.core.analysis.CountedHpoTerm;
-import org.monarchinitiative.maxodiff.core.analysis.Frequencies;
 import org.monarchinitiative.maxodiff.core.analysis.RankedMaxoResult;
 import org.monarchinitiative.maxodiff.core.analysis.refinement.DiffDiagRefiner;
-import org.monarchinitiative.maxodiff.core.analysis.refinement.MaxodiffResult;
 import org.monarchinitiative.maxodiff.core.analysis.refinement.RefinementOptions;
 import org.monarchinitiative.maxodiff.core.diffdg.DifferentialDiagnosisEngine;
-import org.monarchinitiative.maxodiff.core.io.PhenopacketImporter;
-import org.monarchinitiative.maxodiff.core.model.PhenopacketData;
 import org.monarchinitiative.maxodiff.phenomizer.IcMicaData;
 import org.monarchinitiative.maxodiff.phenomizer.IcMicaDictLoader;
 import org.monarchinitiative.maxodiff.phenomizer.PhenomizerDifferentialDiagnosisEngine;
@@ -25,7 +21,6 @@ import org.monarchinitiative.phenol.io.OntologyLoader;
 import org.monarchinitiative.phenol.ontology.data.Ontology;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 import org.monarchinitiative.phenol.ontology.similarity.TermPair;
-import org.phenopackets.schema.v2.Phenopacket;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import picocli.CommandLine;
@@ -37,7 +32,6 @@ import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.*;
 import java.util.concurrent.ForkJoinPool;
-import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
 
@@ -48,7 +42,7 @@ import java.util.stream.IntStream;
 @CommandLine.Command(name = "benchmarking", aliases = {"BX"},
         mixinStandardHelpOptions = true,
         description = "benchmark maxodiff analysis")
-public class BenchmarkingCommand extends DifferentialDiagnosisCommand {
+public class BenchmarkingCommand extends DDxCommand {
     private static final Logger LOGGER = LoggerFactory.getLogger(BenchmarkingCommand.class);
 
 
@@ -157,9 +151,9 @@ public class BenchmarkingCommand extends DifferentialDiagnosisCommand {
                     maxodiffPropsConfiguration,
                     refiner);
             String ppktId = benchmarker.getSample().id();
-            List<MaxodiffResult> initialResults = benchmarker.standardRun();
+            List<RankedMaxoResult> initialResults = benchmarker.standardRun(maxodiffPropsConfiguration.biometadataService());
             for (int i = 0; i < nDiseases; i++) {
-                List<MaxodiffResult> randomizedResults = benchmarker.spikedRandomizer(i);
+                List<RankedMaxoResult> randomizedResults = benchmarker.spikedRandomizer(i, maxodiffPropsConfiguration.biometadataService());
                 BenchmarkResult bres = getSpikedBenchmarkResult(ppktId, i, initialResults, randomizedResults);
                 resultList.add(bres);
             }
@@ -230,19 +224,19 @@ public class BenchmarkingCommand extends DifferentialDiagnosisCommand {
 
     private BenchmarkResult getSpikedBenchmarkResult(String ppktId,
                                                      int spikedIdx,
-                                                     List<MaxodiffResult> initialResults,
-                                                     List<MaxodiffResult> randomizedResults) {
+                                                     List<RankedMaxoResult> initialResults,
+                                                     List<RankedMaxoResult> randomizedResults) {
 
-        TermId topMaxo = initialResults.getFirst().rankMaxoScore().maxoId();
-        double maxoFinalScore = initialResults.getFirst().rankMaxoScore().maxoScore();
-        List<MaxodiffResult> topResultRandomList = randomizedResults.stream()
-                .filter(mr -> mr.rankMaxoScore().maxoId().equals(topMaxo)).toList();
+        String topMaxo = initialResults.getFirst().maxoTerm().termId();
+        double maxoFinalScore = initialResults.getFirst().maxoScore();
+        List<RankedMaxoResult> topResultRandomList = randomizedResults.stream()
+                .filter(mr -> mr.maxoTerm().termId().equals(topMaxo)).toList();
         int topMaxoRandomIdx = topResultRandomList.isEmpty() ? -1 : randomizedResults.indexOf(topResultRandomList.getFirst()) + 1;
-        double maxScoreValueRandom = topResultRandomList.isEmpty() ? 0.0 : topResultRandomList.getFirst().rankMaxoScore().maxoScore();
+        double maxScoreValueRandom = topResultRandomList.isEmpty() ? 0.0 : topResultRandomList.getFirst().maxoScore();
         BenchmarkProcedure procedure = BenchmarkProcedure.SpikedInRandomization;
         int nMaxo = initialResults.size();
         int nMaxoRandom = randomizedResults.size();
-        return new BenchmarkResult(ppktId, nDiseases, nRepetitions, topMaxo, maxoFinalScore,
+        return new BenchmarkResult(ppktId, nDiseases, nRepetitions, TermId.of(topMaxo), maxoFinalScore,
                 procedure, topMaxoRandomIdx, maxScoreValueRandom, nMaxo, nMaxoRandom, spikedIdx);
     }
 

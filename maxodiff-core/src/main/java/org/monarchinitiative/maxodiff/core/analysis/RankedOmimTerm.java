@@ -1,9 +1,9 @@
 package org.monarchinitiative.maxodiff.core.analysis;
 
-/** Ranks of OMIMs are initial LIRICAL analysis, and average rank after MaxoDiff procedure */
-public record RankedOmimTerm(SimpleTerm omimTerm, int initialRank, int averageRank) {
+/** Ranks of OMIMs are initial Phenomizer analysis, and average rank after MaxoDiff procedure */
+public record RankedOmimTerm(SimpleTerm omimTerm, int initialRank, float averageRank) {
 
-    public int signedRankChange() {
+    public float signedRankChange() {
         return averageRank - initialRank;
     }
 
