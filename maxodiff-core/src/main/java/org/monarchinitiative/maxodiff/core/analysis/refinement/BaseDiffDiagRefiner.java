@@ -46,15 +46,9 @@ public class BaseDiffDiagRefiner implements DiffDiagRefiner {
     public RankMaxo getRankMaxo(List<DifferentialDiagnosis> allInitialDiagnoses,
                                 List<DifferentialDiagnosis> initialDiagnoses,
                                  DifferentialDiagnosisEngine engine,
-                                 Map<TermId, Set<TermId>> maxoToHpoTermIdMap,
-                                 String diseaseProbModel) {
+                                 Map<TermId, Set<TermId>> maxoToHpoTermIdMap) {
 
         DiseaseModelProbability diseaseModelProbability = DiseaseModelProbability.ranked(initialDiagnoses);
-        switch (diseaseProbModel) {
-            case "ranked" -> diseaseModelProbability = DiseaseModelProbability.ranked(initialDiagnoses);
-            case "softmax" -> diseaseModelProbability = DiseaseModelProbability.softmax(initialDiagnoses);
-            case "expDecay" -> diseaseModelProbability = DiseaseModelProbability.exponentialDecay(initialDiagnoses);
-        }
 
         MaxoHpoTermProbabilities maxoHpoTermProbabilities = new MaxoHpoTermProbabilities(hpoDiseases,
                 hpoToMaxoTermMap,

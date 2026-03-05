@@ -94,8 +94,7 @@ public class MaxodiffAnalysisRunner1 {
                 .collect(Collectors.toCollection(LinkedHashSet::new));
         Map<TermId, Set<TermId>> maxoToHpoTermIdMap = maxoDiffRefiner.getMaxoToHpoTermIdMap(hpoTermCounts);
 
-        String diseaseProbModel = "ranked"; // TODO -- Can we make this an enum?
-        RankMaxo rankMaxo = maxoDiffRefiner.getRankMaxo(allOrderedDiagnoses, initialDiagnoses, engine, maxoToHpoTermIdMap, diseaseProbModel);
+        RankMaxo rankMaxo = maxoDiffRefiner.getRankMaxo(allOrderedDiagnoses, initialDiagnoses, engine, maxoToHpoTermIdMap);
 
         return maxoDiffRefiner.runNew(sample,
                 initialDiagnosesIds,

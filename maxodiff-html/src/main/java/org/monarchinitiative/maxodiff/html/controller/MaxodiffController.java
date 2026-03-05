@@ -180,12 +180,10 @@ public class MaxodiffController {
 
             // Perform maxodiff refinement
             assert maxoToHpoTermIdMap != null;
-            String diseaseProbModel = "ranked";
             rankMaxo = diffDiagRefiner.getRankMaxo(allInitialDiagnoses,
                     initialDiagnoses,
                     diseaseSubsetEngine,
-                    maxoToHpoTermIdMap,
-                    diseaseProbModel);
+                    maxoToHpoTermIdMap);
             List<RankedMaxoResult> resultsList = diffDiagRefiner.runNew(sample,
                     initialDiagnosesIds,
                     options,
