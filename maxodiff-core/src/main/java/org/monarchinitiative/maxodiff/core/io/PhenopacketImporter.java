@@ -18,6 +18,9 @@ public class PhenopacketImporter {
                                      Class<T> clz) throws PhenolRuntimeException {
             PhenopacketParserFactory factory = PhenopacketParserFactory.getInstance();
             PhenopacketSchemaVersion schemaVersion = parseSchemaVersion(clz);
+            if  (schemaVersion != PhenopacketSchemaVersion.V2) {
+                throw new PhenolRuntimeException("MAxO-Diff does not support V1 Phenopackets - Please reformat as V2");
+            }
             PhenopacketParser parser = factory.forFormat(schemaVersion);
             Message message;
             try {
