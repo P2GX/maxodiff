@@ -6,10 +6,7 @@ import org.monarchinitiative.maxodiff.core.analysis.RankedOmimTerm;
 import org.monarchinitiative.maxodiff.core.analysis.SimpleTerm;
 import org.monarchinitiative.maxodiff.core.analysis.refinement.*;
 import org.monarchinitiative.maxodiff.core.diffdg.DifferentialDiagnosisEngine;
-import org.monarchinitiative.maxodiff.core.model.DifferentialDiagnosis;
-import org.monarchinitiative.maxodiff.core.model.PhenopacketData;
-import org.monarchinitiative.maxodiff.core.model.RankMaxo;
-import org.monarchinitiative.maxodiff.core.model.Sample;
+import org.monarchinitiative.maxodiff.core.model.*;
 import org.monarchinitiative.maxodiff.core.service.BiometadataService;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDisease;
 import org.monarchinitiative.phenol.ontology.data.TermId;
@@ -43,14 +40,14 @@ public class MaxodiffAnalysisRunner1 {
 
 
     public List<RankedMaxoResult> analyzeSample(PhenopacketData ppktData) throws Exception {
-        Sample sample = ppktData.getSample();
-        List<DifferentialDiagnosis> differentialDiagnoses = engine.run(sample);
+        PpktSample ppktSample = ppktData.getPpktSample(biometadataService);
+        List<DifferentialDiagnosis> differentialDiagnoses = engine.run(ppktSample);
         // Get List of Refinement results: maxo term scores and frequencies
         RefinementOptions options = RefinementOptions.of(this.nDiseases, this.nRepetitions);
         List<DifferentialDiagnosis> orderedDiagnoses = maxoDiffRefiner.getOrderedDiagnoses(differentialDiagnoses, options);
         List<HpoDisease> diseases = maxoDiffRefiner.getDiseases(orderedDiagnoses);
         Map<TermId, List<HpoFrequency>> hpoTermCounts = maxoDiffRefiner.getHpoTermCounts(diseases);
-        return getRefinementResults(differentialDiagnoses, orderedDiagnoses, hpoTermCounts, sample);
+        return getRefinementResults(differentialDiagnoses, orderedDiagnoses, hpoTermCounts, ppktSample);
     }
 
     public MaxoDiffAnalysisResultRow batchAnalysis(PhenopacketData ppktData) throws Exception {
@@ -82,7 +79,7 @@ public class MaxodiffAnalysisRunner1 {
             List<DifferentialDiagnosis> differentialDiagnoses,
             List<DifferentialDiagnosis> orderedDiagnoses,
             Map<TermId, List<HpoFrequency>> hpoTermCounts,
-            Sample sample) throws Exception {
+            PpktSample sample) throws Exception {
         RefinementOptions options = RefinementOptions.of(this.nDiseases, nRepetitions);
         List<DifferentialDiagnosis> allOrderedDiagnoses = differentialDiagnoses.stream()
                 .sorted(Comparator.comparingDouble(DifferentialDiagnosis::score).reversed())

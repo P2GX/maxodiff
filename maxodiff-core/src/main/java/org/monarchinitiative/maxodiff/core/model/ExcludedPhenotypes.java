@@ -3,6 +3,7 @@ package org.monarchinitiative.maxodiff.core.model;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * This class calculates the excluded phenotypes, i.e. phenotypes that can be ascertained by MAxO terms,
@@ -61,9 +62,10 @@ public class ExcludedPhenotypes {
      * @return Set of excluded phenotypes. These are phenotypes that can be ascertained by MAxO terms,
      *  but are not included in the existing phenotypes in the phenopacket.
      */
-    public Set<TermId> getExcludedPhenotypes(Sample samplePpkt) {
-        Set<TermId> existingTerms = new HashSet<>(samplePpkt.observedHpoTermIds());
-        existingTerms.addAll(samplePpkt.excludedHpoTermIds());
+    public Set<TermId> getExcludedPhenotypes(PpktSample samplePpkt) {
+        Set<TermId> existingTerms = new HashSet<>();
+        existingTerms.addAll(samplePpkt.observedHpoTerms().stream().map(term -> TermId.of(term.termId())).collect(Collectors.toSet()));
+        existingTerms.addAll(samplePpkt.excludedHpoTerms().stream().map(term -> TermId.of(term.termId())).collect(Collectors.toSet()));
         Set<TermId> excludedPhenotypes = new HashSet<>();
         existingTerms.forEach(tid -> excludedPhenotypes.addAll(getExcludedForHpoTerm(tid)));
         excludedPhenotypes.removeAll(existingTerms);

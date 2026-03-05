@@ -23,8 +23,7 @@ import java.util.stream.Collectors;
 public class BaseBenchmarker {
     private static final Logger LOGGER = LoggerFactory.getLogger(BaseBenchmarker.class);
 
-    private final Path phenopacketPath;
-    private final Sample sample;
+    private final PpktSample sample;
     private final int nDiseases;
     private final int nRepetitions;
     private final DifferentialDiagnosisEngine phenomizer;
@@ -41,18 +40,17 @@ public class BaseBenchmarker {
     private final List<DifferentialDiagnosis> completeInitialDiffDiagList;
     private final MaxoHpoTermProbabilities maxoHpoTermProbabilities;
 
-    public Sample getSample() {
+    public PpktSample getSample() {
         return sample;
     }
 
-    public BaseBenchmarker(Path phenopacketPath,
+    public BaseBenchmarker(PpktSample sample,
                            RefinementOptions refinementOptions,
                            DifferentialDiagnosisEngine phenomizer,
                            HpoDiseases hpoDiseases,
                            MaxodiffPropsConfiguration maxoDiffConfig,
                            DiffDiagRefiner refiner ) {
 
-        this.phenopacketPath = phenopacketPath;
         this.nDiseases = refinementOptions.nDiseases();
         this.nRepetitions = refinementOptions.nRepetitions();
         this.phenomizer = phenomizer;
@@ -61,10 +59,7 @@ public class BaseBenchmarker {
         this.refiner = refiner;
         this.ontology = maxoDiffConfig.hpo();
         this.hpoToMaxoTermMap = maxoDiffConfig.maxoAnnotsMap();
-        PhenopacketData phenopacketData = PhenopacketData.readPhenopacketData(this.phenopacketPath);
-        this.sample = Sample.of(phenopacketData.sampleId(),
-                phenopacketData.observedHpoTermIds().toList(),
-                phenopacketData.excludedHpoTermIds().toList());
+        this.sample = sample;
         this.completeInitialDiffDiagList = determineInitialDiagnoses();
         this.maxoHpoTermProbabilities = calculateMaxoHpoTermProbabilities();
     }
@@ -82,7 +77,7 @@ public class BaseBenchmarker {
 
     /*** @return List with top initial (i.e., before Maxodiff) {@code nDiseases} differential diagnoses using Phenomizer */
     private List<DifferentialDiagnosis> determineInitialDiagnoses() {
-        LOGGER.info(String.valueOf(phenopacketPath));
+        LOGGER.info(String.valueOf(sample.id()));
         LOGGER.info("nDiseases = {}", nDiseases);
         List<DifferentialDiagnosis> differentialDiagnoses = phenomizer.run(sample);
 //        differentialDiagnoses.sort(Comparator.comparingDouble(DifferentialDiagnosis::score).reversed());
@@ -99,7 +94,7 @@ public class BaseBenchmarker {
 
     public List<RankedMaxoResult> standardRun(BiometadataService biometadataService) throws Exception {
         RefinementOptions options = RefinementOptions.of(nDiseases, nRepetitions);
-        LOGGER.info("ppkt = {}, n Diseases = {}, n Repetitions = {}", this.phenopacketPath.toFile().getName(), nDiseases, nRepetitions);
+        LOGGER.info("sample = {}, n Diseases = {}, n Repetitions = {}", this.sample.id(), nDiseases, nRepetitions);
         List<DifferentialDiagnosis> topNinitialDiffDiagList = getTopNInitialDiffDiagList();
         Set<TermId> topNInitialDiagnosesIds = topNinitialDiffDiagList.stream()
                 .map(DifferentialDiagnosis::diseaseId)

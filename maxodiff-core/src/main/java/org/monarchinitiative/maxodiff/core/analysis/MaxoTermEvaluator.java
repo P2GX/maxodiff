@@ -1,10 +1,7 @@
 package org.monarchinitiative.maxodiff.core.analysis;
 
 import org.monarchinitiative.maxodiff.core.diffdg.DifferentialDiagnosisEngine;
-import org.monarchinitiative.maxodiff.core.model.DifferentialDiagnosis;
-import org.monarchinitiative.maxodiff.core.model.MaxoHpoDiseaseRank;
-import org.monarchinitiative.maxodiff.core.model.MaxoHpoTermProbabilities;
-import org.monarchinitiative.maxodiff.core.model.Sample;
+import org.monarchinitiative.maxodiff.core.model.*;
 import org.monarchinitiative.maxodiff.core.service.BiometadataService;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDisease;
 import org.monarchinitiative.phenol.ontology.data.TermId;
@@ -22,7 +19,7 @@ public class MaxoTermEvaluator implements Callable<RankedMaxoResult> {
 
     private final MaxoHpoDiseaseRank maxoHpoDiseaseRank;
     private final int nRepetitions;
-    private final Sample ppkt;
+    private final PpktSample ppkt;
     private final DifferentialDiagnosisEngine engine;
     private final MaxoHpoTermProbabilities maxoHpoTermProbabilities;
     private final Set<TermId> diseaseIds;
@@ -32,7 +29,7 @@ public class MaxoTermEvaluator implements Callable<RankedMaxoResult> {
     public MaxoTermEvaluator(
             MaxoHpoDiseaseRank maxoHpoDiseaseRank,
             int nRepetitions,
-            Sample ppkt,
+            PpktSample ppkt,
             DifferentialDiagnosisEngine engine,
             MaxoHpoTermProbabilities maxoHpoTermProbabilities,
             List<DifferentialDiagnosis> initialDiagnoses,
@@ -60,16 +57,16 @@ public class MaxoTermEvaluator implements Callable<RankedMaxoResult> {
         // Run simulations and calculate final scores
         List<List<DifferentialDiagnosis>> newMaxoDiagnosesList = new ArrayList<>();
         List<Double> scores = new ArrayList<>();
-        Set<TermId> simulatedHpoIdSet = new HashSet<>();
+        Set<SimpleTerm> simulatedHpoIdSet = new HashSet<>();
         Map<TermId, Integer> simulatedHpoCountSet = new HashMap<>();
         for (int i = 0; i < nRepetitions; i++) {
             // Sample and count simulated HPO terms
             int nHpos = nHposToSample.get(i);
-            simulatedHpoIdSet.addAll(selectKWeightedHpoTerms(hpoIds, probabilities, nHpos));
+            simulatedHpoIdSet.addAll(selectKWeightedHpoTerms(hpoIds, probabilities, nHpos, biometadataService));
 //            simulatedHpoIdSet = new HashSet<>(selectKWeightedHpoTerms(hpoIds, probabilities, nHpos));
-            simulatedHpoIdSet.forEach(hpoId -> simulatedHpoCountSet.merge(hpoId, 1, Integer::sum));
+            simulatedHpoIdSet.forEach(hpoTerm -> simulatedHpoCountSet.merge(TermId.of(hpoTerm.termId()), 1, Integer::sum));
 
-            Sample newSample = getNewSample(ppkt, simulatedHpoIdSet);
+            PpktSample newSample = getNewSample(ppkt, simulatedHpoIdSet);
             List<DifferentialDiagnosis> newMaxoDiagnoses = engine.run(newSample, diseaseIds);
             newMaxoDiagnosesList.add(newMaxoDiagnoses);
 
@@ -93,7 +90,7 @@ public class MaxoTermEvaluator implements Callable<RankedMaxoResult> {
      * @param k              number of unique HPO terms to sample
      * @return a list of {@code k} sampled HPO term IDs
      */
-    public static List<TermId> selectKWeightedHpoTerms(List<TermId> hpoIds, List<Double> probabilities, int k) {
+    public static List<SimpleTerm> selectKWeightedHpoTerms(List<TermId> hpoIds, List<Double> probabilities, int k, BiometadataService biometadataService) {
         // Create cumulative probabilities
         List<Double> cumulative = new ArrayList<>(probabilities.size());
         double cumSum = 0.0;
@@ -103,7 +100,7 @@ public class MaxoTermEvaluator implements Callable<RankedMaxoResult> {
         }
 
         // Perform weighted sampling without replacement
-        List<TermId> selected = new ArrayList<>();
+        List<SimpleTerm> selected = new ArrayList<>();
         Set<Integer> usedIndices = new HashSet<>();
         Random random = new Random();
 
@@ -111,7 +108,8 @@ public class MaxoTermEvaluator implements Callable<RankedMaxoResult> {
             double r = random.nextDouble();
             for (int i = 0; i < cumulative.size(); i++) {
                 if (r <= cumulative.get(i) && !usedIndices.contains(i)) {
-                    selected.add(hpoIds.get(i));
+                    TermId hpoId = hpoIds.get(i);
+                    selected.add(new SimpleTerm(hpoId.getValue(), biometadataService.hpoLabel(hpoId).orElse("unknown")));
                     usedIndices.add(i);
                     break;
                 }
@@ -127,11 +125,11 @@ public class MaxoTermEvaluator implements Callable<RankedMaxoResult> {
      * @param observed A Set of simulated new observed HPO terms
      * @return The modified (simulated) phenopacket Sample.
      */
-    private Sample getNewSample(Sample ppkt, Set<TermId> observed) {
-        Set<TermId> ppktObserved = new HashSet<>(ppkt.observedHpoTermIds());
-        Set<TermId> combinedObserved = Stream.concat(ppktObserved.stream(), observed.stream()).collect(Collectors.toSet());
+    private PpktSample getNewSample(PpktSample ppkt, Set<SimpleTerm> observed) {
+        Set<SimpleTerm> ppktObserved = new HashSet<>(ppkt.observedHpoTerms());
+        Set<SimpleTerm> combinedObserved = Stream.concat(ppktObserved.stream(), observed.stream()).collect(Collectors.toSet());
 
-        return Sample.of(ppkt.id(), combinedObserved, ppkt.excludedHpoTermIds());
+        return new PpktSample(ppkt.id(), combinedObserved.stream().toList(), ppkt.excludedHpoTerms());
     }
 
 
@@ -210,15 +208,13 @@ public class MaxoTermEvaluator implements Callable<RankedMaxoResult> {
      * @return List of CountedHpoTerm objects
      */
     private List<CountedHpoTerm> getCountedHpoTerms (
-            Set<TermId> chosenHpoIds,
+            Set<SimpleTerm> chosenHpoIds,
             Map<TermId, Integer> chosenHpoTermCountsMap) {
 
         List<CountedHpoTerm> result = new ArrayList<>();
 
-        for (TermId hpoId : chosenHpoIds) {
-            String hpoIdStr = hpoId.getValue();
-            String hpoLabel = biometadataService.hpoLabel(hpoId).orElse("unknown");
-            SimpleTerm hpoTerm = new SimpleTerm(hpoIdStr, hpoLabel);
+        for (SimpleTerm hpoTerm : chosenHpoIds) {
+            TermId hpoId = TermId.of(hpoTerm.termId());
             CountedHpoTerm countedHpoTerm = new CountedHpoTerm(hpoTerm, chosenHpoTermCountsMap.get(hpoId));
             if (!result.contains(countedHpoTerm)) {
                 result.add(countedHpoTerm);
@@ -247,12 +243,13 @@ public class MaxoTermEvaluator implements Callable<RankedMaxoResult> {
      * @param hpoTermFrequencies Map of HPO Term Id and List of HpoFrequency objects.
      * @return List of Frequencies records
      */
-    private List<HpoFrequency> getFrequencyRecords(Set<TermId> omimIds, Set<TermId> hpoIds,
+    private List<HpoFrequency> getFrequencyRecords(Set<TermId> omimIds, Set<SimpleTerm> hpoIds,
                                                   Map<TermId, List<HpoFrequency>> hpoTermFrequencies) {
 
         List<HpoFrequency> frequencyRecords = new ArrayList<>();
         //Set<TermId> omimIds = maxoTermScoreRecord.omimTermIds();
-        for (TermId hpoId : hpoIds) { //maxoTermScoreRecord.hpoTermIds()
+        for (SimpleTerm hpoTerm : hpoIds) { //maxoTermScoreRecord.hpoTermIds()
+            TermId hpoId = TermId.of(hpoTerm.termId());
             List<HpoFrequency> frequencies = hpoTermFrequencies.get(hpoId);
             if (frequencies != null) {
                 for (HpoFrequency hpoFrequency : frequencies) {
@@ -297,7 +294,7 @@ public class MaxoTermEvaluator implements Callable<RankedMaxoResult> {
 
 
     private RankedMaxoResult makeRankedMaxoResult(
-            Set<TermId> chosenHpoIds,
+            Set<SimpleTerm> chosenHpoIds,
             double meanScore,
             List<DifferentialDiagnosis> initialDiagnoses,
             List<List<DifferentialDiagnosis>> newMaxoDiagnosesList,
