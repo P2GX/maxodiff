@@ -6,7 +6,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.monarchinitiative.maxodiff.core.SimpleTermOld;
 import org.monarchinitiative.maxodiff.core.TestResources;
 import org.monarchinitiative.maxodiff.core.model.ExcludedPhenotypes;
-import org.monarchinitiative.maxodiff.core.model.Sample;
+import org.monarchinitiative.maxodiff.core.model.PpktSample;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDisease;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
 import org.monarchinitiative.phenol.base.PhenolRuntimeException;
@@ -51,29 +51,29 @@ public class ExcludedPhenotypesTest {
      *
      * @return Sample phenopacket with one included HPO term Id and one disease Id.
      */
-    public static Sample getPPkt1() {
-        List<TermId> presentTerms = List.of(
-                TermId.of("HP:0006739")
+    public static PpktSample getPPkt1() {
+        List<SimpleTerm> presentTerms = List.of(
+                new SimpleTerm("HP:0006739", "Hpo1")
         );
-        List<TermId> excludedTerms = List.of();
+        List<SimpleTerm> excludedTerms = List.of();
         List<TermId> diseaseIds = List.of(TermId.of("OMIM:620365"));
 
-        return Sample.of("sample1", presentTerms, excludedTerms);//, diseaseIds);
+        return new PpktSample("sample1", presentTerms, excludedTerms);//, diseaseIds);
     }
 
     /**
      *
      * @return Sample phenopacket with two included HPO term Ids and one disease Ids.
      */
-    public static Sample getPPkt2() {
-        List<TermId> presentTerms = List.of(
-                TermId.of("HP:0006739"),
-                TermId.of("HP:0002863")
+    public static PpktSample getPPkt2() {
+        List<SimpleTerm> presentTerms = List.of(
+                new SimpleTerm("HP:0006739", "Hpo1"),
+                new SimpleTerm("HP:0002863", "Hpo2")
         );
-        List<TermId> excludedTerms = List.of();
+        List<SimpleTerm> excludedTerms = List.of();
         List<TermId> diseaseIds = List.of(TermId.of("OMIM:620365"));
 
-        return Sample.of("sample1", presentTerms, excludedTerms);//, diseaseIds);
+        return new PpktSample("sample1", presentTerms, excludedTerms);//, diseaseIds);
     }
 
     //TODO: write edge case test for inheritance, e.g. if maxo term has both hpo Id and it's parent associated w/ it
@@ -84,7 +84,7 @@ public class ExcludedPhenotypesTest {
     @Test
     public void testExcludedPhenotypes1() {
          // Get excluded phenotypes given phenopacket
-         Sample s1 = getPPkt1();
+         PpktSample s1 = getPPkt1();
          Set<TermId> excludedPhenotypeIds = excludedPhenotypes.getExcludedPhenotypes(s1);
 
          // HPO term in phenopacket can be ascertained by 2 Maxo terms (MAXO:0000671 and MAXO:0000691)
@@ -98,7 +98,7 @@ public class ExcludedPhenotypesTest {
         record Error(Supplier<? extends PhenolRuntimeException> exceptionSupplier) implements TestOutcome {}
     }
 
-    public record TestIndividual(String description, Sample myPPkt, TestOutcome expectedOutcome) {}
+    public record TestIndividual(String description, PpktSample myPPkt, TestOutcome expectedOutcome) {}
 
     /**
      *
@@ -122,7 +122,7 @@ public class ExcludedPhenotypesTest {
     @ParameterizedTest
     @MethodSource("testGetIndividualDiseaseIds")
     void testEvaluateExpression(TestIndividual testCase) {
-        Sample ppkti = testCase.myPPkt();
+        PpktSample ppkti = testCase.myPPkt();
 //        TermId targetId = ppkti.diseaseIds().get(0);
         switch (testCase.expectedOutcome()) {
             case TestOutcome.Ok(int expectedResult) ->

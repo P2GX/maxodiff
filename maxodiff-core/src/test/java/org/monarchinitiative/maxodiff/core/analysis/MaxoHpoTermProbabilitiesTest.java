@@ -3,13 +3,11 @@ package org.monarchinitiative.maxodiff.core.analysis;
 import org.junit.jupiter.api.Test;
 import org.monarchinitiative.maxodiff.core.SimpleTermOld;
 import org.monarchinitiative.maxodiff.core.TestResources;
-import org.monarchinitiative.maxodiff.core.model.DifferentialDiagnosis;
-import org.monarchinitiative.maxodiff.core.model.DiseaseModelProbability;
-import org.monarchinitiative.maxodiff.core.model.MaxoHpoTermProbabilities;
-import org.monarchinitiative.maxodiff.core.model.Sample;
+import org.monarchinitiative.maxodiff.core.model.*;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 
+import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
@@ -22,7 +20,7 @@ public class MaxoHpoTermProbabilitiesTest {
     private final static Map<SimpleTermOld, Set<SimpleTermOld>> hpoToMaxoTermMap = TestResources.hpoToMaxo();
     private final static List<DifferentialDiagnosis> initialDiagnoses = TestResources.getExampleDiagnoses().stream().toList(); //top K diagnoses only
     private final static DiseaseModelProbability diseaseModelProbability = DiseaseModelProbability.ranked(initialDiagnoses);
-    private final static Sample samplePhenopacket = TestResources.getExampleSample();
+    private final static PpktSample samplePhenopacket = TestResources.getExampleSample();
 
     private final static MaxoHpoTermProbabilities MAXO_HPO_TERM_PROBABILITIES = new MaxoHpoTermProbabilities(hpoDiseases,
             hpoToMaxoTermMap, initialDiagnoses, diseaseModelProbability);

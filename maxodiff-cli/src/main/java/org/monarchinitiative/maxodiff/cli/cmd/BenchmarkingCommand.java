@@ -7,9 +7,12 @@ import org.monarchinitiative.maxodiff.config.MaxodiffDataResolver;
 import org.monarchinitiative.maxodiff.config.MaxodiffPropsConfiguration;
 import org.monarchinitiative.maxodiff.core.analysis.CountedHpoTerm;
 import org.monarchinitiative.maxodiff.core.analysis.RankedMaxoResult;
+import org.monarchinitiative.maxodiff.core.analysis.SimpleTerm;
 import org.monarchinitiative.maxodiff.core.analysis.refinement.DiffDiagRefiner;
 import org.monarchinitiative.maxodiff.core.analysis.refinement.RefinementOptions;
 import org.monarchinitiative.maxodiff.core.diffdg.DifferentialDiagnosisEngine;
+import org.monarchinitiative.maxodiff.core.model.PhenopacketData;
+import org.monarchinitiative.maxodiff.core.model.PpktSample;
 import org.monarchinitiative.maxodiff.phenomizer.IcMicaData;
 import org.monarchinitiative.maxodiff.phenomizer.IcMicaDictLoader;
 import org.monarchinitiative.maxodiff.phenomizer.PhenomizerDifferentialDiagnosisEngine;
@@ -140,11 +143,23 @@ public class BenchmarkingCommand extends DDxCommand {
         }
     }
 
+    private PpktSample getPpktSample(Path ppktPath) {
+        PhenopacketData phenopacketData = PhenopacketData.readPhenopacketData(ppktPath);
+        List<SimpleTerm> observedSampleTerms = new ArrayList<>();
+        List<SimpleTerm> excludedSampleTerms = new ArrayList<>();
+        phenopacketData.observedHpoTermIds().forEach(tid ->
+                observedSampleTerms.add(new SimpleTerm(tid.getValue(), maxodiffPropsConfiguration.biometadataService().hpoLabel(tid).orElse("n/a"))));
+        phenopacketData.excludedHpoTermIds().forEach(tid ->
+                excludedSampleTerms.add(new SimpleTerm(tid.getValue(), maxodiffPropsConfiguration.biometadataService().hpoLabel(tid).orElse("n/a"))));
+        return new PpktSample(phenopacketData.sampleId(), observedSampleTerms, excludedSampleTerms);
+    }
+
 
     private List<BenchmarkResult> runSpikeOnePPkt(Path ppktPath) {
         List<BenchmarkResult> resultList = new ArrayList<>();
         try {
-            BaseBenchmarker benchmarker = new BaseBenchmarker(ppktPath,
+            PpktSample ppktSample = getPpktSample(ppktPath);
+            BaseBenchmarker benchmarker = new BaseBenchmarker(ppktSample,
                     refinementOptions,
                     this.phenomizer,
                     this.hpoDiseases,
@@ -168,7 +183,8 @@ public class BenchmarkingCommand extends DDxCommand {
     private List<BenchmarkResult> runShuffleOnePPkt(Path ppktPath, Map<String, Double> termToIcMap) {
         List<BenchmarkResult> resultList = new ArrayList<>();
         try {
-            BaseBenchmarker benchmarker = new BaseBenchmarker(ppktPath,
+            PpktSample ppktSample = getPpktSample(ppktPath);
+            BaseBenchmarker benchmarker = new BaseBenchmarker(ppktSample,
                     refinementOptions,
                     this.phenomizer,
                     this.hpoDiseases,

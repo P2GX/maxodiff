@@ -14,6 +14,7 @@ import org.slf4j.LoggerFactory;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
+import java.util.stream.Collectors;
 
 public class RankMaxo {
     private final static Logger LOGGER = LoggerFactory.getLogger(RankMaxo.class);
@@ -64,12 +65,12 @@ public class RankMaxo {
      * @param diseaseIds Set of top n OMIM disease Ids to use for analysis.
      * @return Map of MAxO scores sorted in descending order by score
      */
-    public List<RankedMaxoResult> rankMaxoTermsNew(Sample ppkt, int nRepetitions,
+    public List<RankedMaxoResult> rankMaxoTermsNew(PpktSample ppkt, int nRepetitions,
                                                    Set<TermId> diseaseIds, BiometadataService biometadataService) throws Exception {
 
         Set<TermId> sampleHpoIds = new HashSet<>();
-        sampleHpoIds.addAll(ppkt.observedHpoTermIds());
-        sampleHpoIds.addAll(ppkt.excludedHpoTermIds());
+        sampleHpoIds.addAll(ppkt.observedHpoTerms().stream().map(term -> TermId.of(term.termId())).collect(Collectors.toSet()));
+        sampleHpoIds.addAll(ppkt.excludedHpoTerms().stream().map(term -> TermId.of(term.termId())).collect(Collectors.toSet()));
 
         AscertainablePhenotypes ascertainablePhenotypes = new AscertainablePhenotypes(maxoHpoTermProbabilities.getHpoDiseases());
         Map<TermId, Set<TermId>> fullMaxoToHpoTermIdMap = maxoHpoTermProbabilities.getMaxoToHpoTermIdMap();

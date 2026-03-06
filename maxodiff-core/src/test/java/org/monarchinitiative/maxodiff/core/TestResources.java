@@ -1,8 +1,9 @@
 package org.monarchinitiative.maxodiff.core;
 
+import org.monarchinitiative.maxodiff.core.analysis.SimpleTerm;
 import org.monarchinitiative.maxodiff.core.io.MaxoDxAnnots;
 import org.monarchinitiative.maxodiff.core.model.DifferentialDiagnosis;
-import org.monarchinitiative.maxodiff.core.model.Sample;
+import org.monarchinitiative.maxodiff.core.model.PpktSample;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
 import org.monarchinitiative.phenol.annotations.io.hpo.DiseaseDatabase;
 import org.monarchinitiative.phenol.annotations.io.hpo.HpoDiseaseLoader;
@@ -130,24 +131,24 @@ public class TestResources {
         return hpoToMaxoToy;
     }
 
-    public static Sample getExampleSample() {
+    public static PpktSample getExampleSample() {
         //Example terms from phenopacket v2 PMID_11175294-Tiecke-2001-FBN1-B15.json
-        Collection<TermId> presentTerms = List.of(
-                TermId.of("HP:0000963"),
-                TermId.of("HP:0001653"),
-                TermId.of("HP:0000545"),
-                TermId.of("HP:0000098"),
-                TermId.of("HP:0004325"),
-                TermId.of("HP:0002751"),
-                TermId.of("HP:0002650"),
-                TermId.of("HP:0002616"),
-                TermId.of("HP:0000767"),
-                TermId.of("HP:0012019"),
-                TermId.of("HP:0001166")
+        List<SimpleTerm> presentTerms = List.of(
+                new SimpleTerm("HP:0000963", "Hpo1"),
+                new SimpleTerm("HP:0001653", "Hpo2"),
+                new SimpleTerm("HP:0000545", "Hpo3"),
+                new SimpleTerm("HP:0000098", "Hpo4"),
+                new SimpleTerm("HP:0004325", "Hpo5"),
+                new SimpleTerm("HP:0002751", "Hpo6"),
+                new SimpleTerm("HP:0002650", "Hpo7"),
+                new SimpleTerm("HP:0002616", "Hpo8"),
+                new SimpleTerm("HP:0000767", "Hpo9"),
+                new SimpleTerm("HP:0012019", "Hpo10"),
+                new SimpleTerm("HP:0001166", "Hpo11")
         );
-        Collection<TermId> excludedTerms = List.of();
+        List<SimpleTerm> excludedTerms = List.of();
 
-        return Sample.of("B15", presentTerms, excludedTerms);
+        return new PpktSample("B15", presentTerms, excludedTerms);
     }
 
     public static Collection<DifferentialDiagnosis> getExampleDiagnoses() {

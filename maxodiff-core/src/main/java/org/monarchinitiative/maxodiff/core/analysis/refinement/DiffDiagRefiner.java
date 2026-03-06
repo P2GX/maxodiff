@@ -4,8 +4,8 @@ import org.monarchinitiative.maxodiff.core.analysis.HpoFrequency;
 import org.monarchinitiative.maxodiff.core.analysis.RankedMaxoResult;
 import org.monarchinitiative.maxodiff.core.diffdg.DifferentialDiagnosisEngine;
 import org.monarchinitiative.maxodiff.core.model.DifferentialDiagnosis;
+import org.monarchinitiative.maxodiff.core.model.PpktSample;
 import org.monarchinitiative.maxodiff.core.model.RankMaxo;
-import org.monarchinitiative.maxodiff.core.model.Sample;
 import org.monarchinitiative.maxodiff.core.service.BiometadataService;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDisease;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
@@ -24,7 +24,7 @@ import java.util.Set;
  */
 public interface DiffDiagRefiner {
 
-    List<RankedMaxoResult> runNew(Sample sample,
+    List<RankedMaxoResult> runNew(PpktSample sample,
                                   Set<TermId> initialDiagnosesIds,
                                   RefinementOptions options,
                                   RankMaxo rankMaxo,
@@ -40,10 +40,11 @@ public interface DiffDiagRefiner {
 
     Map<TermId, Set<TermId>> getMaxoToHpoTermIdMap(Map<TermId, List<HpoFrequency>> hpoTermCounts);
 
-    Map<TermId, List<DifferentialDiagnosis>> getMaxoTermToDifferentialDiagnosesMap(Sample sample,
+    Map<TermId, List<DifferentialDiagnosis>> getMaxoTermToDifferentialDiagnosesMap(PpktSample sample,
                                                                                    DifferentialDiagnosisEngine engine,
                                                                                    Map<TermId, Set<TermId>> maxoToHpoTermIdMap,
-                                                                                   Integer nDiseases);
+                                                                                   Integer nDiseases,
+                                                                                   BiometadataService biometadataService);
     HpoDiseases getHPOADiseases();
 
     RankMaxo getRankMaxo(List<DifferentialDiagnosis> allInitialDiagnoses,

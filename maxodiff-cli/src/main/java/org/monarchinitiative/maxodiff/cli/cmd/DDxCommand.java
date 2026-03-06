@@ -13,7 +13,6 @@ import org.monarchinitiative.maxodiff.core.diffdg.DifferentialDiagnosisEngine;
 import org.monarchinitiative.maxodiff.core.io.JsonWriter;
 import org.monarchinitiative.maxodiff.core.model.PhenopacketData;
 import org.monarchinitiative.maxodiff.core.model.PpktSample;
-import org.monarchinitiative.maxodiff.core.model.Sample;
 import org.monarchinitiative.maxodiff.core.service.BiometadataService;
 import org.monarchinitiative.maxodiff.html.results.tleaf.TleafResults;
 import org.monarchinitiative.maxodiff.phenomizer.IcMicaData;
@@ -118,7 +117,6 @@ public class DDxCommand extends BaseCommand {
 
             // Read phenopacket data and make sample
             PhenopacketData phenopacketData = PhenopacketData.readPhenopacketData(phenopacketPath);
-            Sample sample = phenopacketData.getSample();
             List<SimpleTerm> observedSampleTerms = new ArrayList<>();
             List<SimpleTerm> excludedSampleTerms = new ArrayList<>();
             phenopacketData.observedHpoTermIds().forEach(tid ->
@@ -134,7 +132,7 @@ public class DDxCommand extends BaseCommand {
                     biometadataService);
             if (writeCsv) {
                 MaxoDiffAnalysisResultRow row = runner.batchAnalysis(phenopacketData);
-                writeCsvResults(sample.id(), row);
+                writeCsvResults(ppktSample.id(), row);
             } else {
                 List<RankedMaxoResult> resultsList = runner.analyzeSample(phenopacketData);
                 // Take the MaXo term that has the highest score
@@ -143,7 +141,7 @@ public class DDxCommand extends BaseCommand {
                 double maxScoreValue = topResult.maxoScore();
                 System.out.println("Max Score: " + maxScoreMaxoTerm + " = " + maxScoreValue);
 
-                String jsonFilename = String.join("_", sample.id(),
+                String jsonFilename = String.join("_", ppktSample.id(),
                         nDiseases.toString(), nRepetitions.toString(), "maxodiff_results", ".json");
                 if (outputJson) {
                     Path jsonPath = Path.of(String.join(File.separator, outputDir.toString(), jsonFilename));
