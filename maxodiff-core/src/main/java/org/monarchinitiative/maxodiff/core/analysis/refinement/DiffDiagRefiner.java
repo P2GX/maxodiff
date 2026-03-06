@@ -50,6 +50,5 @@ public interface DiffDiagRefiner {
     RankMaxo getRankMaxo(List<DifferentialDiagnosis> allInitialDiagnoses,
                          List<DifferentialDiagnosis> initialDiagnoses,
                          DifferentialDiagnosisEngine engine,
-                         Map<TermId, Set<TermId>> maxoToHpoTermIdMap,
-                         String diseaseProbModel);
+                         Map<TermId, Set<TermId>> maxoToHpoTermIdMap);
 }
