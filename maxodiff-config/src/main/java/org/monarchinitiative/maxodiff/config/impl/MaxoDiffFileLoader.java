@@ -19,7 +19,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 
 public class MaxoDiffFileLoader implements MaxoDiffLoader {
-    Logger LOGGER = LoggerFactory.getLogger(MaxoDiffFileLoader.class);
+    private final static Logger LOGGER = LoggerFactory.getLogger(MaxoDiffFileLoader.class);
     private final MaxodiffDataResolver resolver;
     private MinimalOntology ontology = null;
 

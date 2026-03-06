@@ -17,7 +17,7 @@ public class TleafResults {
     public static String writeHTMLResults(
             MdMetadata mdMetadata,
             List<RankedMaxoResult> resultList,
-            HTMLFrequencyMap  htmlFrequencyMap) throws Exception {
+            HTMLFrequencyMap  htmlFrequencyMap)  {
 
         SpringTemplateEngine templateEngine = templateEngine();
 
