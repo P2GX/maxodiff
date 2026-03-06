@@ -41,7 +41,7 @@ public class DiscoverablePhenotypes {
      * @param targetDiseaseId TermId of the disease of interest
      * @return Set of discoverable phenotypes, i.e. potential phenotypes not including assumed excluded phenotypes.
      */
-    public Set<TermId> getDiscoverablePhenotypeIds(Sample samplePhenopacket, TermId targetDiseaseId) throws PhenolRuntimeException {
+    public Set<TermId> getDiscoverablePhenotypeIds(PpktSample samplePhenopacket, TermId targetDiseaseId) throws PhenolRuntimeException {
         AscertainablePhenotypes ascertainablePhenotypes = new AscertainablePhenotypes(hpoDiseases);
         ExcludedPhenotypes excludedPhenotypes = new ExcludedPhenotypes(hpoToMaxoTermIdMap, maxoToHpoTermIdMap);
         Set<TermId> ascertainablePhenotypeIds = ascertainablePhenotypes.getAscertainablePhenotypeIds(samplePhenopacket, targetDiseaseId);

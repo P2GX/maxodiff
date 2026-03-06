@@ -6,7 +6,7 @@ import org.junit.jupiter.params.provider.MethodSource;
 import org.monarchinitiative.maxodiff.core.SimpleTermOld;
 import org.monarchinitiative.maxodiff.core.TestResources;
 import org.monarchinitiative.maxodiff.core.model.DiscoverablePhenotypes;
-import org.monarchinitiative.maxodiff.core.model.Sample;
+import org.monarchinitiative.maxodiff.core.model.PpktSample;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDisease;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
 import org.monarchinitiative.phenol.base.PhenolRuntimeException;
@@ -51,43 +51,41 @@ public class DiscoverablePhenotypesTest {
      *
      * @return Sample phenopacket with one included HPO term Id and one disease Id.
      */
-    public static Sample getPPkt1() {
-        List<TermId> presentTerms = List.of(
-                TermId.of("HP:0001888")
+    public static PpktSample getPPkt1() {
+        List<SimpleTerm> presentTerms = List.of(
+                new SimpleTerm("HP:0001888", "hpo1")
         );
-        List<TermId> excludedTerms = List.of();
-        List<TermId> diseaseIds = List.of(TermId.of("OMIM:620365"));
+        List<SimpleTerm> excludedTerms = List.of();
 
-        return Sample.of("sample1", presentTerms, excludedTerms);//, diseaseIds);
+        return new PpktSample("sample1", presentTerms, excludedTerms);
     }
 
     /**
      *
      * @return Sample phenopacket with two included HPO term Ids and one disease Ids.
      */
-    public static Sample getPPkt2() {
-        List<TermId> presentTerms = List.of(
-                TermId.of("HP:0001888"),
-                TermId.of("HP:0001903")
+    public static PpktSample getPPkt2() {
+        List<SimpleTerm> presentTerms = List.of(
+                new SimpleTerm("HP:0001888", "hpo1"),
+                new SimpleTerm("HP:0001903", "hpo2")
         );
-        List<TermId> excludedTerms = List.of();
-        List<TermId> diseaseIds = List.of(TermId.of("OMIM:620365"));
+        List<SimpleTerm> excludedTerms = List.of();
 
-        return Sample.of("sample1", presentTerms, excludedTerms);//, diseaseIds);
+        return new PpktSample("sample1", presentTerms, excludedTerms);
     }
 
     /**
      * We expect this to cause an error, because OMIM:123456 is not aa actual identifier
      * @return Sample phenopacket with one included HPO term Id and one dummy disease Id.
      */
-    public static Sample getPPktEmptyDisease() {
-        List<TermId> presentTerms = List.of(
-                TermId.of("HP:0001888")
+    public static PpktSample getPPktEmptyDisease() {
+        List<SimpleTerm> presentTerms = List.of(
+                new SimpleTerm("HP:0001888", "hpo1")
         );
-        List<TermId> excludedTerms = List.of();
+        List<SimpleTerm> excludedTerms = List.of();
         List<TermId> diseaseIds = List.of(TermId.of("OMIM:123456"));
 
-        return Sample.of("sample2", presentTerms, excludedTerms);//, diseaseIds);
+        return new PpktSample("sample2", presentTerms, excludedTerms);//, diseaseIds);
     }
 
 
@@ -97,7 +95,7 @@ public class DiscoverablePhenotypesTest {
     @Test
     public void testDiscoverablePhenotypes1() {
          // Get excluded phenotypes given phenopacket
-         Sample s1 = getPPkt1();
+         PpktSample s1 = getPPkt1();
          TermId targetId = TermId.of("OMIM:620365"); //s1.diseaseIds().getFirst();
          Set<TermId> discoverablePhenotypeIds = DISCOVERABLE_PHENOTYPES.getDiscoverablePhenotypeIds(
                 s1,
@@ -113,7 +111,7 @@ public class DiscoverablePhenotypesTest {
         record Error(Supplier<? extends PhenolRuntimeException> exceptionSupplier) implements TestOutcome {}
     }
 
-    public record TestIndividual(String description, Sample myPPkt, TestOutcome expectedOutcome) {}
+    public record TestIndividual(String description, PpktSample myPPkt, TestOutcome expectedOutcome) {}
 
     /**
      *
@@ -137,7 +135,7 @@ public class DiscoverablePhenotypesTest {
     @ParameterizedTest
     @MethodSource("testGetIndividualDiseaseIds")
     void testEvaluateExpression(TestIndividual testCase) {
-        Sample ppkti = testCase.myPPkt();
+        PpktSample ppkti = testCase.myPPkt();
         TermId targetId = TermId.of("OMIM:620365"); //ppkti.diseaseIds().getFirst();
         TermId targetId2 = TermId.of("OMIM:123456");
         switch (testCase.expectedOutcome()) {

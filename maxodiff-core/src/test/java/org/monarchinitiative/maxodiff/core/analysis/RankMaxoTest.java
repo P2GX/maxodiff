@@ -35,59 +35,16 @@ public class RankMaxoTest {
     public static void setUpBeforeClass() {
         ENGINE = new DifferentialDiagnosisEngine() {
             @Override
-            public List<DifferentialDiagnosis> run(Sample sample) {
-                // TODO[mabeckwith] - Returning the initial diagnoses makes sense to me.
-                //  This is, AFAIK, the purpose of the `DifferentialDiagnosisEngine`.
-                //  However, please check..
+            public List<DifferentialDiagnosis> run(PpktSample sample) {
                 return initialDiagnoses;
             }
 
             @Override
-            public List<DifferentialDiagnosis> run(Sample sample, Collection<TermId> targetDiseases) {
+            public List<DifferentialDiagnosis> run(PpktSample sample, Collection<TermId> targetDiseases) {
                 return initialDiagnoses;
             }
         };
     }
-
-    /**
-     *
-     * @return Sample phenopacket with one included HPO term Id and one disease Id.
-     */
-    public static Sample getPPkt1() {
-        List<TermId> presentTerms = List.of(
-                TermId.of("HP:0008619")
-        );
-        List<TermId> excludedTerms = List.of();
-        List<TermId> diseaseIds = List.of(TermId.of("OMIM:615837"));
-
-        return Sample.of("sample1", presentTerms, excludedTerms);//, diseaseIds);
-    }
-
-    /**
-     *
-     * @return Sample phenopacket with two included HPO term Ids and one disease Id.
-     */
-    public static Sample getPPkt2() {
-        List<TermId> presentTerms = List.of(
-                TermId.of("HP:0008619"),
-                TermId.of("HP:0001751")
-        );
-        List<TermId> excludedTerms = List.of();
-        return Sample.of("sample1", presentTerms, excludedTerms);//, diseaseIds);
-    }
-
-    /**
-     * We expect this to cause an error, because OMIM:123456 is not aa actual identifier
-     * @return Sample phenopacket with one included HPO term Id and one dummy disease Id.
-     */
-    public static Sample getPPktEmptyDisease() {
-        List<TermId> presentTerms = List.of(
-                TermId.of("HP:0008619")
-        );
-        List<TermId> excludedTerms = List.of();
-        return Sample.of("sample2", presentTerms, excludedTerms);//, diseaseIds);
-    }
-
 
 
 }

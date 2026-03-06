@@ -32,7 +32,7 @@ public class BaseDiffDiagRefiner implements DiffDiagRefiner {
 
 
     @Override
-    public List<RankedMaxoResult> runNew(Sample sample,
+    public List<RankedMaxoResult> runNew(PpktSample sample,
                                          Set<TermId> initialDiagnosesIds,
                                          RefinementOptions options,
                                          RankMaxo rankMaxo,
@@ -155,10 +155,11 @@ public class BaseDiffDiagRefiner implements DiffDiagRefiner {
      * @return MAP of DifferentialDiagnosis objects for MAxO term, in reverse score order.
      */
     @Override
-    public Map<TermId, List<DifferentialDiagnosis>> getMaxoTermToDifferentialDiagnosesMap(Sample sample,
+    public Map<TermId, List<DifferentialDiagnosis>> getMaxoTermToDifferentialDiagnosesMap(PpktSample sample,
                                                                                           DifferentialDiagnosisEngine engine,
                                                                                           Map<TermId, Set<TermId>> maxoToHpoTermIdMap,
-                                                                                          Integer nDiseases) {
+                                                                                          Integer nDiseases,
+                                                                                          BiometadataService biometadataService) {
 
         Map<TermId, List<DifferentialDiagnosis>> maxoTermToDifferentialDiagnosesMap = new HashMap<>();
         for (TermId maxoId : maxoToHpoTermIdMap.keySet()) {
@@ -166,7 +167,8 @@ public class BaseDiffDiagRefiner implements DiffDiagRefiner {
             Set<TermId> hpoTermIds = maxoToHpoTermIdMap.get(maxoId);
             List<TermId> maxoDiseaseIds = hpoTermIds.stream().toList();
             System.out.println(maxoId + " ascertained HPO terms: " + maxoDiseaseIds);
-            Sample maxoSample = Sample.of(sample.id(), maxoDiseaseIds, sample.excludedHpoTermIds());
+            List<SimpleTerm> maxoDiseaseTerms = maxoDiseaseIds.stream().map(tid -> new SimpleTerm(tid.getId(), biometadataService.hpoLabel(tid).orElse("unknown"))).toList();
+            PpktSample maxoSample = new PpktSample(sample.id(), maxoDiseaseTerms, sample.excludedHpoTerms());
             List<DifferentialDiagnosis> maxoDiagnoses = engine.run(maxoSample);
             List<DifferentialDiagnosis> orderedMaxoDiagnoses = maxoDiagnoses.stream()
                     .sorted(Comparator.comparingDouble(DifferentialDiagnosis::score).reversed())

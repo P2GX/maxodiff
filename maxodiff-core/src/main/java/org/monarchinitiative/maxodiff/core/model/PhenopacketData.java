@@ -1,6 +1,8 @@
 package org.monarchinitiative.maxodiff.core.model;
 
+import org.monarchinitiative.maxodiff.core.analysis.SimpleTerm;
 import org.monarchinitiative.maxodiff.core.io.PhenopacketImporter;
+import org.monarchinitiative.maxodiff.core.service.BiometadataService;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 
 import java.io.*;
@@ -12,6 +14,7 @@ import org.phenopackets.schema.v2.core.PhenotypicFeature;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Predicate;
@@ -72,11 +75,14 @@ public class PhenopacketData {
         return new PhenopacketData(sampleId, observedTerms, excludedTerms, diseaseIds);
     }
 
-    public Sample getSample() {
-        return Sample.of(
-                sampleId(),
-                observedHpoTermIds().toList(),
-                excludedHpoTermIds().toList());
+    public PpktSample getPpktSample(BiometadataService biometadataService) {
+        List<SimpleTerm> observedSampleTerms = new ArrayList<>();
+        List<SimpleTerm> excludedSampleTerms = new ArrayList<>();
+        observedHpoTermIds().forEach(tid ->
+                observedSampleTerms.add(new SimpleTerm(tid.getValue(), biometadataService.hpoLabel(tid).orElse("n/a"))));
+        excludedHpoTermIds().forEach(tid ->
+                excludedSampleTerms.add(new SimpleTerm(tid.getValue(), biometadataService.hpoLabel(tid).orElse("n/a"))));
+        return new PpktSample(sampleId(), observedSampleTerms, excludedSampleTerms);
     }
 
 

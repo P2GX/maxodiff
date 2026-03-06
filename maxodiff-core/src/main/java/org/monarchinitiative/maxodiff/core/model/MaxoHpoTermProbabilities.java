@@ -33,7 +33,7 @@ public class MaxoHpoTermProbabilities {
      * @return Set of all discoverable phenotypes, i.e. potential phenotypes not including assumed excluded phenotypes,
      * for all K diseases in the differential diagnosis
      */
-    public Set<TermId> getUnionOfDiscoverablePhenotypes(Sample ppkt) {
+    public Set<TermId> getUnionOfDiscoverablePhenotypes(PpktSample ppkt) {
         Set<TermId> unionDiscoverablePhenotypes = new HashSet<>();
 
         for (DifferentialDiagnosis diagnosis : initialDiagnoses) {
@@ -52,7 +52,7 @@ public class MaxoHpoTermProbabilities {
      * @return HPO terms discoverable by the MAxO term, i.e. the intersection of the HPO terms that can be ascertained by
      * that MAxO term and the union of discoverable phenotypes for the diseases
      */
-    public Set<TermId> getDiscoverableByMaxoHpoTerms(Sample ppkt, TermId maxoId, Map<TermId, Set<TermId>> maxoToHpoTermIdMap) {
+    public Set<TermId> getDiscoverableByMaxoHpoTerms(PpktSample ppkt, TermId maxoId, Map<TermId, Set<TermId>> maxoToHpoTermIdMap) {
         Set<TermId> maxoAssociatedHpoIds = maxoToHpoTermIdMap.get(maxoId);
         if (maxoAssociatedHpoIds != null) {
             Set<TermId> unionDiscoverablePhenotypes = getUnionOfDiscoverablePhenotypes(ppkt);
