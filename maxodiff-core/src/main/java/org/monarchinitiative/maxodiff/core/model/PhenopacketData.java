@@ -1,17 +1,18 @@
 package org.monarchinitiative.maxodiff.core.model;
 
+import org.monarchinitiative.maxodiff.core.analysis.SimpleTerm;
 import org.monarchinitiative.maxodiff.core.io.PhenopacketImporter;
+import org.monarchinitiative.maxodiff.core.service.BiometadataService;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 
 import java.io.*;
 import java.nio.file.Path;
 import org.phenopackets.schema.v2.Phenopacket;
-import org.phenopackets.schema.v2.core.Disease;
-import org.phenopackets.schema.v2.core.OntologyClass;
-import org.phenopackets.schema.v2.core.PhenotypicFeature;
+import org.phenopackets.schema.v2.core.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Objects;
 import java.util.function.Predicate;
@@ -24,19 +25,25 @@ public class PhenopacketData {
     private final List<String> hpoTerms;
     private final List<String> negatedHpoTerms;
     private final List<TermId> diseaseIds;
+    /* Medical action ontology terms used in the Phenopacket. We will use this information
+     in oder to not suggest a MAxO term that was previosly performed (e.g., do not suggest
+     chext X ray twice!).
+     */
+    private final List<TermId> procedures;
 
 
     PhenopacketData(String sampleId,
                     List<String> hpoTerms,
                     List<String> negatedHpoTerms,
-                    List<TermId> diseaseIds
+                    List<TermId> diseaseIds,
+                    List<TermId> maxoIds
                   ) {
 
         this.sampleId = Objects.requireNonNull(sampleId);
         this.hpoTerms = Objects.requireNonNull(hpoTerms);
         this.negatedHpoTerms = Objects.requireNonNull(negatedHpoTerms);
         this.diseaseIds = diseaseIds;
-
+        this.procedures = maxoIds;
     }
 
     public static PhenopacketData readPhenopacketData(Path phenopacketPath)  {
@@ -69,14 +76,25 @@ public class PhenopacketData {
                 .map(OntologyClass::getId)
                 .map(TermId::of)
                 .toList();
-        return new PhenopacketData(sampleId, observedTerms, excludedTerms, diseaseIds);
+        List<TermId> maxoIds = ppkt.getMedicalActionsList()
+                .stream()
+                .filter(MedicalAction::hasProcedure)
+                .map(MedicalAction::getProcedure)
+                .map(Procedure::getCode)
+                .map(OntologyClass::getId)
+                .map(TermId::of)
+                .toList();
+        return new PhenopacketData(sampleId, observedTerms, excludedTerms, diseaseIds, maxoIds);
     }
 
-    public Sample getSample() {
-        return Sample.of(
-                sampleId(),
-                observedHpoTermIds().toList(),
-                excludedHpoTermIds().toList());
+    public PpktSample getPpktSample(BiometadataService biometadataService) {
+        List<SimpleTerm> observedSampleTerms = new ArrayList<>();
+        List<SimpleTerm> excludedSampleTerms = new ArrayList<>();
+        observedHpoTermIds().forEach(tid ->
+                observedSampleTerms.add(new SimpleTerm(tid.getValue(), biometadataService.hpoLabel(tid).orElse("n/a"))));
+        excludedHpoTermIds().forEach(tid ->
+                excludedSampleTerms.add(new SimpleTerm(tid.getValue(), biometadataService.hpoLabel(tid).orElse("n/a"))));
+        return new PpktSample(sampleId(), observedSampleTerms, excludedSampleTerms);
     }
 
 
@@ -91,6 +109,10 @@ public class PhenopacketData {
 
     public Stream<TermId> observedHpoTermIds() {
         return hpoTerms.stream().map(TermId::of);
+    }
+
+    public List<TermId> maxoProcedureIds() {
+        return this.procedures;
     }
 
 

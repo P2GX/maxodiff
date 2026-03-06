@@ -42,11 +42,12 @@ public class AscertainablePhenotypes {
      * @throws PhenolRuntimeException if that targetDiseaseId is not found.
      */
     public Set<TermId> getAscertainablePhenotypeIds(
-            Sample myPpkt,
+            PpktSample myPpkt,
             TermId diseaseId) throws PhenolRuntimeException {
         HpoDisease disease = hpoDiseases.diseaseById(diseaseId)
                 .orElseThrow(() -> new PhenolRuntimeException("Could not find disease id " + diseaseId.getValue()));
-        Set<TermId> allPkktTerms = myPpkt.allPhenotypesSet();
+        Set<TermId> allPkktTerms = myPpkt.observedHpoTerms().stream().map(term -> TermId.of(term.termId())).collect(Collectors.toSet());
+        allPkktTerms.addAll(myPpkt.excludedHpoTerms().stream().map(term -> TermId.of(term.termId())).collect(Collectors.toSet()));
         // Ascertainable phenotypes include all terms not currently mentioned
         // in the phenopacket
         return disease.annotationTermIdList().stream()

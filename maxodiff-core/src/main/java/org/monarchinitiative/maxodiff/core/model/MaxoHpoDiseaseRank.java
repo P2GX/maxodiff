@@ -57,7 +57,7 @@ public class MaxoHpoDiseaseRank {
                               AscertainablePhenotypes ascertainablePhenotypes,
                               Map<TermId, Set<TermId>> maxoToHpoTermIdMap,
                               TermId maxoId,
-                              Sample sample,
+                              PpktSample sample,
                               int nDiagnoses,
                               String maxoLabel) {
         this.initialDiagnoses = initialDiagnoses;
@@ -88,7 +88,7 @@ public class MaxoHpoDiseaseRank {
      * @param sample        the sample (patient) whose ascertainable phenotypes are being analyzed
      * @param nDiagnoses    the number of top diagnoses to consider
      */
-    public void makeAscertainedHpoCountListAndRankMap(Sample sample, int nDiagnoses) {
+    public void makeAscertainedHpoCountListAndRankMap(PpktSample sample, int nDiagnoses) {
 
         for (DifferentialDiagnosis diagnosis : initialDiagnoses.subList(0, nDiagnoses)) {
             double diseaseRankFactor = 1.0 / (initialDiagnoses.indexOf(diagnosis) + 1);
@@ -115,10 +115,10 @@ public class MaxoHpoDiseaseRank {
      *
      * @param sample  the sample providing observed and excluded HPO terms
      */
-    public void makeHpoToProbabilityMap(Sample sample) {
+    public void makeHpoToProbabilityMap(PpktSample sample) {
 
-        Set<TermId> sampleTerms = new HashSet<>(sample.observedHpoTermIds());
-        sampleTerms.addAll(sample.excludedHpoTermIds());
+        Set<TermId> sampleTerms = sample.observedHpoTerms().stream().map(term -> TermId.of(term.termId())).collect(Collectors.toSet());
+        sampleTerms.addAll(sample.excludedHpoTerms().stream().map(term -> TermId.of(term.termId())).collect(Collectors.toSet()));
         List<TermId> maxoAscertainedHpoIdsExclSample = new ArrayList<>(allMaxoAscertainedHpoIds);
         maxoAscertainedHpoIdsExclSample.removeAll(sampleTerms); // ascertainable terms  not in phenopacket
 
@@ -209,7 +209,7 @@ public class MaxoHpoDiseaseRank {
         private Map<TermId, Set<TermId>> maxoToHpoTermIdMap;
         private TermId maxoId = null;
         private Integer nDiagnoses = null;
-        private Sample sample;
+        private PpktSample sample;
         private String maxoLabel;
 
 
@@ -223,7 +223,7 @@ public class MaxoHpoDiseaseRank {
             return this;
         }
 
-        public Builder sample(Sample sample) {
+        public Builder sample(PpktSample sample) {
             this.sample = sample;
             return this;
         }
