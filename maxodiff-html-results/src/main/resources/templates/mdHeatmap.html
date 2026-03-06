@@ -1,11 +1,3 @@
-<!DOCTYPE html>
-<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
-<head>
-    <meta charset="UTF-8">
-    <title>Title</title>
-</head>
-<body>
-
 <div class="container">
     <div class="section-box">
         <h2 th:text="|${maxoData.index()}) ${maxoData.maxoId()}: ${maxoData.maxoLabel()}|">Header</h2>
@@ -29,7 +21,14 @@
         <table>
             <tbody>
             <tr>
-                <td><div th:id="'TornadoBarChartContainer_' + ${maxoData.index}" style="height:500px; width:1600px; border: 1px solid black"></div></td>
+                <td>
+                    <div style="text-align:center; margin: 40px 0;">
+                        <!-- Title above the chart -->
+                        <h2>Average Rank Change per Disease</h2>
+                        <div th:id="'TornadoBarChartContainer_' + ${maxoData.index}" style="height:500px; width:1000px; border: 1px solid black; display:block;margin:0 auto;">
+                        </div>
+                    </div>
+                </td>
             </tr>
             </tbody>
         </table>
@@ -38,8 +37,28 @@
             var rankedOmimTerms = [[${maxoData.getRankedOmimTermList}]];
             var nDiseases = [[${maxoData.nDiseases}]];
             var chartIdx = [[${maxoData.index}]]
+            var tornadoBarChart = document.querySelector("#TornadoBarChartContainer_" + chartIdx);
         </script>
-        <script type="text/javascript" th:src="@{src/main/resources/static/js/TornadoBarChart.js}"></script>
+        <script th:inline="javascript">
+            var diseaseLabels = rankedOmimTerms.map(rt => rt.omimTerm.termLabel);
+            var rankChanges = rankedOmimTerms.map(rt => rt.initialRank - rt.averageRank);
+
+            var options = {
+                series: [{ name: 'Average Rank Change', data: rankChanges }],
+                chart: { type: 'bar', height: 500 },
+                colors: rankChanges.map(rc => rc >= 0 ? '#FF4560' : '#008FFB'),
+                plotOptions: { bar: { horizontal: true, distributed: true, borderRadius: 4 } },
+                dataLabels: { enabled: false },
+                legend: { show: false },
+                xaxis: { categories: diseaseLabels, min: -(nDiseases-1), max: nDiseases-1 },
+                tooltip: {
+                    y: { formatter: value => (value >=0 ? 'Decline' : 'Improve') + ' by ' + Math.abs(value) }
+                }
+            };
+
+            var chart = new ApexCharts(tornadoBarChart, options);
+            chart.render();
+        </script>
 
         <table class="countsTable">
             <thead>
@@ -97,5 +116,3 @@
         </table>
     </div>
 </div>
-</body>
-</html>
