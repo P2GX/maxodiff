@@ -37,11 +37,11 @@ public class MaxoHpoDiseaseRank {
     private final String maxoLabel;
 
     /** List of counts of ascertainable HPO terms per disease. */
-    List<Integer> ascertainedHpoCountList = new ArrayList<>();
+    private final List<Integer> ascertainedHpoCountList = new ArrayList<>();
     /** Mapping of HPO term IDs to lists of initial differential diagnosis disease rankings. */
-    Map<TermId, List<Double>> hpoToRankMap = new HashMap<>();
+    private final Map<TermId, List<Double>> hpoToRankMap = new HashMap<>();
     /** Mapping of HPO term IDs to normalized probabilities. */
-    Map<TermId, Double> hpoToProbabiltyMap = new HashMap<>();
+    private Map<TermId, Double> hpoToProbabiltyMap = new HashMap<>();
 
 
     /**

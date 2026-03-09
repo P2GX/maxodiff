@@ -1,8 +1,6 @@
 package org.monarchinitiative.maxodiff.core.analysis;
 
 import org.junit.jupiter.api.BeforeAll;
-import org.junit.jupiter.api.Disabled;
-import org.junit.jupiter.api.Test;
 import org.monarchinitiative.maxodiff.core.SimpleTermOld;
 import org.monarchinitiative.maxodiff.core.TestResources;
 import org.monarchinitiative.maxodiff.core.diffdg.DifferentialDiagnosisEngine;
@@ -12,7 +10,6 @@ import org.monarchinitiative.phenol.ontology.data.Ontology;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 
 import java.util.*;
-import java.util.stream.Collectors;
 
 
 public class RankMaxoTest {

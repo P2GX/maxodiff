@@ -14,7 +14,7 @@ import java.util.Map;
  */
 public final class ValidationRankDiffImpl extends ValidationModelImpl  implements ValidationModel {
 
-    Map<TermId, Double> rankChanges = new HashMap<>();
+    private final Map<TermId, Double> rankChanges = new HashMap<>();
 
     public ValidationRankDiffImpl(List<DifferentialDiagnosis> initialDifferentialDiagnoses,
                                   List<DifferentialDiagnosis> maxoDifferentialDiagnoses) {

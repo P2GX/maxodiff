@@ -218,7 +218,7 @@ public class BenchmarkingCommand extends DDxCommand {
                                 discHpoIds.stream().mapToDouble(termToIcMap::get).sum();
                         topRandomScores.add(maxScoreValueRandom);
                         if (i % 10 == 0) {
-                            LOGGER.info("Finished index " + i);
+                            LOGGER.info("Finished index {}", i);
                         }
                     })
                 ).get();

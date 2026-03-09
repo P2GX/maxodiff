@@ -183,7 +183,7 @@ public class MaxodiffController {
                     initialDiagnoses,
                     diseaseSubsetEngine,
                     maxoToHpoTermIdMap);
-            List<RankedMaxoResult> resultsList = diffDiagRefiner.runNew(sample,
+            List<RankedMaxoResult> resultsList = diffDiagRefiner.runNew(ppktSample,
                     initialDiagnosesIds,
                     options,
                     rankMaxo,

@@ -38,8 +38,7 @@ public record MaxodiffPropsConfiguration(
         }
         Map<TermId, String> generalMaxoTermsMap = GeneralMaxoTerms.getGeneralMaxoTerms();
         Set<SimpleTermOld> generalMaxoTerms = new HashSet<>();
-        generalMaxoTermsMap.entrySet().forEach(entry ->
-                generalMaxoTerms.add(new SimpleTermOld(entry.getKey(), entry.getValue())));
+        generalMaxoTermsMap.forEach((key, value) -> generalMaxoTerms.add(new SimpleTermOld(key, value)));
         for (Set<SimpleTermOld> mterms : maxoAnnotsMap.values()) {
             mterms.removeAll(generalMaxoTerms);
         }

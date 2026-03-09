@@ -110,7 +110,7 @@ public class DownloadCommand implements Callable<Integer>{
 
     }
 
-    private static URL createUrlOrExplode(String url) throws Exception {
+    private static URL createUrlOrExplode(String url) {
         try {
             return URI.create(url).toURL();
         } catch (MalformedURLException e) {

@@ -7,7 +7,6 @@ import org.monarchinitiative.maxodiff.core.model.*;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 
-import java.nio.file.Path;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;

@@ -37,7 +37,7 @@ public class PoissonSampler {
 
         double mean = 3.2;
         for (int i = 0; i < 20; i++) {
-            int sample = sampler.sample(mean);
+            int sample = PoissonSampler.sample(mean);
             System.out.println(sample);
         }
     }
