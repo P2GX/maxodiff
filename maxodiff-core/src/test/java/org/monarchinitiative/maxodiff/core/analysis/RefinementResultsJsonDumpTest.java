@@ -35,36 +35,21 @@ public class RefinementResultsJsonDumpTest {
         String expected = """
                 [ {
                   "maxoTerm" : {
-                    "termId" : "MAXO:123",
-                    "termLabel" : "MAXO Label 123"
+                    "termId" : "MAXO:123"
                   },
                   "maxoScore" : 2.0,
                   "rankedOmimTermList" : [ {
-                    "omimTerm" : {
-                      "termId" : "OMIM:256000",
-                      "termLabel" : "OMIM 256 Label"
-                    },
-                    "initialRank" : 5,
+                    "termId" : "OMIM:256000",
                     "averageRank" : 1.0
                   }, {
-                    "omimTerm" : {
-                      "termId" : "OMIM:128000",
-                      "termLabel" : "OMIM 128 Label"
-                    },
-                    "initialRank" : 4,
+                    "termId" : "OMIM:000128",
                     "averageRank" : 2.0
                   } ],
                   "hpoTermIds" : [ {
-                    "hpoTerm" : {
-                      "termId" : "HPO:123000",
-                      "termLabel" : "HPO 123 Label"
-                    },
+                    "termId" : "HPO:123000",
                     "count" : 50
                   }, {
-                    "hpoTerm" : {
-                      "termId" : "HPO:425000",
-                      "termLabel" : "HPO 425 Label"
-                    },
+                    "termId" : "HPO:425000",
                     "count" : 85
                   } ],
                   "frequencies" : [ {
@@ -74,7 +59,7 @@ public class RefinementResultsJsonDumpTest {
                     "frequency" : 0.5,
                     "mica" : 5.3
                   }, {
-                    "omimId" : "OMIM:128000",
+                    "omimId" : "OMIM:000128",
                     "hpoId" : "HPO:425000",
                     "count" : 20,
                     "frequency" : 0.75,
@@ -87,9 +72,9 @@ public class RefinementResultsJsonDumpTest {
     private static List<RankedMaxoResult> createResults() {
         return List.of(new RankedMaxoResult(new SimpleTerm("MAXO:123", "MAXO Label 123"),
                         2.,
-                        List.of(new RankedOmimTerm(new SimpleTerm("OMIM:256000", "OMIM 256 Label"), 5, 1), new RankedOmimTerm(new SimpleTerm("OMIM:128000", "OMIM 128 Label"), 4,2)),
+                        List.of(new RankedOmimTerm(new SimpleTerm("OMIM:256000", "OMIM 256 Label"), 5, 1), new RankedOmimTerm(new SimpleTerm("OMIM:000128", "OMIM 128 Label"), 4,2)),
                         List.of(new CountedHpoTerm(new SimpleTerm("HPO:123000", "HPO 123 Label"), 50), new CountedHpoTerm(new SimpleTerm("HPO:425000", "HPO 425 Label"), 85)),
-                        List.of(new HpoFrequency("OMIM:256000", "HPO:123000", 10, 0.5f, 5.3f), new HpoFrequency("OMIM:128000", "HPO:425000", 20, 0.75f, 10.6f))
+                        List.of(new HpoFrequency("OMIM:256000", "HPO:123000", 10, 0.5f, 5.3f), new HpoFrequency("OMIM:000128", "HPO:425000", 20, 0.75f, 10.6f))
                         )
         );
     }
