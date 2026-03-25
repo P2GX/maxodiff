@@ -51,6 +51,7 @@
                 dataLabels: { enabled: false },
                 legend: { show: false },
                 xaxis: { categories: diseaseLabels, min: -(nDiseases-1), max: nDiseases-1 },
+                yaxis: { labels: { maxWidth: 1000 } },
                 tooltip: {
                     y: { formatter: value => (value >=0 ? 'Decline' : 'Improve') + ' by ' + Math.abs(value) }
                 }
