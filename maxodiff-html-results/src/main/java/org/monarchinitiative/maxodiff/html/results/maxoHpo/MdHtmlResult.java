@@ -39,10 +39,9 @@ public class MdHtmlResult {
         for (HpoFrequency hpoFrequency : result.frequencies()) {
             String omimId = hpoFrequency.omimId();
             String hpoId = hpoFrequency.hpoId();
-            int count = hpoFrequency.count();
             float frequency = hpoFrequency.frequency();
             float mica = htmlFrequencyMap.micaForDisease(TermId.of(hpoId), TermId.of(omimId));
-            hpoFrequenciesMica.add(new HpoFrequency(omimId, hpoId, count, frequency, mica));
+            hpoFrequenciesMica.add(new HpoFrequency(omimId, hpoId, frequency, mica));
         }
 
         repetitionRow = MdRepetitionRow.buildRepetitionRow(nRepetitions, result);

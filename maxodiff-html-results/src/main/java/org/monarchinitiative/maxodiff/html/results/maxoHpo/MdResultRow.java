@@ -46,7 +46,7 @@ public class MdResultRow {
                 if (hpoFrequencyOpt.isPresent()) {
                     mica = hpoFrequencyOpt.get().mica();
                 } else {
-                    ct = 0;
+//                    ct = 0;
                     mica = htmlFrequencyMap.micaForDisease(TermId.of(hpoId), TermId.of(omimId));
                 }
                 float maxMica = 8.343077871169383f;
