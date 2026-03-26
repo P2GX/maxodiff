@@ -41,7 +41,7 @@ public class DiseaseTermCountImpl implements DiseaseTermCount {
             for (TermId hpoId : disease.annotationTermIdList()) {
                 List<HpoFrequency> freqRecords = hpoTermCounts.computeIfAbsent(hpoId, id -> new ArrayList<>());
                 float freq = disease.getFrequencyOfTermInDisease(hpoId).map(Ratio::frequency).orElse(1f);
-                freqRecords.add(new HpoFrequency(omimId.toString(), hpoId.toString(), 1, freq, 0f));
+                freqRecords.add(new HpoFrequency(omimId.toString(), hpoId.toString(), freq, 0f));
             }
         }
         return new DiseaseTermCountImpl(diseaseList, hpoTermCounts);

@@ -35,7 +35,7 @@ public class HpoTableCell {
         if (opc < 0.01) {
             opc = 0.01;
         }
-        return "rgba(220, 20, 60, " + opc + ")";
+        return "rgba(255, 127, 80, " + opc + ")";
     }
 
     public boolean isEmpty() {
