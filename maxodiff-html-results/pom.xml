@@ -18,7 +18,7 @@
     </properties>
     <dependencies>
         <dependency>
-            <groupId>org.monarchinitiative.maxodiff</groupId>
+            <groupId>org.p2gx.maxodiff</groupId>
             <artifactId>maxodiff-core</artifactId>
             <version>0.4.2</version>
             <scope>compile</scope>

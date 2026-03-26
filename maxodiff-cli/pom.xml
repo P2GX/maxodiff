@@ -14,22 +14,22 @@
 
     <dependencies>
         <dependency>
-            <groupId>org.monarchinitiative.maxodiff</groupId>
+            <groupId>org.p2gx.maxodiff</groupId>
             <artifactId>maxodiff-core</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.monarchinitiative.maxodiff</groupId>
+            <groupId>org.p2gx.maxodiff</groupId>
             <artifactId>maxodiff-config</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.monarchinitiative.maxodiff</groupId>
+            <groupId>org.p2gx.maxodiff</groupId>
             <artifactId>maxodiff-phenomizer</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.monarchinitiative.maxodiff</groupId>
+            <groupId>org.p2gx.maxodiff</groupId>
             <artifactId>maxodiff-html-results</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
@@ -64,7 +64,7 @@
             <artifactId>picocli</artifactId>
         </dependency>
         <dependency>
-            <groupId>org.monarchinitiative.maxodiff</groupId>
+            <groupId>org.p2gx.maxodiff</groupId>
             <artifactId>maxodiff-html-results</artifactId>
             <version>0.4.2</version>
             <scope>compile</scope>

@@ -13,7 +13,7 @@
 
     <dependencies>
         <dependency>
-            <groupId>org.monarchinitiative.maxodiff</groupId>
+            <groupId>org.p2gx.maxodiff</groupId>
             <artifactId>maxodiff-core</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
