@@ -1,11 +1,12 @@
 package org.monarchinitiative.maxodiff.config;
 
-import org.monarchinitiative.maxodiff.core.SimpleTermOld;
-import org.monarchinitiative.maxodiff.core.analysis.refinement.*;
-import org.monarchinitiative.maxodiff.core.io.MaxoDxAnnots;
-import org.monarchinitiative.maxodiff.core.model.GeneralMaxoTerms;
-import org.monarchinitiative.maxodiff.core.service.BiometadataService;
-import org.monarchinitiative.maxodiff.core.service.BiometadataServiceImpl;
+import org.p2gx.maxodiff.core.SimpleTermOld;
+import org.p2gx.maxodiff.core.analysis.refinement.BaseDiffDiagRefiner;
+import org.p2gx.maxodiff.core.analysis.refinement.DiffDiagRefiner;
+import org.p2gx.maxodiff.core.io.MaxoDxAnnots;
+import org.p2gx.maxodiff.core.model.GeneralMaxoTerms;
+import org.p2gx.maxodiff.core.service.BiometadataService;
+import org.p2gx.maxodiff.core.service.BiometadataServiceImpl;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
 import org.monarchinitiative.phenol.annotations.io.hpo.HpoDiseaseLoaderOptions;
 import org.monarchinitiative.phenol.annotations.io.hpo.HpoDiseaseLoaders;
