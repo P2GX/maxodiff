@@ -1,7 +1,7 @@
 package org.p2gx.maxodiff.html;
 
 import org.junit.jupiter.api.Test;
-import org.monarchinitiative.maxodiff.config.MaxodiffDataResolver;
+import org.p2gx.maxodiff.config.MaxodiffDataResolver;
 import org.p2gx.maxodiff.core.service.BiometadataService;
 import org.p2gx.maxodiff.html.config.MaxodiffAutoConfiguration;
 import org.p2gx.maxodiff.html.config.MaxodiffProperties;
