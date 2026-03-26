@@ -1,6 +1,5 @@
 package org.monarchinitiative.maxodiff.html.controller;
 
-import org.monarchinitiative.maxodiff.core.SimpleTermOld;
 import org.monarchinitiative.maxodiff.core.analysis.*;
 import org.monarchinitiative.maxodiff.core.analysis.refinement.*;
 import org.monarchinitiative.maxodiff.core.diffdg.DifferentialDiagnosisEngine;
@@ -40,9 +39,9 @@ public class MaxodiffController {
 
     private final HpoDiseases hpoDiseases;
 
-    private final Map<TermId, Set<TermId>> hpoToMaxoIdMap;
+    private final Map<String, Set<String>> hpoToMaxoIdMap;
 
-    private final Map<SimpleTermOld, Set<SimpleTermOld>> hpoToMaxoTermMap;
+    private final Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxoTermMap;
 
     private RankMaxo rankMaxo;
 
@@ -56,8 +55,8 @@ public class MaxodiffController {
             DiffDiagRefiner diffDiagRefiner,
             Ontology hpo,
             HpoDiseases hpoDiseases,
-            Map<TermId, Set<TermId>> hpoToMaxoIdMap,
-            Map<SimpleTermOld, Set<SimpleTermOld>> hpoToMaxoTermMap
+            Map<String, Set<String>> hpoToMaxoIdMap,
+            Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxoTermMap
     ) {
         this.icMicaData = icMicaData;
         this.biometadataService = biometadataService;
@@ -126,17 +125,17 @@ public class MaxodiffController {
             // Map of HPO Term Id and List of HpoFrequency objects for the subset n diseases.
             if (model.getAttribute("hpoTermCounts") == null || !nDiseases.equals(prevNDiseases)) {
                 List<HpoDisease> diseases = diffDiagRefiner.getDiseases(orderedDiagnoses);
-                Map<TermId, List<HpoFrequency>> hpoTermCounts = diffDiagRefiner.getHpoTermCounts(diseases);
+                Map<String, List<HpoFrequency>> hpoTermCounts = diffDiagRefiner.getHpoTermCounts(diseases);
                 model.addAttribute("hpoTermCounts", hpoTermCounts);
             }
-            Map<TermId, List<HpoFrequency>> hpoTermCounts = (Map<TermId, List<HpoFrequency>>) model.getAttribute("hpoTermCounts");
+            Map<String, List<HpoFrequency>> hpoTermCounts = (Map<String, List<HpoFrequency>>) model.getAttribute("hpoTermCounts");
 
             // Map of MAxO term id : List of associated HPO term ids for the subset n diseases. HPO ancestors are removed
             if (model.getAttribute("maxoToHpoTermIdMap") == null || !nDiseases.equals(prevNDiseases)) {
-                Map<TermId, Set<TermId>> maxoToHpoTermIdMap = diffDiagRefiner.getMaxoToHpoTermIdMap(hpoTermCounts);
+                Map<String, Set<String>> maxoToHpoTermIdMap = diffDiagRefiner.getMaxoToHpoTermIdMap(hpoTermCounts);
                 model.addAttribute("maxoToHpoTermIdMap", maxoToHpoTermIdMap);
             }
-            Map<TermId, Set<TermId>> maxoToHpoTermIdMap = (Map<TermId, Set<TermId>>) model.getAttribute("maxoToHpoTermIdMap");
+            Map<String, Set<String>> maxoToHpoTermIdMap = (Map<String, Set<String>>) model.getAttribute("maxoToHpoTermIdMap");
 
             DifferentialDiagnosisEngine diseaseSubsetEngine;
             assert orderedDiagnoses != null;

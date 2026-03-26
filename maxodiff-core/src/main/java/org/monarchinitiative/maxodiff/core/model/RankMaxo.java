@@ -2,7 +2,6 @@ package org.monarchinitiative.maxodiff.core.model;
 
 import org.monarchinitiative.maxodiff.core.JpsChecker;
 import org.monarchinitiative.maxodiff.core.ProgessBar;
-import org.monarchinitiative.maxodiff.core.SimpleTermOld;
 import org.monarchinitiative.maxodiff.core.analysis.*;
 import org.monarchinitiative.maxodiff.core.diffdg.DifferentialDiagnosisEngine;
 import org.monarchinitiative.maxodiff.core.service.BiometadataService;
@@ -18,8 +17,8 @@ import java.util.stream.Collectors;
 
 public class RankMaxo {
     private final static Logger LOGGER = LoggerFactory.getLogger(RankMaxo.class);
-    private final Map<SimpleTermOld, Set<SimpleTermOld>> hpoToMaxoTermMap;
-    private final Map<TermId, Set<TermId>> maxoToHpoTermIdMap;
+    private final Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxoTermMap;
+    private final Map<String, Set<String>> maxoToHpoTermIdMap;
     private final MaxoHpoTermProbabilities maxoHpoTermProbabilities;
     private final DifferentialDiagnosisEngine engine;
     double progress;
@@ -42,8 +41,8 @@ public class RankMaxo {
      * @author Martha Beckwith
      * @since 1.0
      */
-    public RankMaxo(Map<SimpleTermOld, Set<SimpleTermOld>> hpoToMaxoTermMap,
-                    Map<TermId, Set<TermId>> maxoToHpoTermIdMap,
+    public RankMaxo(Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxoTermMap,
+                    Map<String, Set<String>> maxoToHpoTermIdMap,
                     MaxoHpoTermProbabilities maxoHpoTermProbabilities,
                     DifferentialDiagnosisEngine engine,
                     Ontology hpo,
@@ -73,7 +72,7 @@ public class RankMaxo {
         sampleHpoIds.addAll(ppkt.excludedHpoTerms().stream().map(term -> TermId.of(term.termId())).collect(Collectors.toSet()));
 
         AscertainablePhenotypes ascertainablePhenotypes = new AscertainablePhenotypes(maxoHpoTermProbabilities.getHpoDiseases());
-        Map<TermId, Set<TermId>> fullMaxoToHpoTermIdMap = maxoHpoTermProbabilities.getMaxoToHpoTermIdMap();
+        Map<String, Set<String>> fullMaxoToHpoTermIdMap = maxoHpoTermProbabilities.getMaxoToHpoTermIdMap();
 
         int numThreads = Runtime.getRuntime().availableProcessors() - 1;
         ExecutorService executor = Executors.newFixedThreadPool(numThreads);
@@ -81,7 +80,7 @@ public class RankMaxo {
         List<Callable<RankedMaxoResult>> tasks = new ArrayList<>();
         int maxoIdx = 0;
         ProgessBar pb = new ProgessBar(maxoIdx, maxoToHpoTermIdMap.size());
-        for (TermId maxoId : maxoToHpoTermIdMap.keySet()) {
+        for (String maxoId : maxoToHpoTermIdMap.keySet()) {
             MaxoHpoDiseaseRank maxoHpoDiseaseRank = MaxoHpoDiseaseRank.Builder.builder()
                     .initialDiagnoses(allInitialDiagnoses)
                     .ascertainablePhenotypes(ascertainablePhenotypes)

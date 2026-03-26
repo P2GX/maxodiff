@@ -1,5 +1,6 @@
 package org.monarchinitiative.maxodiff.core.model;
 
+import org.monarchinitiative.maxodiff.core.analysis.SimpleTerm;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 
 import java.util.*;
@@ -17,15 +18,15 @@ import java.util.stream.Collectors;
 public class ExcludedPhenotypes {
 
 
-    private final Map<TermId, Set<TermId>> hpoToMaxoTermIdMap;
-    private final Map<TermId, Set<TermId>> maxoToHpoTermIdMap;
+    private final Map<String, Set<String>> hpoToMaxoTermIdMap;
+    private final Map<String, Set<String>> maxoToHpoTermIdMap;
 
     /**
      * @param hpoToMaxoTermIdMap Map of HPO term ids : Set of associated MAxO term ids created using maxo_diagnostic_annotations file.
      * @param maxoToHpoTermIdMap Map of MAxO term ids : Set of associated HPO term ids created using maxo_diagnostic_annotations file.
      */
-    public ExcludedPhenotypes(Map<TermId, Set<TermId>> hpoToMaxoTermIdMap,
-                              Map<TermId, Set<TermId>> maxoToHpoTermIdMap) {
+    public ExcludedPhenotypes(Map<String, Set<String>> hpoToMaxoTermIdMap,
+                              Map<String, Set<String>> maxoToHpoTermIdMap) {
         this.hpoToMaxoTermIdMap = hpoToMaxoTermIdMap;
         this.maxoToHpoTermIdMap = maxoToHpoTermIdMap;
     }
@@ -37,14 +38,14 @@ public class ExcludedPhenotypes {
      * @return Set of excluded HPO Ids for the HPO term, including any other existing HPO Ids in the phenopacket.
      * The other HPO Ids from the phenopacket are removed in getExcludedPhenotypes method.
      */
-    public Set<TermId> getExcludedForHpoTerm(TermId hpoId) {
-        Set<TermId> excluded;
-        Set<TermId> associatedMaxoTermIds = hpoToMaxoTermIdMap.get(hpoId);
-        List<Set<TermId>> maxoIdHpoIds = new ArrayList<>();
+    public Set<String> getExcludedForHpoTerm(String hpoId) {
+        Set<String> excluded;
+        Set<String> associatedMaxoTermIds = hpoToMaxoTermIdMap.get(hpoId);
+        List<Set<String>> maxoIdHpoIds = new ArrayList<>();
         if (associatedMaxoTermIds == null) {
             excluded = Set.of();
         } else if (associatedMaxoTermIds.size() == 1) {
-            TermId maxoId = associatedMaxoTermIds.iterator().next();
+            String maxoId = associatedMaxoTermIds.iterator().next();
             excluded = maxoToHpoTermIdMap.get(maxoId);
         } else if (associatedMaxoTermIds.isEmpty()) {
             excluded = Set.of();
@@ -62,11 +63,11 @@ public class ExcludedPhenotypes {
      * @return Set of excluded phenotypes. These are phenotypes that can be ascertained by MAxO terms,
      *  but are not included in the existing phenotypes in the phenopacket.
      */
-    public Set<TermId> getExcludedPhenotypes(PpktSample samplePpkt) {
-        Set<TermId> existingTerms = new HashSet<>();
-        existingTerms.addAll(samplePpkt.observedHpoTerms().stream().map(term -> TermId.of(term.termId())).collect(Collectors.toSet()));
-        existingTerms.addAll(samplePpkt.excludedHpoTerms().stream().map(term -> TermId.of(term.termId())).collect(Collectors.toSet()));
-        Set<TermId> excludedPhenotypes = new HashSet<>();
+    public Set<String> getExcludedPhenotypes(PpktSample samplePpkt) {
+        Set<String> existingTerms = new HashSet<>();
+        existingTerms.addAll(samplePpkt.observedHpoTerms().stream().map(SimpleTerm::termId).collect(Collectors.toSet()));
+        existingTerms.addAll(samplePpkt.excludedHpoTerms().stream().map(SimpleTerm::termId).collect(Collectors.toSet()));
+        Set<String> excludedPhenotypes = new HashSet<>();
         existingTerms.forEach(tid -> excludedPhenotypes.addAll(getExcludedForHpoTerm(tid)));
         excludedPhenotypes.removeAll(existingTerms);
         return excludedPhenotypes;
@@ -77,13 +78,13 @@ public class ExcludedPhenotypes {
      * @param sets List of Sets of TermIds
      * @return The intersection of the sets, i.e. only the TermIds that are present in all the sets in the list.
      */
-    public static Set<TermId> getIntersection(List<Set<TermId>> sets) {
+    public static Set<String> getIntersection(List<Set<String>> sets) {
         if (sets == null || sets.isEmpty()) {
             return new HashSet<>(); // Return an empty set if no input sets are provided
         }
 
         // Create a new set to avoid modifying the original sets
-        Set<TermId> intersection = new HashSet<>(sets.getFirst()); // Retain only elements that are in all sets
+        Set<String> intersection = new HashSet<>(sets.getFirst()); // Retain only elements that are in all sets
         for (int i = 1; i < sets.size(); i++) {
             intersection.retainAll(sets.get(i));
         }

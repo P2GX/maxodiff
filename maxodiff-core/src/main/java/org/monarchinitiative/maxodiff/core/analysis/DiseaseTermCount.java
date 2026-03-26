@@ -14,7 +14,7 @@ public interface DiseaseTermCount {
     int nDiseases();
     List<HpoDisease> hpoDiseases();
     int nHpoTerms();
-    Map<TermId, List<HpoFrequency>> hpoTermCounts();
+    Map<String, List<HpoFrequency>> hpoTermCounts();
 
     /** Return an empty {@link DiseaseTermCount}. */
     static DiseaseTermCount empty() {

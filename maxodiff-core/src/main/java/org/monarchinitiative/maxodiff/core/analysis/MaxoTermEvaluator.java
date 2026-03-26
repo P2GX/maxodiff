@@ -47,24 +47,24 @@ public class MaxoTermEvaluator implements Callable<RankedMaxoResult> {
     @Override
     public RankedMaxoResult call() {
 
-        Map<TermId, Double> hpoToProbabilityMap = maxoHpoDiseaseRank.getHpoToProbabiltyMap();
+        Map<String, Double> hpoToProbabilityMap = maxoHpoDiseaseRank.getHpoToProbabiltyMap();
         List<Integer> nHposToSample = maxoHpoDiseaseRank.getSampledHpoCounts(nRepetitions);
 
         // Separate HPO IDs and their probabilities
-        List<TermId> hpoIds = new ArrayList<>(hpoToProbabilityMap.keySet());
+        List<String> hpoIds = new ArrayList<>(hpoToProbabilityMap.keySet());
         List<Double> probabilities = new ArrayList<>(hpoToProbabilityMap.values());
 
         // Run simulations and calculate final scores
         List<List<DifferentialDiagnosis>> newMaxoDiagnosesList = new ArrayList<>();
         List<Double> scores = new ArrayList<>();
         Set<SimpleTerm> simulatedHpoIdSet = new HashSet<>();
-        Map<TermId, Integer> simulatedHpoCountSet = new HashMap<>();
+        Map<String, Integer> simulatedHpoCountSet = new HashMap<>();
         for (int i = 0; i < nRepetitions; i++) {
             // Sample and count simulated HPO terms
             int nHpos = nHposToSample.get(i);
             simulatedHpoIdSet.addAll(selectKWeightedHpoTerms(hpoIds, probabilities, nHpos, biometadataService));
 //            simulatedHpoIdSet = new HashSet<>(selectKWeightedHpoTerms(hpoIds, probabilities, nHpos));
-            simulatedHpoIdSet.forEach(hpoTerm -> simulatedHpoCountSet.merge(TermId.of(hpoTerm.termId()), 1, Integer::sum));
+            simulatedHpoIdSet.forEach(hpoTerm -> simulatedHpoCountSet.merge(hpoTerm.termId(), 1, Integer::sum));
 
             PpktSample newSample = getNewSample(ppkt, simulatedHpoIdSet);
             List<DifferentialDiagnosis> newMaxoDiagnoses = engine.run(newSample, diseaseIds);
@@ -90,7 +90,7 @@ public class MaxoTermEvaluator implements Callable<RankedMaxoResult> {
      * @param k              number of unique HPO terms to sample
      * @return a list of {@code k} sampled HPO term IDs
      */
-    public static List<SimpleTerm> selectKWeightedHpoTerms(List<TermId> hpoIds, List<Double> probabilities, int k, BiometadataService biometadataService) {
+    public static List<SimpleTerm> selectKWeightedHpoTerms(List<String> hpoIds, List<Double> probabilities, int k, BiometadataService biometadataService) {
         // Create cumulative probabilities
         List<Double> cumulative = new ArrayList<>(probabilities.size());
         double cumSum = 0.0;
@@ -108,8 +108,8 @@ public class MaxoTermEvaluator implements Callable<RankedMaxoResult> {
             double r = random.nextDouble();
             for (int i = 0; i < cumulative.size(); i++) {
                 if (r <= cumulative.get(i) && !usedIndices.contains(i)) {
-                    TermId hpoId = hpoIds.get(i);
-                    selected.add(new SimpleTerm(hpoId.getValue(), biometadataService.hpoLabel(hpoId).orElse("unknown")));
+                    String hpoId = hpoIds.get(i);
+                    selected.add(new SimpleTerm(hpoId, biometadataService.hpoLabel(TermId.of(hpoId)).orElse("unknown")));
                     usedIndices.add(i);
                     break;
                 }
@@ -209,12 +209,12 @@ public class MaxoTermEvaluator implements Callable<RankedMaxoResult> {
      */
     private List<CountedHpoTerm> getCountedHpoTerms (
             Set<SimpleTerm> chosenHpoIds,
-            Map<TermId, Integer> chosenHpoTermCountsMap) {
+            Map<String, Integer> chosenHpoTermCountsMap) {
 
         List<CountedHpoTerm> result = new ArrayList<>();
 
         for (SimpleTerm hpoTerm : chosenHpoIds) {
-            TermId hpoId = TermId.of(hpoTerm.termId());
+            String hpoId = hpoTerm.termId();
             CountedHpoTerm countedHpoTerm = new CountedHpoTerm(hpoTerm, chosenHpoTermCountsMap.get(hpoId));
             if (!result.contains(countedHpoTerm)) {
                 result.add(countedHpoTerm);
@@ -229,7 +229,7 @@ public class MaxoTermEvaluator implements Callable<RankedMaxoResult> {
      * @param diseases List of Hpo diseases
      * @return Map of HPO Term Id and List of HpoFrequency objects.
      */
-    private Map<TermId, List<HpoFrequency>> getHpoTermFrequencies(
+    private Map<String, List<HpoFrequency>> getHpoTermFrequencies(
             List<HpoDisease> diseases) {
         // Collect HPO terms and frequencies for the target m diseases
         DiseaseTermCount diseaseTermCount = DiseaseTermCount.of(diseases);
@@ -244,13 +244,13 @@ public class MaxoTermEvaluator implements Callable<RankedMaxoResult> {
      * @return List of Frequencies records
      */
     private List<HpoFrequency> getFrequencyRecords(Set<TermId> omimIds, Set<SimpleTerm> hpoIds,
-                                                  Map<TermId, List<HpoFrequency>> hpoTermFrequencies) {
+                                                  Map<String, List<HpoFrequency>> hpoTermFrequencies) {
 
         List<HpoFrequency> frequencyRecords = new ArrayList<>();
         //Set<TermId> omimIds = maxoTermScoreRecord.omimTermIds();
         for (SimpleTerm hpoTerm : hpoIds) { //maxoTermScoreRecord.hpoTermIds()
             TermId hpoId = TermId.of(hpoTerm.termId());
-            List<HpoFrequency> frequencies = hpoTermFrequencies.get(hpoId);
+            List<HpoFrequency> frequencies = hpoTermFrequencies.get(hpoId.getValue());
             if (frequencies != null) {
                 for (HpoFrequency hpoFrequency : frequencies) {
                     for (TermId omimId : omimIds) {
@@ -298,7 +298,7 @@ public class MaxoTermEvaluator implements Callable<RankedMaxoResult> {
             double meanScore,
             List<DifferentialDiagnosis> initialDiagnoses,
             List<List<DifferentialDiagnosis>> newMaxoDiagnosesList,
-            Map<TermId, Integer> chosenHpoTermCountsMap) {
+            Map<String, Integer> chosenHpoTermCountsMap) {
 
         // Step 1: Make MAXO SimpleTerm
         String maxoId = maxoHpoDiseaseRank.getMaxoId().toString();
@@ -316,7 +316,7 @@ public class MaxoTermEvaluator implements Callable<RankedMaxoResult> {
 
         // Step 4: get collection of HPO Term Frequencies (List<Frequencies>)
         List<HpoDisease> hpoDiseases = maxoHpoTermProbabilities.getHpoDiseases().hpoDiseases().toList();
-        Map<TermId, List<HpoFrequency>> hpoFrequencyMap = getHpoTermFrequencies(hpoDiseases);
+        Map<String, List<HpoFrequency>> hpoFrequencyMap = getHpoTermFrequencies(hpoDiseases);
         List<HpoFrequency> frequencies = getFrequencyRecords(maxoIds, chosenHpoIds, hpoFrequencyMap);
 
         // Step 5: construct final result

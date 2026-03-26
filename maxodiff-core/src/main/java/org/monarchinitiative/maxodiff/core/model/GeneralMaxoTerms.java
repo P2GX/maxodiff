@@ -12,15 +12,15 @@ import java.util.Map;
  * @author peter robinson
  */
 public class GeneralMaxoTerms {
-    private static TermId clinicalAssessment = TermId.of("MAXO:0000487");
-    private static TermId medicalAction = TermId.of("MAXO:0000001");
-    private static TermId medicalHistoryTaking = TermId.of("MAXO:0000574");
-    private static TermId magneticResonanceImagingProcedure = TermId.of("MAXO:0000424");
-    private static TermId clinicalBiopsy = TermId.of("MAXO:0001269");
-    private static TermId clinicalCoreNeedleBiopsy = TermId.of("MAXO:0001271");
-    private static Map<TermId, String> generalMaxoTerms = null;
+    private static String clinicalAssessment = "MAXO:0000487";
+    private static String medicalAction = "MAXO:0000001";
+    private static String medicalHistoryTaking = "MAXO:0000574";
+    private static String magneticResonanceImagingProcedure = "MAXO:0000424";
+    private static String clinicalBiopsy = "MAXO:0001269";
+    private static String clinicalCoreNeedleBiopsy = "MAXO:0001271";
+    private static Map<String, String> generalMaxoTerms = null;
 
-    public static Map<TermId, String> getGeneralMaxoTerms() {
+    public static Map<String, String> getGeneralMaxoTerms() {
         if (generalMaxoTerms == null) {
             generalMaxoTerms = new HashMap<>();
 

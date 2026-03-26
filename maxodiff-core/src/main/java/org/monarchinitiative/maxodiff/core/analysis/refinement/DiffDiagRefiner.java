@@ -36,19 +36,12 @@ public interface DiffDiagRefiner {
 
     List<HpoDisease> getDiseases(List<DifferentialDiagnosis> differentialDiagnoses);
 
-    Map<TermId, List<HpoFrequency>> getHpoTermCounts(List<HpoDisease> hpoDiseases);
+    Map<String, List<HpoFrequency>> getHpoTermCounts(List<HpoDisease> hpoDiseases);
 
-    Map<TermId, Set<TermId>> getMaxoToHpoTermIdMap(Map<TermId, List<HpoFrequency>> hpoTermCounts);
-
-    Map<TermId, List<DifferentialDiagnosis>> getMaxoTermToDifferentialDiagnosesMap(PpktSample sample,
-                                                                                   DifferentialDiagnosisEngine engine,
-                                                                                   Map<TermId, Set<TermId>> maxoToHpoTermIdMap,
-                                                                                   Integer nDiseases,
-                                                                                   BiometadataService biometadataService);
-    HpoDiseases getHPOADiseases();
+    Map<String, Set<String>> getMaxoToHpoTermIdMap(Map<String, List<HpoFrequency>> hpoTermCounts);
 
     RankMaxo getRankMaxo(List<DifferentialDiagnosis> allInitialDiagnoses,
                          List<DifferentialDiagnosis> initialDiagnoses,
                          DifferentialDiagnosisEngine engine,
-                         Map<TermId, Set<TermId>> maxoToHpoTermIdMap);
+                         Map<String, Set<String>> maxoToHpoTermIdMap);
 }

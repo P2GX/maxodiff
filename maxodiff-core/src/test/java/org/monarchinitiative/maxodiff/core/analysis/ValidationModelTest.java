@@ -1,11 +1,9 @@
 package org.monarchinitiative.maxodiff.core.analysis;
 
 import org.junit.jupiter.api.Test;
-import org.monarchinitiative.maxodiff.core.SimpleTermOld;
 import org.monarchinitiative.maxodiff.core.TestResources;
 import org.monarchinitiative.maxodiff.core.model.*;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
-import org.monarchinitiative.phenol.ontology.data.TermId;
 
 import java.util.List;
 import java.util.Map;
@@ -18,9 +16,9 @@ public class ValidationModelTest {
 
     private final static HpoDiseases hpoDiseases = TestResources.hpoDiseases();
     private final static List<DifferentialDiagnosis> initialDiagnoses = TestResources.getExampleDiagnoses().stream().toList();
-    private final static Map<SimpleTermOld, Set<SimpleTermOld>> hpoToMaxoTermMap = TestResources.hpoToMaxo();
+    private final static Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxoTermMap = TestResources.hpoToMaxo();
 
-    private final static Map<TermId, Set<TermId>> maxoToHpoTermIdMap = MaxoHpoTermIdMaps.getMaxoToHpoTermIdMap(hpoToMaxoTermMap);
+    private final static Map<String, Set<String>> maxoToHpoTermIdMap = MaxoHpoTermIdMaps.getMaxoToHpoTermIdMap(hpoToMaxoTermMap);
     private final static MaxoHpoTermProbabilities maxoHpoTermProbabilities =
             new MaxoHpoTermProbabilities(hpoDiseases,
                                          hpoToMaxoTermMap,

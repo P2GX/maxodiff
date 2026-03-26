@@ -26,14 +26,14 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public class RankMaxoProgress {
 
-    private final ConcurrentHashMap<TermId, Double> taskProgress = new ConcurrentHashMap<>();
+    private final ConcurrentHashMap<String, Double> taskProgress = new ConcurrentHashMap<>();
     private final int nMaxoTerms;
 
     public RankMaxoProgress(int nMaxoTerms) {
         this.nMaxoTerms = nMaxoTerms;
     }
 
-    public void updateProgress(TermId maxoId, double progress) {
+    public void updateProgress(String maxoId, double progress) {
         taskProgress.put(maxoId, progress);
     }
 

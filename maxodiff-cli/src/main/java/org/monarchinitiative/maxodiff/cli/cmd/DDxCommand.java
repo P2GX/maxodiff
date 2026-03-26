@@ -6,7 +6,7 @@ import org.monarchinitiative.maxodiff.config.MaxoDiffLoader;
 import org.monarchinitiative.maxodiff.config.MaxodiffDataResolver;
 import org.monarchinitiative.maxodiff.config.MaxodiffPropsConfiguration;
 import org.monarchinitiative.maxodiff.core.MaxoDiffAnalysisResultRow;
-import org.monarchinitiative.maxodiff.core.MaxodiffAnalysisRunner1;
+import org.monarchinitiative.maxodiff.core.MaxodiffAnalysisRunner;
 import org.monarchinitiative.maxodiff.core.analysis.*;
 import org.monarchinitiative.maxodiff.core.analysis.refinement.DiffDiagRefiner;
 import org.monarchinitiative.maxodiff.core.diffdg.DifferentialDiagnosisEngine;
@@ -125,7 +125,7 @@ public class DDxCommand extends BaseCommand {
                     excludedSampleTerms.add(new SimpleTerm(tid.getValue(), biometadataService.hpoLabel(tid).orElse("n/a"))));
             PpktSample ppktSample = new PpktSample(phenopacketData.sampleId(), observedSampleTerms, excludedSampleTerms);
 
-            MaxodiffAnalysisRunner1 runner = new MaxodiffAnalysisRunner1(this.nDiseases,
+            MaxodiffAnalysisRunner runner = new MaxodiffAnalysisRunner(this.nDiseases,
                     this.nRepetitions,
                     engine,
                     maxoDiffRefiner,

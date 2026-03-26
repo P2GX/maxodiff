@@ -1,7 +1,7 @@
 package org.monarchinitiative.maxodiff.core.model;
 
-import org.monarchinitiative.maxodiff.core.SimpleTermOld;
 import org.monarchinitiative.maxodiff.core.analysis.MaxoHpoTermIdMaps;
+import org.monarchinitiative.maxodiff.core.analysis.SimpleTerm;
 import org.monarchinitiative.phenol.annotations.base.Ratio;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDisease;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
@@ -14,15 +14,15 @@ public class MaxoHpoTermProbabilities {
     private final HpoDiseases hpoDiseases;
     private final List<DifferentialDiagnosis> initialDiagnoses; //top K diagnoses only
     private final DiseaseModelProbability diseaseModelProbability;
-    private final Map<TermId, Set<TermId>> maxoToHpoTermIdMap;
+    private final Map<String, Set<String>> maxoToHpoTermIdMap;
     private final DiscoverablePhenotypes discoverablePhenotypes;
 
-    public MaxoHpoTermProbabilities(HpoDiseases hpoDiseases, Map<SimpleTermOld, Set<SimpleTermOld>> hpoToMaxoTermMap,
+    public MaxoHpoTermProbabilities(HpoDiseases hpoDiseases, Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxoTermMap,
                                     List<DifferentialDiagnosis> initialDiagnoses, DiseaseModelProbability diseaseModelProbability) {
         this.hpoDiseases = hpoDiseases;
         this.initialDiagnoses = initialDiagnoses;
         this.diseaseModelProbability = diseaseModelProbability;
-        Map<TermId, Set<TermId>> hpoToMaxoTermIdMap = MaxoHpoTermIdMaps.getHpoToMaxoTermIdMap(hpoToMaxoTermMap);
+        Map<String, Set<String>> hpoToMaxoTermIdMap = MaxoHpoTermIdMaps.getHpoToMaxoTermIdMap(hpoToMaxoTermMap);
         this.maxoToHpoTermIdMap = MaxoHpoTermIdMaps.getMaxoToHpoTermIdMap(hpoToMaxoTermMap);
         this.discoverablePhenotypes = new DiscoverablePhenotypes(hpoDiseases, hpoToMaxoTermIdMap, maxoToHpoTermIdMap);
     }
@@ -33,8 +33,8 @@ public class MaxoHpoTermProbabilities {
      * @return Set of all discoverable phenotypes, i.e. potential phenotypes not including assumed excluded phenotypes,
      * for all K diseases in the differential diagnosis
      */
-    public Set<TermId> getUnionOfDiscoverablePhenotypes(PpktSample ppkt) {
-        Set<TermId> unionDiscoverablePhenotypes = new HashSet<>();
+    public Set<String> getUnionOfDiscoverablePhenotypes(PpktSample ppkt) {
+        Set<String> unionDiscoverablePhenotypes = new HashSet<>();
 
         for (DifferentialDiagnosis diagnosis : initialDiagnoses) {
             unionDiscoverablePhenotypes.addAll(discoverablePhenotypes.getDiscoverablePhenotypeIds(
@@ -52,10 +52,10 @@ public class MaxoHpoTermProbabilities {
      * @return HPO terms discoverable by the MAxO term, i.e. the intersection of the HPO terms that can be ascertained by
      * that MAxO term and the union of discoverable phenotypes for the diseases
      */
-    public Set<TermId> getDiscoverableByMaxoHpoTerms(PpktSample ppkt, TermId maxoId, Map<TermId, Set<TermId>> maxoToHpoTermIdMap) {
-        Set<TermId> maxoAssociatedHpoIds = maxoToHpoTermIdMap.get(maxoId);
+    public Set<String> getDiscoverableByMaxoHpoTerms(PpktSample ppkt, TermId maxoId, Map<String, Set<String>> maxoToHpoTermIdMap) {
+        Set<String> maxoAssociatedHpoIds = maxoToHpoTermIdMap.get(maxoId);
         if (maxoAssociatedHpoIds != null) {
-            Set<TermId> unionDiscoverablePhenotypes = getUnionOfDiscoverablePhenotypes(ppkt);
+            Set<String> unionDiscoverablePhenotypes = getUnionOfDiscoverablePhenotypes(ppkt);
             maxoAssociatedHpoIds.retainAll(unionDiscoverablePhenotypes); //intersection
         } else {
             maxoAssociatedHpoIds = Set.of();
@@ -94,7 +94,7 @@ public class MaxoHpoTermProbabilities {
 
     public HpoDiseases getHpoDiseases() { return hpoDiseases; }
 
-    public Map<TermId, Set<TermId>> getMaxoToHpoTermIdMap() {
+    public Map<String, Set<String>> getMaxoToHpoTermIdMap() {
         return maxoToHpoTermIdMap;
     }
 }

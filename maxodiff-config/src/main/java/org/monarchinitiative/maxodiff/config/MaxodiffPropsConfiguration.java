@@ -1,6 +1,6 @@
 package org.monarchinitiative.maxodiff.config;
 
-import org.monarchinitiative.maxodiff.core.SimpleTermOld;
+import org.monarchinitiative.maxodiff.core.analysis.SimpleTerm;
 import org.monarchinitiative.maxodiff.core.analysis.refinement.*;
 import org.monarchinitiative.maxodiff.core.io.MaxoDxAnnots;
 import org.monarchinitiative.maxodiff.core.model.GeneralMaxoTerms;
@@ -24,7 +24,7 @@ import java.util.*;
 public record MaxodiffPropsConfiguration(
         Ontology hpo,
         HpoDiseases hpoDiseases,
-        Map<SimpleTermOld, Set<SimpleTermOld>> maxoAnnotsMap,
+        Map<SimpleTerm, Set<SimpleTerm>> maxoAnnotsMap,
         BiometadataService biometadataService) {
 
     public static MaxodiffPropsConfiguration createConfig(MaxodiffDataResolver maxodiffDataResolver) throws IOException {
@@ -32,14 +32,14 @@ public record MaxodiffPropsConfiguration(
         Ontology hpo = OntologyLoader.loadOntology(maxodiffDataResolver.hpoJson().toFile());
         HpoDiseases diseases = HpoDiseaseLoaders.defaultLoader(minHpo, HpoDiseaseLoaderOptions.defaultOmim()).load(maxodiffDataResolver.phenotypeAnnotations());
         // Map of HPO Id : Set of MAxO Ids
-        Map<SimpleTermOld, Set<SimpleTermOld>> maxoAnnotsMap;
+        Map<SimpleTerm, Set<SimpleTerm>> maxoAnnotsMap;
         try (BufferedReader reader = Files.newBufferedReader(maxodiffDataResolver.maxoDxAnnots())) {
             maxoAnnotsMap = MaxoDxAnnots.parseHpoToMaxo(reader);
         }
-        Map<TermId, String> generalMaxoTermsMap = GeneralMaxoTerms.getGeneralMaxoTerms();
-        Set<SimpleTermOld> generalMaxoTerms = new HashSet<>();
-        generalMaxoTermsMap.forEach((key, value) -> generalMaxoTerms.add(new SimpleTermOld(key, value)));
-        for (Set<SimpleTermOld> mterms : maxoAnnotsMap.values()) {
+        Map<String, String> generalMaxoTermsMap = GeneralMaxoTerms.getGeneralMaxoTerms();
+        Set<SimpleTerm> generalMaxoTerms = new HashSet<>();
+        generalMaxoTermsMap.forEach((key, value) -> generalMaxoTerms.add(new SimpleTerm(key, value)));
+        for (Set<SimpleTerm> mterms : maxoAnnotsMap.values()) {
             mterms.removeAll(generalMaxoTerms);
         }
 
@@ -48,11 +48,11 @@ public record MaxodiffPropsConfiguration(
     }
 
     public DiffDiagRefiner diffDiagRefiner() {
-        Map<TermId, Set<TermId>> hpoToMaxoIdMap = new HashMap<>();
-        for (Map.Entry<SimpleTermOld, Set<SimpleTermOld>> entry : maxoAnnotsMap.entrySet()) {
-            TermId hpoId = entry.getKey().tid();
-            Set<TermId> maxoIds = new HashSet<>();
-            maxoAnnotsMap.get(entry.getKey()).forEach(t -> maxoIds.add(t.tid()));
+        Map<String, Set<String>> hpoToMaxoIdMap = new HashMap<>();
+        for (Map.Entry<SimpleTerm, Set<SimpleTerm>> entry : maxoAnnotsMap.entrySet()) {
+            String hpoId = entry.getKey().termId();
+            Set<String> maxoIds = new HashSet<>();
+            maxoAnnotsMap.get(entry.getKey()).forEach(t -> maxoIds.add(t.termId()));
             hpoToMaxoIdMap.put(hpoId, maxoIds);
         }
         return new BaseDiffDiagRefiner(hpoDiseases, hpoToMaxoIdMap, maxoAnnotsMap, hpo);
