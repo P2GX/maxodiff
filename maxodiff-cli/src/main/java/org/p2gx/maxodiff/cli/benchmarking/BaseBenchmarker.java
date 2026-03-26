@@ -1,6 +1,6 @@
 package org.p2gx.maxodiff.cli.benchmarking;
 
-import org.monarchinitiative.maxodiff.config.MaxodiffPropsConfiguration;
+import org.p2gx.maxodiff.config.MaxodiffPropsConfiguration;
 import org.p2gx.maxodiff.core.SimpleTermOld;
 import org.p2gx.maxodiff.core.analysis.HpoFrequency;
 import org.p2gx.maxodiff.core.analysis.RankedMaxoResult;

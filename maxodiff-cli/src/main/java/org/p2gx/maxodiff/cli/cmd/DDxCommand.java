@@ -2,9 +2,9 @@ package org.p2gx.maxodiff.cli.cmd;
 
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
-import org.monarchinitiative.maxodiff.config.MaxoDiffLoader;
-import org.monarchinitiative.maxodiff.config.MaxodiffDataResolver;
-import org.monarchinitiative.maxodiff.config.MaxodiffPropsConfiguration;
+import org.p2gx.maxodiff.config.MaxoDiffLoader;
+import org.p2gx.maxodiff.config.MaxodiffDataResolver;
+import org.p2gx.maxodiff.config.MaxodiffPropsConfiguration;
 import org.p2gx.maxodiff.core.MaxoDiffAnalysisResultRow;
 import org.p2gx.maxodiff.core.MaxodiffAnalysisRunner1;
 import org.p2gx.maxodiff.core.analysis.HTMLFrequencyMap;

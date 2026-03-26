@@ -1,8 +1,8 @@
-package org.monarchinitiative.maxodiff.config.impl;
+package org.p2gx.maxodiff.config.impl;
 
-import org.monarchinitiative.maxodiff.config.MaxoDiffLoader;
-import org.monarchinitiative.maxodiff.config.MaxodiffDataException;
-import org.monarchinitiative.maxodiff.config.MaxodiffDataResolver;
+import org.p2gx.maxodiff.config.MaxoDiffLoader;
+import org.p2gx.maxodiff.config.MaxodiffDataException;
+import org.p2gx.maxodiff.config.MaxodiffDataResolver;
 import org.p2gx.maxodiff.phenomizer.IcMicaData;
 import org.p2gx.maxodiff.phenomizer.IcMicaDictLoader;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;

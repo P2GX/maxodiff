@@ -1,4 +1,4 @@
-package org.monarchinitiative.maxodiff.config;
+package org.p2gx.maxodiff.config;
 
 import org.p2gx.maxodiff.core.SimpleTermOld;
 import org.p2gx.maxodiff.core.analysis.refinement.BaseDiffDiagRefiner;

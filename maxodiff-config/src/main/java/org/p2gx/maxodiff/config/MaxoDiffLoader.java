@@ -1,6 +1,6 @@
-package org.monarchinitiative.maxodiff.config;
+package org.p2gx.maxodiff.config;
 
-import org.monarchinitiative.maxodiff.config.impl.MaxoDiffFileLoader;
+import org.p2gx.maxodiff.config.impl.MaxoDiffFileLoader;
 import org.p2gx.maxodiff.phenomizer.IcMicaData;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
 import org.monarchinitiative.phenol.ontology.data.MinimalOntology;
