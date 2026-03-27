@@ -5,7 +5,7 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>org.monarchinitiative.maxodiff</groupId>
+        <groupId>org.p2gx.maxodiff</groupId>
         <artifactId>maxodiff</artifactId>
         <version>0.4.2</version>
     </parent>
@@ -14,24 +14,24 @@
 
     <dependencies>
         <dependency>
-            <groupId>org.monarchinitiative.maxodiff</groupId>
+            <groupId>org.p2gx.maxodiff</groupId>
             <artifactId>maxodiff-core</artifactId>
-            <version>${project.parent.version}</version>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.monarchinitiative.maxodiff</groupId>
+            <groupId>org.p2gx.maxodiff</groupId>
             <artifactId>maxodiff-config</artifactId>
-            <version>${project.parent.version}</version>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.monarchinitiative.maxodiff</groupId>
+            <groupId>org.p2gx.maxodiff</groupId>
             <artifactId>maxodiff-phenomizer</artifactId>
-            <version>${project.parent.version}</version>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
-            <groupId>org.monarchinitiative.maxodiff</groupId>
+            <groupId>org.p2gx.maxodiff</groupId>
             <artifactId>maxodiff-html-results</artifactId>
-            <version>${project.parent.version}</version>
+            <version>${project.version}</version>
         </dependency>
         <dependency>
             <groupId>org.monarchinitiative.phenol</groupId>
@@ -63,12 +63,6 @@
             <groupId>info.picocli</groupId>
             <artifactId>picocli</artifactId>
         </dependency>
-        <dependency>
-            <groupId>org.monarchinitiative.maxodiff</groupId>
-            <artifactId>maxodiff-html-results</artifactId>
-            <version>0.4.2</version>
-            <scope>compile</scope>
-        </dependency>
     </dependencies>
 
     <build>
@@ -89,7 +83,7 @@
                         <manifest>
                             <addClasspath>true</addClasspath>
                             <useUniqueVersions>false</useUniqueVersions>
-                            <mainClass>org.monarchinitiative.maxodiff.cli.Main</mainClass>
+                            <mainClass>org.p2gx.maxodiff.cli.Main</mainClass>
                             <addDefaultImplementationEntries>true</addDefaultImplementationEntries>
                         </manifest>
                     </archive>

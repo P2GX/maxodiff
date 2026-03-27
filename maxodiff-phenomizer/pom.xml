@@ -4,7 +4,7 @@
          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-        <groupId>org.monarchinitiative.maxodiff</groupId>
+        <groupId>org.p2gx.maxodiff</groupId>
         <artifactId>maxodiff</artifactId>
         <version>0.4.2</version>
     </parent>
@@ -13,7 +13,7 @@
 
     <dependencies>
         <dependency>
-            <groupId>org.monarchinitiative.maxodiff</groupId>
+            <groupId>org.p2gx.maxodiff</groupId>
             <artifactId>maxodiff-core</artifactId>
             <version>${project.parent.version}</version>
         </dependency>
