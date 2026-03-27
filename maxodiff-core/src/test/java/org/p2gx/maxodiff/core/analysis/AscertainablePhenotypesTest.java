@@ -11,9 +11,7 @@ import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
 import org.monarchinitiative.phenol.base.PhenolRuntimeException;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 import java.util.function.Supplier;
 import java.util.stream.Stream;
 
@@ -90,13 +88,13 @@ public class AscertainablePhenotypesTest {
          // Get potential phenotypes given phenopacket
          PpktSample s1 = getPPkt1();
          TermId targetId = TermId.of("OMIM:615837"); //s1.diseaseIds().getFirst();
-         Set<TermId> ascertainablePhenotypeIds = ASCERTAINABLE_PHENOTYPES.getAscertainablePhenotypeIds(s1, targetId);
+         Set<String> ascertainablePhenotypeIds = ASCERTAINABLE_PHENOTYPES.getAscertainablePhenotypeIds(s1, targetId);
          // Disease associated with ppkt has 3 phenotype terms, example ppkt already has 1, so expect 2 here
         assertEquals(2, ascertainablePhenotypeIds.size());
      }
 
     public sealed interface TestOutcome {
-        record Ok(Set<TermId> termIdSet) implements TestOutcome {}
+        record Ok(Set<String> termIdSet) implements TestOutcome {}
         record Error(Supplier<? extends PhenolRuntimeException> exceptionSupplier) implements TestOutcome {}
     }
 
@@ -111,10 +109,10 @@ public class AscertainablePhenotypesTest {
         return Stream.of(
                 new TestIndividual("46 year old female, infantile onset (1 term)",
                         getPPkt1(),
-                        new TestOutcome.Ok(Set.of(TermId.of("HP:0001751"), TermId.of("HP:0000505")))),
+                        new TestOutcome.Ok(Set.of("HP:0000505", "HP:0001751"))),
                 new TestIndividual("46 year old female, infantile onset (2 terms)",
                         getPPkt2(),
-                        new TestOutcome.Ok(Set.of(TermId.of("HP:0000505")))),
+                        new TestOutcome.Ok(new HashSet<>(Collections.singleton("HP:0000505")))),
                 new TestIndividual("No disease id",
                         getPPktEmptyDisease(),
                         new TestOutcome.Error(() -> new PhenolRuntimeException("No disease id found")))
@@ -128,7 +126,7 @@ public class AscertainablePhenotypesTest {
         TermId targetId = TermId.of("OMIM:615837"); //ppkti.diseaseIds().getFirst();
         TermId targetId2 = TermId.of("OMIM:123456");
         switch (testCase.expectedOutcome()) {
-            case TestOutcome.Ok(Set<TermId> expectedResult) ->
+            case TestOutcome.Ok(Set<String> expectedResult) ->
                     assertEquals(expectedResult, ASCERTAINABLE_PHENOTYPES.getAscertainablePhenotypeIds(ppkti, targetId),
                             "Incorrect evaluation for: " + testCase.description());
             case TestOutcome.Error(Supplier<? extends RuntimeException> exceptionSupplier) ->

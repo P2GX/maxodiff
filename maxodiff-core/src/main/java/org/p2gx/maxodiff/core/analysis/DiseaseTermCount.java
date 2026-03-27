@@ -2,7 +2,7 @@ package org.p2gx.maxodiff.core.analysis;
 
 import org.p2gx.maxodiff.core.analysis.impl.DiseaseTermCountImpl;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDisease;
-import org.monarchinitiative.phenol.ontology.data.TermId;
+
 import java.util.List;
 import java.util.Map;
 
@@ -14,7 +14,7 @@ public interface DiseaseTermCount {
     int nDiseases();
     List<HpoDisease> hpoDiseases();
     int nHpoTerms();
-    Map<TermId, List<HpoFrequency>> hpoTermCounts();
+    Map<String, List<HpoFrequency>> hpoTermCounts();
 
     /** Return an empty {@link DiseaseTermCount}. */
     static DiseaseTermCount empty() {

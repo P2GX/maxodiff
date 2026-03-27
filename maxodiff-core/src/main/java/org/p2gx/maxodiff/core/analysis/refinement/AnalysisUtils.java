@@ -17,7 +17,7 @@ class AnalysisUtils {
      * @param diseases List of Hpo diseases
      * @return Map of HPO Term Id and List of HpoFrequency objects.
      */
-    static Map<TermId, List<HpoFrequency>> getHpoTermCounts(
+    static Map<String, List<HpoFrequency>> getHpoTermCounts(
             List<HpoDisease> diseases) {
         // Collect HPO terms and frequencies for the target m diseases
         DiseaseTermCount diseaseTermCount = DiseaseTermCount.of(diseases);
@@ -30,13 +30,13 @@ class AnalysisUtils {
      * @param hpoTermIds Set of HPO TermIds associated with the subset of m diseases.
      * @return Map of HPO -> MAXO TermId set mappings for the subset of m diseases.
      */
-    static Map<TermId, Set<TermId>> makeHpoToMaxoTermIdMap(Map<TermId, Set<TermId>> fullHpoToMaxoTermMap,
-                                                           Set<TermId> hpoTermIds) {
-        Map<TermId, Set<TermId>> hpoToMaxoTermIdMap = new HashMap<>();
-        for (TermId hpoId : hpoTermIds) {
-            for (TermId hpoTermId : fullHpoToMaxoTermMap.keySet()) {
+    static Map<String, Set<String>> makeHpoToMaxoTermIdMap(Map<String, Set<String>> fullHpoToMaxoTermMap,
+                                                           Set<String> hpoTermIds) {
+        Map<String, Set<String>> hpoToMaxoTermIdMap = new HashMap<>();
+        for (String hpoId : hpoTermIds) {
+            for (String hpoTermId : fullHpoToMaxoTermMap.keySet()) {
                 if (hpoTermId.equals(hpoId)) {
-                    Set<TermId> maxoTermIds = fullHpoToMaxoTermMap.get(hpoTermId);
+                    Set<String> maxoTermIds = fullHpoToMaxoTermMap.get(hpoTermId);
                     hpoToMaxoTermIdMap.put(hpoTermId, maxoTermIds);
                     break;
                 }
@@ -51,30 +51,30 @@ class AnalysisUtils {
      * @param hpoToMaxoTermMap Map of HPO -> MAXO TermId set mappings for the subset of m diseases.
      * @return Map of MAXO -> HPO TermId set mappings for the subset of m diseases. HPO ancestors are removed.
      */
-    static Map<TermId, Set<TermId>> makeMaxoToHpoTermIdMap(MinimalOntology ontology, Map<TermId, Set<TermId>> hpoToMaxoTermMap) {
-        Map<TermId, Set<TermId>> maxoToHpoTermIdMap = new HashMap<>();
-        for (Map.Entry<TermId, Set<TermId>> entry : hpoToMaxoTermMap.entrySet()) {
-            TermId hpoTermId = entry.getKey();
-            Set<TermId> maxoTermIds = entry.getValue();
-            for (TermId maxoTermId : maxoTermIds) {
+    static Map<String, Set<String>> makeMaxoToHpoTermIdMap(MinimalOntology ontology, Map<String, Set<String>> hpoToMaxoTermMap) {
+        Map<String, Set<String>> maxoToHpoTermIdMap = new HashMap<>();
+        for (Map.Entry<String, Set<String>> entry : hpoToMaxoTermMap.entrySet()) {
+            String hpoTermId = entry.getKey();
+            Set<String> maxoTermIds = entry.getValue();
+            for (String maxoTermId : maxoTermIds) {
                 if (!maxoToHpoTermIdMap.containsKey(maxoTermId)) {
                     maxoToHpoTermIdMap.put(maxoTermId, new HashSet<>(Collections.singleton(hpoTermId)));
                 } else {
-                    Set<TermId> hpoTermIds = maxoToHpoTermIdMap.get(maxoTermId);
+                    Set<String> hpoTermIds = maxoToHpoTermIdMap.get(maxoTermId);
                     hpoTermIds.add(hpoTermId);
                     maxoToHpoTermIdMap.replace(maxoTermId, hpoTermIds);
                 }
             }
         }
         //TODO: removing ancestors possibly incorrect for excluded HPO features
-        for (Map.Entry<TermId, Set<TermId>> e : maxoToHpoTermIdMap.entrySet()) {
+        for (Map.Entry<String, Set<String>> e : maxoToHpoTermIdMap.entrySet()) {
             // Remove HPO ancestor term Ids from list
-            TermId mId = e.getKey();
-            Set<TermId> hpoIdSet = new HashSet<>(e.getValue());
-            for (TermId hpoId : e.getValue()) {
+            String mId = e.getKey();
+            Set<String> hpoIdSet = new HashSet<>(e.getValue());
+            for (String hpoId : e.getValue()) {
                 try {
-                    for (TermId ancestor : ontology.graph().getAncestors(hpoId)) {
-                        hpoIdSet.remove(ancestor);
+                    for (TermId ancestor : ontology.graph().getAncestors(TermId.of(hpoId))) {
+                        hpoIdSet.remove(ancestor.getValue());
                     }
                 } catch (Exception ex) {
                     System.out.println(ex.getMessage());

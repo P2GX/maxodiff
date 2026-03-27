@@ -1,6 +1,6 @@
 package org.p2gx.maxodiff.core.service;
 
-import org.p2gx.maxodiff.core.SimpleTermOld;
+import org.p2gx.maxodiff.core.analysis.SimpleTerm;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDisease;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 
@@ -9,10 +9,10 @@ import java.util.Map;
 import java.util.Set;
 
 public record MaxoDiffServiceImpl(Map<TermId, HpoDisease> diseaseMap,
-                                  Map<TermId, Set<SimpleTermOld>> diseaseToMaxoMap,
-                                  Map<TermId, Set<SimpleTermOld>> diseaseToHpoMap,
-                                  List<SimpleTermOld> allMaxoAnnots,
-                                  List<SimpleTermOld> allHpoAnnots,
-                                  Map<SimpleTermOld, Set<SimpleTermOld>> maxoDxAnnots,
-                                  Map<SimpleTermOld, Set<SimpleTermOld>> maxoToHpoMap) implements  MaxoDiffService {
+                                  Map<TermId, Set<SimpleTerm>> diseaseToMaxoMap,
+                                  Map<TermId, Set<SimpleTerm>> diseaseToHpoMap,
+                                  List<SimpleTerm> allMaxoAnnots,
+                                  List<SimpleTerm> allHpoAnnots,
+                                  Map<SimpleTerm, Set<SimpleTerm>> maxoDxAnnots,
+                                  Map<SimpleTerm, Set<SimpleTerm>> maxoToHpoMap) implements  MaxoDiffService {
 }

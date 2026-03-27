@@ -3,7 +3,6 @@ package org.p2gx.maxodiff.core.analysis;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
-import org.p2gx.maxodiff.core.SimpleTermOld;
 import org.p2gx.maxodiff.core.TestResources;
 import org.p2gx.maxodiff.core.model.DiscoverablePhenotypes;
 import org.p2gx.maxodiff.core.model.PpktSample;
@@ -24,10 +23,10 @@ import static org.junit.jupiter.api.Assertions.*;
 public class DiscoverablePhenotypesTest {
 
      private final static HpoDiseases hpoDiseases = TestResources.hpoDiseases();
-     private final static Map<SimpleTermOld, Set<SimpleTermOld>> hpoToMaxoTermMap = TestResources.hpoToMaxoToy();
+     private final static Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxoTermMap = TestResources.hpoToMaxoToy();
 
-     private final static Map<TermId, Set<TermId>> hpoToMaxoTermIdMap = MaxoHpoTermIdMaps.getHpoToMaxoTermIdMap(hpoToMaxoTermMap);
-     private final static Map<TermId, Set<TermId>> maxoToHpoTermIdMap = MaxoHpoTermIdMaps.getMaxoToHpoTermIdMap(hpoToMaxoTermMap);
+     private final static Map<String, Set<String>> hpoToMaxoTermIdMap = MaxoHpoTermIdMaps.getHpoToMaxoTermIdMap(hpoToMaxoTermMap);
+     private final static Map<String, Set<String>> maxoToHpoTermIdMap = MaxoHpoTermIdMaps.getMaxoToHpoTermIdMap(hpoToMaxoTermMap);
      private final static DiscoverablePhenotypes DISCOVERABLE_PHENOTYPES = new DiscoverablePhenotypes(hpoDiseases, hpoToMaxoTermIdMap, maxoToHpoTermIdMap);
 
     /**
@@ -97,13 +96,13 @@ public class DiscoverablePhenotypesTest {
          // Get excluded phenotypes given phenopacket
          PpktSample s1 = getPPkt1();
          TermId targetId = TermId.of("OMIM:620365"); //s1.diseaseIds().getFirst();
-         Set<TermId> discoverablePhenotypeIds = DISCOVERABLE_PHENOTYPES.getDiscoverablePhenotypeIds(
+         Set<String> discoverablePhenotypeIds = DISCOVERABLE_PHENOTYPES.getDiscoverablePhenotypeIds(
                 s1,
                 targetId);
 //         System.out.println(discoverablePhenotypeIds);
          // HPO term in phenopacket can be ascertained by 2 Maxo terms (MAXO:0000671 and MAXO:0000691)
          // 67 total HPO terms can ascertained by both Maxo terms
-         assertEquals(11, discoverablePhenotypeIds.size());
+         assertEquals(12, discoverablePhenotypeIds.size());
      }
 
     public sealed interface TestOutcome {
@@ -122,10 +121,10 @@ public class DiscoverablePhenotypesTest {
         return Stream.of(
                 new TestIndividual("46 year old female, infantile onset (1 term)",
                         getPPkt1(),
-                        new TestOutcome.Ok(11)),
+                        new TestOutcome.Ok(12)),
                 new TestIndividual("46 year old female, infantile onset (2 terms)",
                         getPPkt2(),
-                        new TestOutcome.Ok(10)),
+                        new TestOutcome.Ok(11)),
                 new TestIndividual("No disease id",
                         getPPktEmptyDisease(),
                         new TestOutcome.Error(() -> new PhenolRuntimeException("No disease id found")))

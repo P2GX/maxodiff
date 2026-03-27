@@ -1,6 +1,7 @@
 package org.p2gx.maxodiff.core.service;
 
-import org.p2gx.maxodiff.core.SimpleTermOld;
+import org.p2gx.maxodiff.core.analysis.SimpleTerm;
+
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
 import org.monarchinitiative.phenol.ontology.data.Ontology;
 
@@ -10,14 +11,14 @@ import java.util.Set;
 public interface PhenotypeService {
 
     static PhenotypeService of(Ontology hpo,
-                               Map<SimpleTermOld, Set<SimpleTermOld>> dxmap,
+                               Map<SimpleTerm, Set<SimpleTerm>> dxmap,
                                HpoDiseases diseases) {
         return new PhenotypeServiceImpl(hpo, dxmap, diseases);
     }
 
     Ontology hpo();
 
-    Map<SimpleTermOld, Set<SimpleTermOld>> maxoDxAnnots();
+    Map<SimpleTerm, Set<SimpleTerm>> maxoDxAnnots();
 
     HpoDiseases diseases();
 

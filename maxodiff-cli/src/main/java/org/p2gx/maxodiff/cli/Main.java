@@ -17,7 +17,6 @@ public class Main implements Callable<Integer> {
             args = new String[]{"-h"};
         }
         CommandLine cline = new CommandLine(new Main())
-                //.addSubcommand("maxodiff", new MaxodiffCommand())
                 .addSubcommand("download", new DownloadCommand())
                 .addSubcommand("analyze", new DDxCommand())
                 .addSubcommand("benchmarking", new BenchmarkingCommand())

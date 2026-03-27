@@ -44,8 +44,8 @@ public class DiseaseTermCountTest {
      */
     @Test
     public void test_long_eyebrows() {
-        Map<TermId, List<HpoFrequency>> hpoFrequencyMap = dtcount.hpoTermCounts();
-        List<HpoFrequency> hpofreqList = hpoFrequencyMap.get(TermId.of("HP:0004523"));
+        Map<String, List<HpoFrequency>> hpoFrequencyMap = dtcount.hpoTermCounts();
+        List<HpoFrequency> hpofreqList = hpoFrequencyMap.get("HP:0004523");
         assertEquals(1, hpofreqList.size());
         HpoFrequency hpofreq = hpofreqList.getFirst();
         assertEquals("OMIM:613224", hpofreq.omimId());
@@ -60,8 +60,8 @@ public class DiseaseTermCountTest {
      */
     @Test
     public void test_epicanthus() {
-        Map<TermId, List<HpoFrequency>> hpoFrequencyMap = dtcount.hpoTermCounts();
-        List<HpoFrequency> hpofreqList = hpoFrequencyMap.get(TermId.of("HP:0000286"));
+        Map<String, List<HpoFrequency>> hpoFrequencyMap = dtcount.hpoTermCounts();
+        List<HpoFrequency> hpofreqList = hpoFrequencyMap.get("HP:0000286");
         assertEquals(2, hpofreqList.size());
         Optional<HpoFrequency> opt1 = hpofreqList.stream().filter(hpf -> hpf.omimId().equals("OMIM:615355")).findFirst();
         assertTrue(opt1.isPresent());

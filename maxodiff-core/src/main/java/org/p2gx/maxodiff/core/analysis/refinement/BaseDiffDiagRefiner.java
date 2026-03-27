@@ -1,17 +1,20 @@
 package org.p2gx.maxodiff.core.analysis.refinement;
 
-import org.p2gx.maxodiff.core.SimpleTermOld;
+
 import org.p2gx.maxodiff.core.analysis.RankedMaxoResult;
 import org.p2gx.maxodiff.core.analysis.SimpleTerm;
 import org.p2gx.maxodiff.core.diffdg.DifferentialDiagnosisEngine;
+
 import org.p2gx.maxodiff.core.service.BiometadataService;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDisease;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
 import org.monarchinitiative.phenol.ontology.data.Ontology;
 import org.monarchinitiative.phenol.ontology.data.TermId;
+
 import org.p2gx.maxodiff.core.analysis.Frequencies;
 import org.p2gx.maxodiff.core.analysis.HpoFrequency;
 import org.p2gx.maxodiff.core.model.*;
+
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -19,13 +22,13 @@ import java.util.stream.Collectors;
 public class BaseDiffDiagRefiner implements DiffDiagRefiner {
 
     private final HpoDiseases hpoDiseases;
-    private final Map<TermId, Set<TermId>> fullHpoToMaxoTermIdMap;
-    private final Map<SimpleTermOld, Set<SimpleTermOld>> hpoToMaxoTermMap;
+    private final Map<String, Set<String>> fullHpoToMaxoTermIdMap;
+    private final Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxoTermMap;
     private final Ontology hpo;
 
     public BaseDiffDiagRefiner(HpoDiseases hpoDiseases,
-                               Map<TermId, Set<TermId>> fullHpoToMaxoTermIdMap,
-                               Map<SimpleTermOld, Set<SimpleTermOld>> hpoToMaxoTermMap,
+                               Map<String, Set<String>> fullHpoToMaxoTermIdMap,
+                               Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxoTermMap,
                                Ontology hpo) {
         this.hpoDiseases = hpoDiseases;
         this.fullHpoToMaxoTermIdMap = fullHpoToMaxoTermIdMap;
@@ -49,7 +52,7 @@ public class BaseDiffDiagRefiner implements DiffDiagRefiner {
     public RankMaxo getRankMaxo(List<DifferentialDiagnosis> allInitialDiagnoses,
                                 List<DifferentialDiagnosis> initialDiagnoses,
                                  DifferentialDiagnosisEngine engine,
-                                 Map<TermId, Set<TermId>> maxoToHpoTermIdMap) {
+                                Map<String, Set<String>> maxoToHpoTermIdMap) {
 
         DiseaseModelProbability diseaseModelProbability = DiseaseModelProbability.ranked(initialDiagnoses);
 
@@ -63,10 +66,11 @@ public class BaseDiffDiagRefiner implements DiffDiagRefiner {
                 hpo, allInitialDiagnoses, initialDiagnoses);
     }
 
+
     //TODO: handle possible multiple differential diagnoses with same termId
 
     /**
-     *
+     * TODO DELETE
      * @param omimIds disease Ids.
      * @param hpoIds hpo Ids.
      * @param hpoTermCounts Map of HPO Term Id and List of HpoFrequency objects.
@@ -93,6 +97,7 @@ public class BaseDiffDiagRefiner implements DiffDiagRefiner {
         }
         return frequencyRecords;
     }
+
 
     @Override
     public List<DifferentialDiagnosis> getOrderedDiagnoses(Collection<DifferentialDiagnosis> originalDifferentialDiagnoses,
@@ -122,63 +127,26 @@ public class BaseDiffDiagRefiner implements DiffDiagRefiner {
     }
 
     @Override
-    public Map<TermId, List<HpoFrequency>> getHpoTermCounts(List<HpoDisease> diseases) {
+    public Map<String, List<HpoFrequency>> getHpoTermCounts(List<HpoDisease> diseases) {
 
         // Get Map of HPO Term Id and List of HpoFrequency objects for list of m diseases.
-        Map<TermId, List<HpoFrequency>> hpoTermCountsImmutable = AnalysisUtils.getHpoTermCounts(diseases);
+        Map<String, List<HpoFrequency>> hpoTermCountsImmutable = AnalysisUtils.getHpoTermCounts(diseases);
 
         return new HashMap<>(hpoTermCountsImmutable);
     }
 
     @Override
-    public Map<TermId, Set<TermId>> getMaxoToHpoTermIdMap(Map<TermId, List<HpoFrequency>> hpoTermCounts) {
+    public Map<String, Set<String>> getMaxoToHpoTermIdMap(Map<String, List<HpoFrequency>> hpoTermCounts) {
 
 
-        Set<TermId> hpoIds = hpoTermCounts.keySet();
+        Set<String> hpoIds = hpoTermCounts.keySet();
 
         // Get all the MaXo terms that can be used to diagnose the HPO terms, removing ancestors
         //TODO: make MAXO:HPO term map directly from maxo_diagnostic_annotations.tsv file
-        Map<TermId, Set<TermId>> hpoToMaxoTermIdMap = AnalysisUtils.makeHpoToMaxoTermIdMap(fullHpoToMaxoTermIdMap, hpoIds);
-        Map<TermId, Set<TermId>> maxoToHpoTermIdMap = AnalysisUtils.makeMaxoToHpoTermIdMap(hpo, hpoToMaxoTermIdMap);
+        Map<String, Set<String>> hpoToMaxoTermIdMap = AnalysisUtils.makeHpoToMaxoTermIdMap(fullHpoToMaxoTermIdMap, hpoIds);
+        Map<String, Set<String>> maxoToHpoTermIdMap = AnalysisUtils.makeMaxoToHpoTermIdMap(hpo, hpoToMaxoTermIdMap);
 
         return maxoToHpoTermIdMap;
-    }
-
-    /**
-     *
-     * @param sample Sample info, may or may not be from a phenopacket.
-     * @param engine The engine used for the original differential diagnosis calculation (e.g. LIRICAL).
-     * @param maxoToHpoTermIdMap Map of MAXO Term Id to Set of HPO Term Ids.
-     * @return MAP of DifferentialDiagnosis objects for MAxO term, in reverse score order.
-     */
-    @Override
-    public Map<TermId, List<DifferentialDiagnosis>> getMaxoTermToDifferentialDiagnosesMap(PpktSample sample,
-                                                                                          DifferentialDiagnosisEngine engine,
-                                                                                          Map<TermId, Set<TermId>> maxoToHpoTermIdMap,
-                                                                                          Integer nDiseases,
-                                                                                          BiometadataService biometadataService) {
-
-        Map<TermId, List<DifferentialDiagnosis>> maxoTermToDifferentialDiagnosesMap = new HashMap<>();
-        for (TermId maxoId : maxoToHpoTermIdMap.keySet()) {
-            // Get the set of HPO terms that can be ascertained by the MAXO term
-            Set<TermId> hpoTermIds = maxoToHpoTermIdMap.get(maxoId);
-            List<TermId> maxoDiseaseIds = hpoTermIds.stream().toList();
-            System.out.println(maxoId + " ascertained HPO terms: " + maxoDiseaseIds);
-            List<SimpleTerm> maxoDiseaseTerms = maxoDiseaseIds.stream().map(tid -> new SimpleTerm(tid.getId(), biometadataService.hpoLabel(tid).orElse("unknown"))).toList();
-            PpktSample maxoSample = new PpktSample(sample.id(), maxoDiseaseTerms, sample.excludedHpoTerms());
-            List<DifferentialDiagnosis> maxoDiagnoses = engine.run(maxoSample);
-            List<DifferentialDiagnosis> orderedMaxoDiagnoses = maxoDiagnoses.stream()
-                    .sorted(Comparator.comparingDouble(DifferentialDiagnosis::score).reversed())
-                    .toList();
-            maxoTermToDifferentialDiagnosesMap.put(maxoId, orderedMaxoDiagnoses.subList(0, nDiseases));
-        }
-
-        return maxoTermToDifferentialDiagnosesMap;
-    }
-
-    @Override
-    public HpoDiseases getHPOADiseases() {
-        return this.hpoDiseases;
     }
 
 }

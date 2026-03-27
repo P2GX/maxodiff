@@ -4,23 +4,24 @@ import org.p2gx.maxodiff.core.analysis.HpoFrequency;
 import org.p2gx.maxodiff.core.analysis.RankedMaxoResult;
 import org.p2gx.maxodiff.core.analysis.RankedOmimTerm;
 import org.p2gx.maxodiff.core.analysis.SimpleTerm;
+
+import org.p2gx.maxodiff.core.diffdg.DifferentialDiagnosisEngine;
+import org.p2gx.maxodiff.core.service.BiometadataService;
+import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDisease;
+import org.monarchinitiative.phenol.ontology.data.TermId;
 import org.p2gx.maxodiff.core.analysis.refinement.DiffDiagRefiner;
 import org.p2gx.maxodiff.core.analysis.refinement.RefinementOptions;
-import org.p2gx.maxodiff.core.diffdg.DifferentialDiagnosisEngine;
 import org.p2gx.maxodiff.core.model.DifferentialDiagnosis;
 import org.p2gx.maxodiff.core.model.PhenopacketData;
 import org.p2gx.maxodiff.core.model.PpktSample;
 import org.p2gx.maxodiff.core.model.RankMaxo;
-import org.p2gx.maxodiff.core.service.BiometadataService;
-import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDisease;
-import org.monarchinitiative.phenol.ontology.data.TermId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class MaxodiffAnalysisRunner1 {
+public class MaxodiffAnalysisRunner {
     private final static Logger LOGGER = LoggerFactory.getLogger(MaxoDiffAnalysisResultRow.class);
     private final int nDiseases;
     private final int nRepetitions;
@@ -28,7 +29,7 @@ public class MaxodiffAnalysisRunner1 {
     private final DiffDiagRefiner maxoDiffRefiner;
     private final BiometadataService biometadataService;
 
-    public MaxodiffAnalysisRunner1(
+    public MaxodiffAnalysisRunner(
             int nDiseases,
             int nRepetitions,
             DifferentialDiagnosisEngine engine,
@@ -50,7 +51,7 @@ public class MaxodiffAnalysisRunner1 {
         RefinementOptions options = RefinementOptions.of(this.nDiseases, this.nRepetitions);
         List<DifferentialDiagnosis> orderedDiagnoses = maxoDiffRefiner.getOrderedDiagnoses(differentialDiagnoses, options);
         List<HpoDisease> diseases = maxoDiffRefiner.getDiseases(orderedDiagnoses);
-        Map<TermId, List<HpoFrequency>> hpoTermCounts = maxoDiffRefiner.getHpoTermCounts(diseases);
+        Map<String, List<HpoFrequency>> hpoTermCounts = maxoDiffRefiner.getHpoTermCounts(diseases);
         return getRefinementResults(differentialDiagnoses, orderedDiagnoses, hpoTermCounts, ppktSample);
     }
 
@@ -82,7 +83,7 @@ public class MaxodiffAnalysisRunner1 {
     private List<RankedMaxoResult> getRefinementResults(
             List<DifferentialDiagnosis> differentialDiagnoses,
             List<DifferentialDiagnosis> orderedDiagnoses,
-            Map<TermId, List<HpoFrequency>> hpoTermCounts,
+            Map<String, List<HpoFrequency>> hpoTermCounts,
             PpktSample sample) throws Exception {
         RefinementOptions options = RefinementOptions.of(this.nDiseases, nRepetitions);
         List<DifferentialDiagnosis> allOrderedDiagnoses = differentialDiagnoses.stream()
@@ -93,7 +94,7 @@ public class MaxodiffAnalysisRunner1 {
         Set<TermId> initialDiagnosesIds = initialDiagnoses.stream()
                 .map(DifferentialDiagnosis::diseaseId)
                 .collect(Collectors.toCollection(LinkedHashSet::new));
-        Map<TermId, Set<TermId>> maxoToHpoTermIdMap = maxoDiffRefiner.getMaxoToHpoTermIdMap(hpoTermCounts);
+        Map<String, Set<String>> maxoToHpoTermIdMap = maxoDiffRefiner.getMaxoToHpoTermIdMap(hpoTermCounts);
 
         RankMaxo rankMaxo = maxoDiffRefiner.getRankMaxo(allOrderedDiagnoses, initialDiagnoses, engine, maxoToHpoTermIdMap);
 

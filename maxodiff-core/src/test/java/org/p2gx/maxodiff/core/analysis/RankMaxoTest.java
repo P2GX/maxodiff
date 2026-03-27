@@ -1,7 +1,6 @@
 package org.p2gx.maxodiff.core.analysis;
 
 import org.junit.jupiter.api.BeforeAll;
-import org.p2gx.maxodiff.core.SimpleTermOld;
 import org.p2gx.maxodiff.core.TestResources;
 import org.p2gx.maxodiff.core.diffdg.DifferentialDiagnosisEngine;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
@@ -19,7 +18,7 @@ public class RankMaxoTest {
 
     private final static HpoDiseases hpoDiseases = TestResources.hpoDiseases();
     private final static List<DifferentialDiagnosis> initialDiagnoses = TestResources.getExampleDiagnoses().stream().toList();
-    private final static Map<SimpleTermOld, Set<SimpleTermOld>> hpoToMaxoTermMap = TestResources.hpoToMaxo();
+    private final static Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxoTermMap = TestResources.hpoToMaxo();
 
     private final static Map<TermId, Set<TermId>> maxoToHpoTermIdMap = MaxoHpoTermIdMaps.getMaxoToHpoTermIdMap(hpoToMaxoTermMap);
     private final static MaxoHpoTermProbabilities maxoHpoTermProbabilities =

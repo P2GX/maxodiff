@@ -1,5 +1,6 @@
 package org.p2gx.maxodiff.html;
 
+import org.hamcrest.MatcherAssert;
 import org.junit.jupiter.api.Test;
 import org.p2gx.maxodiff.config.MaxodiffDataResolver;
 import org.p2gx.maxodiff.core.service.BiometadataService;
@@ -62,7 +63,7 @@ public class MaxodiffAutoConfigurationTest extends AbstractAutoConfigurationTest
 
         // Test that few beans are available.
         assertThat(context.getBean(BiometadataService.class), is(notNullValue()));
-        assertThat(context.getBean(DifferentialDiagnosisEngineService.class), is(notNullValue()));
-        assertThat(context.getBean(MaxodiffController.class), is(notNullValue()));
+        MatcherAssert.assertThat(context.getBean(DifferentialDiagnosisEngineService.class), is(notNullValue()));
+        MatcherAssert.assertThat(context.getBean(MaxodiffController.class), is(notNullValue()));
     }
 }

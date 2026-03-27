@@ -1,10 +1,10 @@
 package org.p2gx.maxodiff.html.config;
 
+import org.p2gx.maxodiff.core.analysis.SimpleTerm;
 import org.p2gx.maxodiff.core.analysis.refinement.BaseDiffDiagRefiner;
 import org.p2gx.maxodiff.core.diffdg.DifferentialDiagnosisEngine;
 import org.p2gx.maxodiff.core.io.MaxoDxAnnots;
 import org.p2gx.maxodiff.config.MaxodiffDataException;
-import org.p2gx.maxodiff.core.SimpleTermOld;
 import org.p2gx.maxodiff.core.analysis.refinement.DiffDiagRefiner;
 import org.p2gx.maxodiff.config.MaxodiffDataResolver;
 import org.p2gx.maxodiff.core.model.GeneralMaxoTerms;
@@ -23,7 +23,6 @@ import org.monarchinitiative.phenol.io.MinimalOntologyLoader;
 import org.monarchinitiative.phenol.io.OntologyLoader;
 import org.monarchinitiative.phenol.ontology.data.MinimalOntology;
 import org.monarchinitiative.phenol.ontology.data.Ontology;
-import org.monarchinitiative.phenol.ontology.data.TermId;
 import org.monarchinitiative.phenol.ontology.similarity.TermPair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -82,14 +81,14 @@ public class MaxodiffAutoConfiguration {
     }
 
     @Bean
-    public Map<SimpleTermOld, Set<SimpleTermOld>> maxoAnnotsMap(MaxodiffDataResolver maxodiffDataResolver) throws IOException {
+    public Map<SimpleTerm, Set<SimpleTerm>> maxoAnnotsMap(MaxodiffDataResolver maxodiffDataResolver) throws IOException {
         LOGGER.debug("Loading MAxO annotations from {}", maxodiffDataResolver.maxoDxAnnots().toAbsolutePath());
         try (BufferedReader reader = Files.newBufferedReader(maxodiffDataResolver.maxoDxAnnots())) {
-            Map<SimpleTermOld, Set<SimpleTermOld>> maxoAnnotsMap = MaxoDxAnnots.parseHpoToMaxo(reader);
-            Map<TermId, String> generalMaxoTermsMap = GeneralMaxoTerms.getGeneralMaxoTerms();
-            Set<SimpleTermOld> generalMaxoTerms = new HashSet<>();
-            generalMaxoTermsMap.forEach((key, value) -> generalMaxoTerms.add(new SimpleTermOld(key, value)));
-            for (Set<SimpleTermOld> mterms : maxoAnnotsMap.values()) {
+            Map<SimpleTerm, Set<SimpleTerm>> maxoAnnotsMap = MaxoDxAnnots.parseHpoToMaxo(reader);
+            Map<String, String> generalMaxoTermsMap = GeneralMaxoTerms.getGeneralMaxoTerms();
+            Set<SimpleTerm> generalMaxoTerms = new HashSet<>();
+            generalMaxoTermsMap.forEach((key, value) -> generalMaxoTerms.add(new SimpleTerm(key, value)));
+            for (Set<SimpleTerm> mterms : maxoAnnotsMap.values()) {
                 mterms.removeAll(generalMaxoTerms);
             }
             return maxoAnnotsMap;
@@ -111,12 +110,12 @@ public class MaxodiffAutoConfiguration {
     }
 
     @Bean
-    public Map<TermId, Set<TermId>> hpoToMaxoIdMap(Map<SimpleTermOld, Set<SimpleTermOld>> maxoAnnotsMap) {
-        Map<TermId, Set<TermId>> hpoToMaxoIdMap = new HashMap<>();
-        for (Map.Entry<SimpleTermOld, Set<SimpleTermOld>> entry : maxoAnnotsMap.entrySet()) {
-            TermId hpoId = entry.getKey().tid();
-            Set<TermId> maxoIds = new HashSet<>();
-            maxoAnnotsMap.get(entry.getKey()).forEach(t -> maxoIds.add(t.tid()));
+    public Map<String, Set<String>> hpoToMaxoIdMap(Map<SimpleTerm, Set<SimpleTerm>> maxoAnnotsMap) {
+        Map<String, Set<String>> hpoToMaxoIdMap = new HashMap<>();
+        for (Map.Entry<SimpleTerm, Set<SimpleTerm>> entry : maxoAnnotsMap.entrySet()) {
+            String hpoId = entry.getKey().termId();
+            Set<String> maxoIds = new HashSet<>();
+            maxoAnnotsMap.get(entry.getKey()).forEach(t -> maxoIds.add(t.termId()));
             hpoToMaxoIdMap.put(hpoId, maxoIds);
         }
         return hpoToMaxoIdMap;
@@ -126,7 +125,7 @@ public class MaxodiffAutoConfiguration {
     public BiometadataService biometadataService(
             MinimalOntology minHpo,
             HpoDiseases hpoDiseases,
-            Map<SimpleTermOld, Set<SimpleTermOld>> maxoAnnotsMap) {
+            Map<SimpleTerm, Set<SimpleTerm>> maxoAnnotsMap) {
         return BiometadataServiceImpl.of(minHpo, hpoDiseases, maxoAnnotsMap);
     }
 
@@ -135,8 +134,8 @@ public class MaxodiffAutoConfiguration {
             MinimalOntology minHpo,
             Ontology hpo,
             HpoDiseases hpoDiseases,
-            Map<TermId, Set<TermId>> hpoToMaxoIdMap,
-            Map<SimpleTermOld, Set<SimpleTermOld>> maxoAnnotsMap) {
+            Map<String, Set<String>> hpoToMaxoIdMap,
+            Map<SimpleTerm, Set<SimpleTerm>> maxoAnnotsMap) {
 
         return new BaseDiffDiagRefiner(hpoDiseases, hpoToMaxoIdMap, maxoAnnotsMap, hpo);
     }

@@ -45,17 +45,17 @@ public class DiseaseTermCountTest {
 
     @Test
     public void hpoTermCountTest() {
-        Map<TermId, List<HpoFrequency>> termCounts = diseaseTermCount.hpoTermCounts();
-        for (Map.Entry<TermId, List<HpoFrequency>> e : termCounts.entrySet()) {
-            TermId id = e.getKey();
+        Map<String, List<HpoFrequency>> termCounts = diseaseTermCount.hpoTermCounts();
+        for (Map.Entry<String, List<HpoFrequency>> e : termCounts.entrySet()) {
+            String id = e.getKey();
             List<HpoFrequency> frequencyList = e.getValue();
             int count = frequencyList.size();
-            if (id.getId().equals("0012469") | id.getId().equals("0000252") | id.getId().equals("0002187")
-                    | id.getId().equals("0001252") | id.getId().equals("0001249") | id.getId().equals("0000826")) {
+            if (id.equals("HP:0012469") | id.equals("HP:0000252") | id.equals("HP:0002187")
+                    | id.equals("HP:0001252") | id.equals("HP:0001249") | id.equals("HP:0000826")) {
                 assertEquals(2, count);
-            } else if (id.getId().equals("0001250")) {
+            } else if (id.equals("HP:0001250")) {
                 assertEquals(3, count);
-            } else if (id.getId().equals("0011097")) {
+            } else if (id.equals("HP:0011097")) {
                 assertEquals(4, count);
             } else {
                 assertEquals(1, count);

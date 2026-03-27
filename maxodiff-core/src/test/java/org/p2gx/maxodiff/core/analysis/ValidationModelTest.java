@@ -1,10 +1,9 @@
 package org.p2gx.maxodiff.core.analysis;
 
 import org.junit.jupiter.api.Test;
-import org.p2gx.maxodiff.core.SimpleTermOld;
+
 import org.p2gx.maxodiff.core.TestResources;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
-import org.monarchinitiative.phenol.ontology.data.TermId;
 import org.p2gx.maxodiff.core.model.DifferentialDiagnosis;
 import org.p2gx.maxodiff.core.model.DiseaseModelProbability;
 import org.p2gx.maxodiff.core.model.MaxoHpoTermProbabilities;
@@ -20,9 +19,9 @@ public class ValidationModelTest {
 
     private final static HpoDiseases hpoDiseases = TestResources.hpoDiseases();
     private final static List<DifferentialDiagnosis> initialDiagnoses = TestResources.getExampleDiagnoses().stream().toList();
-    private final static Map<SimpleTermOld, Set<SimpleTermOld>> hpoToMaxoTermMap = TestResources.hpoToMaxo();
+    private final static Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxoTermMap = TestResources.hpoToMaxo();
 
-    private final static Map<TermId, Set<TermId>> maxoToHpoTermIdMap = MaxoHpoTermIdMaps.getMaxoToHpoTermIdMap(hpoToMaxoTermMap);
+    private final static Map<String, Set<String>> maxoToHpoTermIdMap = MaxoHpoTermIdMaps.getMaxoToHpoTermIdMap(hpoToMaxoTermMap);
     private final static MaxoHpoTermProbabilities maxoHpoTermProbabilities =
             new MaxoHpoTermProbabilities(hpoDiseases,
                                          hpoToMaxoTermMap,
