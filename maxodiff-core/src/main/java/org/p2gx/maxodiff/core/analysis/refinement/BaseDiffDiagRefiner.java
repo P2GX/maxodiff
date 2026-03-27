@@ -1,15 +1,20 @@
 package org.p2gx.maxodiff.core.analysis.refinement;
 
-import org.p2gx.maxodiff.core.analysis.HpoFrequency;
+
 import org.p2gx.maxodiff.core.analysis.RankedMaxoResult;
 import org.p2gx.maxodiff.core.analysis.SimpleTerm;
 import org.p2gx.maxodiff.core.diffdg.DifferentialDiagnosisEngine;
-import org.p2gx.maxodiff.core.model.*;
+
 import org.p2gx.maxodiff.core.service.BiometadataService;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDisease;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
 import org.monarchinitiative.phenol.ontology.data.Ontology;
 import org.monarchinitiative.phenol.ontology.data.TermId;
+
+import org.p2gx.maxodiff.core.analysis.Frequencies;
+import org.p2gx.maxodiff.core.analysis.HpoFrequency;
+import org.p2gx.maxodiff.core.model.*;
+
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -60,6 +65,39 @@ public class BaseDiffDiagRefiner implements DiffDiagRefiner {
         return new RankMaxo(hpoToMaxoTermMap, maxoToHpoTermIdMap, maxoHpoTermProbabilities, engine,
                 hpo, allInitialDiagnoses, initialDiagnoses);
     }
+
+
+    //TODO: handle possible multiple differential diagnoses with same termId
+
+    /**
+     * TODO DELETE
+     * @param omimIds disease Ids.
+     * @param hpoIds hpo Ids.
+     * @param hpoTermCounts Map of HPO Term Id and List of HpoFrequency objects.
+     * @return List of Frequencies records
+     */
+    public static List<Frequencies> getFrequencyRecords(Set<TermId> omimIds, Set<TermId> hpoIds,
+                                                        Map<TermId, List<HpoFrequency>> hpoTermCounts) {
+
+        List<Frequencies> frequencyRecords = new ArrayList<>();
+        //Set<TermId> omimIds = maxoTermScoreRecord.omimTermIds();
+        for (TermId hpoId : hpoIds) { //maxoTermScoreRecord.hpoTermIds()
+            Map<TermId, Float> maxoFrequencies = new LinkedHashMap<>();
+            omimIds.forEach(e -> maxoFrequencies.put(e, null));
+            List<HpoFrequency> frequencies = hpoTermCounts.get(hpoId);
+            for (HpoFrequency hpoFrequency : frequencies) {
+                for (TermId omimId : omimIds) {
+                    if (hpoFrequency.omimId().equals(omimId.toString())) {
+                        Float frequency = hpoFrequency.frequency();
+                        maxoFrequencies.replace(omimId, frequency);
+                    }
+                }
+            }
+            frequencyRecords.add(new Frequencies(hpoId, maxoFrequencies.values().stream().toList()));
+        }
+        return frequencyRecords;
+    }
+
 
     @Override
     public List<DifferentialDiagnosis> getOrderedDiagnoses(Collection<DifferentialDiagnosis> originalDifferentialDiagnoses,

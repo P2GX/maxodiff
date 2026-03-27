@@ -1,5 +1,7 @@
 package org.p2gx.maxodiff.config;
 
+import org.p2gx.maxodiff.core.analysis.SimpleTerm;
+
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
 import org.monarchinitiative.phenol.annotations.io.hpo.HpoDiseaseLoaderOptions;
 import org.monarchinitiative.phenol.annotations.io.hpo.HpoDiseaseLoaders;
@@ -8,7 +10,7 @@ import org.monarchinitiative.phenol.io.OntologyLoader;
 import org.monarchinitiative.phenol.ontology.data.MinimalOntology;
 import org.monarchinitiative.phenol.ontology.data.Ontology;
 
-import org.p2gx.maxodiff.core.analysis.SimpleTerm;
+
 import org.p2gx.maxodiff.core.analysis.refinement.BaseDiffDiagRefiner;
 import org.p2gx.maxodiff.core.analysis.refinement.DiffDiagRefiner;
 import org.p2gx.maxodiff.core.io.MaxoDxAnnots;

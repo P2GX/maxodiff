@@ -7,6 +7,9 @@ import java.io.BufferedReader;
 import java.io.InputStreamReader;
 import java.io.IOException;
 
+/**
+ * Java Virtual Machine Process Status Tool.
+ */
 public class JpsChecker {
     private static final Logger LOGGER = LoggerFactory.getLogger(JpsChecker.class);
     public static boolean isMainClassRunning(String mainClassName) {

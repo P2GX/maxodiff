@@ -2,6 +2,7 @@ package org.p2gx.maxodiff.core.model;
 
 import org.p2gx.maxodiff.core.analysis.MaxoHpoTermIdMaps;
 import org.p2gx.maxodiff.core.analysis.SimpleTerm;
+
 import org.monarchinitiative.phenol.annotations.base.Ratio;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDisease;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;

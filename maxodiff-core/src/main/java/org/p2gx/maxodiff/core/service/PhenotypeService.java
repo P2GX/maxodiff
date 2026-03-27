@@ -1,6 +1,7 @@
 package org.p2gx.maxodiff.core.service;
 
 import org.p2gx.maxodiff.core.analysis.SimpleTerm;
+
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
 import org.monarchinitiative.phenol.ontology.data.Ontology;
 

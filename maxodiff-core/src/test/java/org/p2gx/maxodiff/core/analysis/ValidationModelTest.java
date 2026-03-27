@@ -1,6 +1,7 @@
 package org.p2gx.maxodiff.core.analysis;
 
 import org.junit.jupiter.api.Test;
+
 import org.p2gx.maxodiff.core.TestResources;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
 import org.p2gx.maxodiff.core.model.DifferentialDiagnosis;

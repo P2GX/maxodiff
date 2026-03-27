@@ -63,6 +63,12 @@
             <groupId>info.picocli</groupId>
             <artifactId>picocli</artifactId>
         </dependency>
+        <dependency>
+            <groupId>org.p2gx.maxodiff</groupId>
+            <artifactId>maxodiff-html-results</artifactId>
+            <version>0.4.2</version>
+            <scope>compile</scope>
+        </dependency>
     </dependencies>
 
     <build>

@@ -2,6 +2,7 @@ package org.p2gx.maxodiff.core.model;
 
 import org.p2gx.maxodiff.core.JpsChecker;
 import org.p2gx.maxodiff.core.ProgessBar;
+
 import org.p2gx.maxodiff.core.diffdg.DifferentialDiagnosisEngine;
 import org.p2gx.maxodiff.core.service.BiometadataService;
 import org.monarchinitiative.phenol.ontology.data.Ontology;
@@ -10,6 +11,7 @@ import org.p2gx.maxodiff.core.analysis.MaxoTermEvaluator;
 import org.p2gx.maxodiff.core.analysis.RankMaxoProgress;
 import org.p2gx.maxodiff.core.analysis.RankedMaxoResult;
 import org.p2gx.maxodiff.core.analysis.SimpleTerm;
+
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
