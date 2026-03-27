@@ -28,12 +28,11 @@ public class RankMaxoTest {
                                          initialDiagnoses,
                                          DiseaseModelProbability.ranked(initialDiagnoses));
 
-    private static DifferentialDiagnosisEngine ENGINE;
     private static final Ontology ontology = TestResources.hpo();
 
     @BeforeAll
     public static void setUpBeforeClass() {
-        ENGINE = new DifferentialDiagnosisEngine() {
+        DifferentialDiagnosisEngine ENGINE = new DifferentialDiagnosisEngine() {
             @Override
             public List<DifferentialDiagnosis> run(PpktSample sample) {
                 return initialDiagnoses;

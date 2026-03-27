@@ -15,8 +15,6 @@ public class MdHtmlResult {
     private final int index;
     private final String maxoId;
     private final String maxoLabel;
-    private final Map<TermId, String> hpoTermsMap;
-
     private final RankedMaxoResult rankedMaxoResult;
     private final MdRepetitionRow repetitionRow;
     private final List<MdResultRow> resultRows;
@@ -29,7 +27,6 @@ public class MdHtmlResult {
             int nDiseases,
             int nRepetitions,
             HTMLFrequencyMap htmlFrequencyMap) {
-        this.hpoTermsMap = new HashMap<>();
         this.index = idx;
         this.maxoId = result.maxoTerm().termId();
         this.maxoLabel = result.maxoTerm().termLabel();

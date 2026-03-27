@@ -20,13 +20,11 @@ import java.util.stream.Collectors;
 
 public class RankMaxo {
     private final static Logger LOGGER = LoggerFactory.getLogger(RankMaxo.class);
-    private final Map<SimpleTermOld, Set<SimpleTermOld>> hpoToMaxoTermMap;
     private final Map<TermId, Set<TermId>> maxoToHpoTermIdMap;
     private final MaxoHpoTermProbabilities maxoHpoTermProbabilities;
     private final DifferentialDiagnosisEngine engine;
     double progress;
     RankMaxoProgress rankMaxoProgress;
-    private final Ontology ontology;
     private final List<DifferentialDiagnosis> allInitialDiagnoses;
     private final List<DifferentialDiagnosis> initialDiagnoses;
 
@@ -51,11 +49,9 @@ public class RankMaxo {
                     Ontology hpo,
                     List<DifferentialDiagnosis> allInitialDiagnoses,
                     List<DifferentialDiagnosis> initialDiagnoses) {
-        this.hpoToMaxoTermMap = hpoToMaxoTermMap;
         this.maxoToHpoTermIdMap = maxoToHpoTermIdMap;
         this.maxoHpoTermProbabilities = maxoHpoTermProbabilities;
         this.engine = engine;
-        this.ontology = hpo;
         this.allInitialDiagnoses = allInitialDiagnoses;
         this.initialDiagnoses = initialDiagnoses;
     }

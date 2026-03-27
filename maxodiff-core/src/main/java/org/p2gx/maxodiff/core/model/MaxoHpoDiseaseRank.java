@@ -137,9 +137,6 @@ public class MaxoHpoDiseaseRank {
         }
 
         //Normalize probability values and order by decreasing probability
-//        Double probabilitySum = hpoToProbabilityMapOriginal.values().stream().mapToDouble(Double::doubleValue).sum();
-//        hpoToProbabilityMapOriginal.forEach( (id, prob) -> hpoToProbabilityMapOriginal.replace(id, prob/probabilitySum));
-
         hpoToProbabiltyMap = hpoToProbabilityMapOriginal.entrySet().stream()
                 .sorted(Map.Entry.comparingByValue(Comparator.reverseOrder()))
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (a, b)->b, LinkedHashMap::new));
