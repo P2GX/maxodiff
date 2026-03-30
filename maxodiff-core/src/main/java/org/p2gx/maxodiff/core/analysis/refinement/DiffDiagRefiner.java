@@ -23,11 +23,12 @@ import java.util.Set;
  */
 public interface DiffDiagRefiner {
 
-    List<RankedMaxoResult> runNew(PpktSample sample,
-                                  Set<TermId> initialDiagnosesIds,
-                                  RefinementOptions options,
-                                  RankMaxo rankMaxo,
-                                  BiometadataService biometadataService
+    List<RankedMaxoResult> run(PpktSample sample,
+                               Set<TermId> initialDiagnosesIds,
+                               RefinementOptions options,
+                               RankMaxo rankMaxo,
+                               BiometadataService biometadataService,
+                               List<TermId> ppktMaxoIds
     ) throws Exception;
 
     List<DifferentialDiagnosis> getOrderedDiagnoses(Collection<DifferentialDiagnosis> originalDifferentialDiagnoses,

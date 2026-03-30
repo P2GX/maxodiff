@@ -69,8 +69,9 @@ public class RankMaxo {
      * @param diseaseIds Set of top n OMIM disease Ids to use for analysis.
      * @return Map of MAxO scores sorted in descending order by score
      */
-    public List<RankedMaxoResult> rankMaxoTermsNew(PpktSample ppkt, int nRepetitions,
-                                                   Set<TermId> diseaseIds, BiometadataService biometadataService) throws Exception {
+    public List<RankedMaxoResult> rankMaxoTerms(PpktSample ppkt, int nRepetitions,
+                                                Set<TermId> diseaseIds, BiometadataService biometadataService,
+                                                List<TermId> ppktMaxoIds) throws Exception {
 
         Set<TermId> sampleHpoIds = new HashSet<>();
         sampleHpoIds.addAll(ppkt.observedHpoTerms().stream().map(term -> TermId.of(term.termId())).collect(Collectors.toSet()));
@@ -86,6 +87,10 @@ public class RankMaxo {
         int maxoIdx = 0;
         ProgessBar pb = new ProgessBar(maxoIdx, maxoToHpoTermIdMap.size());
         for (String maxoId : maxoToHpoTermIdMap.keySet()) {
+            if (ppktMaxoIds.contains(TermId.of(maxoId))) {
+                LOGGER.debug("Sample " + ppkt.id() + " already contains " + maxoId + ".");
+                continue;
+            }
             MaxoHpoDiseaseRank maxoHpoDiseaseRank = MaxoHpoDiseaseRank.Builder.builder()
                     .initialDiagnoses(allInitialDiagnoses)
                     .ascertainablePhenotypes(ascertainablePhenotypes)
@@ -126,16 +131,6 @@ public class RankMaxo {
         return results.stream()
                 .sorted(Comparator.comparing(RankedMaxoResult :: maxoScore).reversed())
                 .toList();
-    }
-
-    private static double calculateRelDiseaseDiffEntropySum(List<Double> differentialDiagnosisScores) {
-        double sum = 0.0;
-        final double EPSILON = 1e-10;
-        for(Double score : differentialDiagnosisScores) {
-            //TODO: double-check log base. Default is base e.
-            sum += Math.abs(score) < EPSILON ? 0 : Math.log(score)*score;
-        }
-        return -sum;
     }
 
     private double updateProgress(double p, int nMaxoTermIds) {
