@@ -8,7 +8,11 @@ import org.monarchinitiative.phenol.ontology.data.TermId;
 import java.io.*;
 import java.nio.file.Path;
 
+import org.phenopackets.phenopackettools.validator.core.ValidationResults;
+import org.phenopackets.phenopackettools.validator.core.ValidationWorkflowRunner;
+import org.phenopackets.phenopackettools.validator.jsonschema.JsonSchemaValidationWorkflowRunner;
 import org.phenopackets.schema.v2.Phenopacket;
+import org.phenopackets.schema.v2.PhenopacketOrBuilder;
 import org.phenopackets.schema.v2.core.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -50,6 +54,12 @@ public class PhenopacketData {
     public static PhenopacketData readPhenopacketData(Path phenopacketPath)  {
         try (InputStream is = new BufferedInputStream(new FileInputStream(String.valueOf(phenopacketPath)))) {
             Phenopacket ppkt = PhenopacketImporter.readPhenopacket(is, Phenopacket.class);
+            ValidationWorkflowRunner<PhenopacketOrBuilder> runner = JsonSchemaValidationWorkflowRunner.phenopacketBuilder()
+                    .build();
+            ValidationResults results = runner.validate(ppkt);
+            if (!results.isValid()) {
+                throw new RuntimeException(results.toString());
+            }
             return PhenopacketData.fromPpkt(ppkt);
         } catch (IOException e) {
             LOGGER.error(e.getMessage());
