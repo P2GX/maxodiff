@@ -54,17 +54,27 @@
         <dependency>
             <groupId>org.phenopackets.phenopackettools</groupId>
             <artifactId>phenopacket-tools-core</artifactId>
-            <version>1.0.0-RC3</version>
+            <version>${phenopacket-tools.version}</version>
         </dependency>
         <dependency>
             <groupId>org.phenopackets.phenopackettools</groupId>
             <artifactId>phenopacket-tools-io</artifactId>
-            <version>1.0.0-RC3</version>
+            <version>${phenopacket-tools.version}</version>
         </dependency>
         <dependency>
             <groupId>org.phenopackets.phenopackettools</groupId>
             <artifactId>phenopacket-tools-util</artifactId>
-            <version>1.0.0-RC3</version>
+            <version>${phenopacket-tools.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.phenopackets.phenopackettools</groupId>
+            <artifactId>phenopacket-tools-validator-core</artifactId>
+            <version>${phenopacket-tools.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.phenopackets.phenopackettools</groupId>
+            <artifactId>phenopacket-tools-validator-jsonschema</artifactId>
+            <version>${phenopacket-tools.version}</version>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.datatype</groupId>
