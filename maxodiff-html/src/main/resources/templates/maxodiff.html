@@ -154,7 +154,7 @@
     <h1>Maxodiff Differential Diagnosis</h1>
 
     <form th:action="@{/maxodiff}">
-        <div th:fragment="sample" th:object="${sample}" class="section-box-sample" enctype="multipart/form-data">
+        <div th:fragment="sample" class="section-box-sample" enctype="multipart/form-data">
             <h1>Sample Input</h1>
 
             <label for="file">Upload Phenopacket File: </label>
@@ -164,18 +164,6 @@
             <h2>Sample parameters:</h2>
             <table>
                 <tbody>
-                <tr>
-    <!--                <td>ID:</td>-->
-                    <td><input type="hidden" th:field="*{id}" readonly="readonly"/></td>
-                </tr>
-                <tr>
-    <!--                <td>Present HPO Term IDs:</td>-->
-                    <td><input type="hidden" th:field="*{observedHpoTerms}" readonly="readonly"/></td>
-                </tr>
-                <tr>
-    <!--                <td>Excluded HPO Term IDs:</td>-->
-                    <td><input type="hidden" th:field="*{excludedHpoTerms}" readonly="readonly"/></td>
-                </tr>
                 <tr>
                     <td>Observed HPO Terms:</td>
                     <td><ul id="observedHpoTermsList"></ul></td>
@@ -220,11 +208,6 @@
                 })
                 .then(response => response.json())
                 .then(data => {
-    <!--                document.getElementById('phenopacketName').textContent = data.phenopacketName;-->
-                    document.querySelector('[name="id"]').value = data.id || '';
-                    document.querySelector('[name="observedHpoTerms"]').value = data.observedHpoTerms || '';
-                    document.querySelector('[name="excludedHpoTerms"]').value = data.excludedHpoTerms || '';
-
                     var observedHpoTermsListContainer = document.getElementById('observedHpoTermsList');
                     var observedHpoTermsMap = new Map(Object.entries(data.observedHpoTerms));
                     addHpoTermToList(observedHpoTermsListContainer, observedHpoTermsMap);
@@ -258,13 +241,14 @@
                         <option th:selected="${nRepetitions} == 20 ? selected" value="20">20</option>
                         <option th:selected="${nRepetitions} == 40 ? selected" value="40">40</option>
                         <option th:selected="${nRepetitions} == 60 ? selected" value="60">60</option>
+                        <option th:selected="${nRepetitions} == 80 ? selected" value="80">80</option>
                         <option th:selected="${nRepetitions} == 100 ? selected" value="100">100</option></select></td>
                 </tr>
                 </tbody>
             </table>
 
             <p><input type="submit" value="Run Differential Diagnosis Calculation" id="submitButton"
-                      th:disabled="${sample.id() == null}"
+                      th:disabled="${sample == null}"
                       onclick="startTask()"/></p>
 
             <div id="progressBarContainer1">

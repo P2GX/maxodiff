@@ -51,6 +51,7 @@
                 dataLabels: { enabled: false },
                 legend: { show: false },
                 xaxis: { categories: diseaseLabels, min: -(nDiseases-1), max: nDiseases-1 },
+                yaxis: { labels: { maxWidth: 1000 } },
                 tooltip: {
                     y: { formatter: value => (value >=0 ? 'Decline' : 'Improve') + ' by ' + Math.abs(value) }
                 }
@@ -84,14 +85,18 @@
                     </div>
                     <div class="tooltip">
                         <div class="tooltip-header" th:text="${cell.toolTipHeader}">Header</div>
-                        <div class="tooltip-subheader">Annotation frequency</div>
-                        <ul  class="tooltip-list">
-                            <li th:each="item: ${cell.toolTipItems}">
-                                <span th:text="${item.hpo}">HPO Term</span>:
-                                <strong th:text="${item.percentage}">0%</strong>
-                            </li>
-                        </ul>
-                    </div>
+                        <div th:if="${not #lists.isEmpty(cell.toolTipItems)}">
+                            <div class="tooltip-subheader">Annotation frequency</div>
+                            <ul class="tooltip-list">
+                                <li th:each="item: ${cell.toolTipItems}">
+                                    <span th:text="${item.hpo}">HPO Term</span>:
+                                    <strong th:text="${item.percentage}">0%</strong>
+                                </li>
+                            </ul>
+                        </div>
+                        <div th:unless="${not #lists.isEmpty(cell.toolTipItems)}" class="tooltip-empty">
+                            <p>No direct HPO annotations.</p>
+                        </div>
                 </td>
             </tr>
             <!-- Now add one row for each of the diseases -->
