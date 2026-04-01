@@ -159,7 +159,9 @@ public class BenchmarkingCommand extends DDxCommand {
         List<BenchmarkResult> resultList = new ArrayList<>();
         try {
             PpktSample ppktSample = getPpktSample(ppktPath);
+            PhenopacketData ppktData = PhenopacketData.readPhenopacketData(phenopacketPath);
             BaseBenchmarker benchmarker = new BaseBenchmarker(ppktSample,
+                    ppktData.maxoProcedureIds(),
                     refinementOptions,
                     this.phenomizer,
                     this.hpoDiseases,
@@ -184,7 +186,9 @@ public class BenchmarkingCommand extends DDxCommand {
         List<BenchmarkResult> resultList = new ArrayList<>();
         try {
             PpktSample ppktSample = getPpktSample(ppktPath);
+            PhenopacketData ppktData = PhenopacketData.readPhenopacketData(phenopacketPath);
             BaseBenchmarker benchmarker = new BaseBenchmarker(ppktSample,
+                    ppktData.maxoProcedureIds(),
                     refinementOptions,
                     this.phenomizer,
                     this.hpoDiseases,

@@ -2,6 +2,7 @@ package org.p2gx.maxodiff.cli.cmd;
 
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
+import org.monarchinitiative.phenol.ontology.data.TermId;
 import org.p2gx.maxodiff.config.MaxoDiffLoader;
 import org.p2gx.maxodiff.config.MaxodiffDataResolver;
 import org.p2gx.maxodiff.config.MaxodiffPropsConfiguration;
@@ -120,6 +121,7 @@ public class DDxCommand extends BaseCommand {
 
             // Read phenopacket data and make sample
             PhenopacketData phenopacketData = PhenopacketData.readPhenopacketData(phenopacketPath);
+            List<TermId> ppktMaxoIds = phenopacketData.maxoProcedureIds();
             List<SimpleTerm> observedSampleTerms = new ArrayList<>();
             List<SimpleTerm> excludedSampleTerms = new ArrayList<>();
             phenopacketData.observedHpoTermIds().forEach(tid ->
@@ -134,10 +136,10 @@ public class DDxCommand extends BaseCommand {
                     maxoDiffRefiner,
                     biometadataService);
             if (writeCsv) {
-                MaxoDiffAnalysisResultRow row = runner.batchAnalysis(phenopacketData);
+                MaxoDiffAnalysisResultRow row = runner.batchAnalysis(phenopacketData, ppktMaxoIds);
                 writeCsvResults(ppktSample.id(), row);
             } else {
-                List<RankedMaxoResult> resultsList = runner.analyzeSample(phenopacketData);
+                List<RankedMaxoResult> resultsList = runner.analyzeSample(phenopacketData, ppktMaxoIds);
                 // Take the MaXo term that has the highest score
                 RankedMaxoResult topResult = resultsList.getFirst();
                 String maxScoreMaxoTerm = topResult.maxoTerm().toString();

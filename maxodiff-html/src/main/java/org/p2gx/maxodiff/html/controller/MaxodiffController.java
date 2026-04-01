@@ -52,6 +52,8 @@ public class MaxodiffController {
 
     private PpktSample sample;
 
+    private List<TermId> ppktMaxoIds;
+
     private static final Path UPLOAD_DIR = Paths.get(System.getProperty("user.home"), "maxodiff", "uploads");
 
     public MaxodiffController(
@@ -162,11 +164,13 @@ public class MaxodiffController {
                     initialDiagnoses,
                     diseaseSubsetEngine,
                     maxoToHpoTermIdMap);
-            List<RankedMaxoResult> resultsList = diffDiagRefiner.runNew(sample,
+            List<RankedMaxoResult> resultsList = diffDiagRefiner.run(sample,
                     initialDiagnosesIds,
                     options,
                     rankMaxo,
-                    biometadataService);
+                    biometadataService,
+                    ppktMaxoIds
+                    );
 
 
             // Write final results to HTML
@@ -244,6 +248,7 @@ public class MaxodiffController {
             List<TermId> excludedHpoTermIds = new ArrayList<>();
             if (phenopacketPath != null) {
                 PhenopacketData phenopacketData = PhenopacketData.readPhenopacketData(phenopacketPath);
+                this.ppktMaxoIds = phenopacketData.maxoProcedureIds();
                 sampleId = phenopacketData.sampleId();
                 observedHpoTermIds = phenopacketData.observedHpoTermIds().toList();//.map(Object::toString).collect(Collectors.joining(","));
                 excludedHpoTermIds = phenopacketData.excludedHpoTermIds().toList();//.map(Object::toString).collect(Collectors.joining(","));

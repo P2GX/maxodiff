@@ -44,7 +44,7 @@ public class MaxodiffAnalysisRunner {
     }
 
 
-    public List<RankedMaxoResult> analyzeSample(PhenopacketData ppktData) throws Exception {
+    public List<RankedMaxoResult> analyzeSample(PhenopacketData ppktData, List<TermId> ppktMaxoIds) throws Exception {
         PpktSample ppktSample = ppktData.getPpktSample(biometadataService);
         List<DifferentialDiagnosis> differentialDiagnoses = engine.run(ppktSample);
         // Get List of Refinement results: maxo term scores and frequencies
@@ -52,11 +52,11 @@ public class MaxodiffAnalysisRunner {
         List<DifferentialDiagnosis> orderedDiagnoses = maxoDiffRefiner.getOrderedDiagnoses(differentialDiagnoses, options);
         List<HpoDisease> diseases = maxoDiffRefiner.getDiseases(orderedDiagnoses);
         Map<String, List<HpoFrequency>> hpoTermCounts = maxoDiffRefiner.getHpoTermCounts(diseases);
-        return getRefinementResults(differentialDiagnoses, orderedDiagnoses, hpoTermCounts, ppktSample);
+        return getRefinementResults(differentialDiagnoses, orderedDiagnoses, hpoTermCounts, ppktSample, ppktMaxoIds);
     }
 
-    public MaxoDiffAnalysisResultRow batchAnalysis(PhenopacketData ppktData) throws Exception {
-        List<RankedMaxoResult> resultsList = analyzeSample(ppktData);
+    public MaxoDiffAnalysisResultRow batchAnalysis(PhenopacketData ppktData, List<TermId> ppktMaxoIds) throws Exception {
+        List<RankedMaxoResult> resultsList = analyzeSample(ppktData, ppktMaxoIds);
         String phenopacket_id = ppktData.sampleId();
         String disease_id = ppktData.diseaseIds().getFirst().getValue();
         RankedMaxoResult topResult = resultsList.getFirst();
@@ -84,7 +84,8 @@ public class MaxodiffAnalysisRunner {
             List<DifferentialDiagnosis> differentialDiagnoses,
             List<DifferentialDiagnosis> orderedDiagnoses,
             Map<String, List<HpoFrequency>> hpoTermCounts,
-            PpktSample sample) throws Exception {
+            PpktSample sample,
+            List<TermId> ppktMaxoIds) throws Exception {
         RefinementOptions options = RefinementOptions.of(this.nDiseases, nRepetitions);
         List<DifferentialDiagnosis> allOrderedDiagnoses = differentialDiagnoses.stream()
                 .sorted(Comparator.comparingDouble(DifferentialDiagnosis::score).reversed())
@@ -98,11 +99,12 @@ public class MaxodiffAnalysisRunner {
 
         RankMaxo rankMaxo = maxoDiffRefiner.getRankMaxo(allOrderedDiagnoses, initialDiagnoses, engine, maxoToHpoTermIdMap);
 
-        return maxoDiffRefiner.runNew(sample,
+        return maxoDiffRefiner.run(sample,
                 initialDiagnosesIds,
                 options,
                 rankMaxo,
-                biometadataService);
+                biometadataService,
+                ppktMaxoIds);
     }
 
 
