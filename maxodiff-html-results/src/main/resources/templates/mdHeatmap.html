@@ -34,14 +34,14 @@
         </table>
         <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
         <script th:inline="javascript">
-            var rankedOmimTerms = [[${maxoData.getRankedOmimTermList}]];
+            var resultRows = [[${maxoData.resultRows}]];
             var nDiseases = [[${maxoData.nDiseases}]];
             var chartIdx = [[${maxoData.index}]]
             var tornadoBarChart = document.querySelector("#TornadoBarChartContainer_" + chartIdx);
         </script>
         <script th:inline="javascript">
-            var diseaseLabels = rankedOmimTerms.map(rt => rt.omimTerm.termLabel);
-            var rankChanges = rankedOmimTerms.map(rt => rt.initialRank - rt.averageRank);
+            var diseaseLabels = resultRows.map(rt => rt.omimLabel);
+            var rankChanges = resultRows.map(rt => rt.initialRank - rt.averageRank);
 
             var options = {
                 series: [{ name: 'Average Rank Change', data: rankChanges }],

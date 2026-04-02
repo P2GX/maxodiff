@@ -9,15 +9,15 @@ public class MdResultRow {
     private final String omimId;
     private final String omimLabel;
     private final int initialRank;
-    private final float rankChange;
+    private final float averageRank;
     private final int nDiseases;
     private final List<HpoTableCell> cells;
 
-    public MdResultRow(String omimId, String omimLabel, int initialRank, float rankChange, int nDiseases, List<HpoTableCell> cells) {
+    public MdResultRow(String omimId, String omimLabel, int initialRank, float averageRank, int nDiseases, List<HpoTableCell> cells) {
         this.omimId = omimId;
         this.omimLabel = omimLabel;
         this.initialRank = initialRank;
-        this.rankChange = rankChange;
+        this.averageRank = averageRank;
         this.nDiseases = nDiseases;
         this.cells = cells;
     }
@@ -59,12 +59,6 @@ public class MdResultRow {
         return rows;
     }
 
-    public String getStyle() {
-        double opacity = (double) rankChange / nDiseases;
-        return (rankChange < 0) ? "rgba(0, 128, 0, " + (-1.0 * opacity) + ")" :
-                "rgba(255, 0, 0, " + opacity + ")";
-    }
-
     public String getOmimId() {
         return omimId;
     }
@@ -82,8 +76,8 @@ public class MdResultRow {
         return initialRank;
     }
 
-    public float getRankChange() {
-        return rankChange;
+    public float getAverageRank() {
+        return averageRank;
     }
 
     public int getnDiseases() {

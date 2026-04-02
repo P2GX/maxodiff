@@ -147,7 +147,7 @@ public class DDxCommand extends BaseCommand {
                 System.out.println("Max Score: " + maxScoreMaxoTerm + " = " + maxScoreValue);
 
                 String jsonFilename = String.join("_", ppktSample.id(),
-                        nDiseases.toString(), nRepetitions.toString(), "maxodiff_results", ".json");
+                        nDiseases.toString(), nRepetitions.toString(), "maxodiff_results.json");
                 if (outputJson) {
                     Path jsonPath = Path.of(String.join(File.separator, outputDir.toString(), jsonFilename));
                     JsonWriter.writeToJsonFile(jsonPath, resultsList);
