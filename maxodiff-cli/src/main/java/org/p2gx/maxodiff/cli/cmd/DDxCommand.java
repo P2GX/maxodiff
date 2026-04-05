@@ -103,23 +103,14 @@ public class DDxCommand extends BaseCommand {
             // Read phenopacket data and make sample
             PhenopacketData phenopacketData = PhenopacketData.readPhenopacketData(phenopacketPath);
             List<TermId> ppktMaxoIds = phenopacketData.maxoProcedureIds();
-            List<SimpleTerm> observedSampleTerms = new ArrayList<>();
-            List<SimpleTerm> excludedSampleTerms = new ArrayList<>();
-            // TODO, capture SingleTerm in the phenopacketData object
-            BiometadataService biometadataService = context.biometadataService();
-            phenopacketData.observedHpoTermIds().forEach(tid ->
-                    observedSampleTerms.add(new SimpleTerm(tid.getValue(), biometadataService.hpoLabel(tid).orElse("n/a"))));
-            phenopacketData.excludedHpoTermIds().forEach(tid ->
-                    excludedSampleTerms.add(new SimpleTerm(tid.getValue(), biometadataService.hpoLabel(tid).orElse("n/a"))));
-            PpktSample ppktSample = new PpktSample(phenopacketData.sampleId(), observedSampleTerms, excludedSampleTerms);
-
+           // PpktSample ppktSample = phenopacketData.getPpktSample();
             MaxodiffAnalysisRunner runner = new MaxodiffAnalysisRunner(
                     context,
                     engine,
                     maxoDiffRefiner);
             if (writeCsv) {
                 MaxoDiffAnalysisResultRow row = runner.batchAnalysis(phenopacketData);
-                writeCsvResults(ppktSample.id(), row);
+                writeCsvResults(phenopacketData.sampleId(), row);
             } else {
                 List<RankedMaxoResult> resultsList = runner.analyzeSample(phenopacketData);
                 // Take the MaXo term that has the highest score
@@ -128,7 +119,7 @@ public class DDxCommand extends BaseCommand {
                 double maxScoreValue = topResult.maxoScore();
                 System.out.println("Max Score: " + maxScoreMaxoTerm + " = " + maxScoreValue);
 
-                String jsonFilename = String.join("_", ppktSample.id(),
+                String jsonFilename = String.join("_", phenopacketData.sampleId(),
                         nDiseases.toString(), nRepetitions.toString(), "maxodiff_results.json");
                 if (outputJson) {
                     Path jsonPath = Path.of(String.join(File.separator, outputDir.toString(), jsonFilename));
@@ -137,11 +128,11 @@ public class DDxCommand extends BaseCommand {
                     return 0;
                 }
 
-                MdMetadata mdMetadata = new MdMetadata(ppktSample.id(),
+                MdMetadata mdMetadata = new MdMetadata(phenopacketData.sampleId(),
                         this.nDiseases,
                         this.nRepetitions,
-                        ppktSample.observedHpoTerms(),
-                        ppktSample.excludedHpoTerms(),
+                        phenopacketData.getObservedHpoSimpleTerms(),
+                        phenopacketData.getExcludedHpoSimpleTerms(),
                         resultsList);
 
                 HTMLFrequencyMap htmlFrequencyMap = new HTMLFrequencyMap(context);
@@ -150,9 +141,6 @@ public class DDxCommand extends BaseCommand {
                 Files.writeString(maxodiffResultsHTMLPath, headerHtml);
                 LOGGER.info("Wrote HTML file to {}", maxodiffResultsHTMLPath);
             }
-
-
-           // BatchDiagnosisCommand.setResultsMap(resultsMap);
         } catch (Exception ex) {
             LOGGER.error(ex.getMessage(), ex);
             return 1;

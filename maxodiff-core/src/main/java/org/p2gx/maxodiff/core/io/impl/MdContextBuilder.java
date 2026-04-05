@@ -4,8 +4,10 @@ import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
 import org.monarchinitiative.phenol.annotations.io.hpo.HpoDiseaseLoader;
 import org.monarchinitiative.phenol.annotations.io.hpo.HpoDiseaseLoaderOptions;
 import org.monarchinitiative.phenol.annotations.io.hpo.HpoDiseaseLoaders;
+import org.monarchinitiative.phenol.io.OntologyLoader;
 import org.monarchinitiative.phenol.ontology.data.MinimalOntology;
 import org.monarchinitiative.phenol.io.MinimalOntologyLoader;
+import org.monarchinitiative.phenol.ontology.data.Ontology;
 import org.p2gx.maxodiff.core.io.MdContext;
 import org.p2gx.maxodiff.core.io.MdParams;
 import org.p2gx.maxodiff.core.io.MdResources;
@@ -47,7 +49,7 @@ public class MdContextBuilder {
                 "Did not find maxo.json in data directory");
         Path termPairSimFile = Objects.requireNonNull(dataDir.resolve("term-pair-similarity.csv.gz"),
             "Did not find term-pair-similarity.csv.gz in data directory");
-        MinimalOntology hpo = MinimalOntologyLoader.loadOntology(hpoJsonPath.toFile());
+        Ontology hpo = OntologyLoader.loadOntology(hpoJsonPath.toFile());
         MinimalOntology maxo = MinimalOntologyLoader.loadOntology(maxoJsonPath.toFile());
         HpoDiseaseLoader loader = HpoDiseaseLoaders.defaultLoader(hpo, HpoDiseaseLoaderOptions.defaultOmim());
         HpoDiseases hpoDiseases = loader.load(phenotypeHpoaPath);

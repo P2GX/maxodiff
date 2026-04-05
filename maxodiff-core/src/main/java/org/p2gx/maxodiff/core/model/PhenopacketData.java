@@ -1,5 +1,6 @@
 package org.p2gx.maxodiff.core.model;
 
+import org.p2gx.maxodiff.core.analysis.MySimpleTerm;
 import org.p2gx.maxodiff.core.analysis.SimpleTerm;
 import org.p2gx.maxodiff.core.io.PhenopacketImporter;
 import org.p2gx.maxodiff.core.service.BiometadataService;
@@ -29,6 +30,8 @@ public class PhenopacketData {
     private final String sampleId;
     private final List<String> hpoTerms;
     private final List<String> negatedHpoTerms;
+    private List<MySimpleTerm> observedHpoTerms = new ArrayList<>();
+    private List<MySimpleTerm> excludedHpoTerms = new ArrayList<>();
     private final List<TermId> diseaseIds;
     /* Medical action ontology terms used in the Phenopacket. We will use this information
      in oder to not suggest a MAxO term that was previosly performed (e.g., do not suggest
@@ -50,6 +53,31 @@ public class PhenopacketData {
         this.diseaseIds = diseaseIds;
         this.procedures = maxoIds;
     }
+    /// TODO complette refactoring
+    /// Masked needed only to distinguish the constructor, it
+    // can be deleted later on
+    PhenopacketData(String sampleId,
+                    List<MySimpleTerm> hpoTerms,
+                    List<MySimpleTerm> negatedHpoTerms,
+                    List<TermId> diseaseIds,
+                    List<TermId> maxoIds,
+                    boolean masked
+    ) {
+
+        this.sampleId = Objects.requireNonNull(sampleId);
+        this.observedHpoTerms = Objects.requireNonNull(hpoTerms);
+        this.excludedHpoTerms = Objects.requireNonNull(negatedHpoTerms);
+        this.hpoTerms = this.observedHpoTerms.stream()
+                .map(MySimpleTerm::tid)
+                .map(TermId::getValue)
+                .toList();
+        this.negatedHpoTerms = this.excludedHpoTerms.stream()
+                .map(MySimpleTerm::tid)
+                .map(TermId::getValue)
+                .toList();
+        this.diseaseIds = diseaseIds;
+        this.procedures = maxoIds;
+    }
 
     public static PhenopacketData readPhenopacketData(Path phenopacketPath)  {
         try (InputStream is = new BufferedInputStream(new FileInputStream(String.valueOf(phenopacketPath)))) {
@@ -65,6 +93,37 @@ public class PhenopacketData {
             LOGGER.error(e.getMessage());
             throw new RuntimeException(e);
         }
+    }
+
+    private static PhenopacketData fromPpkt2(Phenopacket ppkt) {
+        String sampleId = ppkt.getId();
+        List<MySimpleTerm> observedTerms = ppkt.getPhenotypicFeaturesList()
+                .stream().filter(Predicate.not(PhenotypicFeature::getExcluded))
+                .map(PhenotypicFeature::getType)
+                .map(oc -> MySimpleTerm.fromStrings(oc.getId(), oc.getLabel()))
+                .toList();
+        List<MySimpleTerm> excludedTerms = ppkt.getPhenotypicFeaturesList()
+                .stream()
+                .filter(PhenotypicFeature::getExcluded)
+                .map(PhenotypicFeature::getType)
+                .map(oc -> MySimpleTerm.fromStrings(oc.getId(), oc.getLabel()))
+                .toList();
+        List<TermId> diseaseIds = ppkt.getDiseasesList()
+                .stream()
+                .filter(Predicate.not(Disease::getExcluded))
+                .map(Disease::getTerm)
+                .map(OntologyClass::getId)
+                .map(TermId::of)
+                .toList();
+        List<TermId> maxoIds = ppkt.getMedicalActionsList()
+                .stream()
+                .filter(MedicalAction::hasProcedure)
+                .map(MedicalAction::getProcedure)
+                .map(Procedure::getCode)
+                .map(OntologyClass::getId)
+                .map(TermId::of)
+                .toList();
+        return new PhenopacketData(sampleId, observedTerms, excludedTerms, diseaseIds, maxoIds, true);
     }
 
 
@@ -106,6 +165,24 @@ public class PhenopacketData {
         excludedHpoTermIds().forEach(tid ->
                 excludedSampleTerms.add(new SimpleTerm(tid.getValue(), biometadataService.hpoLabel(tid).orElse("n/a"))));
         return new PpktSample(sampleId(), observedSampleTerms, excludedSampleTerms);
+    }
+
+    public List<SimpleTerm> getObservedHpoSimpleTerms() {
+        return observedHpoTerms.
+                stream()
+                .map(mst -> new SimpleTerm(mst.tid().getValue(), mst.label()))
+                .toList();
+    }
+
+    public List<SimpleTerm> getExcludedHpoSimpleTerms() {
+        return excludedHpoTerms
+                .stream()
+                .map(mst -> new SimpleTerm(mst.tid().getValue(), mst.label()))
+                .toList();
+    }
+
+    public PpktSample getPpktSample() {
+        return new PpktSample(sampleId(), getObservedHpoSimpleTerms(), getExcludedHpoSimpleTerms());
     }
 
 
