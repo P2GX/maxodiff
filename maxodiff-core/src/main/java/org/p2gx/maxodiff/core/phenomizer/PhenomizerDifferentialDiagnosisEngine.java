@@ -1,12 +1,9 @@
 package org.p2gx.maxodiff.core.phenomizer;
 
-import org.p2gx.maxodiff.core.analysis.MySimpleTerm;
 import org.p2gx.maxodiff.core.io.MdContext;
-import org.p2gx.maxodiff.core.analysis.SimpleTerm;
 import org.p2gx.maxodiff.core.diffdg.DifferentialDiagnosisEngine;
 import org.p2gx.maxodiff.core.model.DifferentialDiagnosis;
 import org.p2gx.maxodiff.core.model.PhenopacketData;
-import org.p2gx.maxodiff.core.model.PpktSample;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDisease;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseaseAnnotation;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;

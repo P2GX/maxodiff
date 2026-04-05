@@ -19,17 +19,14 @@ import org.slf4j.LoggerFactory;
 import java.util.*;
 import java.util.concurrent.*;
 import java.util.concurrent.atomic.AtomicInteger;
-import java.util.stream.Collectors;
 
 public class RankMaxo {
     private final static Logger LOGGER = LoggerFactory.getLogger(RankMaxo.class);
-    private final Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxoTermMap;
     private final Map<String, Set<String>> maxoToHpoTermIdMap;
     private final MaxoHpoTermProbabilities maxoHpoTermProbabilities;
     private final DifferentialDiagnosisEngine engine;
     double progress;
     RankMaxoProgress rankMaxoProgress;
-    private final MinimalOntology ontology;
     private final List<DifferentialDiagnosis> allInitialDiagnoses;
     private final List<DifferentialDiagnosis> initialDiagnoses;
 
@@ -54,11 +51,9 @@ public class RankMaxo {
                     MinimalOntology hpo,
                     List<DifferentialDiagnosis> allInitialDiagnoses,
                     List<DifferentialDiagnosis> initialDiagnoses) {
-        this.hpoToMaxoTermMap = hpoToMaxoTermMap;
         this.maxoToHpoTermIdMap = maxoToHpoTermIdMap;
         this.maxoHpoTermProbabilities = maxoHpoTermProbabilities;
         this.engine = engine;
-        this.ontology = hpo;
         this.allInitialDiagnoses = allInitialDiagnoses;
         this.initialDiagnoses = initialDiagnoses;
     }
@@ -88,7 +83,7 @@ public class RankMaxo {
         ProgessBar pb = new ProgessBar(maxoIdx, maxoToHpoTermIdMap.size());
         for (String maxoId : maxoToHpoTermIdMap.keySet()) {
             if (ppktMaxoIds.contains(TermId.of(maxoId))) {
-                LOGGER.debug("Sample " + ppkt.sampleId() + " already contains " + maxoId + ".");
+                LOGGER.debug("Sample {}  already contains {}.", ppkt.sampleId(), maxoId);
                 continue;
             }
             MaxoHpoDiseaseRank maxoHpoDiseaseRank = MaxoHpoDiseaseRank.Builder.builder()

@@ -5,7 +5,6 @@ import org.p2gx.maxodiff.core.analysis.RankedMaxoResult;
 import org.p2gx.maxodiff.core.diffdg.DifferentialDiagnosisEngine;
 import org.p2gx.maxodiff.core.model.DifferentialDiagnosis;
 import org.p2gx.maxodiff.core.model.PhenopacketData;
-import org.p2gx.maxodiff.core.model.PpktSample;
 import org.p2gx.maxodiff.core.model.RankMaxo;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDisease;
 import org.monarchinitiative.phenol.ontology.data.TermId;

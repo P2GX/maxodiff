@@ -25,7 +25,7 @@
                     <div style="text-align:center; margin: 40px 0;">
                         <!-- Title above the chart -->
                         <h2>Average Rank Change per Disease</h2>
-                        <div th:id="'TornadoBarChartContainer_' + ${maxoData.index}" style="height:500px; width:1000px; border: 1px solid black; display:block;margin:0 auto;">
+                        <div th:id="'TornadoBarChartContainer_' + ${maxoData.index()}" style="height:500px; width:1000px; border: 1px solid black; display:block;margin:0 auto;">
                         </div>
                     </div>
                 </td>
@@ -36,7 +36,7 @@
         <script th:inline="javascript">
             var resultRows = [[${maxoData.resultRows}]];
             var nDiseases = [[${maxoData.nDiseases}]];
-            var chartIdx = [[${maxoData.index}]]
+            var chartIdx = [[${maxoData.index()}]]
             var tornadoBarChart = document.querySelector("#TornadoBarChartContainer_" + chartIdx);
         </script>
         <script th:inline="javascript">

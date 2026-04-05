@@ -7,7 +7,6 @@ import org.p2gx.maxodiff.core.analysis.refinement.RefinementOptions;
 import org.p2gx.maxodiff.core.diffdg.DifferentialDiagnosisEngine;
 import org.p2gx.maxodiff.core.model.DifferentialDiagnosis;
 import org.p2gx.maxodiff.core.model.PhenopacketData;
-import org.p2gx.maxodiff.core.model.PpktSample;
 import org.p2gx.maxodiff.core.model.RankMaxo;
 import org.p2gx.maxodiff.core.service.BiometadataService;
 import org.p2gx.maxodiff.html.results.tleaf.TleafResults;

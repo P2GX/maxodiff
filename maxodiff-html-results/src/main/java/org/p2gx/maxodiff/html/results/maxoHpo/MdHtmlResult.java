@@ -15,8 +15,6 @@ public class MdHtmlResult {
     private final int index;
     private final String maxoId;
     private final String maxoLabel;
-    private final Map<TermId, String> hpoTermsMap;
-
     private final RankedMaxoResult rankedMaxoResult;
     private final MdRepetitionRow repetitionRow;
     private final List<MdResultRow> resultRows;
@@ -29,7 +27,6 @@ public class MdHtmlResult {
             int nDiseases,
             int nRepetitions,
             HTMLFrequencyMap htmlFrequencyMap) {
-        this.hpoTermsMap = new HashMap<>();
         this.index = idx;
         this.maxoId = result.maxoTerm().termId();
         this.maxoLabel = result.maxoTerm().termLabel();
@@ -47,14 +44,6 @@ public class MdHtmlResult {
         repetitionRow = MdRepetitionRow.buildRepetitionRow(nRepetitions, result);
 
         this.resultRows = MdResultRow.createMaxoResultRows(result, nDiseases, hpoFrequenciesMica, htmlFrequencyMap);
-    }
-
-    public List<RepetitionCell> getRepetitionCells() {
-        return repetitionRow.getCells();
-    }
-
-    public List<MdResultRow> getResultRows() {
-        return resultRows;
     }
 
     public int index() {
@@ -85,13 +74,19 @@ public class MdHtmlResult {
         return this.rankedMaxoResult.hpoTermIds().stream().map(CountedHpoTerm::hpoTerm).collect(Collectors.toList());
     }
 
-    public List<RankedOmimTerm> getRankedOmimTermList() {
-        return this.rankedMaxoResult.rankedOmimTermList().stream().toList();
+    public List<MdResultRow> getResultRows() {
+        return this.resultRows;
+    }
+
+    public MdRepetitionRow getRepetitionRow() {
+        return repetitionRow;
+    }
+
+    public List<RepetitionCell> getRepetitionCells() {
+        return repetitionRow.getCells();
     }
 
 
-    Map<TermId, Double> termToMicaMap(TermId hpoId, HpoDiseases diseases ) {
-        return null;
-    }
+
 
 }

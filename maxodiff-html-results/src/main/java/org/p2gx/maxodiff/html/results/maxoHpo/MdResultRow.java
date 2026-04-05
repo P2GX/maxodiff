@@ -43,12 +43,7 @@ public class MdResultRow {
                     .filter(hpoFrequency ->
                         (hpoFrequency.omimId().equals(omimId) && hpoFrequency.hpoId().equals(hpoId)))
                     .findFirst();
-                if (hpoFrequencyOpt.isPresent()) {
-                    mica = hpoFrequencyOpt.get().mica();
-                } else {
-//                    ct = 0;
-                    mica = htmlFrequencyMap.micaForDisease(TermId.of(hpoId), TermId.of(omimId));
-                }
+                mica = hpoFrequencyOpt.map(HpoFrequency::mica).orElseGet(() -> htmlFrequencyMap.micaForDisease(TermId.of(hpoId), TermId.of(omimId)));
                 float maxMica = 8.343077871169383f;
                 double opacity = mica / maxMica;
                 cells.add(new HpoTableCell(ct, opacity, mica));

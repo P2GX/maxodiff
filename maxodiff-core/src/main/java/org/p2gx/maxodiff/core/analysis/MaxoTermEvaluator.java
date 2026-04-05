@@ -304,7 +304,7 @@ public class MaxoTermEvaluator implements Callable<RankedMaxoResult> {
             Map<String, Integer> chosenHpoTermCountsMap) {
 
         // Step 1: Make MAXO SimpleTerm
-        String maxoId = maxoHpoDiseaseRank.getMaxoId().toString();
+        String maxoId = maxoHpoDiseaseRank.getMaxoId();
         String maxoLabel = maxoHpoDiseaseRank.getMaxoLabel();
         SimpleTerm maxoTerm = new SimpleTerm(maxoId, maxoLabel);
 
