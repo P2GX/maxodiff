@@ -23,14 +23,10 @@ public interface DiffDiagRefiner {
 
     List<RankedMaxoResult> run(PpktSample sample,
                                Set<TermId> initialDiagnosesIds,
-                               RefinementOptions options,
                                RankMaxo rankMaxo,
-                               BiometadataService biometadataService,
-                               List<TermId> ppktMaxoIds
-    ) throws Exception;
+                               List<TermId> ppktMaxoIds) throws Exception;
 
-    List<DifferentialDiagnosis> getOrderedDiagnoses(Collection<DifferentialDiagnosis> originalDifferentialDiagnoses,
-                                                    RefinementOptions options);
+    List<DifferentialDiagnosis> getOrderedDiagnoses(Collection<DifferentialDiagnosis> originalDifferentialDiagnoses);
 
     List<HpoDisease> getDiseases(List<DifferentialDiagnosis> differentialDiagnoses);
 

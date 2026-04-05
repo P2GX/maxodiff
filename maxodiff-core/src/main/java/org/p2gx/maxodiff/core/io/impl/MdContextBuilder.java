@@ -49,14 +49,14 @@ public class MdContextBuilder {
                 "Did not find maxo.json in data directory");
         Path termPairSimFile = Objects.requireNonNull(dataDir.resolve("term-pair-similarity.csv.gz"),
             "Did not find term-pair-similarity.csv.gz in data directory");
-        Ontology hpo = OntologyLoader.loadOntology(hpoJsonPath.toFile());
-        MinimalOntology maxo = MinimalOntologyLoader.loadOntology(maxoJsonPath.toFile());
+        MinimalOntology hpo = MinimalOntologyLoader.loadOntology(hpoJsonPath.toFile());
+        MinimalOntology maxo = MinimalOntologyLoader.loadOntology(maxoJsonPath.toFile(), "HP");
         HpoDiseaseLoader loader = HpoDiseaseLoaders.defaultLoader(hpo, HpoDiseaseLoaderOptions.defaultOmim());
         HpoDiseases hpoDiseases = loader.load(phenotypeHpoaPath);
         IcMicaData icData = IcMicaDictLoader.loadIcMicaDict(termPairSimFile);
         Map<SimpleTerm, Set<SimpleTerm>> maxoAnnotsMap;
         try (BufferedReader reader = Files.newBufferedReader(maxoDxPath)) {
-            maxoAnnotsMap = MaxoDxAnnots.parseMaxoToHpo(reader);
+            maxoAnnotsMap = MaxoDxAnnots.parseHpoToMaxo(reader);
         }
         Map<String, String> generalMaxoTermsMap = GeneralMaxoTerms.getGeneralMaxoTerms();
         Set<SimpleTerm> generalMaxoTerms = new HashSet<>();
@@ -70,5 +70,7 @@ public class MdContextBuilder {
 
         return new MdContext(resources, params, biometadataService);
     }
+
+
 
 }

@@ -97,13 +97,11 @@ public class DDxCommand extends BaseCommand {
                 this.maxoDataPath,
                 this.nRepetitions,
                 this.nDiseases);
+        LOGGER.info("{}", context);
         try {
             DiffDiagRefiner maxoDiffRefiner = context.createRefiner();
             DifferentialDiagnosisEngine engine = new PhenomizerDifferentialDiagnosisEngine(context);
-            // Read phenopacket data and make sample
             PhenopacketData phenopacketData = PhenopacketData.readPhenopacketData(phenopacketPath);
-            List<TermId> ppktMaxoIds = phenopacketData.maxoProcedureIds();
-           // PpktSample ppktSample = phenopacketData.getPpktSample();
             MaxodiffAnalysisRunner runner = new MaxodiffAnalysisRunner(
                     context,
                     engine,
@@ -113,6 +111,10 @@ public class DDxCommand extends BaseCommand {
                 writeCsvResults(phenopacketData.sampleId(), row);
             } else {
                 List<RankedMaxoResult> resultsList = runner.analyzeSample(phenopacketData);
+                if (resultsList.isEmpty()) {
+                    System.err.println("No results found for phenopacket: " + phenopacketPath);
+                    return 1;
+                }
                 // Take the MaXo term that has the highest score
                 RankedMaxoResult topResult = resultsList.getFirst();
                 String maxScoreMaxoTerm = topResult.maxoTerm().toString();

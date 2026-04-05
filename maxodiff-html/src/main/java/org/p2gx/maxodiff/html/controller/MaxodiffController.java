@@ -124,7 +124,7 @@ public class MaxodiffController {
 
             // n diseases subset of initial differential diagnoses in order of decreasing probability
             if (model.getAttribute("orderedDiagnoses") == null || !nDiseases.equals(prevNDiseases)) {
-                List<DifferentialDiagnosis> orderedDiagnoses = diffDiagRefiner.getOrderedDiagnoses(differentialDiagnoses, options);
+                List<DifferentialDiagnosis> orderedDiagnoses = diffDiagRefiner.getOrderedDiagnoses(differentialDiagnoses);
                 model.addAttribute("orderedDiagnoses", orderedDiagnoses);
             }
             List<DifferentialDiagnosis> orderedDiagnoses = (List<DifferentialDiagnosis>) model.getAttribute("orderedDiagnoses");
@@ -151,24 +151,20 @@ public class MaxodiffController {
             Set<TermId> initialDiagnosesIds = initialDiagnoses.stream()
                     .map(DifferentialDiagnosis::diseaseId)
                     .collect(Collectors.toCollection(LinkedHashSet::new));
-            int totalNDiseases = differentialDiagnoses.size();
-            RefinementOptions allDiseasesOptions = RefinementOptions.of(totalNDiseases, nRepetitions);
-            List<DifferentialDiagnosis> allInitialDiagnoses = diffDiagRefiner.getOrderedDiagnoses(differentialDiagnoses, allDiseasesOptions);
-            List<HpoDisease> allDiseases = diffDiagRefiner.getDiseases(allInitialDiagnoses);
-
-            diseaseSubsetEngine = phenomizerDifferentialDxEngine;
+          //  int totalNDiseases = differentialDiagnoses.size();
+            //RefinementOptions allDiseasesOptions = RefinementOptions.of(totalNDiseases, nRepetitions);
+            List<DifferentialDiagnosis> allInitialDiagnoses = diffDiagRefiner.getOrderedDiagnoses(differentialDiagnoses);
+           // List<HpoDisease> allDiseases = diffDiagRefiner.getDiseases(allInitialDiagnoses);
 
             // Perform maxodiff refinement
             assert maxoToHpoTermIdMap != null;
             rankMaxo = diffDiagRefiner.getRankMaxo(allInitialDiagnoses,
                     initialDiagnoses,
-                    diseaseSubsetEngine,
+                    phenomizerDifferentialDxEngine,
                     maxoToHpoTermIdMap);
             List<RankedMaxoResult> resultsList = diffDiagRefiner.run(sample,
                     initialDiagnosesIds,
-                    options,
                     rankMaxo,
-                    biometadataService,
                     ppktMaxoIds
                     );
 

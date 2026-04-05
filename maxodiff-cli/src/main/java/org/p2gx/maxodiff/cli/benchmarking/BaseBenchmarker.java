@@ -112,9 +112,7 @@ public class BaseBenchmarker {
 
         List<RankedMaxoResult> resultsList = refiner.run(sample,
                 topNInitialDiagnosesIds,
-                options,
                 rankMaxo,
-                biometadataService,
                 ppktMaxoIds);
 
         return resultsList;
@@ -149,9 +147,7 @@ public class BaseBenchmarker {
                 ontology, getCompleteInitialDiffDiagList(), initialDiagnosesNDiseasesRandom);
         List<RankedMaxoResult> refinementResults = refiner.run(sample,
                 topNInitialDiagnosesIdsRandom,
-                new RefinementOptions(nDiseases, nRepetitions),
                 rankMaxo,
-                biometadataService,
                 ppktMaxoIds);
 
         return refinementResults;
@@ -178,14 +174,11 @@ public class BaseBenchmarker {
         RankMaxo rankMaxo = new RankMaxo(hpoToMaxoTermMap, maxoToHpoTermIdMap,
                 maxoHpoTermProbabilities, phenomizer,
                 ontology, getCompleteInitialDiffDiagList(), initialDiagnosesNDiseasesRandom);
-        List<RankedMaxoResult> refinementResults = refiner.run(sample,
-                topNInitialDiagnosesIdsRandom,
-                new RefinementOptions(nDiseases, nRepetitions),
-                rankMaxo,
-                biometadataService,
-                ppktMaxoIds);
 
-        return refinementResults;
+        return refiner.run(sample,
+                topNInitialDiagnosesIdsRandom,
+                rankMaxo,
+                ppktMaxoIds);
     }
 
 

@@ -14,9 +14,8 @@ public class MaxoDxAnnots {
     private MaxoDxAnnots() {}
 
     /**
-     * @deprecated use {@link #parseMaxoToHpo(BufferedReader)} instead
+     * TODO DOCUMENT ME. THIS IS THE CORRECT METHOD BUT IT WAS LISTED AS DEPRECATED!
      */
-    @Deprecated
     public static Map<SimpleTerm, Set<SimpleTerm>> parseHpoToMaxo(BufferedReader reader) throws IOException {
         Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxo = new HashMap<>();
 

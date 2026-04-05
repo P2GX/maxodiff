@@ -26,23 +26,21 @@ class AnalysisUtils {
 
     /**
      *
-     * @param fullHpoToMaxoTermMap Map of all HPO -> MAXO TermId set mappings from maxo_diagnostic_annotations file.
+     * @param fullMap Map of all HPO -> MAXO TermId set mappings from maxo_diagnostic_annotations file.
      * @param hpoTermIds Set of HPO TermIds associated with the subset of m diseases.
      * @return Map of HPO -> MAXO TermId set mappings for the subset of m diseases.
      */
-    static Map<String, Set<String>> makeHpoToMaxoTermIdMap(Map<String, Set<String>> fullHpoToMaxoTermMap,
+    static Map<String, Set<String>> makeHpoToMaxoTermIdMap(Map<String, Set<String>> fullMap,
                                                            Set<String> hpoTermIds) {
-        Map<String, Set<String>> hpoToMaxoTermIdMap = new HashMap<>();
+        Map<String, Set<String>> filteredMap = new HashMap<>();
+
         for (String hpoId : hpoTermIds) {
-            for (String hpoTermId : fullHpoToMaxoTermMap.keySet()) {
-                if (hpoTermId.equals(hpoId)) {
-                    Set<String> maxoTermIds = fullHpoToMaxoTermMap.get(hpoTermId);
-                    hpoToMaxoTermIdMap.put(hpoTermId, maxoTermIds);
-                    break;
-                }
+            if (fullMap.containsKey(hpoId)) {
+                filteredMap.put(hpoId, fullMap.get(hpoId));
             }
         }
-        return hpoToMaxoTermIdMap;
+
+        return filteredMap;
     }
 
     /**

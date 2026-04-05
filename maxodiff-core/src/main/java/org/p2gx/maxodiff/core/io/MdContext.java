@@ -42,6 +42,19 @@ public record MdContext(MdResources resources,
             maxoAnnotsMap.get(entry.getKey()).forEach(t -> maxoIds.add(t.termId()));
             hpoToMaxoIdMap.put(hpoId, maxoIds);
         }
-        return new DiffDiagRefinerImpl(diseases, hpoToMaxoIdMap, maxoAnnotsMap, hpo);
+        return new DiffDiagRefinerImpl(this,  hpoToMaxoIdMap, maxoAnnotsMap);
+       // return new DiffDiagRefinerImpl(diseases, hpoToMaxoIdMap, maxoAnnotsMap, hpo);
+    }
+
+    @Override
+    public String toString() {
+        int nHpo = this.resources.hpo().allTermIdCount();
+        int nMaxo = this.resources.maxoAnnotsMap().size();
+        int nDiseases = this.resources.hpoDiseases().size();
+        int nDxMaxo = this.resources.maxoAnnotsMap()
+                .values()
+                .stream().mapToInt(Set::size).sum();
+        return String.format("HPO Terms: %s; Diagnostic MAxO terms: %d; diseases: %d; diagnostic MAXO annotations: %d",
+                nHpo, nMaxo, nDiseases, nDxMaxo);
     }
 }
