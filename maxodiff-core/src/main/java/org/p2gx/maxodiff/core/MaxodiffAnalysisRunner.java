@@ -1,5 +1,6 @@
 package org.p2gx.maxodiff.core;
 
+import org.p2gx.maxodiff.core.io.MdContext;
 import org.p2gx.maxodiff.core.analysis.HpoFrequency;
 import org.p2gx.maxodiff.core.analysis.RankedMaxoResult;
 import org.p2gx.maxodiff.core.analysis.RankedOmimTerm;
@@ -30,21 +31,20 @@ public class MaxodiffAnalysisRunner {
     private final BiometadataService biometadataService;
 
     public MaxodiffAnalysisRunner(
-            int nDiseases,
-            int nRepetitions,
+            MdContext mdContext,
             DifferentialDiagnosisEngine engine,
-            DiffDiagRefiner maxoDiffRefiner,
-            BiometadataService biometadataService
+            DiffDiagRefiner maxoDiffRefiner
     ) {
-        this.nDiseases = nDiseases;
-        this.nRepetitions = nRepetitions;
+        this.nDiseases = mdContext.params().nDiseases();
+        this.nRepetitions = mdContext.params().nRepetitions();
         this.engine = engine;
         this.maxoDiffRefiner = maxoDiffRefiner;
-        this.biometadataService = biometadataService;
+        this.biometadataService = mdContext.biometadataService();
     }
 
 
-    public List<RankedMaxoResult> analyzeSample(PhenopacketData ppktData, List<TermId> ppktMaxoIds) throws Exception {
+    public List<RankedMaxoResult> analyzeSample(PhenopacketData ppktData) throws Exception {
+        List<TermId> ppktMaxoIds = ppktData.maxoProcedureIds();
         PpktSample ppktSample = ppktData.getPpktSample(biometadataService);
         List<DifferentialDiagnosis> differentialDiagnoses = engine.run(ppktSample);
         // Get List of Refinement results: maxo term scores and frequencies
@@ -55,8 +55,8 @@ public class MaxodiffAnalysisRunner {
         return getRefinementResults(differentialDiagnoses, orderedDiagnoses, hpoTermCounts, ppktSample, ppktMaxoIds);
     }
 
-    public MaxoDiffAnalysisResultRow batchAnalysis(PhenopacketData ppktData, List<TermId> ppktMaxoIds) throws Exception {
-        List<RankedMaxoResult> resultsList = analyzeSample(ppktData, ppktMaxoIds);
+    public MaxoDiffAnalysisResultRow batchAnalysis(PhenopacketData ppktData) throws Exception {
+        List<RankedMaxoResult> resultsList = analyzeSample(ppktData);
         String phenopacket_id = ppktData.sampleId();
         String disease_id = ppktData.diseaseIds().getFirst().getValue();
         RankedMaxoResult topResult = resultsList.getFirst();

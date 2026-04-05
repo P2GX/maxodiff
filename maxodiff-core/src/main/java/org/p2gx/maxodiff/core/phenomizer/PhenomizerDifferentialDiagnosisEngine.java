@@ -1,5 +1,6 @@
-package org.p2gx.maxodiff.phenomizer;
+package org.p2gx.maxodiff.core.phenomizer;
 
+import org.p2gx.maxodiff.core.io.MdContext;
 import org.p2gx.maxodiff.core.analysis.SimpleTerm;
 import org.p2gx.maxodiff.core.diffdg.DifferentialDiagnosisEngine;
 import org.p2gx.maxodiff.core.model.DifferentialDiagnosis;
@@ -20,14 +21,20 @@ public class PhenomizerDifferentialDiagnosisEngine implements DifferentialDiagno
     private final Map<TermId, Integer> diseaseToPresentAnnotationCount;
     private final ScoringMode scoringMode;
 
-    public PhenomizerDifferentialDiagnosisEngine(
-            HpoDiseases diseases,
-            Map<TermPair, Double> termPairToIc) {
+    public PhenomizerDifferentialDiagnosisEngine(MdContext context) {
+        this.diseases = context.resources().hpoDiseases();
+        this.termPairToIc = context.resources().icMicaData().icMicaDict();
+        this.diseaseToPresentAnnotationCount = countPresentAnnotations(diseases);
+        this.scoringMode = ScoringMode.ONE_SIDED;
+    }
+
+    public PhenomizerDifferentialDiagnosisEngine(HpoDiseases diseases, Map<TermPair, Double> termPairToIc) {
         this.diseases = diseases;
         this.termPairToIc = termPairToIc;
         this.diseaseToPresentAnnotationCount = countPresentAnnotations(diseases);
         this.scoringMode = ScoringMode.ONE_SIDED;
     }
+
 
 
     private static Map<TermId, Integer> countPresentAnnotations(HpoDiseases diseases) {

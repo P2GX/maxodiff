@@ -2,6 +2,7 @@ package org.p2gx.maxodiff.core.analysis.refinement;
 
 import org.p2gx.maxodiff.core.analysis.HpoFrequency;
 import org.p2gx.maxodiff.core.analysis.RankedMaxoResult;
+import org.p2gx.maxodiff.core.analysis.SimpleTerm;
 import org.p2gx.maxodiff.core.diffdg.DifferentialDiagnosisEngine;
 import org.p2gx.maxodiff.core.model.DifferentialDiagnosis;
 import org.p2gx.maxodiff.core.model.PpktSample;
@@ -10,10 +11,7 @@ import org.p2gx.maxodiff.core.service.BiometadataService;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDisease;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 /**
  * Differential diagnosis results come from some source.
@@ -44,4 +42,11 @@ public interface DiffDiagRefiner {
                          List<DifferentialDiagnosis> initialDiagnoses,
                          DifferentialDiagnosisEngine engine,
                          Map<String, Set<String>> maxoToHpoTermIdMap);
+
+
+
+
+
+
+
 }

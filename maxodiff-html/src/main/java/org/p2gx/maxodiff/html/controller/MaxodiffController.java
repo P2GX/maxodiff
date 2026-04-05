@@ -1,7 +1,7 @@
 package org.p2gx.maxodiff.html.controller;
 
 import org.p2gx.maxodiff.core.analysis.*;
-import org.p2gx.maxodiff.core.analysis.refinement.BaseDiffDiagRefiner;
+import org.p2gx.maxodiff.core.analysis.refinement.DiffDiagRefinerImpl;
 import org.p2gx.maxodiff.core.analysis.refinement.DiffDiagRefiner;
 import org.p2gx.maxodiff.core.analysis.refinement.RefinementOptions;
 import org.p2gx.maxodiff.core.diffdg.DifferentialDiagnosisEngine;
@@ -11,9 +11,9 @@ import org.p2gx.maxodiff.core.model.PpktSample;
 import org.p2gx.maxodiff.core.model.RankMaxo;
 import org.p2gx.maxodiff.core.service.BiometadataService;
 import org.p2gx.maxodiff.html.results.tleaf.TleafResults;
-import org.p2gx.maxodiff.phenomizer.IcMicaData;
-import org.p2gx.maxodiff.phenomizer.PhenomizerDifferentialDiagnosisEngine;
-import org.p2gx.maxodiff.phenomizer.ScoringMode;
+import org.p2gx.maxodiff.core.phenomizer.IcMicaData;
+import org.p2gx.maxodiff.core.phenomizer.PhenomizerDifferentialDiagnosisEngine;
+import org.p2gx.maxodiff.core.phenomizer.ScoringMode;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDisease;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
 import org.monarchinitiative.phenol.ontology.data.Ontology;
@@ -106,7 +106,7 @@ public class MaxodiffController {
         model.addAttribute("differentialDiagnoses", differentialDiagnoses);
 
         // Maxodiff refiner
-        diffDiagRefiner = new BaseDiffDiagRefiner(hpoDiseases, hpoToMaxoIdMap, hpoToMaxoTermMap, hpo);
+        diffDiagRefiner = new DiffDiagRefinerImpl(hpoDiseases, hpoToMaxoIdMap, hpoToMaxoTermMap, hpo);
 
         // maxodiff analysis parameters: n diseases to use and n simulations to run
         Integer prevNDiseases = (Integer) model.getAttribute("nDiseases");

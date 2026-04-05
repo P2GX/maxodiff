@@ -1,4 +1,4 @@
-package org.p2gx.maxodiff.phenomizer;
+package org.p2gx.maxodiff.core.phenomizer;
 
 import java.time.LocalDate;
 

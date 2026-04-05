@@ -1,5 +1,6 @@
 package org.p2gx.maxodiff.core.model;
 
+import org.monarchinitiative.phenol.ontology.data.MinimalOntology;
 import org.p2gx.maxodiff.core.JpsChecker;
 import org.p2gx.maxodiff.core.ProgessBar;
 
@@ -28,7 +29,7 @@ public class RankMaxo {
     private final DifferentialDiagnosisEngine engine;
     double progress;
     RankMaxoProgress rankMaxoProgress;
-    private final Ontology ontology;
+    private final MinimalOntology ontology;
     private final List<DifferentialDiagnosis> allInitialDiagnoses;
     private final List<DifferentialDiagnosis> initialDiagnoses;
 
@@ -50,7 +51,7 @@ public class RankMaxo {
                     Map<String, Set<String>> maxoToHpoTermIdMap,
                     MaxoHpoTermProbabilities maxoHpoTermProbabilities,
                     DifferentialDiagnosisEngine engine,
-                    Ontology hpo,
+                    MinimalOntology hpo,
                     List<DifferentialDiagnosis> allInitialDiagnoses,
                     List<DifferentialDiagnosis> initialDiagnoses) {
         this.hpoToMaxoTermMap = hpoToMaxoTermMap;

@@ -1,7 +1,7 @@
 package org.p2gx.maxodiff.html.config;
 
 import org.p2gx.maxodiff.core.analysis.SimpleTerm;
-import org.p2gx.maxodiff.core.analysis.refinement.BaseDiffDiagRefiner;
+import org.p2gx.maxodiff.core.analysis.refinement.DiffDiagRefinerImpl;
 import org.p2gx.maxodiff.core.diffdg.DifferentialDiagnosisEngine;
 import org.p2gx.maxodiff.core.io.MaxoDxAnnots;
 import org.p2gx.maxodiff.config.MaxodiffDataException;
@@ -12,9 +12,9 @@ import org.p2gx.maxodiff.core.service.BiometadataService;
 import org.p2gx.maxodiff.core.service.BiometadataServiceImpl;
 import org.p2gx.maxodiff.html.service.DifferentialDiagnosisEngineService;
 import org.p2gx.maxodiff.html.service.DifferentialDiagnosisEngineServiceImpl;
-import org.p2gx.maxodiff.phenomizer.IcMicaData;
-import org.p2gx.maxodiff.phenomizer.IcMicaDictLoader;
-import org.p2gx.maxodiff.phenomizer.IcMicaDictMetadata;
+import org.p2gx.maxodiff.core.phenomizer.IcMicaData;
+import org.p2gx.maxodiff.core.phenomizer.IcMicaDictLoader;
+import org.p2gx.maxodiff.core.phenomizer.IcMicaDictMetadata;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
 import org.monarchinitiative.phenol.annotations.io.hpo.HpoDiseaseLoader;
 import org.monarchinitiative.phenol.annotations.io.hpo.HpoDiseaseLoaderOptions;
@@ -137,7 +137,7 @@ public class MaxodiffAutoConfiguration {
             Map<String, Set<String>> hpoToMaxoIdMap,
             Map<SimpleTerm, Set<SimpleTerm>> maxoAnnotsMap) {
 
-        return new BaseDiffDiagRefiner(hpoDiseases, hpoToMaxoIdMap, maxoAnnotsMap, hpo);
+        return new DiffDiagRefinerImpl(hpoDiseases, hpoToMaxoIdMap, maxoAnnotsMap, hpo);
     }
 
     @Bean

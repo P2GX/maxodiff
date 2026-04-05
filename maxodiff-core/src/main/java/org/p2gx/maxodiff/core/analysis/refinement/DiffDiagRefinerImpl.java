@@ -1,6 +1,7 @@
 package org.p2gx.maxodiff.core.analysis.refinement;
 
 
+import org.monarchinitiative.phenol.ontology.data.MinimalOntology;
 import org.p2gx.maxodiff.core.analysis.RankedMaxoResult;
 import org.p2gx.maxodiff.core.analysis.SimpleTerm;
 import org.p2gx.maxodiff.core.diffdg.DifferentialDiagnosisEngine;
@@ -18,17 +19,17 @@ import org.p2gx.maxodiff.core.model.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class BaseDiffDiagRefiner implements DiffDiagRefiner {
+public class DiffDiagRefinerImpl implements DiffDiagRefiner {
 
     private final HpoDiseases hpoDiseases;
     private final Map<String, Set<String>> fullHpoToMaxoTermIdMap;
     private final Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxoTermMap;
-    private final Ontology hpo;
+    private final MinimalOntology hpo;
 
-    public BaseDiffDiagRefiner(HpoDiseases hpoDiseases,
+    public DiffDiagRefinerImpl(HpoDiseases hpoDiseases,
                                Map<String, Set<String>> fullHpoToMaxoTermIdMap,
                                Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxoTermMap,
-                               Ontology hpo) {
+                               MinimalOntology hpo) {
         this.hpoDiseases = hpoDiseases;
         this.fullHpoToMaxoTermIdMap = fullHpoToMaxoTermIdMap;
         this.hpoToMaxoTermMap = hpoToMaxoTermMap;
