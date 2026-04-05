@@ -6,7 +6,7 @@ import org.p2gx.maxodiff.core.analysis.RankedMaxoResult;
 import org.p2gx.maxodiff.core.analysis.RankedOmimTerm;
 import org.p2gx.maxodiff.core.analysis.SimpleTerm;
 
-import org.p2gx.maxodiff.core.diffdg.DifferentialDiagnosisEngine;
+import org.p2gx.maxodiff.core.diffdg.DDxEngine;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDisease;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 import org.p2gx.maxodiff.core.analysis.refinement.DiffDiagRefiner;
@@ -23,12 +23,12 @@ import java.util.stream.Collectors;
 public class MaxodiffAnalysisRunner {
     private final static Logger LOGGER = LoggerFactory.getLogger(MaxoDiffAnalysisResultRow.class);
     private final MdContext mdContext;
-    private final DifferentialDiagnosisEngine engine;
+    private final DDxEngine engine;
     private final DiffDiagRefiner maxoDiffRefiner;
 
     public MaxodiffAnalysisRunner(
             MdContext mdContext,
-            DifferentialDiagnosisEngine engine,
+            DDxEngine engine,
             DiffDiagRefiner maxoDiffRefiner
     ) {
         this.mdContext = mdContext;
@@ -93,8 +93,7 @@ public class MaxodiffAnalysisRunner {
 
         return maxoDiffRefiner.run(sample,
                 initialDiagnosesIds,
-                rankMaxo,
-                ppktMaxoIds);
+                rankMaxo);
     }
 
 

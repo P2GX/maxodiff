@@ -16,32 +16,32 @@ import java.util.stream.Collectors;
 public class BiometadataServiceImpl implements BiometadataService {
 
     private final Map<String, String> maxoTermsMap;
-    private final Map<TermId, String> hpoTermsMap;
+    private final MinimalOntology ontology;
     private final Map<TermId, String> diseaseTermsMap;
 
     public static BiometadataServiceImpl of(MinimalOntology hpo, HpoDiseases hpoDiseases, Map<SimpleTerm, Set<SimpleTerm>> maxoAnnotsMap) {
-        Map<TermId, String> hpoToLabel = hpo.getTerms().stream().collect(Collectors.toMap(Term::id, Term::getName));
         Map<TermId, String> diseaseToLabel = hpoDiseases.hpoDiseases().collect(Collectors.toMap(HpoDisease::id, HpoDisease::diseaseName));
         // Note, we assume that there are no MAxO terms with identical ids but different labels.
         Map<String, String> maxoTermsMap = maxoAnnotsMap.values().stream()
                 .flatMap(Collection::stream).distinct()
                 .collect(Collectors.toMap(SimpleTerm::termId, SimpleTerm::termLabel));
-        return new BiometadataServiceImpl(maxoTermsMap, hpoToLabel, diseaseToLabel);
+        return new BiometadataServiceImpl(maxoTermsMap, hpo, diseaseToLabel);
     }
 
     public BiometadataServiceImpl(Map<String, String> maxoTermsMap,
-                                  Map<TermId, String> hpoTermsMap,
+                                  MinimalOntology hpo,
                                   Map<TermId, String> diseaseTermsMap) {
 
         this.maxoTermsMap = maxoTermsMap;
-        this.hpoTermsMap = hpoTermsMap;
+        this.ontology = hpo;
         this.diseaseTermsMap = diseaseTermsMap;
     }
 
 
     @Override
     public Optional<String> hpoLabel(TermId termId) {
-        return Optional.ofNullable(hpoTermsMap.get(termId));
+        Optional<Term> opt = this.ontology.termForTermId(termId);
+        return opt.map(Term::getName);
     }
 
     @Override

@@ -33,8 +33,6 @@ public class PoissonSampler {
     }
 
     public static void main(String[] args) {
-        PoissonSampler sampler = new PoissonSampler();
-
         double mean = 3.2;
         for (int i = 0; i < 20; i++) {
             int sample = PoissonSampler.sample(mean);

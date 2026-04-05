@@ -4,7 +4,7 @@ package org.p2gx.maxodiff.core.analysis.refinement;
 import org.monarchinitiative.phenol.ontology.data.MinimalOntology;
 import org.p2gx.maxodiff.core.analysis.RankedMaxoResult;
 import org.p2gx.maxodiff.core.analysis.SimpleTerm;
-import org.p2gx.maxodiff.core.diffdg.DifferentialDiagnosisEngine;
+import org.p2gx.maxodiff.core.diffdg.DDxEngine;
 
 import org.p2gx.maxodiff.core.io.MdContext;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDisease;
@@ -67,14 +67,13 @@ public class DiffDiagRefinerImpl implements DiffDiagRefiner {
     @Override
     public List<RankedMaxoResult> run(PhenopacketData sample,
                                       Set<TermId> initialDiagnosesIds,
-                                      RankMaxo rankMaxo,
-                                      List<TermId> ppktMaxoIds) throws Exception {
+                                      RankMaxo rankMaxo) throws Exception {
         return rankMaxo.rankMaxoTerms(sample, initialDiagnosesIds,  context);
     }
 
     public RankMaxo getRankMaxo(List<DifferentialDiagnosis> allInitialDiagnoses,
                                 List<DifferentialDiagnosis> initialDiagnoses,
-                                 DifferentialDiagnosisEngine engine,
+                                 DDxEngine engine,
                                 Map<String, Set<String>> maxoToHpoTermIdMap) {
 
         DiseaseModelProbability diseaseModelProbability = DiseaseModelProbability.ranked(initialDiagnoses);

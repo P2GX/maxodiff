@@ -2,11 +2,14 @@ package org.p2gx.maxodiff.html.config;
 
 import org.p2gx.maxodiff.core.analysis.SimpleTerm;
 import org.p2gx.maxodiff.core.analysis.refinement.DiffDiagRefinerImpl;
-import org.p2gx.maxodiff.core.diffdg.DifferentialDiagnosisEngine;
+import org.p2gx.maxodiff.core.diffdg.DDxEngine;
 import org.p2gx.maxodiff.core.io.MaxoDxAnnots;
 import org.p2gx.maxodiff.config.MaxodiffDataException;
 import org.p2gx.maxodiff.core.analysis.refinement.DiffDiagRefiner;
 import org.p2gx.maxodiff.config.MaxodiffDataResolver;
+import org.p2gx.maxodiff.core.io.MdContext;
+import org.p2gx.maxodiff.core.io.MdParams;
+import org.p2gx.maxodiff.core.io.MdResources;
 import org.p2gx.maxodiff.core.model.GeneralMaxoTerms;
 import org.p2gx.maxodiff.core.service.BiometadataService;
 import org.p2gx.maxodiff.core.service.BiometadataServiceImpl;
@@ -130,6 +133,18 @@ public class MaxodiffAutoConfiguration {
     }
 
     @Bean
+    public MdContext mdContext(MinimalOntology hpo,
+                               HpoDiseases hpoDiseases,
+                               Map<SimpleTerm, Set<SimpleTerm>> maxoAnnotsMap,
+                               IcMicaData icMicaData) {
+        MdParams params = MdParams.defaultParams();
+        MdResources resources = new MdResources(hpo, hpoDiseases, maxoAnnotsMap, icMicaData);
+        BiometadataService biometadataService = BiometadataServiceImpl.of(hpo, hpoDiseases, maxoAnnotsMap);
+        return new MdContext(resources, params, biometadataService);
+    }
+
+
+    @Bean
     public DiffDiagRefiner diffDiagRefiner(
             MinimalOntology minHpo,
             Ontology hpo,
@@ -142,7 +157,7 @@ public class MaxodiffAutoConfiguration {
 
     @Bean
     public DifferentialDiagnosisEngineService differentialDiagnosisEngineService() {
-        Map<String, DifferentialDiagnosisEngine> engines = Map.of();
+        Map<String, DDxEngine> engines = Map.of();
         return DifferentialDiagnosisEngineServiceImpl.of(engines);
     }
 }

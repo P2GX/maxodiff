@@ -12,7 +12,7 @@ import java.util.List;
  * The differential diagnosis engine represents a way for performing a differential diagnosis 
  * for a provided {@link PpktSample}, where signs and symptoms are encoded into terms of Human Phenotype Ontology.
  */
-public interface DifferentialDiagnosisEngine {
+public interface DDxEngine {
 
     /**
      * Run the differential diagnosis on the provided <code>sample</code>.

@@ -1,6 +1,6 @@
 package org.p2gx.maxodiff.core.analysis;
 
-import org.p2gx.maxodiff.core.diffdg.DifferentialDiagnosisEngine;
+import org.p2gx.maxodiff.core.diffdg.DDxEngine;
 import org.p2gx.maxodiff.core.model.*;
 import org.p2gx.maxodiff.core.service.BiometadataService;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDisease;
@@ -20,7 +20,7 @@ public class MaxoTermEvaluator implements Callable<RankedMaxoResult> {
     private final MaxoHpoDiseaseRank maxoHpoDiseaseRank;
     private final int nRepetitions;
     private final PhenopacketData ppkt;
-    private final DifferentialDiagnosisEngine engine;
+    private final DDxEngine engine;
     private final MaxoHpoTermProbabilities maxoHpoTermProbabilities;
     private final Set<TermId> diseaseIds;
     private final List<DifferentialDiagnosis> initialDiagnoses;
@@ -30,7 +30,7 @@ public class MaxoTermEvaluator implements Callable<RankedMaxoResult> {
             MaxoHpoDiseaseRank maxoHpoDiseaseRank,
             int nRepetitions,
             PhenopacketData ppkt,
-            DifferentialDiagnosisEngine engine,
+            DDxEngine engine,
             MaxoHpoTermProbabilities maxoHpoTermProbabilities,
             List<DifferentialDiagnosis> initialDiagnoses,
             Set<TermId> diseaseIds, BiometadataService biometadataService) {

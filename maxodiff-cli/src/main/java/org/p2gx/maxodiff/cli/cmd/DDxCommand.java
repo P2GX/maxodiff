@@ -10,11 +10,11 @@ import org.p2gx.maxodiff.core.analysis.HTMLFrequencyMap;
 import org.p2gx.maxodiff.core.analysis.MdMetadata;
 import org.p2gx.maxodiff.core.analysis.RankedMaxoResult;
 import org.p2gx.maxodiff.core.analysis.refinement.DiffDiagRefiner;
-import org.p2gx.maxodiff.core.diffdg.DifferentialDiagnosisEngine;
+import org.p2gx.maxodiff.core.diffdg.DDxEngine;
 import org.p2gx.maxodiff.core.io.JsonWriter;
 import org.p2gx.maxodiff.core.model.PhenopacketData;
 import org.p2gx.maxodiff.html.results.tleaf.TleafResults;
-import org.p2gx.maxodiff.core.phenomizer.PhenomizerDifferentialDiagnosisEngine;
+import org.p2gx.maxodiff.core.phenomizer.PhenomizerDDxEngine;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import picocli.CommandLine;
@@ -95,7 +95,7 @@ public class DDxCommand extends BaseCommand {
         LOGGER.info("{}", context);
         try {
             DiffDiagRefiner maxoDiffRefiner = context.createRefiner();
-            DifferentialDiagnosisEngine engine = new PhenomizerDifferentialDiagnosisEngine(context);
+            DDxEngine engine = new PhenomizerDDxEngine(context);
             PhenopacketData phenopacketData = PhenopacketData.readPhenopacketData(phenopacketPath);
             MaxodiffAnalysisRunner runner = new MaxodiffAnalysisRunner(
                     context,

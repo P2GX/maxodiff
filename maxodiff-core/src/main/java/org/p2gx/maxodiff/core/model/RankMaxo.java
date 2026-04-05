@@ -4,7 +4,7 @@ import org.monarchinitiative.phenol.ontology.data.MinimalOntology;
 import org.p2gx.maxodiff.core.JpsChecker;
 import org.p2gx.maxodiff.core.ProgessBar;
 
-import org.p2gx.maxodiff.core.diffdg.DifferentialDiagnosisEngine;
+import org.p2gx.maxodiff.core.diffdg.DDxEngine;
 import org.p2gx.maxodiff.core.io.MdContext;
 import org.p2gx.maxodiff.core.service.BiometadataService;
 import org.monarchinitiative.phenol.ontology.data.TermId;
@@ -24,7 +24,7 @@ public class RankMaxo {
     private final static Logger LOGGER = LoggerFactory.getLogger(RankMaxo.class);
     private final Map<String, Set<String>> maxoToHpoTermIdMap;
     private final MaxoHpoTermProbabilities maxoHpoTermProbabilities;
-    private final DifferentialDiagnosisEngine engine;
+    private final DDxEngine engine;
     double progress;
     RankMaxoProgress rankMaxoProgress;
     private final List<DifferentialDiagnosis> allInitialDiagnoses;
@@ -47,7 +47,7 @@ public class RankMaxo {
     public RankMaxo(Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxoTermMap,
                     Map<String, Set<String>> maxoToHpoTermIdMap,
                     MaxoHpoTermProbabilities maxoHpoTermProbabilities,
-                    DifferentialDiagnosisEngine engine,
+                    DDxEngine engine,
                     MinimalOntology hpo,
                     List<DifferentialDiagnosis> allInitialDiagnoses,
                     List<DifferentialDiagnosis> initialDiagnoses) {

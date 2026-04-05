@@ -3,7 +3,7 @@ package org.p2gx.maxodiff.core.diffdg;
 import org.p2gx.maxodiff.core.MaxodiffRuntimeException;
 
 /**
- * An exception thrown for issues encountered by {@link DifferentialDiagnosisEngine}.
+ * An exception thrown for issues encountered by {@link DDxEngine}.
  */
 public class DifferentialDiagnosisEngineException extends MaxodiffRuntimeException {
 

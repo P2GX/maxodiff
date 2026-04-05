@@ -1,7 +1,7 @@
 package org.p2gx.maxodiff.core.phenomizer;
 
 import org.p2gx.maxodiff.core.io.MdContext;
-import org.p2gx.maxodiff.core.diffdg.DifferentialDiagnosisEngine;
+import org.p2gx.maxodiff.core.diffdg.DDxEngine;
 import org.p2gx.maxodiff.core.model.DifferentialDiagnosis;
 import org.p2gx.maxodiff.core.model.PhenopacketData;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDisease;
@@ -13,21 +13,21 @@ import org.monarchinitiative.phenol.ontology.similarity.TermPair;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class PhenomizerDifferentialDiagnosisEngine implements DifferentialDiagnosisEngine {
+public class PhenomizerDDxEngine implements DDxEngine {
 
     private final HpoDiseases diseases;
     private final Map<TermPair, Double> termPairToIc;
     private final Map<TermId, Integer> diseaseToPresentAnnotationCount;
     private final ScoringMode scoringMode;
 
-    public PhenomizerDifferentialDiagnosisEngine(MdContext context) {
+    public PhenomizerDDxEngine(MdContext context) {
         this.diseases = context.resources().hpoDiseases();
         this.termPairToIc = context.resources().icMicaData().icMicaDict();
         this.diseaseToPresentAnnotationCount = countPresentAnnotations(diseases);
         this.scoringMode = ScoringMode.ONE_SIDED;
     }
 
-    public PhenomizerDifferentialDiagnosisEngine(HpoDiseases diseases, Map<TermPair, Double> termPairToIc) {
+    public PhenomizerDDxEngine(HpoDiseases diseases, Map<TermPair, Double> termPairToIc) {
         this.diseases = diseases;
         this.termPairToIc = termPairToIc;
         this.diseaseToPresentAnnotationCount = countPresentAnnotations(diseases);

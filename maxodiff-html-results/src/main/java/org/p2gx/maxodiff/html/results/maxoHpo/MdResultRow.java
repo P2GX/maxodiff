@@ -38,12 +38,11 @@ public class MdResultRow {
             for (CountedHpoTerm hpoTerm : result.hpoTermIds()) {
                 String hpoId = hpoTerm.hpoTerm().termId();
                 int ct = hpoTerm.count();
-                float mica = 0f;
                 Optional<HpoFrequency> hpoFrequencyOpt = hpoFrequenciesMica.stream()
                     .filter(hpoFrequency ->
                         (hpoFrequency.omimId().equals(omimId) && hpoFrequency.hpoId().equals(hpoId)))
                     .findFirst();
-                mica = hpoFrequencyOpt.map(HpoFrequency::mica).orElseGet(() -> htmlFrequencyMap.micaForDisease(TermId.of(hpoId), TermId.of(omimId)));
+                float mica = hpoFrequencyOpt.map(HpoFrequency::mica).orElseGet(() -> htmlFrequencyMap.micaForDisease(TermId.of(hpoId), TermId.of(omimId)));
                 float maxMica = 8.343077871169383f;
                 double opacity = mica / maxMica;
                 cells.add(new HpoTableCell(ct, opacity, mica));
