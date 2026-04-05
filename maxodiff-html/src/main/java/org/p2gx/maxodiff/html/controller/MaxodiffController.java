@@ -50,7 +50,7 @@ public class MaxodiffController {
 
     private RankMaxo rankMaxo;
 
-    private PpktSample sample;
+    private PhenopacketData sample;
 
     private List<TermId> ppktMaxoIds;
 
@@ -97,7 +97,7 @@ public class MaxodiffController {
         phenomizerDifferentialDxEngine = new PhenomizerDifferentialDiagnosisEngine(hpoDiseases, icMicaDict);
         model.addAttribute("icMicaDict", icMicaDict);
 
-        if (sample != null && sample.id() != null) {
+        if (sample != null && sample.sampleId() != null) {
             // Get initial differential diagnoses from running Phenomizer
             differentialDiagnoses = phenomizerDifferentialDxEngine.run(sample);
         }
@@ -170,11 +170,11 @@ public class MaxodiffController {
 
 
             // Write final results to HTML
-            MdMetadata mdMetadata = new MdMetadata(sample.id(),
+            MdMetadata mdMetadata = new MdMetadata(sample.sampleId(),
                     nDiseases,
                     nRepetitions,
-                    sample.observedHpoTerms(),
-                    sample.excludedHpoTerms(),
+                    sample.getObservedHpoSimpleTerms(),
+                    sample.getExcludedHpoSimpleTerms(),
                     resultsList);
 
             HTMLFrequencyMap htmlFrequencyMap = new HTMLFrequencyMap(hpoDiseases, icMicaData.icMicaDict());
@@ -187,7 +187,7 @@ public class MaxodiffController {
     }
 
     /** This is a flag indicating that the next step is to run the MAxOdiff analysis */
-    private boolean shouldMaxoAnalysisBeRun(PpktSample ppktSample, List<DifferentialDiagnosis> differentialDiagnoses, Integer nDiseases, Integer nRepetitions) {
+    private boolean shouldMaxoAnalysisBeRun(PhenopacketData ppktSample, List<DifferentialDiagnosis> differentialDiagnoses, Integer nDiseases, Integer nRepetitions) {
         return ppktSample != null && differentialDiagnoses != null && !differentialDiagnoses.isEmpty() && nDiseases != null && nRepetitions != null;
     }
 
@@ -204,7 +204,7 @@ public class MaxodiffController {
 
 
 //    @GetMapping("/updateSample")
-    public PpktSample updateSample(@ModelAttribute(value = "id") String sampleId,
+    public PhenopacketData updateSample(@ModelAttribute(value = "id") String sampleId,
                              @ModelAttribute(value = "observedHpoTermIds") List<TermId> observedHpoTermIds,
                              @ModelAttribute(value = "excludedHpoTermIds") List<TermId> excludedHpoTermIds,
                              Model model) {
@@ -219,7 +219,7 @@ public class MaxodiffController {
                     observedSampleTerms.add(new SimpleTerm(tid.getValue(), biometadataService.hpoLabel(tid).orElse("n/a"))));
             excludedHpoTermIds.forEach(tid ->
                     excludedSampleTerms.add(new SimpleTerm(tid.getValue(), biometadataService.hpoLabel(tid).orElse("n/a"))));
-            this.sample = new PpktSample(sampleId, observedSampleTerms, excludedSampleTerms);
+            this.sample = PhenopacketData.fromSimpleTerms(sampleId, observedSampleTerms, excludedSampleTerms);
 
 //            System.out.println("updateSample sample = " + sample);
 
@@ -257,16 +257,16 @@ public class MaxodiffController {
             result.put("observedHpoTermIds", observedHpoTermIds);
             result.put("excludedHpoTermIds", excludedHpoTermIds);
 
-            PpktSample ppktSample = updateSample(sampleId, observedHpoTermIds, excludedHpoTermIds, model);
+            PhenopacketData ppktSample = updateSample(sampleId, observedHpoTermIds, excludedHpoTermIds, model);
 
             model.addAttribute("sample", ppktSample);
 
             Map<TermId, String> sampleObservedTermsMap = new HashMap<>();
-            ppktSample.observedHpoTerms().forEach(tid ->
-                    sampleObservedTermsMap.put(TermId.of(tid.termId()), tid.termLabel()));
+            ppktSample.observed().forEach(st ->
+                    sampleObservedTermsMap.put(st.tid(), st.label()));
             Map<TermId, String> sampleExcludedTermsMap = new HashMap<>();
-            ppktSample.excludedHpoTerms().forEach(tid ->
-                    sampleExcludedTermsMap.put(TermId.of(tid.termId()), tid.termLabel()));
+            ppktSample.excluded().forEach(st ->
+                    sampleExcludedTermsMap.put(st.tid(), st.label()));
 
             result.put("observedHpoTerms", sampleObservedTermsMap);
             result.put("excludedHpoTerms", sampleExcludedTermsMap);

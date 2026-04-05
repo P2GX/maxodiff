@@ -2,7 +2,6 @@ package org.p2gx.maxodiff.cli.cmd;
 
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
-import org.monarchinitiative.phenol.ontology.data.TermId;
 import org.p2gx.maxodiff.core.io.MdContext;
 import org.p2gx.maxodiff.core.io.impl.MdContextBuilder;
 import org.p2gx.maxodiff.core.MaxoDiffAnalysisResultRow;
@@ -10,13 +9,10 @@ import org.p2gx.maxodiff.core.MaxodiffAnalysisRunner;
 import org.p2gx.maxodiff.core.analysis.HTMLFrequencyMap;
 import org.p2gx.maxodiff.core.analysis.MdMetadata;
 import org.p2gx.maxodiff.core.analysis.RankedMaxoResult;
-import org.p2gx.maxodiff.core.analysis.SimpleTerm;
 import org.p2gx.maxodiff.core.analysis.refinement.DiffDiagRefiner;
 import org.p2gx.maxodiff.core.diffdg.DifferentialDiagnosisEngine;
 import org.p2gx.maxodiff.core.io.JsonWriter;
 import org.p2gx.maxodiff.core.model.PhenopacketData;
-import org.p2gx.maxodiff.core.model.PpktSample;
-import org.p2gx.maxodiff.core.service.BiometadataService;
 import org.p2gx.maxodiff.html.results.tleaf.TleafResults;
 import org.p2gx.maxodiff.core.phenomizer.PhenomizerDifferentialDiagnosisEngine;
 import org.slf4j.Logger;
@@ -29,7 +25,6 @@ import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.util.ArrayList;
 import java.util.List;
 import java.util.zip.GZIPOutputStream;
 
@@ -112,6 +107,7 @@ public class DDxCommand extends BaseCommand {
             } else {
                 List<RankedMaxoResult> resultsList = runner.analyzeSample(phenopacketData);
                 if (resultsList.isEmpty()) {
+                    // should never happen...
                     System.err.println("No results found for phenopacket: " + phenopacketPath);
                     return 1;
                 }

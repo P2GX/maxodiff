@@ -160,14 +160,14 @@ public class BenchmarkingCommand extends DDxCommand {
         try {
             PpktSample ppktSample = getPpktSample(ppktPath);
             PhenopacketData ppktData = PhenopacketData.readPhenopacketData(phenopacketPath);
-            BaseBenchmarker benchmarker = new BaseBenchmarker(ppktSample,
+            BaseBenchmarker benchmarker = new BaseBenchmarker(ppktData,
                     ppktData.maxoProcedureIds(),
                     refinementOptions,
                     this.phenomizer,
                     this.hpoDiseases,
                     maxodiffPropsConfiguration,
                     refiner);
-            String ppktId = benchmarker.getSample().id();
+            String ppktId = benchmarker.getSample().sampleId();
             List<RankedMaxoResult> initialResults = benchmarker.standardRun(maxodiffPropsConfiguration.biometadataService());
             for (int i = 0; i < nDiseases; i++) {
                 List<RankedMaxoResult> randomizedResults = benchmarker.spikedRandomizer(i, maxodiffPropsConfiguration.biometadataService());
@@ -185,16 +185,16 @@ public class BenchmarkingCommand extends DDxCommand {
     private List<BenchmarkResult> runShuffleOnePPkt(Path ppktPath, Map<String, Double> termToIcMap) {
         List<BenchmarkResult> resultList = new ArrayList<>();
         try {
-            PpktSample ppktSample = getPpktSample(ppktPath);
+            //PpktSample ppktSample = getPpktSample(ppktPath);
             PhenopacketData ppktData = PhenopacketData.readPhenopacketData(phenopacketPath);
-            BaseBenchmarker benchmarker = new BaseBenchmarker(ppktSample,
+            BaseBenchmarker benchmarker = new BaseBenchmarker(ppktData,
                     ppktData.maxoProcedureIds(),
                     refinementOptions,
                     this.phenomizer,
                     this.hpoDiseases,
                     maxodiffPropsConfiguration,
                     refiner);
-            String ppktId = benchmarker.getSample().id();
+            String ppktId = benchmarker.getSample().sampleId();
             List<RankedMaxoResult> initialResults = benchmarker.standardRun(maxodiffPropsConfiguration.biometadataService());
             String topMaxo = initialResults.getFirst().maxoTerm().termId();
             List<Double> topRandomScores = new ArrayList<>();

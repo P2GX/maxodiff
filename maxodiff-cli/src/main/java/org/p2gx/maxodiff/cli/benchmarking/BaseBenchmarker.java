@@ -23,7 +23,7 @@ import java.util.stream.Collectors;
 public class BaseBenchmarker {
     private static final Logger LOGGER = LoggerFactory.getLogger(BaseBenchmarker.class);
 
-    private final PpktSample sample;
+    private final PhenopacketData sample;
     private final int nDiseases;
     private final int nRepetitions;
     private final DifferentialDiagnosisEngine phenomizer;
@@ -41,11 +41,11 @@ public class BaseBenchmarker {
     private final List<DifferentialDiagnosis> completeInitialDiffDiagList;
     private final MaxoHpoTermProbabilities maxoHpoTermProbabilities;
 
-    public PpktSample getSample() {
+    public PhenopacketData getSample() {
         return sample;
     }
 
-    public BaseBenchmarker(PpktSample sample,
+    public BaseBenchmarker(PhenopacketData sample,
                            List<TermId> ppktMaxoIds,
                            RefinementOptions refinementOptions,
                            DifferentialDiagnosisEngine phenomizer,
@@ -80,7 +80,7 @@ public class BaseBenchmarker {
 
     /*** @return List with top initial (i.e., before Maxodiff) {@code nDiseases} differential diagnoses using Phenomizer */
     private List<DifferentialDiagnosis> determineInitialDiagnoses() {
-        LOGGER.info(String.valueOf(sample.id()));
+        LOGGER.info(String.valueOf(sample.sampleId()));
         LOGGER.info("nDiseases = {}", nDiseases);
         List<DifferentialDiagnosis> differentialDiagnoses = phenomizer.run(sample);
 //        differentialDiagnoses.sort(Comparator.comparingDouble(DifferentialDiagnosis::score).reversed());
@@ -97,7 +97,7 @@ public class BaseBenchmarker {
 
     public List<RankedMaxoResult> standardRun(BiometadataService biometadataService) throws Exception {
         RefinementOptions options = RefinementOptions.of(nDiseases, nRepetitions);
-        LOGGER.info("sample = {}, n Diseases = {}, n Repetitions = {}", this.sample.id(), nDiseases, nRepetitions);
+        LOGGER.info("sample = {}, n Diseases = {}, n Repetitions = {}", this.sample.sampleId(), nDiseases, nRepetitions);
         List<DifferentialDiagnosis> topNinitialDiffDiagList = getTopNInitialDiffDiagList();
         Set<TermId> topNInitialDiagnosesIds = topNinitialDiffDiagList.stream()
                 .map(DifferentialDiagnosis::diseaseId)

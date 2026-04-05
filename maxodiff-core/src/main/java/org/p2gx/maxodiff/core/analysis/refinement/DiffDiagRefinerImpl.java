@@ -7,10 +7,8 @@ import org.p2gx.maxodiff.core.analysis.SimpleTerm;
 import org.p2gx.maxodiff.core.diffdg.DifferentialDiagnosisEngine;
 
 import org.p2gx.maxodiff.core.io.MdContext;
-import org.p2gx.maxodiff.core.service.BiometadataService;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDisease;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
-import org.monarchinitiative.phenol.ontology.data.Ontology;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 
 import org.p2gx.maxodiff.core.analysis.HpoFrequency;
@@ -67,14 +65,11 @@ public class DiffDiagRefinerImpl implements DiffDiagRefiner {
 
 
     @Override
-    public List<RankedMaxoResult> run(PpktSample sample,
-                                         Set<TermId> initialDiagnosesIds,
-                                         RankMaxo rankMaxo,
+    public List<RankedMaxoResult> run(PhenopacketData sample,
+                                      Set<TermId> initialDiagnosesIds,
+                                      RankMaxo rankMaxo,
                                       List<TermId> ppktMaxoIds) throws Exception {
-
-
-        return rankMaxo.rankMaxoTerms(sample, context.params().nRepetitions(),
-                initialDiagnosesIds, context.biometadataService(), ppktMaxoIds);
+        return rankMaxo.rankMaxoTerms(sample, initialDiagnosesIds,  context);
     }
 
     public RankMaxo getRankMaxo(List<DifferentialDiagnosis> allInitialDiagnoses,

@@ -1,10 +1,7 @@
 package org.p2gx.maxodiff.core.analysis;
 
 import org.p2gx.maxodiff.core.diffdg.DifferentialDiagnosisEngine;
-import org.p2gx.maxodiff.core.model.DifferentialDiagnosis;
-import org.p2gx.maxodiff.core.model.MaxoHpoDiseaseRank;
-import org.p2gx.maxodiff.core.model.MaxoHpoTermProbabilities;
-import org.p2gx.maxodiff.core.model.PpktSample;
+import org.p2gx.maxodiff.core.model.*;
 import org.p2gx.maxodiff.core.service.BiometadataService;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDisease;
 import org.monarchinitiative.phenol.ontology.data.TermId;
@@ -22,7 +19,7 @@ public class MaxoTermEvaluator implements Callable<RankedMaxoResult> {
 
     private final MaxoHpoDiseaseRank maxoHpoDiseaseRank;
     private final int nRepetitions;
-    private final PpktSample ppkt;
+    private final PhenopacketData ppkt;
     private final DifferentialDiagnosisEngine engine;
     private final MaxoHpoTermProbabilities maxoHpoTermProbabilities;
     private final Set<TermId> diseaseIds;
@@ -32,7 +29,7 @@ public class MaxoTermEvaluator implements Callable<RankedMaxoResult> {
     public MaxoTermEvaluator(
             MaxoHpoDiseaseRank maxoHpoDiseaseRank,
             int nRepetitions,
-            PpktSample ppkt,
+            PhenopacketData ppkt,
             DifferentialDiagnosisEngine engine,
             MaxoHpoTermProbabilities maxoHpoTermProbabilities,
             List<DifferentialDiagnosis> initialDiagnoses,
@@ -69,7 +66,7 @@ public class MaxoTermEvaluator implements Callable<RankedMaxoResult> {
 //            simulatedHpoIdSet = new HashSet<>(selectKWeightedHpoTerms(hpoIds, probabilities, nHpos));
             simulatedHpoIdSet.forEach(hpoTerm -> simulatedHpoCountSet.merge(hpoTerm.termId(), 1, Integer::sum));
 
-            PpktSample newSample = getNewSample(ppkt, simulatedHpoIdSet);
+            PhenopacketData newSample = getNewSample(ppkt, simulatedHpoIdSet);
             List<DifferentialDiagnosis> newMaxoDiagnoses = engine.run(newSample, diseaseIds);
             newMaxoDiagnosesList.add(newMaxoDiagnoses);
 
@@ -128,11 +125,14 @@ public class MaxoTermEvaluator implements Callable<RankedMaxoResult> {
      * @param observed A Set of simulated new observed HPO terms
      * @return The modified (simulated) phenopacket Sample.
      */
-    private PpktSample getNewSample(PpktSample ppkt, Set<SimpleTerm> observed) {
-        Set<SimpleTerm> ppktObserved = new HashSet<>(ppkt.observedHpoTerms());
-        Set<SimpleTerm> combinedObserved = Stream.concat(ppktObserved.stream(), observed.stream()).collect(Collectors.toSet());
-
-        return new PpktSample(ppkt.id(), combinedObserved.stream().toList(), ppkt.excludedHpoTerms());
+    private PhenopacketData getNewSample(PhenopacketData ppkt, Set<SimpleTerm> observed) {
+        List<MySimpleTerm> newObservedHpos = Stream.concat(
+                        ppkt.observed().stream(),
+                        observed.stream().map(st -> new MySimpleTerm(TermId.of(st.termId()), st.termLabel()))
+                )
+                .distinct() // Ensures uniqueness
+                .toList();
+        return new PhenopacketData(ppkt.sampleId(), newObservedHpos, ppkt.excluded(), ppkt.diseaseIds(), ppkt.maxoProcedureIds(),false);
     }
 
 

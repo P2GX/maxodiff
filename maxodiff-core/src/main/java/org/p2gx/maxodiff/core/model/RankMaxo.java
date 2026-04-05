@@ -5,8 +5,8 @@ import org.p2gx.maxodiff.core.JpsChecker;
 import org.p2gx.maxodiff.core.ProgessBar;
 
 import org.p2gx.maxodiff.core.diffdg.DifferentialDiagnosisEngine;
+import org.p2gx.maxodiff.core.io.MdContext;
 import org.p2gx.maxodiff.core.service.BiometadataService;
-import org.monarchinitiative.phenol.ontology.data.Ontology;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 import org.p2gx.maxodiff.core.analysis.MaxoTermEvaluator;
 import org.p2gx.maxodiff.core.analysis.RankMaxoProgress;
@@ -66,18 +66,17 @@ public class RankMaxo {
     /**
      *
      * @param ppkt Input phenopacket with present and excluded HPO terms.
-     * @param nRepetitions number of times to calculate scores for each MAxO term.
      * @param diseaseIds Set of top n OMIM disease Ids to use for analysis.
      * @return Map of MAxO scores sorted in descending order by score
      */
-    public List<RankedMaxoResult> rankMaxoTerms(PpktSample ppkt, int nRepetitions,
-                                                Set<TermId> diseaseIds, BiometadataService biometadataService,
-                                                List<TermId> ppktMaxoIds) throws Exception {
+    public List<RankedMaxoResult> rankMaxoTerms(PhenopacketData ppkt,
+                                                Set<TermId> diseaseIds,
+                                                MdContext context) throws Exception {
 
-        Set<TermId> sampleHpoIds = new HashSet<>();
-        sampleHpoIds.addAll(ppkt.observedHpoTerms().stream().map(term -> TermId.of(term.termId())).collect(Collectors.toSet()));
-        sampleHpoIds.addAll(ppkt.excludedHpoTerms().stream().map(term -> TermId.of(term.termId())).collect(Collectors.toSet()));
-
+        int nRepetitions = context.params().nRepetitions();
+        BiometadataService biometadataService = context.biometadataService();
+        List<TermId> ppktMaxoIds = ppkt.maxoProcedureIds();
+        Set<TermId> sampleHpoIds = ppkt.allHpoTermIds();
         AscertainablePhenotypes ascertainablePhenotypes = new AscertainablePhenotypes(maxoHpoTermProbabilities.getHpoDiseases());
         Map<String, Set<String>> fullMaxoToHpoTermIdMap = maxoHpoTermProbabilities.getMaxoToHpoTermIdMap();
 
@@ -89,7 +88,7 @@ public class RankMaxo {
         ProgessBar pb = new ProgessBar(maxoIdx, maxoToHpoTermIdMap.size());
         for (String maxoId : maxoToHpoTermIdMap.keySet()) {
             if (ppktMaxoIds.contains(TermId.of(maxoId))) {
-                LOGGER.debug("Sample " + ppkt.id() + " already contains " + maxoId + ".");
+                LOGGER.debug("Sample " + ppkt.sampleId() + " already contains " + maxoId + ".");
                 continue;
             }
             MaxoHpoDiseaseRank maxoHpoDiseaseRank = MaxoHpoDiseaseRank.Builder.builder()
@@ -97,9 +96,9 @@ public class RankMaxo {
                     .ascertainablePhenotypes(ascertainablePhenotypes)
                     .maxoToHpoTermIdMap(fullMaxoToHpoTermIdMap)
                     .maxoId(maxoId)
-                    .sample(ppkt)
+                    .sample(ppkt.getPpktSample())
                     .nDiagnoses(500)
-                    .maxoLabel(biometadataService.maxoLabel(maxoId.toString()).get())
+                    .maxoLabel(biometadataService.maxoLabel(maxoId).get())
                     .build();
             rankMaxoProgress = new RankMaxoProgress(maxoToHpoTermIdMap.size());
             int finalMaxoIdx = maxoIdx;
