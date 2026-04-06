@@ -54,7 +54,7 @@ public class MaxoHpoTermProbabilities {
      * that MAxO term and the union of discoverable phenotypes for the diseases
      */
     public Set<String> getDiscoverableByMaxoHpoTerms(PpktSample ppkt, TermId maxoId, Map<String, Set<String>> maxoToHpoTermIdMap) {
-        Set<String> maxoAssociatedHpoIds = maxoToHpoTermIdMap.get(maxoId);
+        Set<String> maxoAssociatedHpoIds = maxoToHpoTermIdMap.get(maxoId.getValue());
         if (maxoAssociatedHpoIds != null) {
             Set<String> unionDiscoverablePhenotypes = getUnionOfDiscoverablePhenotypes(ppkt);
             maxoAssociatedHpoIds.retainAll(unionDiscoverablePhenotypes); //intersection
