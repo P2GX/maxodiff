@@ -14,36 +14,11 @@ public class HTMLFrequencyMap {
     private final Map<TermPair, Double> icMicaData;
 
     public HTMLFrequencyMap(
-            HpoDiseases diseases,
-            Map<TermPair, Double> icMicaData
-    ) {
-        this.diseases = diseases;
-        this.icMicaData = icMicaData;
-    }
-
-    public HTMLFrequencyMap(
            MdContext context
     ) {
         this.diseases = context.resources().hpoDiseases();
         this.icMicaData = context.resources().icMicaData().icMicaDict();
     }
-
-
-    /**
-     * Retrieve a flattened list of {@link HpoFrequency} records from the provided map.
-     *
-     * <p>Each {@link HpoFrequency} has an OMIM id, an HPO id, and a frequency..</p>
-     *
-     * @param hpoTermCounts a map where each key is an {@link TermId} and the value is a list of
-     *                      {@link HpoFrequency} objects associated with that term
-     * @return a combined list of all {@link HpoFrequency} objects across all HPO terms
-     */
-    public static List<HpoFrequency> getHpoFrequencies(Map<TermId, List<HpoFrequency>> hpoTermCounts) {
-        return hpoTermCounts.values().stream()
-                .flatMap(List::stream)
-                .toList();
-    }
-
 
 
 
@@ -70,43 +45,12 @@ public class HTMLFrequencyMap {
         return mica;
     }
 
-    public static Map<String, Map<Float, List<String>>> makeFrequencyDiseaseMap(Map<TermId, String> hpoIdToLabelMap,
-                                                                                Map<TermId, String> omimIdToLabelMap,
-                                                                                Map<TermId, Map<TermId, Integer>> hpoTermIdRepCtsMap,
-                                                                                List<HpoFrequency> hpoFrequencies) {
-
-        Map<String, Map<Float, List<String>>> frequencyMap = new HashMap<>();
-        for (Map.Entry<TermId, String> hpoMapEntry : hpoIdToLabelMap.entrySet()) {
-            var hpoId = hpoMapEntry.getKey();
-            var hpoLabel = hpoMapEntry.getValue();
-            Map<Float, List<String>> frequencyOmimMap = new HashMap<>();
-            for (Map.Entry<TermId, String> omimMapEntry : omimIdToLabelMap.entrySet()) {
-                var omimId = omimMapEntry.getKey();
-                var omimLabel = omimMapEntry.getValue();
-                var hpoRepCt = hpoTermIdRepCtsMap.get(omimId).get(hpoId);
-                if (hpoRepCt != null) {
-                    for (HpoFrequency freqRecord : hpoFrequencies) {
-                        var freqRecordOmimId = freqRecord.omimId();
-                        var freqRecordHpoId = freqRecord.hpoId();
-                        var frequency = freqRecord.frequency();
-                        if (freqRecordOmimId.equals(omimId.toString()) && freqRecordHpoId.equals(hpoId.toString()) && frequency > 0) {
-                            List<String> frequencyMapDiseaseList = new ArrayList<>();
-                            if (!frequencyOmimMap.containsKey(frequency)) {
-                                frequencyMapDiseaseList.add(omimLabel);
-                            } else {
-                                frequencyMapDiseaseList = frequencyOmimMap.get(frequency);
-                                frequencyMapDiseaseList.add(omimLabel);
-                            }
-                            frequencyOmimMap.put(frequency, frequencyMapDiseaseList);
-                        }
-                    }
-                }
-            }
-            if (!frequencyOmimMap.isEmpty()) {
-                frequencyMap.put(hpoLabel, frequencyOmimMap);
-            }
-        }
-
-        return frequencyMap;
+    public double maxMica() {
+        return icMicaData.entrySet().stream()
+                .filter(e -> !e.getValue().isInfinite())
+                .max(Map.Entry.comparingByValue())
+                .map(Map.Entry::getValue)
+                .orElse(Double.NaN);
     }
+
 }

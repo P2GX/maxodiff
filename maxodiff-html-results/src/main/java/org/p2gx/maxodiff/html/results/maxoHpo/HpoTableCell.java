@@ -4,11 +4,13 @@ public class HpoTableCell {
     private final int count;
     private final double opacity;
     private final float mica;
+    private final double maxMica;
 
-    public HpoTableCell(int count, double opacity, float mica) {
+    public HpoTableCell(int count, double opacity, float mica, double maxMica) {
         this.count = count;
         this.opacity = opacity;
         this.mica = mica;
+        this.maxMica = maxMica;
     }
 
     public String getCount() {
@@ -24,11 +26,14 @@ public class HpoTableCell {
         return mica;
     }
 
+    public double getMaxMica() {
+        return maxMica;
+    }
+
     /** This will be the color of the "square" in the HPO cell */
     public String getStyle() {
         if (count == 0) {
-            float maxMica = 8.343077871169383f;
-            float mica = getMica() / maxMica;
+            float mica = getMica() / (float) getMaxMica();
             return "rgba(65, 105, 255, " + mica + ")";
         }
         double opc = getOpacity();

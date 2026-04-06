@@ -40,9 +40,10 @@ public class MdHtmlResult {
             hpoFrequenciesMica.add(new HpoFrequency(omimId, hpoId, frequency, mica));
         }
 
+        double maxMica = htmlFrequencyMap.maxMica();
         repetitionRow = MdRepetitionRow.buildRepetitionRow(nRepetitions, result);
 
-        this.resultRows = MdResultRow.createMaxoResultRows(result, nDiseases, hpoFrequenciesMica, htmlFrequencyMap);
+        this.resultRows = MdResultRow.createMaxoResultRows(result, nDiseases, hpoFrequenciesMica, htmlFrequencyMap, maxMica);
     }
 
     public int index() {
