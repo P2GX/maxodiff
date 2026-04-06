@@ -5,6 +5,7 @@ import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseaseAnnotation
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 import org.monarchinitiative.phenol.ontology.similarity.TermPair;
+import org.p2gx.maxodiff.core.io.MdContext;
 
 import java.util.*;
 
@@ -18,6 +19,13 @@ public class HTMLFrequencyMap {
     ) {
         this.diseases = diseases;
         this.icMicaData = icMicaData;
+    }
+
+    public HTMLFrequencyMap(
+           MdContext context
+    ) {
+        this.diseases = context.resources().hpoDiseases();
+        this.icMicaData = context.resources().icMicaData().icMicaDict();
     }
 
 

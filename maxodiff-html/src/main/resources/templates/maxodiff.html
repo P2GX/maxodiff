@@ -142,13 +142,16 @@
     </style>
 </head>
 <body>
+<div th:if="${hasError}" class="alert alert-danger">
+    <p th:text="${errorMessage}">Default error text</p>
+    <a href="/upload-page" class="btn btn-primary">Go to Upload</a>
+</div>
 
-
-<div th:if="${showMDresults}">
+<div th:if="${showMDresults != null and showMDresults and !hasError}">
     <div th:utext="${htmlTemplateString}"></div>
 </div>
 
-<div th:unless="${showMDresults}">
+<div th:unless="${showMDresults != null and showMDresults and !hasError}">
     <div th:replace="~{maxodiffNavBar :: header}">...</div>
 
     <h1>Maxodiff Differential Diagnosis</h1>

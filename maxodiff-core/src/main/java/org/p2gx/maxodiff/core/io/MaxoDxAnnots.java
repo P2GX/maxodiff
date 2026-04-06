@@ -14,9 +14,8 @@ public class MaxoDxAnnots {
     private MaxoDxAnnots() {}
 
     /**
-     * @deprecated use {@link #parseMaxoToHpo(BufferedReader)} instead
+     * TODO DOCUMENT ME. THIS IS THE CORRECT METHOD BUT IT WAS LISTED AS DEPRECATED!
      */
-    @Deprecated
     public static Map<SimpleTerm, Set<SimpleTerm>> parseHpoToMaxo(BufferedReader reader) throws IOException {
         Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxo = new HashMap<>();
 
@@ -38,9 +37,8 @@ public class MaxoDxAnnots {
                 String maxoLabel = fields[4];
                 SimpleTerm mterm = new SimpleTerm(maxoId, maxoLabel);
                 hpoToMaxo.computeIfAbsent(hterm, whatever -> new HashSet<>()).add(mterm);
-            } else if (predicate.equals("is_prenatally_observable_through")) {
-                continue; // skip prenatal for this analysis
-            } else {
+            } else if (! predicate.equals("is_prenatally_observable_through")) {
+                // skip prenatal for current analysis
                 throw new RuntimeException(String.format("Did not recognize predicate %s", predicate));
             }
         }
@@ -69,13 +67,11 @@ public class MaxoDxAnnots {
                 String maxoLabel = fields[4];
                 SimpleTerm mterm = new SimpleTerm(maxoId, maxoLabel);
                 maxoToHpo.computeIfAbsent(mterm, whatever -> new HashSet<>()).add(hterm);
-            } else if (predicate.equals("is_prenatally_observable_through")) {
-                continue; // skip prenatal for this analysis
-            } else {
+            } else if (! predicate.equals("is_prenatally_observable_through")) {
+                // skip prenatal for this analysis
                 throw new RuntimeException(String.format("Did not recognize predicate %s", predicate));
             }
         }
-
         return maxoToHpo;
     }
 }

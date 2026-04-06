@@ -89,7 +89,7 @@ public class ExcludedPhenotypesTest {
          // HPO term in phenopacket can be ascertained by 2 Maxo terms (MAXO:0000671 and MAXO:0000691)
          // 4 total HPO terms can ascertained by both Maxo terms in toy example
          // 1 exists in phenopacket, so 3 excluded
-         assertEquals(0, excludedPhenotypeIds.size());
+         assertEquals(3, excludedPhenotypeIds.size());
      }
 
     public sealed interface TestOutcome {
@@ -108,10 +108,10 @@ public class ExcludedPhenotypesTest {
         return Stream.of(
                 new TestIndividual("46 year old female, infantile onset (1 term)",
                         getPPkt1(),
-                        new TestOutcome.Ok(0)),
+                        new TestOutcome.Ok(3)),
                 new TestIndividual("46 year old female, infantile onset (2 terms)",
                         getPPkt2(),
-                        new TestOutcome.Ok(0))//,
+                        new TestOutcome.Ok(3))//,
 //                new TestIndividual("No disease id",
 //                        getPPktEmptyDisease(),
 //                        new TestOutcome.Error(() -> new PhenolRuntimeException("No disease id found")))

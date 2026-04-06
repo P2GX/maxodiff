@@ -11,7 +11,7 @@ import org.monarchinitiative.phenol.ontology.data.MinimalOntology;
 import org.monarchinitiative.phenol.ontology.data.Ontology;
 
 
-import org.p2gx.maxodiff.core.analysis.refinement.BaseDiffDiagRefiner;
+import org.p2gx.maxodiff.core.analysis.refinement.DiffDiagRefinerImpl;
 import org.p2gx.maxodiff.core.analysis.refinement.DiffDiagRefiner;
 import org.p2gx.maxodiff.core.io.MaxoDxAnnots;
 import org.p2gx.maxodiff.core.model.GeneralMaxoTerms;
@@ -58,7 +58,7 @@ public record MaxodiffPropsConfiguration(
             maxoAnnotsMap.get(entry.getKey()).forEach(t -> maxoIds.add(t.termId()));
             hpoToMaxoIdMap.put(hpoId, maxoIds);
         }
-        return new BaseDiffDiagRefiner(hpoDiseases, hpoToMaxoIdMap, maxoAnnotsMap, hpo);
+        return new DiffDiagRefinerImpl(hpoDiseases, hpoToMaxoIdMap, maxoAnnotsMap, hpo);
 
     }
 }

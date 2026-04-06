@@ -1,14 +1,14 @@
 package org.p2gx.maxodiff.core.analysis.refinement;
 
 
+import org.monarchinitiative.phenol.ontology.data.MinimalOntology;
 import org.p2gx.maxodiff.core.analysis.RankedMaxoResult;
 import org.p2gx.maxodiff.core.analysis.SimpleTerm;
-import org.p2gx.maxodiff.core.diffdg.DifferentialDiagnosisEngine;
+import org.p2gx.maxodiff.core.diffdg.DDxEngine;
 
-import org.p2gx.maxodiff.core.service.BiometadataService;
+import org.p2gx.maxodiff.core.io.MdContext;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDisease;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
-import org.monarchinitiative.phenol.ontology.data.Ontology;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 
 import org.p2gx.maxodiff.core.analysis.HpoFrequency;
@@ -18,40 +18,62 @@ import org.p2gx.maxodiff.core.model.*;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class BaseDiffDiagRefiner implements DiffDiagRefiner {
+public class DiffDiagRefinerImpl implements DiffDiagRefiner {
 
     private final HpoDiseases hpoDiseases;
     private final Map<String, Set<String>> fullHpoToMaxoTermIdMap;
     private final Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxoTermMap;
-    private final Ontology hpo;
+    private final MinimalOntology hpo;
 
-    public BaseDiffDiagRefiner(HpoDiseases hpoDiseases,
+    private MdContext context;
+
+    public DiffDiagRefinerImpl(HpoDiseases hpoDiseases,
                                Map<String, Set<String>> fullHpoToMaxoTermIdMap,
                                Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxoTermMap,
-                               Ontology hpo) {
+                               MinimalOntology hpo) {
         this.hpoDiseases = hpoDiseases;
         this.fullHpoToMaxoTermIdMap = fullHpoToMaxoTermIdMap;
         this.hpoToMaxoTermMap = hpoToMaxoTermMap;
         this.hpo = hpo;
+        if (this.fullHpoToMaxoTermIdMap.isEmpty()) {
+            System.err.println("DiffDiagRefinerImpl is empty");
+            System.exit(1);
+        }
+        if (this.hpoToMaxoTermMap.isEmpty()) {
+            System.err.println("DiffDiagRefinerImpl is empty");
+            System.exit(1);
+        }
+    }
+
+    public DiffDiagRefinerImpl(MdContext context,
+                               Map<String, Set<String>> fullHpoToMaxoTermIdMap,
+                               Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxoTermMap) {
+        this.context = context;
+        this.hpo = context.resources().hpo();
+        this.hpoDiseases = context.resources().hpoDiseases();
+        this.fullHpoToMaxoTermIdMap = fullHpoToMaxoTermIdMap;
+        this.hpoToMaxoTermMap = hpoToMaxoTermMap;
+        if (this.fullHpoToMaxoTermIdMap.isEmpty()) {
+            System.err.println("DiffDiagRefinerImpl is empty");
+            System.exit(1);
+        }
+        if (this.hpoToMaxoTermMap.isEmpty()) {
+            System.err.println("DiffDiagRefinerImpl is empty");
+            System.exit(1);
+        }
     }
 
 
     @Override
-    public List<RankedMaxoResult> run(PpktSample sample,
-                                         Set<TermId> initialDiagnosesIds,
-                                         RefinementOptions options,
-                                         RankMaxo rankMaxo,
-                                         BiometadataService biometadataService,
-                                      List<TermId> ppktMaxoIds) throws Exception {
-
-
-        return rankMaxo.rankMaxoTerms(sample, options.nRepetitions(),
-                initialDiagnosesIds, biometadataService, ppktMaxoIds);
+    public List<RankedMaxoResult> run(PhenopacketData sample,
+                                      Set<TermId> initialDiagnosesIds,
+                                      RankMaxo rankMaxo) throws Exception {
+        return rankMaxo.rankMaxoTerms(sample, initialDiagnosesIds,  context);
     }
 
     public RankMaxo getRankMaxo(List<DifferentialDiagnosis> allInitialDiagnoses,
                                 List<DifferentialDiagnosis> initialDiagnoses,
-                                 DifferentialDiagnosisEngine engine,
+                                 DDxEngine engine,
                                 Map<String, Set<String>> maxoToHpoTermIdMap) {
 
         DiseaseModelProbability diseaseModelProbability = DiseaseModelProbability.ranked(initialDiagnoses);
@@ -70,17 +92,15 @@ public class BaseDiffDiagRefiner implements DiffDiagRefiner {
     //TODO: handle possible multiple differential diagnoses with same termId
 
     @Override
-    public List<DifferentialDiagnosis> getOrderedDiagnoses(Collection<DifferentialDiagnosis> originalDifferentialDiagnoses,
-                                                           RefinementOptions options) {
-        if (originalDifferentialDiagnoses.size() < options.nDiseases()) {
+    public List<DifferentialDiagnosis> getOrderedDiagnoses(Collection<DifferentialDiagnosis> originalDifferentialDiagnoses) {
+        if (originalDifferentialDiagnoses.size() < context.params().nDiseases()) {
             //TODO: replace with MaxodiffRuntimeException that extends RuntimeException.
             throw new RuntimeException("Input No. Diseases larger than No. diseases in sample.");
         }
         List<DifferentialDiagnosis> orderedDiagnoses = originalDifferentialDiagnoses.stream()
                 .sorted(Comparator.comparingDouble(DifferentialDiagnosis::score).reversed())
                 .toList();
-
-        return orderedDiagnoses.subList(0, options.nDiseases());
+        return orderedDiagnoses.subList(0, context.params().nDiseases());
     }
 
     @Override

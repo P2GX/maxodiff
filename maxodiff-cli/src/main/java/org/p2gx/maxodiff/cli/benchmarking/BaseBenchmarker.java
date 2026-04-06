@@ -7,7 +7,7 @@ import org.p2gx.maxodiff.core.analysis.SimpleTerm;
 
 import org.p2gx.maxodiff.core.analysis.refinement.DiffDiagRefiner;
 import org.p2gx.maxodiff.core.analysis.refinement.RefinementOptions;
-import org.p2gx.maxodiff.core.diffdg.DifferentialDiagnosisEngine;
+import org.p2gx.maxodiff.core.diffdg.DDxEngine;
 import org.p2gx.maxodiff.core.model.*;
 import org.p2gx.maxodiff.core.service.BiometadataService;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDisease;
@@ -23,10 +23,10 @@ import java.util.stream.Collectors;
 public class BaseBenchmarker {
     private static final Logger LOGGER = LoggerFactory.getLogger(BaseBenchmarker.class);
 
-    private final PpktSample sample;
+    private final PhenopacketData sample;
     private final int nDiseases;
     private final int nRepetitions;
-    private final DifferentialDiagnosisEngine phenomizer;
+    private final DDxEngine phenomizer;
     private final HpoDiseases hpoDiseases;
     private final Map<SimpleTerm, Set<SimpleTerm>> hpoTermToMaxoTermSetMap;
     private final DiffDiagRefiner refiner;
@@ -41,14 +41,14 @@ public class BaseBenchmarker {
     private final List<DifferentialDiagnosis> completeInitialDiffDiagList;
     private final MaxoHpoTermProbabilities maxoHpoTermProbabilities;
 
-    public PpktSample getSample() {
+    public PhenopacketData getSample() {
         return sample;
     }
 
-    public BaseBenchmarker(PpktSample sample,
+    public BaseBenchmarker(PhenopacketData sample,
                            List<TermId> ppktMaxoIds,
                            RefinementOptions refinementOptions,
-                           DifferentialDiagnosisEngine phenomizer,
+                           DDxEngine phenomizer,
                            HpoDiseases hpoDiseases,
                            MaxodiffPropsConfiguration maxoDiffConfig,
                            DiffDiagRefiner refiner ) {
@@ -80,7 +80,7 @@ public class BaseBenchmarker {
 
     /*** @return List with top initial (i.e., before Maxodiff) {@code nDiseases} differential diagnoses using Phenomizer */
     private List<DifferentialDiagnosis> determineInitialDiagnoses() {
-        LOGGER.info(String.valueOf(sample.id()));
+        LOGGER.info(String.valueOf(sample.sampleId()));
         LOGGER.info("nDiseases = {}", nDiseases);
         List<DifferentialDiagnosis> differentialDiagnoses = phenomizer.run(sample);
 //        differentialDiagnoses.sort(Comparator.comparingDouble(DifferentialDiagnosis::score).reversed());
@@ -97,7 +97,7 @@ public class BaseBenchmarker {
 
     public List<RankedMaxoResult> standardRun(BiometadataService biometadataService) throws Exception {
         RefinementOptions options = RefinementOptions.of(nDiseases, nRepetitions);
-        LOGGER.info("sample = {}, n Diseases = {}, n Repetitions = {}", this.sample.id(), nDiseases, nRepetitions);
+        LOGGER.info("sample = {}, n Diseases = {}, n Repetitions = {}", this.sample.sampleId(), nDiseases, nRepetitions);
         List<DifferentialDiagnosis> topNinitialDiffDiagList = getTopNInitialDiffDiagList();
         Set<TermId> topNInitialDiagnosesIds = topNinitialDiffDiagList.stream()
                 .map(DifferentialDiagnosis::diseaseId)
@@ -110,14 +110,9 @@ public class BaseBenchmarker {
                 maxoHpoTermProbabilities, phenomizer,
                 ontology, getCompleteInitialDiffDiagList(), topNinitialDiffDiagList);
 
-        List<RankedMaxoResult> resultsList = refiner.run(sample,
+        return refiner.run(sample,
                 topNInitialDiagnosesIds,
-                options,
-                rankMaxo,
-                biometadataService,
-                ppktMaxoIds);
-
-        return resultsList;
+                rankMaxo);
     }
 
     /**
@@ -147,14 +142,10 @@ public class BaseBenchmarker {
         RankMaxo rankMaxo = new RankMaxo(hpoToMaxoTermMap, maxoToHpoTermIdMap,
                 maxoHpoTermProbabilities, phenomizer,
                 ontology, getCompleteInitialDiffDiagList(), initialDiagnosesNDiseasesRandom);
-        List<RankedMaxoResult> refinementResults = refiner.run(sample,
-                topNInitialDiagnosesIdsRandom,
-                new RefinementOptions(nDiseases, nRepetitions),
-                rankMaxo,
-                biometadataService,
-                ppktMaxoIds);
 
-        return refinementResults;
+        return refiner.run(sample,
+                topNInitialDiagnosesIdsRandom,
+                rankMaxo);
     }
 
     /**
@@ -178,14 +169,10 @@ public class BaseBenchmarker {
         RankMaxo rankMaxo = new RankMaxo(hpoToMaxoTermMap, maxoToHpoTermIdMap,
                 maxoHpoTermProbabilities, phenomizer,
                 ontology, getCompleteInitialDiffDiagList(), initialDiagnosesNDiseasesRandom);
-        List<RankedMaxoResult> refinementResults = refiner.run(sample,
-                topNInitialDiagnosesIdsRandom,
-                new RefinementOptions(nDiseases, nRepetitions),
-                rankMaxo,
-                biometadataService,
-                ppktMaxoIds);
 
-        return refinementResults;
+        return refiner.run(sample,
+                topNInitialDiagnosesIdsRandom,
+                rankMaxo);
     }
 
 

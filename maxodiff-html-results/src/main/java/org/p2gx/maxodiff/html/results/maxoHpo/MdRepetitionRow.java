@@ -27,7 +27,7 @@ public class MdRepetitionRow {
     }
 
     private static String getStyleString(Integer counts, int nRepetitions) {
-        double opacity = (counts == null) ? 0 : (counts * 1.0) / nRepetitions;
+        double opacity =  (counts * 1.0) / nRepetitions;
         opacity = 0.5;
         return "rgba(255, 215, 0, " + opacity + ")";
     }

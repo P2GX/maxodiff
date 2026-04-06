@@ -1,16 +1,15 @@
 package org.p2gx.maxodiff.core;
 
+import org.p2gx.maxodiff.core.io.MdContext;
 import org.p2gx.maxodiff.core.analysis.HpoFrequency;
 import org.p2gx.maxodiff.core.analysis.RankedMaxoResult;
 import org.p2gx.maxodiff.core.analysis.RankedOmimTerm;
 import org.p2gx.maxodiff.core.analysis.SimpleTerm;
 
-import org.p2gx.maxodiff.core.diffdg.DifferentialDiagnosisEngine;
-import org.p2gx.maxodiff.core.service.BiometadataService;
+import org.p2gx.maxodiff.core.diffdg.DDxEngine;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDisease;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 import org.p2gx.maxodiff.core.analysis.refinement.DiffDiagRefiner;
-import org.p2gx.maxodiff.core.analysis.refinement.RefinementOptions;
 import org.p2gx.maxodiff.core.model.DifferentialDiagnosis;
 import org.p2gx.maxodiff.core.model.PhenopacketData;
 import org.p2gx.maxodiff.core.model.PpktSample;
@@ -23,40 +22,35 @@ import java.util.stream.Collectors;
 
 public class MaxodiffAnalysisRunner {
     private final static Logger LOGGER = LoggerFactory.getLogger(MaxoDiffAnalysisResultRow.class);
-    private final int nDiseases;
-    private final int nRepetitions;
-    private final DifferentialDiagnosisEngine engine;
+    private final MdContext mdContext;
+    private final DDxEngine engine;
     private final DiffDiagRefiner maxoDiffRefiner;
-    private final BiometadataService biometadataService;
 
     public MaxodiffAnalysisRunner(
-            int nDiseases,
-            int nRepetitions,
-            DifferentialDiagnosisEngine engine,
-            DiffDiagRefiner maxoDiffRefiner,
-            BiometadataService biometadataService
+            MdContext mdContext,
+            DDxEngine engine,
+            DiffDiagRefiner maxoDiffRefiner
     ) {
-        this.nDiseases = nDiseases;
-        this.nRepetitions = nRepetitions;
+        this.mdContext = mdContext;
         this.engine = engine;
         this.maxoDiffRefiner = maxoDiffRefiner;
-        this.biometadataService = biometadataService;
     }
 
 
-    public List<RankedMaxoResult> analyzeSample(PhenopacketData ppktData, List<TermId> ppktMaxoIds) throws Exception {
-        PpktSample ppktSample = ppktData.getPpktSample(biometadataService);
-        List<DifferentialDiagnosis> differentialDiagnoses = engine.run(ppktSample);
+    public List<RankedMaxoResult> analyzeSample(PhenopacketData ppktData) throws Exception {
+        List<TermId> ppktMaxoIds = ppktData.maxoProcedureIds();
+        PpktSample ppktSample = ppktData.getPpktSample();
+        List<DifferentialDiagnosis> differentialDiagnoses = engine.run(ppktData);
         // Get List of Refinement results: maxo term scores and frequencies
-        RefinementOptions options = RefinementOptions.of(this.nDiseases, this.nRepetitions);
-        List<DifferentialDiagnosis> orderedDiagnoses = maxoDiffRefiner.getOrderedDiagnoses(differentialDiagnoses, options);
+       // RefinementOptions options = RefinementOptions.of(this.nDiseases, this.nRepetitions);
+        List<DifferentialDiagnosis> orderedDiagnoses = maxoDiffRefiner.getOrderedDiagnoses(differentialDiagnoses);
         List<HpoDisease> diseases = maxoDiffRefiner.getDiseases(orderedDiagnoses);
         Map<String, List<HpoFrequency>> hpoTermCounts = maxoDiffRefiner.getHpoTermCounts(diseases);
-        return getRefinementResults(differentialDiagnoses, orderedDiagnoses, hpoTermCounts, ppktSample, ppktMaxoIds);
+        return getRefinementResults(differentialDiagnoses, orderedDiagnoses, hpoTermCounts, ppktData, ppktMaxoIds);
     }
 
-    public MaxoDiffAnalysisResultRow batchAnalysis(PhenopacketData ppktData, List<TermId> ppktMaxoIds) throws Exception {
-        List<RankedMaxoResult> resultsList = analyzeSample(ppktData, ppktMaxoIds);
+    public MaxoDiffAnalysisResultRow batchAnalysis(PhenopacketData ppktData) throws Exception {
+        List<RankedMaxoResult> resultsList = analyzeSample(ppktData);
         String phenopacket_id = ppktData.sampleId();
         String disease_id = ppktData.diseaseIds().getFirst().getValue();
         RankedMaxoResult topResult = resultsList.getFirst();
@@ -72,9 +66,9 @@ public class MaxodiffAnalysisRunner {
                 disease_id,
                 maxo_id,
                 maxo_label,
-                this.nDiseases,
+                this.mdContext.params().nDiseases(),
                 diseaseIds,
-                this.nRepetitions,
+                this.mdContext.params().nRepetitions(),
                 maxScoreValue
         );
     }
@@ -84,14 +78,12 @@ public class MaxodiffAnalysisRunner {
             List<DifferentialDiagnosis> differentialDiagnoses,
             List<DifferentialDiagnosis> orderedDiagnoses,
             Map<String, List<HpoFrequency>> hpoTermCounts,
-            PpktSample sample,
+            PhenopacketData sample,
             List<TermId> ppktMaxoIds) throws Exception {
-        RefinementOptions options = RefinementOptions.of(this.nDiseases, nRepetitions);
         List<DifferentialDiagnosis> allOrderedDiagnoses = differentialDiagnoses.stream()
                 .sorted(Comparator.comparingDouble(DifferentialDiagnosis::score).reversed())
                 .toList();
-
-        List<DifferentialDiagnosis> initialDiagnoses = orderedDiagnoses.subList(0, options.nDiseases());
+        List<DifferentialDiagnosis> initialDiagnoses = orderedDiagnoses.subList(0, this.mdContext.params().nDiseases());
         Set<TermId> initialDiagnosesIds = initialDiagnoses.stream()
                 .map(DifferentialDiagnosis::diseaseId)
                 .collect(Collectors.toCollection(LinkedHashSet::new));
@@ -101,10 +93,7 @@ public class MaxodiffAnalysisRunner {
 
         return maxoDiffRefiner.run(sample,
                 initialDiagnosesIds,
-                options,
-                rankMaxo,
-                biometadataService,
-                ppktMaxoIds);
+                rankMaxo);
     }
 
 

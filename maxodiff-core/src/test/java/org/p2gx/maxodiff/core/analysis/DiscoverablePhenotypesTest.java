@@ -102,7 +102,7 @@ public class DiscoverablePhenotypesTest {
 //         System.out.println(discoverablePhenotypeIds);
          // HPO term in phenopacket can be ascertained by 2 Maxo terms (MAXO:0000671 and MAXO:0000691)
          // 67 total HPO terms can ascertained by both Maxo terms
-         assertEquals(12, discoverablePhenotypeIds.size());
+         assertEquals(11, discoverablePhenotypeIds.size());
      }
 
     public sealed interface TestOutcome {
@@ -121,10 +121,10 @@ public class DiscoverablePhenotypesTest {
         return Stream.of(
                 new TestIndividual("46 year old female, infantile onset (1 term)",
                         getPPkt1(),
-                        new TestOutcome.Ok(12)),
+                        new TestOutcome.Ok(11)),
                 new TestIndividual("46 year old female, infantile onset (2 terms)",
                         getPPkt2(),
-                        new TestOutcome.Ok(11)),
+                        new TestOutcome.Ok(10)),
                 new TestIndividual("No disease id",
                         getPPktEmptyDisease(),
                         new TestOutcome.Error(() -> new PhenolRuntimeException("No disease id found")))

@@ -1,4 +1,4 @@
-package org.p2gx.maxodiff.phenomizer;
+package org.p2gx.maxodiff.core.phenomizer;
 
 import org.monarchinitiative.phenol.ontology.data.TermId;
 import org.monarchinitiative.phenol.ontology.similarity.TermPair;

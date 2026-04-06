@@ -16,7 +16,7 @@
         <dependency>
             <groupId>org.p2gx.maxodiff</groupId>
             <artifactId>maxodiff-core</artifactId>
-            <version>${project.version}</version>
+            <version>${project.parent.version}</version>
         </dependency>
         <dependency>
             <groupId>org.monarchinitiative.phenol</groupId>

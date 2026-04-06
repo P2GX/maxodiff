@@ -122,7 +122,7 @@ public class TestResources {
             SimpleTerm hpoTerm = entry.getKey();
             Set<SimpleTerm> maxoTerms = entry.getValue();
             for (TermId hpoId : hpoIdSubset) {
-                if (hpoTerm.equals(hpoId)) {
+                if (hpoTerm.termId().equals(hpoId.getValue())) {
                     hpoToMaxoToy.put(hpoTerm, maxoTerms);
                 }
             }

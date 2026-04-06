@@ -10,12 +10,12 @@ import org.p2gx.maxodiff.core.analysis.RankedMaxoResult;
 import org.p2gx.maxodiff.core.analysis.SimpleTerm;
 import org.p2gx.maxodiff.core.analysis.refinement.DiffDiagRefiner;
 import org.p2gx.maxodiff.core.analysis.refinement.RefinementOptions;
-import org.p2gx.maxodiff.core.diffdg.DifferentialDiagnosisEngine;
+import org.p2gx.maxodiff.core.diffdg.DDxEngine;
 import org.p2gx.maxodiff.core.model.PhenopacketData;
 import org.p2gx.maxodiff.core.model.PpktSample;
-import org.p2gx.maxodiff.phenomizer.IcMicaData;
-import org.p2gx.maxodiff.phenomizer.IcMicaDictLoader;
-import org.p2gx.maxodiff.phenomizer.PhenomizerDifferentialDiagnosisEngine;
+import org.p2gx.maxodiff.core.phenomizer.IcMicaData;
+import org.p2gx.maxodiff.core.phenomizer.IcMicaDictLoader;
+import org.p2gx.maxodiff.core.phenomizer.PhenomizerDDxEngine;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
 import org.monarchinitiative.phenol.annotations.io.hpo.HpoDiseaseLoader;
 import org.monarchinitiative.phenol.annotations.io.hpo.HpoDiseaseLoaderOptions;
@@ -66,7 +66,7 @@ public class BenchmarkingCommand extends DDxCommand {
     private Path ppktDir = null;
 
 
-    private DifferentialDiagnosisEngine phenomizer;
+    private DDxEngine phenomizer;
 
     private MaxodiffPropsConfiguration maxodiffPropsConfiguration;
     private DiffDiagRefiner refiner;
@@ -86,7 +86,7 @@ public class BenchmarkingCommand extends DDxCommand {
         this.hpoDiseases = loader.load(hpoaPath);
         IcMicaData icMicaData = IcMicaDictLoader.loadIcMicaDict(MaxodiffDataResolver.of(maxoDataPath).icMicaDict());
         Map<TermPair, Double> icMicaDict = icMicaData.icMicaDict();
-        this.phenomizer = new PhenomizerDifferentialDiagnosisEngine(hpoDiseases, icMicaDict);
+        this.phenomizer = new PhenomizerDDxEngine(hpoDiseases, icMicaDict);
         this.refinementOptions = RefinementOptions.of(nDiseases, nRepetitions);
 
         File icFile = new File("/Users/beckwm/IdeaProjects/maxodiff/data/term-to-ic.csv");
@@ -160,14 +160,14 @@ public class BenchmarkingCommand extends DDxCommand {
         try {
             PpktSample ppktSample = getPpktSample(ppktPath);
             PhenopacketData ppktData = PhenopacketData.readPhenopacketData(phenopacketPath);
-            BaseBenchmarker benchmarker = new BaseBenchmarker(ppktSample,
+            BaseBenchmarker benchmarker = new BaseBenchmarker(ppktData,
                     ppktData.maxoProcedureIds(),
                     refinementOptions,
                     this.phenomizer,
                     this.hpoDiseases,
                     maxodiffPropsConfiguration,
                     refiner);
-            String ppktId = benchmarker.getSample().id();
+            String ppktId = benchmarker.getSample().sampleId();
             List<RankedMaxoResult> initialResults = benchmarker.standardRun(maxodiffPropsConfiguration.biometadataService());
             for (int i = 0; i < nDiseases; i++) {
                 List<RankedMaxoResult> randomizedResults = benchmarker.spikedRandomizer(i, maxodiffPropsConfiguration.biometadataService());
@@ -185,16 +185,16 @@ public class BenchmarkingCommand extends DDxCommand {
     private List<BenchmarkResult> runShuffleOnePPkt(Path ppktPath, Map<String, Double> termToIcMap) {
         List<BenchmarkResult> resultList = new ArrayList<>();
         try {
-            PpktSample ppktSample = getPpktSample(ppktPath);
+            //PpktSample ppktSample = getPpktSample(ppktPath);
             PhenopacketData ppktData = PhenopacketData.readPhenopacketData(phenopacketPath);
-            BaseBenchmarker benchmarker = new BaseBenchmarker(ppktSample,
+            BaseBenchmarker benchmarker = new BaseBenchmarker(ppktData,
                     ppktData.maxoProcedureIds(),
                     refinementOptions,
                     this.phenomizer,
                     this.hpoDiseases,
                     maxodiffPropsConfiguration,
                     refiner);
-            String ppktId = benchmarker.getSample().id();
+            String ppktId = benchmarker.getSample().sampleId();
             List<RankedMaxoResult> initialResults = benchmarker.standardRun(maxodiffPropsConfiguration.biometadataService());
             String topMaxo = initialResults.getFirst().maxoTerm().termId();
             List<Double> topRandomScores = new ArrayList<>();
@@ -203,7 +203,7 @@ public class BenchmarkingCommand extends DDxCommand {
             try {
                 customThreadPool.submit(() ->
                     IntStream.range(0, 50).parallel().forEach(i -> {
-                        List<RankedMaxoResult> randomizedResults = null;
+                        List<RankedMaxoResult> randomizedResults;
                         try {
                             randomizedResults = benchmarker.shuffledRandomizer(maxodiffPropsConfiguration.biometadataService());
                         } catch (Exception e) {
@@ -287,10 +287,10 @@ public class BenchmarkingCommand extends DDxCommand {
 //
         double maxoFinalScore = discHpoIds.isEmpty() ? 0.0 :
                 discHpoIds.stream().mapToDouble(termToIcMap::get).sum();
-        System.out.println("standard run results:");
-//        System.out.println("initial " + initialResults.getFirst().rankMaxoScore().initialOmimTermIds());
-//        System.out.println("maxo " + initialResults.getFirst().rankMaxoScore().maxoOmimTermIds());
-        System.out.println(discHpoIds + " IC Sum = " + maxoFinalScore);
+        LOGGER.info("standard run results:");
+        LOGGER.info("initial " + initialResults.getFirst().maxoTerm());
+        LOGGER.info("initial " + initialResults.getFirst().rankedOmimTermList());
+        LOGGER.info("{} IC Sum = {}.", discHpoIds, maxoFinalScore);
         BenchmarkProcedure procedure = BenchmarkProcedure.ShuffledRandomization;
         int nMaxo = initialResults.size();
         return new BenchmarkResult(ppktId, nDiseases, nRepetitions, topMaxo, maxoFinalScore,

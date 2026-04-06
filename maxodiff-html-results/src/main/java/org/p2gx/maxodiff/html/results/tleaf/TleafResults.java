@@ -22,7 +22,7 @@ public class TleafResults {
         SpringTemplateEngine templateEngine = templateEngine();
 
         Context context = new Context();
-
+        System.out.println("OBSE" + mdMetadata.observedHpoTerms());
         // Header
         context.setVariable("ppktId", mdMetadata.ppktId());
         context.setVariable("observedHpoTerms", mdMetadata.observedHpoTerms());

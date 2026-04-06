@@ -1,12 +1,12 @@
 package org.p2gx.maxodiff.html.service;
 
-import org.p2gx.maxodiff.core.diffdg.DifferentialDiagnosisEngine;
+import org.p2gx.maxodiff.core.diffdg.DDxEngine;
 
 import java.util.*;
 
 public class DifferentialDiagnosisEngineServiceImpl implements DifferentialDiagnosisEngineService {
 
-    private final Map<String, DifferentialDiagnosisEngine> engineMap;
+    private final Map<String, DDxEngine> engineMap;
 
     private static final DifferentialDiagnosisEngineServiceImpl EMPTY = new DifferentialDiagnosisEngineServiceImpl(Map.of());
 
@@ -14,11 +14,11 @@ public class DifferentialDiagnosisEngineServiceImpl implements DifferentialDiagn
         return EMPTY;
     }
 
-    public static DifferentialDiagnosisEngineServiceImpl of(Map<String, DifferentialDiagnosisEngine> engineMap) {
+    public static DifferentialDiagnosisEngineServiceImpl of(Map<String, DDxEngine> engineMap) {
         return new DifferentialDiagnosisEngineServiceImpl(engineMap);
     }
 
-    private DifferentialDiagnosisEngineServiceImpl(Map<String, DifferentialDiagnosisEngine> engineMap) {
+    private DifferentialDiagnosisEngineServiceImpl(Map<String, DDxEngine> engineMap) {
         this.engineMap = engineMap;
     }
 
@@ -26,7 +26,7 @@ public class DifferentialDiagnosisEngineServiceImpl implements DifferentialDiagn
         return engineMap.keySet();
     }
 
-    public Optional<DifferentialDiagnosisEngine> getEngine(String engineName) {
+    public Optional<DDxEngine> getEngine(String engineName) {
         return Optional.ofNullable(engineMap.get(engineName));
     }
 

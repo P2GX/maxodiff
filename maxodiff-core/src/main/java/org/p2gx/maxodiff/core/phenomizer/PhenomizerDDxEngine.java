@@ -1,9 +1,9 @@
-package org.p2gx.maxodiff.phenomizer;
+package org.p2gx.maxodiff.core.phenomizer;
 
-import org.p2gx.maxodiff.core.analysis.SimpleTerm;
-import org.p2gx.maxodiff.core.diffdg.DifferentialDiagnosisEngine;
+import org.p2gx.maxodiff.core.io.MdContext;
+import org.p2gx.maxodiff.core.diffdg.DDxEngine;
 import org.p2gx.maxodiff.core.model.DifferentialDiagnosis;
-import org.p2gx.maxodiff.core.model.PpktSample;
+import org.p2gx.maxodiff.core.model.PhenopacketData;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDisease;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseaseAnnotation;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
@@ -13,21 +13,27 @@ import org.monarchinitiative.phenol.ontology.similarity.TermPair;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class PhenomizerDifferentialDiagnosisEngine implements DifferentialDiagnosisEngine {
+public class PhenomizerDDxEngine implements DDxEngine {
 
     private final HpoDiseases diseases;
     private final Map<TermPair, Double> termPairToIc;
     private final Map<TermId, Integer> diseaseToPresentAnnotationCount;
     private final ScoringMode scoringMode;
 
-    public PhenomizerDifferentialDiagnosisEngine(
-            HpoDiseases diseases,
-            Map<TermPair, Double> termPairToIc) {
+    public PhenomizerDDxEngine(MdContext context) {
+        this.diseases = context.resources().hpoDiseases();
+        this.termPairToIc = context.resources().icMicaData().icMicaDict();
+        this.diseaseToPresentAnnotationCount = countPresentAnnotations(diseases);
+        this.scoringMode = ScoringMode.ONE_SIDED;
+    }
+
+    public PhenomizerDDxEngine(HpoDiseases diseases, Map<TermPair, Double> termPairToIc) {
         this.diseases = diseases;
         this.termPairToIc = termPairToIc;
         this.diseaseToPresentAnnotationCount = countPresentAnnotations(diseases);
         this.scoringMode = ScoringMode.ONE_SIDED;
     }
+
 
 
     private static Map<TermId, Integer> countPresentAnnotations(HpoDiseases diseases) {
@@ -44,12 +50,12 @@ public class PhenomizerDifferentialDiagnosisEngine implements DifferentialDiagno
     }
 
     @Override
-    public List<DifferentialDiagnosis> run(PpktSample sample) {
+    public List<DifferentialDiagnosis> run(PhenopacketData sample) {
         return run(sample, null);
     }
 
     @Override
-    public List<DifferentialDiagnosis> run(PpktSample sample, Collection<TermId> targetDiseases) {
+    public List<DifferentialDiagnosis> run(PhenopacketData sample, Collection<TermId> targetDiseases) {
         int nDiag = targetDiseases == null ? diseases.size() : targetDiseases.size();
         List<DifferentialDiagnosis> diagnoses = new ArrayList<>(nDiag);
 
@@ -59,11 +65,11 @@ public class PhenomizerDifferentialDiagnosisEngine implements DifferentialDiagno
 
             double similarity = switch (scoringMode) {
                 case ONE_SIDED -> oneSided(
-                        sample.observedHpoTerms().stream().map(SimpleTerm::termId).toList(),
+                        sample.observedHpoTermIds().toList(),
                         disease
                 );
                 case TWO_SIDED -> twoSided(
-                        sample.observedHpoTerms().stream().map(SimpleTerm::termId).toList(),
+                        sample.observedHpoTermIds().toList(),
                         disease
                 );
             };
@@ -81,7 +87,7 @@ public class PhenomizerDifferentialDiagnosisEngine implements DifferentialDiagno
     }
 
     private double oneSided(
-            List<String> query,
+            List<TermId> query,
             HpoDisease disease
     ) {
         int presentAnnotationCount = diseaseToPresentAnnotationCount.get(disease.id());
@@ -90,9 +96,9 @@ public class PhenomizerDifferentialDiagnosisEngine implements DifferentialDiagno
 
         double[] vals = new double[query.size()];
         int i = 0;
-        for (String q : query) {
+        for (TermId tid : query) {
             for (HpoDiseaseAnnotation anno : disease.presentAnnotations()) {
-                TermPair pair = TermPair.symmetric(TermId.of(q), anno.id());
+                TermPair pair = TermPair.symmetric(tid, anno.id());
                 Double icMica = termPairToIc.getOrDefault(pair, 0.);
                 vals[i] = Double.max(icMica, vals[i]);
             }
@@ -103,7 +109,7 @@ public class PhenomizerDifferentialDiagnosisEngine implements DifferentialDiagno
     }
 
     private double twoSided(
-            List<String> query,
+            List<TermId> query,
             HpoDisease disease
     ) {
         int presentAnnotationCount = diseaseToPresentAnnotationCount.get(disease.id());
@@ -113,11 +119,11 @@ public class PhenomizerDifferentialDiagnosisEngine implements DifferentialDiagno
         double[] queryToDisease = new double[query.size()];
         double[] diseaseToQuery = new double[presentAnnotationCount];
         int q = 0;
-        for (String feature : query) {
+        for (TermId tid : query) {
             double q2d = 0;
             int d = 0;
             for (HpoDiseaseAnnotation anno : disease.presentAnnotations()) {
-                TermPair pair = TermPair.symmetric(TermId.of(feature), anno.id());
+                TermPair pair = TermPair.symmetric(tid, anno.id());
                 double icMica = termPairToIc.getOrDefault(pair, 0.);
 
                 q2d = Double.max(icMica, q2d);

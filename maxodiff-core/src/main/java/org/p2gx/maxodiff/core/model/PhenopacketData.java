@@ -1,5 +1,6 @@
 package org.p2gx.maxodiff.core.model;
 
+import org.p2gx.maxodiff.core.analysis.MySimpleTerm;
 import org.p2gx.maxodiff.core.analysis.SimpleTerm;
 import org.p2gx.maxodiff.core.io.PhenopacketImporter;
 import org.p2gx.maxodiff.core.service.BiometadataService;
@@ -17,9 +18,7 @@ import org.phenopackets.schema.v2.core.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
+import java.util.*;
 import java.util.function.Predicate;
 import java.util.stream.Stream;
 
@@ -29,6 +28,8 @@ public class PhenopacketData {
     private final String sampleId;
     private final List<String> hpoTerms;
     private final List<String> negatedHpoTerms;
+    private List<MySimpleTerm> observedHpoTerms = new ArrayList<>();
+    private List<MySimpleTerm> excludedHpoTerms = new ArrayList<>();
     private final List<TermId> diseaseIds;
     /* Medical action ontology terms used in the Phenopacket. We will use this information
      in oder to not suggest a MAxO term that was previosly performed (e.g., do not suggest
@@ -50,6 +51,38 @@ public class PhenopacketData {
         this.diseaseIds = diseaseIds;
         this.procedures = maxoIds;
     }
+    /// TODO complette refactoring
+    /// Masked needed only to distinguish the constructor, it
+    // can be deleted later on
+   public PhenopacketData(String sampleId,
+                    List<MySimpleTerm> observed,
+                    List<MySimpleTerm> excluded,
+                    List<TermId> diseaseIds,
+                    List<TermId> maxoIds,
+                    boolean masked
+    ) {
+
+        this.sampleId = Objects.requireNonNull(sampleId);
+        this.observedHpoTerms = Objects.requireNonNull(observed);
+        this.excludedHpoTerms = Objects.requireNonNull(excluded);
+        this.hpoTerms = this.observedHpoTerms.stream()
+                .map(MySimpleTerm::tid)
+                .map(TermId::getValue)
+                .toList();
+        this.negatedHpoTerms = this.excludedHpoTerms.stream()
+                .map(MySimpleTerm::tid)
+                .map(TermId::getValue)
+                .toList();
+        this.diseaseIds = diseaseIds;
+        this.procedures = maxoIds;
+    }
+
+
+    public static PhenopacketData fromSimpleTerms(String id, List<SimpleTerm> obs, List<SimpleTerm> exc) {
+        List<MySimpleTerm> observed = obs.stream().map(st -> new MySimpleTerm(TermId.of(st.termId()), st.termLabel())).toList();
+        List<MySimpleTerm> excluded = exc.stream().map(st -> new MySimpleTerm(TermId.of(st.termId()), st.termLabel())).toList();
+        return new PhenopacketData(id, observed, excluded, List.of(), List.of(), false);
+    }
 
     public static PhenopacketData readPhenopacketData(Path phenopacketPath)  {
         try (InputStream is = new BufferedInputStream(new FileInputStream(String.valueOf(phenopacketPath)))) {
@@ -67,18 +100,18 @@ public class PhenopacketData {
         }
     }
 
-
     private static PhenopacketData fromPpkt(Phenopacket ppkt) {
         String sampleId = ppkt.getId();
-        List<String> observedTerms = ppkt.getPhenotypicFeaturesList()
+        List<MySimpleTerm> observedTerms = ppkt.getPhenotypicFeaturesList()
                 .stream().filter(Predicate.not(PhenotypicFeature::getExcluded))
                 .map(PhenotypicFeature::getType)
-                .map(OntologyClass::getId)
+                .map(oc -> MySimpleTerm.fromStrings(oc.getId(), oc.getLabel()))
                 .toList();
-        List<String> excludedTerms = ppkt.getPhenotypicFeaturesList()
-                .stream().filter(PhenotypicFeature::getExcluded)
+        List<MySimpleTerm> excludedTerms = ppkt.getPhenotypicFeaturesList()
+                .stream()
+                .filter(PhenotypicFeature::getExcluded)
                 .map(PhenotypicFeature::getType)
-                .map(OntologyClass::getId)
+                .map(oc -> MySimpleTerm.fromStrings(oc.getId(), oc.getLabel()))
                 .toList();
         List<TermId> diseaseIds = ppkt.getDiseasesList()
                 .stream()
@@ -95,8 +128,10 @@ public class PhenopacketData {
                 .map(OntologyClass::getId)
                 .map(TermId::of)
                 .toList();
-        return new PhenopacketData(sampleId, observedTerms, excludedTerms, diseaseIds, maxoIds);
+        return new PhenopacketData(sampleId, observedTerms, excludedTerms, diseaseIds, maxoIds, true);
     }
+
+
 
     public PpktSample getPpktSample(BiometadataService biometadataService) {
         List<SimpleTerm> observedSampleTerms = new ArrayList<>();
@@ -106,6 +141,32 @@ public class PhenopacketData {
         excludedHpoTermIds().forEach(tid ->
                 excludedSampleTerms.add(new SimpleTerm(tid.getValue(), biometadataService.hpoLabel(tid).orElse("n/a"))));
         return new PpktSample(sampleId(), observedSampleTerms, excludedSampleTerms);
+    }
+
+    public List<SimpleTerm> getObservedHpoSimpleTerms() {
+        return observedHpoTerms.
+                stream()
+                .map(mst -> new SimpleTerm(mst.tid().getValue(), mst.label()))
+                .toList();
+    }
+
+    public List<SimpleTerm> getExcludedHpoSimpleTerms() {
+        return excludedHpoTerms
+                .stream()
+                .map(mst -> new SimpleTerm(mst.tid().getValue(), mst.label()))
+                .toList();
+    }
+
+    public List<MySimpleTerm> observed() {
+        return  observedHpoTerms;
+    }
+
+    public List<MySimpleTerm> excluded() {
+        return  excludedHpoTerms;
+    }
+
+    public PpktSample getPpktSample() {
+        return new PpktSample(sampleId(), getObservedHpoSimpleTerms(), getExcludedHpoSimpleTerms());
     }
 
 
@@ -120,6 +181,13 @@ public class PhenopacketData {
 
     public Stream<TermId> observedHpoTermIds() {
         return hpoTerms.stream().map(TermId::of);
+    }
+
+    public Set<TermId> allHpoTermIds() {
+        Set<TermId> hpoTermIds = new HashSet<>();
+        observedHpoTerms.forEach(t -> hpoTermIds.add(t.tid()));
+        excludedHpoTerms.forEach(t -> hpoTermIds.add(t.tid()));
+        return hpoTermIds;
     }
 
     public List<TermId> maxoProcedureIds() {
