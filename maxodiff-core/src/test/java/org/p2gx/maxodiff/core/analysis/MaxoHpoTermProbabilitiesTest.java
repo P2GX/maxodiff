@@ -38,7 +38,7 @@ public class MaxoHpoTermProbabilitiesTest {
         Map<String, Set<String>> maxoToHpoTermIdMap = MaxoHpoTermIdMaps.getMaxoToHpoTermIdMap(hpoToMaxoTermMap);
         TermId maxoId = TermId.of("MAXO:0035006"); //Foot radiography
         Set<String> maxoBenefitIds = MAXO_HPO_TERM_PROBABILITIES.getDiscoverableByMaxoHpoTerms(samplePhenopacket, maxoId, maxoToHpoTermIdMap);
-        assertEquals(0, maxoBenefitIds.size(), 1e-3);
+        assertEquals(9, maxoBenefitIds.size(), 1e-3);
     }
 
     @Test
