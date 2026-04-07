@@ -68,13 +68,14 @@ public class DiffDiagRefinerImpl implements DiffDiagRefiner {
     public List<RankedMaxoResult> run(PhenopacketData sample,
                                       Set<TermId> initialDiagnosesIds,
                                       RankMaxo rankMaxo) throws Exception {
-        return rankMaxo.rankMaxoTerms(sample, initialDiagnosesIds,  context);
+        return rankMaxo.rankMaxoTerms(sample, initialDiagnosesIds, context);
     }
 
     public RankMaxo getRankMaxo(List<DifferentialDiagnosis> allInitialDiagnoses,
                                 List<DifferentialDiagnosis> initialDiagnoses,
                                  DDxEngine engine,
-                                Map<String, Set<String>> maxoToHpoTermIdMap) {
+                                Map<String, Set<String>> maxoToHpoTermIdMap,
+                                List<HpoFrequency> hpoFrequenciesNDiseases) {
 
         DiseaseModelProbability diseaseModelProbability = DiseaseModelProbability.ranked(initialDiagnoses);
 
@@ -85,7 +86,7 @@ public class DiffDiagRefinerImpl implements DiffDiagRefiner {
 
 
         return new RankMaxo(hpoToMaxoTermMap, maxoToHpoTermIdMap, maxoHpoTermProbabilities, engine,
-                hpo, allInitialDiagnoses, initialDiagnoses);
+                hpo, allInitialDiagnoses, initialDiagnoses, hpoFrequenciesNDiseases);
     }
 
 
@@ -117,20 +118,23 @@ public class DiffDiagRefinerImpl implements DiffDiagRefiner {
     }
 
     @Override
-    public List<HpoFrequency> getHpoTermCounts(List<HpoDisease> diseases) {
+    public List<HpoFrequency> getHpoFrequenciesNDiseases(List<HpoDisease> diseases,
+                                                         List<HpoFrequency> allHpoFrequencies) {
 
-        // Get Map of HPO Term Id and List of HpoFrequency objects for list of m diseases.
-//        List<HpoFrequency> hpoTermCountsImmutable = AnalysisUtils.getHpoTermCounts(diseases);
+        List<HpoFrequency> hpoFrequenciesNDiseases = new ArrayList<>();
+        allHpoFrequencies.forEach(freq -> {
+            diseases.stream().filter(disease -> freq.diseaseId().equals(disease.id()))
+                    .map(disease -> freq).forEach(hpoFrequenciesNDiseases::add);
+        });
 
-//        return new HashMap<>(hpoTermCountsImmutable);
-        return AnalysisUtils.getHpoTermCounts(diseases);
+        return hpoFrequenciesNDiseases;
     }
 
     @Override
-    public Map<String, Set<String>> getMaxoToHpoTermIdMap(List<HpoFrequency> hpoTermCounts) {
+    public Map<String, Set<String>> getMaxoToHpoTermIdMap(List<HpoFrequency> hpoFrequenciesNDiseases) {
 
 
-        Set<String> hpoIds = hpoTermCounts.stream().map(HpoFrequency::hpoId).collect(Collectors.toSet());
+        Set<String> hpoIds = hpoFrequenciesNDiseases.stream().map(HpoFrequency::hpoId).map(String::valueOf).collect(Collectors.toSet());
 
         // Get all the MaXo terms that can be used to diagnose the HPO terms, removing ancestors
         //TODO: make MAXO:HPO term map directly from maxo_diagnostic_annotations.tsv file

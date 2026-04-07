@@ -33,6 +33,7 @@ public class BaseBenchmarker {
     private final Ontology ontology;
     private final Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxoTermMap;
     private final List<TermId> ppktMaxoIds;
+    private final List<HpoFrequency> hpoFrequencies;
 
     public List<DifferentialDiagnosis> getCompleteInitialDiffDiagList() {
         return completeInitialDiffDiagList;
@@ -51,7 +52,7 @@ public class BaseBenchmarker {
                            DDxEngine phenomizer,
                            HpoDiseases hpoDiseases,
                            MaxodiffPropsConfiguration maxoDiffConfig,
-                           DiffDiagRefiner refiner ) {
+                           DiffDiagRefiner refiner, List<HpoFrequency> hpoFrequencies) {
 
         this.nDiseases = refinementOptions.nDiseases();
         this.nRepetitions = refinementOptions.nRepetitions();
@@ -62,6 +63,7 @@ public class BaseBenchmarker {
         this.ontology = maxoDiffConfig.hpo();
         this.hpoToMaxoTermMap = maxoDiffConfig.maxoAnnotsMap();
         this.sample = sample;
+        this.hpoFrequencies = hpoFrequencies;
         this.completeInitialDiffDiagList = determineInitialDiagnoses();
         this.maxoHpoTermProbabilities = calculateMaxoHpoTermProbabilities();
         this.ppktMaxoIds = ppktMaxoIds;
@@ -103,12 +105,12 @@ public class BaseBenchmarker {
                 .map(DifferentialDiagnosis::diseaseId)
                 .collect(Collectors.toCollection(LinkedHashSet::new));
         List<HpoDisease> diseases = refiner.getDiseases(topNinitialDiffDiagList);
-        List<HpoFrequency> hpoTermCounts = refiner.getHpoTermCounts(diseases);
+        List<HpoFrequency> hpoTermCounts = refiner.getHpoFrequenciesNDiseases(diseases, hpoFrequencies);
         Map<String, Set<String>> maxoToHpoTermIdMap = refiner.getMaxoToHpoTermIdMap(hpoTermCounts);
 
         RankMaxo rankMaxo = new RankMaxo(hpoToMaxoTermMap, maxoToHpoTermIdMap,
                 maxoHpoTermProbabilities, phenomizer,
-                ontology, getCompleteInitialDiffDiagList(), topNinitialDiffDiagList);
+                ontology, getCompleteInitialDiffDiagList(), topNinitialDiffDiagList, hpoTermCounts);
 
         return refiner.run(sample,
                 topNInitialDiagnosesIds,
@@ -136,12 +138,12 @@ public class BaseBenchmarker {
                 .collect(Collectors.toCollection(LinkedHashSet::new));
 
         List<HpoDisease> diseases = refiner.getDiseases(initialDiagnosesNDiseasesRandom);
-        List<HpoFrequency> hpoTermCounts = refiner.getHpoTermCounts(diseases);
+        List<HpoFrequency> hpoTermCounts = refiner.getHpoFrequenciesNDiseases(diseases, hpoFrequencies);
         Map<String, Set<String>> maxoToHpoTermIdMap = refiner.getMaxoToHpoTermIdMap(hpoTermCounts);
 
         RankMaxo rankMaxo = new RankMaxo(hpoToMaxoTermMap, maxoToHpoTermIdMap,
                 maxoHpoTermProbabilities, phenomizer,
-                ontology, getCompleteInitialDiffDiagList(), initialDiagnosesNDiseasesRandom);
+                ontology, getCompleteInitialDiffDiagList(), initialDiagnosesNDiseasesRandom, hpoTermCounts);
 
         return refiner.run(sample,
                 topNInitialDiagnosesIdsRandom,
@@ -163,12 +165,12 @@ public class BaseBenchmarker {
                 .collect(Collectors.toCollection(LinkedHashSet::new));
 
         List<HpoDisease> diseases = refiner.getDiseases(initialDiagnosesNDiseasesRandom);
-        List<HpoFrequency> hpoTermCounts = refiner.getHpoTermCounts(diseases);
+        List<HpoFrequency> hpoTermCounts = refiner.getHpoFrequenciesNDiseases(diseases, hpoFrequencies);
         Map<String, Set<String>> maxoToHpoTermIdMap = refiner.getMaxoToHpoTermIdMap(hpoTermCounts);
 
         RankMaxo rankMaxo = new RankMaxo(hpoToMaxoTermMap, maxoToHpoTermIdMap,
                 maxoHpoTermProbabilities, phenomizer,
-                ontology, getCompleteInitialDiffDiagList(), initialDiagnosesNDiseasesRandom);
+                ontology, getCompleteInitialDiffDiagList(), initialDiagnosesNDiseasesRandom, hpoTermCounts);
 
         return refiner.run(sample,
                 topNInitialDiagnosesIdsRandom,

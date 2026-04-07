@@ -1,6 +1,5 @@
 package org.p2gx.maxodiff.core.analysis.refinement;
 
-import org.p2gx.maxodiff.core.analysis.DiseaseTermCount;
 import org.p2gx.maxodiff.core.analysis.HpoFrequency;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDisease;
 import org.monarchinitiative.phenol.ontology.data.MinimalOntology;
@@ -11,18 +10,6 @@ import java.util.*;
 class AnalysisUtils {
 
     private AnalysisUtils() {}
-
-    /**
-     *
-     * @param diseases List of Hpo diseases
-     * @return Map of HPO Term Id and List of HpoFrequency objects.
-     */
-    static List<HpoFrequency> getHpoTermCounts(
-            List<HpoDisease> diseases) {
-        // Collect HPO terms and frequencies for the target m diseases
-        DiseaseTermCount diseaseTermCount = DiseaseTermCount.of(diseases);
-        return diseaseTermCount.hpoTermCounts();
-    }
 
     /**
      *

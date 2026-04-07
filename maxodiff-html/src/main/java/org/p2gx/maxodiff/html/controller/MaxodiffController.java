@@ -103,10 +103,10 @@ public class MaxodiffController {
             }
             List<DifferentialDiagnosis> orderedDiagnoses = this.sessionData.getOrderedDiagnoses();
 
-            // Map of HPO Term Id and List of HpoFrequency objects for the subset n diseases.
+            // List of HpoFrequency objects for the subset n diseases.
             if (sessionData.getHpoTermCounts() == null || !nDiseases.equals(sessionData.getDiagnosesCount())) {
                 List<HpoDisease> diseases = diffDiagRefiner.getDiseases(orderedDiagnoses);
-                List<HpoFrequency> hpoTermCounts = diffDiagRefiner.getHpoTermCounts(diseases);
+                List<HpoFrequency> hpoTermCounts = diffDiagRefiner.getHpoFrequenciesNDiseases(diseases, mdContext.createHpoFrequencies());
                 sessionData.setHpoTermCounts(hpoTermCounts);
             }
             List<HpoFrequency> hpoTermCounts = sessionData.getHpoTermCounts();
@@ -139,7 +139,8 @@ public class MaxodiffController {
                     differentialDiagnoses,
                     orderedDiagnoses,
                     phenomizer,
-                    maxoToHpoTermIdMap);
+                    maxoToHpoTermIdMap,
+                    hpoTermCounts);
             this.sessionData.setRankMaxo(rankMaxo);
             List<RankedMaxoResult> resultsList = diffDiagRefiner.run(sample,
                     initialDiagnosesIds,

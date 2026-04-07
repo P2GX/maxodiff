@@ -6,11 +6,14 @@ import org.p2gx.maxodiff.cli.benchmarking.BenchmarkResult;
 import org.p2gx.maxodiff.config.MaxodiffDataResolver;
 import org.p2gx.maxodiff.config.MaxodiffPropsConfiguration;
 import org.p2gx.maxodiff.core.analysis.CountedHpoTerm;
+import org.p2gx.maxodiff.core.analysis.HpoFrequency;
 import org.p2gx.maxodiff.core.analysis.RankedMaxoResult;
 import org.p2gx.maxodiff.core.analysis.SimpleTerm;
 import org.p2gx.maxodiff.core.analysis.refinement.DiffDiagRefiner;
 import org.p2gx.maxodiff.core.analysis.refinement.RefinementOptions;
 import org.p2gx.maxodiff.core.diffdg.DDxEngine;
+import org.p2gx.maxodiff.core.io.MdContext;
+import org.p2gx.maxodiff.core.io.impl.MdContextBuilder;
 import org.p2gx.maxodiff.core.model.PhenopacketData;
 import org.p2gx.maxodiff.core.model.PpktSample;
 import org.p2gx.maxodiff.core.phenomizer.IcMicaData;
@@ -72,9 +75,17 @@ public class BenchmarkingCommand extends DDxCommand {
     private DiffDiagRefiner refiner;
     private HpoDiseases hpoDiseases;
     private RefinementOptions refinementOptions;
+    private List<HpoFrequency> hpoFrequencies;
 
     @Override
     public Integer execute() throws Exception {
+
+        MdContext context = MdContextBuilder.buildContext(
+                this.maxoDataPath,
+                this.nRepetitions,
+                this.nDiseases);
+
+        hpoFrequencies = context.createHpoFrequencies();
 
         MaxodiffDataResolver maxodiffDataResolver = MaxodiffDataResolver.of(maxoDataPath);
         this.maxodiffPropsConfiguration = MaxodiffPropsConfiguration.createConfig(maxodiffDataResolver);
@@ -166,7 +177,9 @@ public class BenchmarkingCommand extends DDxCommand {
                     this.phenomizer,
                     this.hpoDiseases,
                     maxodiffPropsConfiguration,
-                    refiner);
+                    refiner,
+                    hpoFrequencies
+                    );
             String ppktId = benchmarker.getSample().sampleId();
             List<RankedMaxoResult> initialResults = benchmarker.standardRun(maxodiffPropsConfiguration.biometadataService());
             for (int i = 0; i < nDiseases; i++) {
@@ -193,7 +206,8 @@ public class BenchmarkingCommand extends DDxCommand {
                     this.phenomizer,
                     this.hpoDiseases,
                     maxodiffPropsConfiguration,
-                    refiner);
+                    refiner,
+                    hpoFrequencies);
             String ppktId = benchmarker.getSample().sampleId();
             List<RankedMaxoResult> initialResults = benchmarker.standardRun(maxodiffPropsConfiguration.biometadataService());
             String topMaxo = initialResults.getFirst().maxoTerm().termId();

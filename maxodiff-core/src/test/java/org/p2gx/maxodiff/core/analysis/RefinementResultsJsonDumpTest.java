@@ -6,6 +6,8 @@ import com.fasterxml.jackson.databind.SerializationFeature;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import org.junit.jupiter.api.BeforeAll;
 import org.junit.jupiter.api.Test;
+import org.monarchinitiative.phenol.ontology.data.TermId;
+
 import java.io.StringWriter;
 import java.util.List;
 
@@ -53,12 +55,12 @@ public class RefinementResultsJsonDumpTest {
                     "count" : 85
                   } ],
                   "frequencies" : [ {
-                    "omimId" : "OMIM:256000",
+                    "diseaseId" : "OMIM:256000",
                     "hpoId" : "HPO:123000",
                     "frequency" : 0.5,
                     "mica" : 5.3
                   }, {
-                    "omimId" : "OMIM:000128",
+                    "diseaseId" : "OMIM:000128",
                     "hpoId" : "HPO:425000",
                     "frequency" : 0.75,
                     "mica" : 10.6
@@ -72,7 +74,7 @@ public class RefinementResultsJsonDumpTest {
                         2.,
                         List.of(new RankedOmimTerm(new SimpleTerm("OMIM:256000", "OMIM 256 Label"), 5, 1), new RankedOmimTerm(new SimpleTerm("OMIM:000128", "OMIM 128 Label"), 4,2)),
                         List.of(new CountedHpoTerm(new SimpleTerm("HPO:123000", "HPO 123 Label"), 50), new CountedHpoTerm(new SimpleTerm("HPO:425000", "HPO 425 Label"), 85)),
-                        List.of(new HpoFrequency("OMIM:256000", "HPO:123000",  0.5f, 5.3f), new HpoFrequency("OMIM:000128", "HPO:425000",  0.75f, 10.6f))
+                        List.of(new HpoFrequency(TermId.of("OMIM:256000"), TermId.of("HPO:123000"),  0.5f, 5.3f), new HpoFrequency(TermId.of("OMIM:000128"), TermId.of("HPO:425000"),  0.75f, 10.6f))
                         )
         );
     }
