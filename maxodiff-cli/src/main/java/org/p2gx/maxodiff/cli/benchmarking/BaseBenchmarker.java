@@ -103,7 +103,7 @@ public class BaseBenchmarker {
                 .map(DifferentialDiagnosis::diseaseId)
                 .collect(Collectors.toCollection(LinkedHashSet::new));
         List<HpoDisease> diseases = refiner.getDiseases(topNinitialDiffDiagList);
-        Map<String, List<HpoFrequency>> hpoTermCounts = refiner.getHpoTermCounts(diseases);
+        List<HpoFrequency> hpoTermCounts = refiner.getHpoTermCounts(diseases);
         Map<String, Set<String>> maxoToHpoTermIdMap = refiner.getMaxoToHpoTermIdMap(hpoTermCounts);
 
         RankMaxo rankMaxo = new RankMaxo(hpoToMaxoTermMap, maxoToHpoTermIdMap,
@@ -136,7 +136,7 @@ public class BaseBenchmarker {
                 .collect(Collectors.toCollection(LinkedHashSet::new));
 
         List<HpoDisease> diseases = refiner.getDiseases(initialDiagnosesNDiseasesRandom);
-        Map<String, List<HpoFrequency>> hpoTermCounts = refiner.getHpoTermCounts(diseases);
+        List<HpoFrequency> hpoTermCounts = refiner.getHpoTermCounts(diseases);
         Map<String, Set<String>> maxoToHpoTermIdMap = refiner.getMaxoToHpoTermIdMap(hpoTermCounts);
 
         RankMaxo rankMaxo = new RankMaxo(hpoToMaxoTermMap, maxoToHpoTermIdMap,
@@ -163,7 +163,7 @@ public class BaseBenchmarker {
                 .collect(Collectors.toCollection(LinkedHashSet::new));
 
         List<HpoDisease> diseases = refiner.getDiseases(initialDiagnosesNDiseasesRandom);
-        Map<String, List<HpoFrequency>> hpoTermCounts = refiner.getHpoTermCounts(diseases);
+        List<HpoFrequency> hpoTermCounts = refiner.getHpoTermCounts(diseases);
         Map<String, Set<String>> maxoToHpoTermIdMap = refiner.getMaxoToHpoTermIdMap(hpoTermCounts);
 
         RankMaxo rankMaxo = new RankMaxo(hpoToMaxoTermMap, maxoToHpoTermIdMap,

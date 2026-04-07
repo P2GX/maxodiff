@@ -27,9 +27,9 @@ public interface DiffDiagRefiner {
 
     List<HpoDisease> getDiseases(List<DifferentialDiagnosis> differentialDiagnoses);
 
-    Map<String, List<HpoFrequency>> getHpoTermCounts(List<HpoDisease> hpoDiseases);
+    List<HpoFrequency> getHpoTermCounts(List<HpoDisease> hpoDiseases);
 
-    Map<String, Set<String>> getMaxoToHpoTermIdMap(Map<String, List<HpoFrequency>> hpoTermCounts);
+    Map<String, Set<String>> getMaxoToHpoTermIdMap(List<HpoFrequency> hpoTermCounts);
 
     RankMaxo getRankMaxo(List<DifferentialDiagnosis> allInitialDiagnoses,
                          List<DifferentialDiagnosis> initialDiagnoses,

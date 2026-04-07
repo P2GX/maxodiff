@@ -44,10 +44,10 @@ public class DiseaseTermCountTest {
      */
     @Test
     public void test_long_eyebrows() {
-        Map<String, List<HpoFrequency>> hpoFrequencyMap = dtcount.hpoTermCounts();
-        List<HpoFrequency> hpofreqList = hpoFrequencyMap.get("HP:0004523");
-        assertEquals(1, hpofreqList.size());
-        HpoFrequency hpofreq = hpofreqList.getFirst();
+        List<HpoFrequency> hpoFrequencyList = dtcount.hpoTermCounts();
+        List<HpoFrequency> hpofreqList1 = hpoFrequencyList.stream().filter(f -> f.hpoId().equals("HP:0004523")).toList();
+        assertEquals(1, hpofreqList1.size());
+        HpoFrequency hpofreq = hpofreqList1.getFirst();
         assertEquals("OMIM:613224", hpofreq.omimId());
         assertEquals(1.0f, hpofreq.frequency(), TOLERANCE);
     }
@@ -60,16 +60,16 @@ public class DiseaseTermCountTest {
      */
     @Test
     public void test_epicanthus() {
-        Map<String, List<HpoFrequency>> hpoFrequencyMap = dtcount.hpoTermCounts();
-        List<HpoFrequency> hpofreqList = hpoFrequencyMap.get("HP:0000286");
-        assertEquals(2, hpofreqList.size());
-        Optional<HpoFrequency> opt1 = hpofreqList.stream().filter(hpf -> hpf.omimId().equals("OMIM:615355")).findFirst();
+        List<HpoFrequency> hpoFrequencyList = dtcount.hpoTermCounts();
+        List<HpoFrequency> hpofreqList1 = hpoFrequencyList.stream().filter(f -> f.hpoId().equals("HP:0000286")).toList();
+        assertEquals(2, hpofreqList1.size());
+        Optional<HpoFrequency> opt1 = hpofreqList1.stream().filter(hpf -> hpf.omimId().equals("OMIM:615355")).findFirst();
         assertTrue(opt1.isPresent());
         HpoFrequency noonan8 = opt1.get();
         // omimId=OMIM:613224, hpoId=HP:0004523, count=1, frequency=1.0]
         assertEquals("OMIM:615355", noonan8.omimId());
         assertEquals(4.0f/6.0f, noonan8.frequency(), TOLERANCE);
-        Optional<HpoFrequency> opt2 = hpofreqList.stream().filter(hpf -> hpf.omimId().equals("OMIM:613224")).findFirst();
+        Optional<HpoFrequency> opt2 = hpofreqList1.stream().filter(hpf -> hpf.omimId().equals("OMIM:613224")).findFirst();
         assertTrue(opt2.isPresent());
         HpoFrequency noonan6 = opt2.get();
         assertEquals("OMIM:613224", noonan6.omimId());

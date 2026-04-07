@@ -117,19 +117,20 @@ public class DiffDiagRefinerImpl implements DiffDiagRefiner {
     }
 
     @Override
-    public Map<String, List<HpoFrequency>> getHpoTermCounts(List<HpoDisease> diseases) {
+    public List<HpoFrequency> getHpoTermCounts(List<HpoDisease> diseases) {
 
         // Get Map of HPO Term Id and List of HpoFrequency objects for list of m diseases.
-        Map<String, List<HpoFrequency>> hpoTermCountsImmutable = AnalysisUtils.getHpoTermCounts(diseases);
+//        List<HpoFrequency> hpoTermCountsImmutable = AnalysisUtils.getHpoTermCounts(diseases);
 
-        return new HashMap<>(hpoTermCountsImmutable);
+//        return new HashMap<>(hpoTermCountsImmutable);
+        return AnalysisUtils.getHpoTermCounts(diseases);
     }
 
     @Override
-    public Map<String, Set<String>> getMaxoToHpoTermIdMap(Map<String, List<HpoFrequency>> hpoTermCounts) {
+    public Map<String, Set<String>> getMaxoToHpoTermIdMap(List<HpoFrequency> hpoTermCounts) {
 
 
-        Set<String> hpoIds = hpoTermCounts.keySet();
+        Set<String> hpoIds = hpoTermCounts.stream().map(HpoFrequency::hpoId).collect(Collectors.toSet());
 
         // Get all the MaXo terms that can be used to diagnose the HPO terms, removing ancestors
         //TODO: make MAXO:HPO term map directly from maxo_diagnostic_annotations.tsv file

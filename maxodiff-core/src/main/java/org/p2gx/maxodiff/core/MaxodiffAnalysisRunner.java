@@ -45,7 +45,7 @@ public class MaxodiffAnalysisRunner {
        // RefinementOptions options = RefinementOptions.of(this.nDiseases, this.nRepetitions);
         List<DifferentialDiagnosis> orderedDiagnoses = maxoDiffRefiner.getOrderedDiagnoses(differentialDiagnoses);
         List<HpoDisease> diseases = maxoDiffRefiner.getDiseases(orderedDiagnoses);
-        Map<String, List<HpoFrequency>> hpoTermCounts = maxoDiffRefiner.getHpoTermCounts(diseases);
+        List<HpoFrequency> hpoTermCounts = maxoDiffRefiner.getHpoTermCounts(diseases);
         return getRefinementResults(differentialDiagnoses, orderedDiagnoses, hpoTermCounts, ppktData, ppktMaxoIds);
     }
 
@@ -77,7 +77,7 @@ public class MaxodiffAnalysisRunner {
     private List<RankedMaxoResult> getRefinementResults(
             List<DifferentialDiagnosis> differentialDiagnoses,
             List<DifferentialDiagnosis> orderedDiagnoses,
-            Map<String, List<HpoFrequency>> hpoTermCounts,
+            List<HpoFrequency> hpoTermCounts,
             PhenopacketData sample,
             List<TermId> ppktMaxoIds) throws Exception {
         List<DifferentialDiagnosis> allOrderedDiagnoses = differentialDiagnoses.stream()

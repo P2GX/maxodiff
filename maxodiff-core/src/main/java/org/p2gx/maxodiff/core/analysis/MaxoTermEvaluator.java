@@ -232,7 +232,7 @@ public class MaxoTermEvaluator implements Callable<RankedMaxoResult> {
      * @param diseases List of Hpo diseases
      * @return Map of HPO Term Id and List of HpoFrequency objects.
      */
-    private Map<String, List<HpoFrequency>> getHpoTermFrequencies(
+    private List<HpoFrequency> getHpoTermFrequencies(
             List<HpoDisease> diseases) {
         // Collect HPO terms and frequencies for the target m diseases
         DiseaseTermCount diseaseTermCount = DiseaseTermCount.of(diseases);
@@ -247,14 +247,14 @@ public class MaxoTermEvaluator implements Callable<RankedMaxoResult> {
      * @return List of Frequencies records
      */
     private List<HpoFrequency> getFrequencyRecords(Set<TermId> omimIds, Set<SimpleTerm> hpoIds,
-                                                  Map<String, List<HpoFrequency>> hpoTermFrequencies) {
+                                                  List<HpoFrequency> hpoTermFrequencies) {
 
         List<HpoFrequency> frequencyRecords = new ArrayList<>();
         //Set<TermId> omimIds = maxoTermScoreRecord.omimTermIds();
         for (SimpleTerm hpoTerm : hpoIds) { //maxoTermScoreRecord.hpoTermIds()
             TermId hpoId = TermId.of(hpoTerm.termId());
-            List<HpoFrequency> frequencies = hpoTermFrequencies.get(hpoId.getValue());
-            if (frequencies != null) {
+            List<HpoFrequency> frequencies = hpoTermFrequencies.stream().filter(f->f.hpoId().equals(hpoId.getValue())).toList();
+//            if (frequencies != null) {
                 for (HpoFrequency hpoFrequency : frequencies) {
                     for (TermId omimId : omimIds) {
                         if (hpoFrequency.omimId().equals(omimId.toString())) {
@@ -262,7 +262,7 @@ public class MaxoTermEvaluator implements Callable<RankedMaxoResult> {
                         }
                     }
                 }
-            }
+//            }
         }
         return frequencyRecords;
     }
@@ -319,7 +319,7 @@ public class MaxoTermEvaluator implements Callable<RankedMaxoResult> {
 
         // Step 4: get collection of HPO Term Frequencies (List<Frequencies>)
         List<HpoDisease> hpoDiseases = maxoHpoTermProbabilities.getHpoDiseases().hpoDiseases().toList();
-        Map<String, List<HpoFrequency>> hpoFrequencyMap = getHpoTermFrequencies(hpoDiseases);
+        List<HpoFrequency> hpoFrequencyMap = getHpoTermFrequencies(hpoDiseases);
         List<HpoFrequency> frequencies = getFrequencyRecords(maxoIds, chosenHpoIds, hpoFrequencyMap);
 
         // Step 5: construct final result

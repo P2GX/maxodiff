@@ -11,6 +11,7 @@ import org.monarchinitiative.phenol.ontology.data.TermId;
 import org.p2gx.maxodiff.core.analysis.HpoFrequency;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -41,15 +42,23 @@ public class DiseaseTermCountTest {
     public void diseaseListTest() { assertEquals(diseases, diseaseTermCount.hpoDiseases()); }
 
     @Test
-    public void nHpoTermsTest() { assertEquals(114, diseaseTermCount.nHpoTerms()); }
+    public void nHpoTermsTest() { assertEquals(125, diseaseTermCount.nHpoTerms()); }
 
     @Test
     public void hpoTermCountTest() {
-        Map<String, List<HpoFrequency>> termCounts = diseaseTermCount.hpoTermCounts();
-        for (Map.Entry<String, List<HpoFrequency>> e : termCounts.entrySet()) {
+        List<HpoFrequency> frequencies = diseaseTermCount.hpoTermCounts();
+        Map<String, Integer> termCounts = new HashMap<>();
+        frequencies.stream().map(HpoFrequency::hpoId).forEach(id -> {
+            if (!termCounts.containsKey(id)) {
+                termCounts.put(id, 1);
+            } else {
+                int ct = termCounts.get(id);
+                termCounts.replace(id, ct + 1);
+            }
+        });
+        for (Map.Entry<String, Integer> e : termCounts.entrySet()) {
             String id = e.getKey();
-            List<HpoFrequency> frequencyList = e.getValue();
-            int count = frequencyList.size();
+            Integer count = e.getValue();
             if (id.equals("HP:0012469") | id.equals("HP:0000252") | id.equals("HP:0002187")
                     | id.equals("HP:0001252") | id.equals("HP:0001249") | id.equals("HP:0000826")) {
                 assertEquals(2, count);

@@ -10,7 +10,7 @@ import java.util.*;
 
 public class DiseaseTermCountImpl implements DiseaseTermCount {
 
-    private static final DiseaseTermCountImpl EMPTY = new DiseaseTermCountImpl(List.of(), Map.of());
+    private static final DiseaseTermCountImpl EMPTY = new DiseaseTermCountImpl(List.of(), List.of());
 
     public static DiseaseTermCountImpl empty() {
         return EMPTY;
@@ -19,11 +19,11 @@ public class DiseaseTermCountImpl implements DiseaseTermCount {
     /** A list of all diseases in the HPO Annotation file (usually restricted to OMIM entries). */
     private final List<HpoDisease> diseaseList;
     /** Key is an HPO term Id, and value is a list of {@link HpoFrequency} objects for that term.  Each object is an OMIM id*/
-    private final Map<String, List<HpoFrequency>> hpoTermCounts;
+    private final List<HpoFrequency> hpoTermCounts;
 
     public DiseaseTermCountImpl(
             List<HpoDisease> diseaseList,
-            Map<String, List<HpoFrequency>> hpoTermCounts) {
+            List<HpoFrequency> hpoTermCounts) {
         this.diseaseList = Objects.requireNonNull(diseaseList);
         this.hpoTermCounts = hpoTermCounts;
     }
@@ -35,16 +35,16 @@ public class DiseaseTermCountImpl implements DiseaseTermCount {
      * @return a {@link DiseaseTermCountImpl} summarizing hpo term frequencies for the diseases of interest
      */
     public static DiseaseTermCountImpl defaultCount(List<HpoDisease> diseaseList) {
-        Map<String, List<HpoFrequency>> hpoTermCounts = new HashMap<>();
+        List<HpoFrequency> hpoFrequencies = new ArrayList<>();
         for (HpoDisease disease : diseaseList) {
-            TermId omimId = disease.id();
+            TermId diseaseId = disease.id();
             for (TermId hpoId : disease.annotationTermIdList()) {
-                List<HpoFrequency> freqRecords = hpoTermCounts.computeIfAbsent(hpoId.getValue(), id -> new ArrayList<>());
+//                List<HpoFrequency> freqRecords = hpoFrequencies.computeIfAbsent(hpoId.getValue(), id -> new ArrayList<>());
                 float freq = disease.getFrequencyOfTermInDisease(hpoId).map(Ratio::frequency).orElse(1f);
-                freqRecords.add(new HpoFrequency(omimId.toString(), hpoId.toString(), freq, 0f));
+                hpoFrequencies.add(new HpoFrequency(diseaseId.toString(), hpoId.toString(), freq, 0f));
             }
         }
-        return new DiseaseTermCountImpl(diseaseList, hpoTermCounts);
+        return new DiseaseTermCountImpl(diseaseList, hpoFrequencies);
     }
 
 
@@ -54,6 +54,6 @@ public class DiseaseTermCountImpl implements DiseaseTermCount {
 
     public int nHpoTerms() { return hpoTermCounts.size(); }
 
-    public Map<String, List<HpoFrequency>> hpoTermCounts() { return hpoTermCounts; }
+    public List<HpoFrequency> hpoTermCounts() { return hpoTermCounts; }
 
 }

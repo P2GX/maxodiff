@@ -17,7 +17,7 @@ class AnalysisUtils {
      * @param diseases List of Hpo diseases
      * @return Map of HPO Term Id and List of HpoFrequency objects.
      */
-    static Map<String, List<HpoFrequency>> getHpoTermCounts(
+    static List<HpoFrequency> getHpoTermCounts(
             List<HpoDisease> diseases) {
         // Collect HPO terms and frequencies for the target m diseases
         DiseaseTermCount diseaseTermCount = DiseaseTermCount.of(diseases);

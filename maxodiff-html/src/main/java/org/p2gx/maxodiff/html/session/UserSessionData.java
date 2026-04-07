@@ -27,7 +27,7 @@ public class UserSessionData implements Serializable {
     private PhenopacketData ppkt;
     private RankMaxo rankMaxo;
     private List<DifferentialDiagnosis> orderedDiagnoses;
-    private Map<String, List<HpoFrequency>> hpoTermCounts;
+    private List<HpoFrequency> hpoTermCounts;
     Map<String, Set<String>> maxoToHpoTermIdMap;
 
     public Map<String, Set<String>> getMaxoToHpoTermIdMap() {
@@ -38,11 +38,11 @@ public class UserSessionData implements Serializable {
         this.maxoToHpoTermIdMap = maxoToHpoTermIdMap;
     }
 
-    public Map<String, List<HpoFrequency>> getHpoTermCounts() {
+    public List<HpoFrequency> getHpoTermCounts() {
         return hpoTermCounts;
     }
 
-    public void setHpoTermCounts(Map<String, List<HpoFrequency>> hpoTermCounts) {
+    public void setHpoTermCounts(List<HpoFrequency> hpoTermCounts) {
         this.hpoTermCounts = hpoTermCounts;
     }
 
