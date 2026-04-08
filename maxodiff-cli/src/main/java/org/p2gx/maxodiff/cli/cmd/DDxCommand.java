@@ -2,6 +2,7 @@ package org.p2gx.maxodiff.cli.cmd;
 
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
+import org.p2gx.maxodiff.core.analysis.HpoFrequency;
 import org.p2gx.maxodiff.core.io.MdContext;
 import org.p2gx.maxodiff.core.io.impl.MdContextBuilder;
 import org.p2gx.maxodiff.core.MaxoDiffAnalysisResultRow;
@@ -94,13 +95,15 @@ public class DDxCommand extends BaseCommand {
                 this.nDiseases);
         LOGGER.info("{}", context);
         try {
+            List<HpoFrequency> allHpoFrequencies = context.createHpoFrequencies();
             DiffDiagRefiner maxoDiffRefiner = context.createRefiner();
             DDxEngine engine = new PhenomizerDDxEngine(context);
             PhenopacketData phenopacketData = PhenopacketData.readPhenopacketData(phenopacketPath);
             MaxodiffAnalysisRunner runner = new MaxodiffAnalysisRunner(
                     context,
                     engine,
-                    maxoDiffRefiner);
+                    maxoDiffRefiner,
+                    allHpoFrequencies);
             if (writeCsv) {
                 MaxoDiffAnalysisResultRow row = runner.batchAnalysis(phenopacketData);
                 writeCsvResults(phenopacketData.sampleId(), row);

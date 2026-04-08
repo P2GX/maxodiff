@@ -39,7 +39,7 @@ public class MdRepetitionRow {
             float frequency = freq.frequency();
             String percentage = String.format("%.1f%%", frequency * 100);
             String omimLabel = omimTerms.stream()
-                    .filter(ro -> ro.omimTerm().termId().equals(freq.omimId()))
+                    .filter(ro -> ro.omimTerm().termId().equals(freq.diseaseId().getValue()))
                     .findFirst().get().omimTerm().termLabel();
             String name = String.join("; ", omimLabel);
             items.add(new RepetitionCellTooltipItem(name, percentage));

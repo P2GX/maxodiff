@@ -26,8 +26,8 @@ public class MdDiseaseRow {
 
         List<MdDiseaseRow> rows = new ArrayList<>();
         for (RankedOmimTerm rankedOmimTerm : results.getFirst().rankedOmimTermList()) {
-            String omimId = rankedOmimTerm.omimTerm().termId();
-            String omimLabel = rankedOmimTerm.omimTerm().termLabel();
+            String diseaseId = rankedOmimTerm.omimTerm().termId();
+            String diseaseLabel = rankedOmimTerm.omimTerm().termLabel();
             List<MdDiseaseTableCell> cells = new ArrayList<>();
             double score = 0.;
             double topScore = results.getFirst().maxoScore();
@@ -35,8 +35,8 @@ public class MdDiseaseRow {
             List<MaxoDiseaseCellTooltipItem> tooltipItems = new ArrayList<>();
             for (RankedMaxoResult result : results) {
                 if (!result.frequencies().isEmpty()) {
-                    String firstMaxoDiseaseId = result.frequencies().getFirst().omimId();
-                    if (firstMaxoDiseaseId.equals(omimId)) {
+                    String firstMaxoDiseaseId = result.frequencies().getFirst().diseaseId().getValue();
+                    if (firstMaxoDiseaseId.equals(diseaseId)) {
                         String maxoLabel = result.maxoTerm().termLabel();
                         score = result.maxoScore();
                         tooltipItems.add(new MaxoDiseaseCellTooltipItem(maxoLabel, String.format("%.2f", score)));
@@ -47,7 +47,7 @@ public class MdDiseaseRow {
                     cells.add(new MdDiseaseTableCell(score, opacity, tooltipHeader, tooltipItems));
                 }
             }
-            rows.add(new MdDiseaseRow(omimId, omimLabel, score, topScore, cells));
+            rows.add(new MdDiseaseRow(diseaseId, diseaseLabel, score, topScore, cells));
 
         }
         return rows;

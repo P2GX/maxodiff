@@ -33,10 +33,10 @@ public class MdHtmlResult {
 
         List<HpoFrequency> hpoFrequenciesMica = new ArrayList<>();
         for (HpoFrequency hpoFrequency : result.frequencies()) {
-            String omimId = hpoFrequency.omimId();
-            String hpoId = hpoFrequency.hpoId();
+            TermId omimId = hpoFrequency.diseaseId();
+            TermId hpoId = hpoFrequency.hpoId();
             float frequency = hpoFrequency.frequency();
-            float mica = htmlFrequencyMap.micaForDisease(TermId.of(hpoId), TermId.of(omimId));
+            float mica = htmlFrequencyMap.micaForDisease(hpoId, omimId);
             hpoFrequenciesMica.add(new HpoFrequency(omimId, hpoId, frequency, mica));
         }
 

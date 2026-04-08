@@ -25,6 +25,7 @@ public class MaxoTermEvaluator implements Callable<RankedMaxoResult> {
     private final Set<TermId> diseaseIds;
     private final List<DifferentialDiagnosis> initialDiagnoses;
     private final BiometadataService biometadataService;
+    private final List<HpoFrequency> hpoFrequenciesNDiseases;
 
     public MaxoTermEvaluator(
             MaxoHpoDiseaseRank maxoHpoDiseaseRank,
@@ -33,7 +34,8 @@ public class MaxoTermEvaluator implements Callable<RankedMaxoResult> {
             DDxEngine engine,
             MaxoHpoTermProbabilities maxoHpoTermProbabilities,
             List<DifferentialDiagnosis> initialDiagnoses,
-            Set<TermId> diseaseIds, BiometadataService biometadataService) {
+            Set<TermId> diseaseIds, BiometadataService biometadataService,
+            List<HpoFrequency> hpoFrequenciesNDiseases) {
         this.maxoHpoDiseaseRank = maxoHpoDiseaseRank;
         this.nRepetitions = nRepetitions;
         this.ppkt = ppkt;
@@ -42,6 +44,7 @@ public class MaxoTermEvaluator implements Callable<RankedMaxoResult> {
         this.diseaseIds = diseaseIds;
         this.initialDiagnoses = initialDiagnoses;
         this.biometadataService = biometadataService;
+        this.hpoFrequenciesNDiseases = hpoFrequenciesNDiseases;
     }
 
     @Override
@@ -74,7 +77,8 @@ public class MaxoTermEvaluator implements Callable<RankedMaxoResult> {
             scores.add(finalScore);
         }
         double meanScore = scores.stream().mapToDouble(Double::doubleValue).average().orElse(0.0);
-        return makeRankedMaxoResult(simulatedHpoIdSet, meanScore, initialDiagnoses, newMaxoDiagnosesList, simulatedHpoCountSet);
+        return makeRankedMaxoResult(simulatedHpoIdSet, meanScore, initialDiagnoses, newMaxoDiagnosesList,
+                simulatedHpoCountSet, hpoFrequenciesNDiseases);
     }
 
     /**
@@ -227,17 +231,6 @@ public class MaxoTermEvaluator implements Callable<RankedMaxoResult> {
         return result;
     }
 
-    /**
-     *
-     * @param diseases List of Hpo diseases
-     * @return Map of HPO Term Id and List of HpoFrequency objects.
-     */
-    private Map<String, List<HpoFrequency>> getHpoTermFrequencies(
-            List<HpoDisease> diseases) {
-        // Collect HPO terms and frequencies for the target m diseases
-        DiseaseTermCount diseaseTermCount = DiseaseTermCount.of(diseases);
-        return diseaseTermCount.hpoTermCounts();
-    }
 
     /**
      *
@@ -247,22 +240,22 @@ public class MaxoTermEvaluator implements Callable<RankedMaxoResult> {
      * @return List of Frequencies records
      */
     private List<HpoFrequency> getFrequencyRecords(Set<TermId> omimIds, Set<SimpleTerm> hpoIds,
-                                                  Map<String, List<HpoFrequency>> hpoTermFrequencies) {
+                                                  List<HpoFrequency> hpoTermFrequencies) {
 
         List<HpoFrequency> frequencyRecords = new ArrayList<>();
         //Set<TermId> omimIds = maxoTermScoreRecord.omimTermIds();
         for (SimpleTerm hpoTerm : hpoIds) { //maxoTermScoreRecord.hpoTermIds()
             TermId hpoId = TermId.of(hpoTerm.termId());
-            List<HpoFrequency> frequencies = hpoTermFrequencies.get(hpoId.getValue());
-            if (frequencies != null) {
+            List<HpoFrequency> frequencies = hpoTermFrequencies.stream().filter(f->f.hpoId().equals(hpoId)).toList();
+//            if (frequencies != null) {
                 for (HpoFrequency hpoFrequency : frequencies) {
                     for (TermId omimId : omimIds) {
-                        if (hpoFrequency.omimId().equals(omimId.toString())) {
+                        if (hpoFrequency.diseaseId().equals(omimId)) {
                             frequencyRecords.add(hpoFrequency);
                         }
                     }
                 }
-            }
+//            }
         }
         return frequencyRecords;
     }
@@ -301,7 +294,8 @@ public class MaxoTermEvaluator implements Callable<RankedMaxoResult> {
             double meanScore,
             List<DifferentialDiagnosis> initialDiagnoses,
             List<List<DifferentialDiagnosis>> newMaxoDiagnosesList,
-            Map<String, Integer> chosenHpoTermCountsMap) {
+            Map<String, Integer> chosenHpoTermCountsMap,
+            List<HpoFrequency> hpoFrequenciesNDiseases) {
 
         // Step 1: Make MAXO SimpleTerm
         String maxoId = maxoHpoDiseaseRank.getMaxoId();
@@ -319,8 +313,8 @@ public class MaxoTermEvaluator implements Callable<RankedMaxoResult> {
 
         // Step 4: get collection of HPO Term Frequencies (List<Frequencies>)
         List<HpoDisease> hpoDiseases = maxoHpoTermProbabilities.getHpoDiseases().hpoDiseases().toList();
-        Map<String, List<HpoFrequency>> hpoFrequencyMap = getHpoTermFrequencies(hpoDiseases);
-        List<HpoFrequency> frequencies = getFrequencyRecords(maxoIds, chosenHpoIds, hpoFrequencyMap);
+//        List<HpoFrequency> hpoFrequencyMap = getHpoTermFrequencies(hpoDiseases, allHpoFrequencies);
+        List<HpoFrequency> frequencies = getFrequencyRecords(maxoIds, chosenHpoIds, hpoFrequenciesNDiseases);
 
         // Step 5: construct final result
         return new RankedMaxoResult(

@@ -25,15 +25,18 @@ public class MaxodiffAnalysisRunner {
     private final MdContext mdContext;
     private final DDxEngine engine;
     private final DiffDiagRefiner maxoDiffRefiner;
+    private final List<HpoFrequency> hpoFrequencies;
 
     public MaxodiffAnalysisRunner(
             MdContext mdContext,
             DDxEngine engine,
-            DiffDiagRefiner maxoDiffRefiner
+            DiffDiagRefiner maxoDiffRefiner,
+            List<HpoFrequency> hpoFrequencies
     ) {
         this.mdContext = mdContext;
         this.engine = engine;
         this.maxoDiffRefiner = maxoDiffRefiner;
+        this.hpoFrequencies = hpoFrequencies;
     }
 
 
@@ -45,8 +48,8 @@ public class MaxodiffAnalysisRunner {
        // RefinementOptions options = RefinementOptions.of(this.nDiseases, this.nRepetitions);
         List<DifferentialDiagnosis> orderedDiagnoses = maxoDiffRefiner.getOrderedDiagnoses(differentialDiagnoses);
         List<HpoDisease> diseases = maxoDiffRefiner.getDiseases(orderedDiagnoses);
-        Map<String, List<HpoFrequency>> hpoTermCounts = maxoDiffRefiner.getHpoTermCounts(diseases);
-        return getRefinementResults(differentialDiagnoses, orderedDiagnoses, hpoTermCounts, ppktData, ppktMaxoIds);
+        List<HpoFrequency> hpoFrequenciesNDiseases = maxoDiffRefiner.getHpoFrequenciesNDiseases(diseases, hpoFrequencies);
+        return getRefinementResults(differentialDiagnoses, orderedDiagnoses, hpoFrequenciesNDiseases, ppktData, ppktMaxoIds);
     }
 
     public MaxoDiffAnalysisResultRow batchAnalysis(PhenopacketData ppktData) throws Exception {
@@ -77,7 +80,7 @@ public class MaxodiffAnalysisRunner {
     private List<RankedMaxoResult> getRefinementResults(
             List<DifferentialDiagnosis> differentialDiagnoses,
             List<DifferentialDiagnosis> orderedDiagnoses,
-            Map<String, List<HpoFrequency>> hpoTermCounts,
+            List<HpoFrequency> hpoFrequenciesNDiseases,
             PhenopacketData sample,
             List<TermId> ppktMaxoIds) throws Exception {
         List<DifferentialDiagnosis> allOrderedDiagnoses = differentialDiagnoses.stream()
@@ -87,9 +90,10 @@ public class MaxodiffAnalysisRunner {
         Set<TermId> initialDiagnosesIds = initialDiagnoses.stream()
                 .map(DifferentialDiagnosis::diseaseId)
                 .collect(Collectors.toCollection(LinkedHashSet::new));
-        Map<String, Set<String>> maxoToHpoTermIdMap = maxoDiffRefiner.getMaxoToHpoTermIdMap(hpoTermCounts);
+        Map<String, Set<String>> maxoToHpoTermIdMap = maxoDiffRefiner.getMaxoToHpoTermIdMap(hpoFrequenciesNDiseases);
 
-        RankMaxo rankMaxo = maxoDiffRefiner.getRankMaxo(allOrderedDiagnoses, initialDiagnoses, engine, maxoToHpoTermIdMap);
+        RankMaxo rankMaxo = maxoDiffRefiner.getRankMaxo(allOrderedDiagnoses, initialDiagnoses, engine,
+                maxoToHpoTermIdMap, hpoFrequenciesNDiseases);
 
         return maxoDiffRefiner.run(sample,
                 initialDiagnosesIds,
