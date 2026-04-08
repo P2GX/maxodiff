@@ -12,6 +12,10 @@ import java.util.*;
 public class HTMLFrequencyMap {
     private final HpoDiseases diseases;
     private final Map<TermPair, Double> icMicaData;
+    /** Maximum minimum informatic content of most informative common ancestor (MICA)
+     * We calculate this dynamically but this is a fall back in case there is
+     * an issue*/
+    private final static double DEFAULT_MAX_MICA = 8.343077871169383;
 
     public HTMLFrequencyMap(
            MdContext context
@@ -45,12 +49,15 @@ public class HTMLFrequencyMap {
         return mica;
     }
 
+    /**
+     * @return maximum information content of any most informative common ancestor (MICA) in HPO annotation graph
+     */
     public double maxMica() {
         return icMicaData.entrySet().stream()
                 .filter(e -> !e.getValue().isInfinite())
                 .max(Map.Entry.comparingByValue())
                 .map(Map.Entry::getValue)
-                .orElse(Double.NaN);
+                .orElse(DEFAULT_MAX_MICA);
     }
 
 }
