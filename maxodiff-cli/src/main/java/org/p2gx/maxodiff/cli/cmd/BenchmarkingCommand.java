@@ -172,7 +172,6 @@ public class BenchmarkingCommand extends DDxCommand {
             PpktSample ppktSample = getPpktSample(ppktPath);
             PhenopacketData ppktData = PhenopacketData.readPhenopacketData(phenopacketPath);
             BaseBenchmarker benchmarker = new BaseBenchmarker(ppktData,
-                    ppktData.maxoProcedureIds(),
                     refinementOptions,
                     this.phenomizer,
                     this.hpoDiseases,
@@ -198,10 +197,8 @@ public class BenchmarkingCommand extends DDxCommand {
     private List<BenchmarkResult> runShuffleOnePPkt(Path ppktPath, Map<String, Double> termToIcMap) {
         List<BenchmarkResult> resultList = new ArrayList<>();
         try {
-            //PpktSample ppktSample = getPpktSample(ppktPath);
             PhenopacketData ppktData = PhenopacketData.readPhenopacketData(phenopacketPath);
             BaseBenchmarker benchmarker = new BaseBenchmarker(ppktData,
-                    ppktData.maxoProcedureIds(),
                     refinementOptions,
                     this.phenomizer,
                     this.hpoDiseases,
@@ -272,19 +269,6 @@ public class BenchmarkingCommand extends DDxCommand {
         int nMaxoRandom = randomizedResults.size();
         return new BenchmarkResult(ppktId, nDiseases, nRepetitions, TermId.of(topMaxo), maxoFinalScore,
                 procedure, topMaxoRandomIdx, maxScoreValueRandom, nMaxo, nMaxoRandom, spikedIdx);
-    }
-
-    private BenchmarkResult getShuffledBenchmarkResultOld(String ppktId,
-                                                       List<RankedMaxoResult> initialResults,
-                                                       double avgTopScoreRandom,
-                                                       Map<TermId, Double> termToIcMap) {
-
-        TermId topMaxo = TermId.of(initialResults.getFirst().maxoTerm().termId());
-        double maxoFinalScore = initialResults.getFirst().maxoScore();
-        BenchmarkProcedure procedure = BenchmarkProcedure.ShuffledRandomization;
-        int nMaxo = initialResults.size();
-        return new BenchmarkResult(ppktId, nDiseases, nRepetitions, topMaxo, maxoFinalScore,
-                procedure, -1, avgTopScoreRandom, nMaxo, -1, -1);
     }
 
     private BenchmarkResult getShuffledBenchmarkResult(String ppktId,

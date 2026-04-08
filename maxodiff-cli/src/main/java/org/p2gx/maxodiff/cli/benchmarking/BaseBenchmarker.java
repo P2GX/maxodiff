@@ -32,7 +32,6 @@ public class BaseBenchmarker {
     private final DiffDiagRefiner refiner;
     private final Ontology ontology;
     private final Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxoTermMap;
-    private final List<TermId> ppktMaxoIds;
     private final List<HpoFrequency> hpoFrequencies;
 
     public List<DifferentialDiagnosis> getCompleteInitialDiffDiagList() {
@@ -47,7 +46,6 @@ public class BaseBenchmarker {
     }
 
     public BaseBenchmarker(PhenopacketData sample,
-                           List<TermId> ppktMaxoIds,
                            RefinementOptions refinementOptions,
                            DDxEngine phenomizer,
                            HpoDiseases hpoDiseases,
@@ -66,7 +64,7 @@ public class BaseBenchmarker {
         this.hpoFrequencies = hpoFrequencies;
         this.completeInitialDiffDiagList = determineInitialDiagnoses();
         this.maxoHpoTermProbabilities = calculateMaxoHpoTermProbabilities();
-        this.ppktMaxoIds = ppktMaxoIds;
+
     }
 
 
