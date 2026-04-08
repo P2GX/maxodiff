@@ -60,4 +60,5 @@ public class HTMLFrequencyMap {
                 .orElse(DEFAULT_MAX_MICA);
     }
 
+
 }

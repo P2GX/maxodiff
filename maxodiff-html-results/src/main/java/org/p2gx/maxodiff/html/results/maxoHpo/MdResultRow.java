@@ -41,7 +41,7 @@ public class MdResultRow {
                 int ct = hpoTerm.count();
                 Optional<HpoFrequency> hpoFrequencyOpt = hpoFrequenciesMica.stream()
                     .filter(hpoFrequency ->
-                        (hpoFrequency.omimId().equals(omimId) && hpoFrequency.hpoId().equals(hpoId)))
+                        (hpoFrequency.diseaseId().getValue().equals(omimId) && hpoFrequency.hpoId().getValue().equals(hpoId)))
                     .findFirst();
                 float mica = hpoFrequencyOpt.map(HpoFrequency::mica).orElseGet(() -> htmlFrequencyMap.micaForDisease(TermId.of(hpoId), TermId.of(omimId)));
                 double opacity = mica / maxMica;

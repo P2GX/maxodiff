@@ -4,14 +4,11 @@ import org.monarchinitiative.phenol.ontology.data.MinimalOntology;
 import org.p2gx.maxodiff.core.JpsChecker;
 import org.p2gx.maxodiff.core.ProgessBar;
 
+import org.p2gx.maxodiff.core.analysis.*;
 import org.p2gx.maxodiff.core.diffdg.DDxEngine;
 import org.p2gx.maxodiff.core.io.MdContext;
 import org.p2gx.maxodiff.core.service.BiometadataService;
 import org.monarchinitiative.phenol.ontology.data.TermId;
-import org.p2gx.maxodiff.core.analysis.MaxoTermEvaluator;
-import org.p2gx.maxodiff.core.analysis.RankMaxoProgress;
-import org.p2gx.maxodiff.core.analysis.RankedMaxoResult;
-import org.p2gx.maxodiff.core.analysis.SimpleTerm;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -29,6 +26,7 @@ public class RankMaxo {
     RankMaxoProgress rankMaxoProgress;
     private final List<DifferentialDiagnosis> allInitialDiagnoses;
     private final List<DifferentialDiagnosis> initialDiagnoses;
+    private final List<HpoFrequency> hpoFrequenciesNDiseases;
 
     /**
      * The {@code RankMaxo} ranks MAxO terms and returns results in descending order by score.
@@ -38,7 +36,7 @@ public class RankMaxo {
      * @param maxoHpoTermProbabilities Class with methods for MAxO:HPO term probability calculations
      *                                 (e.g. Probability that the HPO term will be ascertained by a MAxO term procedure).
      * @param engine The engine used for the differential diagnosis. The default is Phenomizer.
-     * @param hpo Full HPO ontology.
+     * @param hpoFrequenciesNDiseases List of HpoFrequency objects for top N diseases.
      * @param allInitialDiagnoses Full list of diseases from the initial differential diagnosis.
      *
      * @author Martha Beckwith
@@ -50,12 +48,14 @@ public class RankMaxo {
                     DDxEngine engine,
                     MinimalOntology hpo,
                     List<DifferentialDiagnosis> allInitialDiagnoses,
-                    List<DifferentialDiagnosis> initialDiagnoses) {
+                    List<DifferentialDiagnosis> initialDiagnoses,
+                    List<HpoFrequency> hpoFrequenciesNDiseases) {
         this.maxoToHpoTermIdMap = maxoToHpoTermIdMap;
         this.maxoHpoTermProbabilities = maxoHpoTermProbabilities;
         this.engine = engine;
         this.allInitialDiagnoses = allInitialDiagnoses;
         this.initialDiagnoses = initialDiagnoses;
+        this.hpoFrequenciesNDiseases = hpoFrequenciesNDiseases;
     }
 
     /**
@@ -100,7 +100,7 @@ public class RankMaxo {
             tasks.add(() -> {
                 MaxoTermEvaluator evaluateMaxoTerm = new MaxoTermEvaluator(maxoHpoDiseaseRank, nRepetitions, ppkt,
                         engine, maxoHpoTermProbabilities,
-                        initialDiagnoses, diseaseIds, biometadataService);
+                        initialDiagnoses, diseaseIds, biometadataService, hpoFrequenciesNDiseases);
                 double done = completedTasks.incrementAndGet();
                 rankMaxoProgress.updateProgress(maxoId, done);
                 if (JpsChecker.isMainClassRunning("org.p2gx.maxodiff.cli.Main")) {

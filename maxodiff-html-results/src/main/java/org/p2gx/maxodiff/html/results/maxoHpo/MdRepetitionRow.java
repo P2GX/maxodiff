@@ -28,7 +28,6 @@ public class MdRepetitionRow {
 
     private static String getStyleString(Integer counts, int nRepetitions) {
         double opacity =  (counts * 1.0) / nRepetitions;
-        opacity = 0.5;
         return "rgba(255, 215, 0, " + opacity + ")";
     }
 
@@ -40,7 +39,7 @@ public class MdRepetitionRow {
             float frequency = freq.frequency();
             String percentage = String.format("%.1f%%", frequency * 100);
             String omimLabel = omimTerms.stream()
-                    .filter(ro -> ro.omimTerm().termId().equals(freq.omimId()))
+                    .filter(ro -> ro.omimTerm().termId().equals(freq.diseaseId().getValue()))
                     .findFirst().get().omimTerm().termLabel();
             String name = String.join("; ", omimLabel);
             items.add(new RepetitionCellTooltipItem(name, percentage));
