@@ -5,7 +5,9 @@ import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDisease;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
 import org.monarchinitiative.phenol.ontology.data.MinimalOntology;
 import org.monarchinitiative.phenol.ontology.data.TermId;
+import org.p2gx.maxodiff.core.analysis.HTMLFrequencyMap;
 import org.p2gx.maxodiff.core.analysis.HpoFrequency;
+import org.p2gx.maxodiff.core.analysis.MySimpleTerm;
 import org.p2gx.maxodiff.core.analysis.SimpleTerm;
 import org.p2gx.maxodiff.core.analysis.refinement.DiffDiagRefiner;
 import org.p2gx.maxodiff.core.analysis.refinement.DiffDiagRefinerImpl;
@@ -37,26 +39,19 @@ public record MdContext(MdResources resources,
             for (TermId hpoId : disease.annotationTermIdList()) {
 //                List<HpoFrequency> freqRecords = hpoFrequencies.computeIfAbsent(hpoId.getValue(), id -> new ArrayList<>());
                 float freq = disease.getFrequencyOfTermInDisease(hpoId).map(Ratio::frequency).orElse(1f);
-                hpoFrequencies.add(new HpoFrequency(diseaseId, hpoId, freq, 0f));
+                HTMLFrequencyMap htmlFrequencyMap = new HTMLFrequencyMap(resources.hpoDiseases(), resources.icMicaData());
+                float mica = htmlFrequencyMap.micaForDisease(hpoId, diseaseId);
+                hpoFrequencies.add(new HpoFrequency(diseaseId, hpoId, freq, mica));
             }
         }
         return hpoFrequencies;
     }
 
     public DiffDiagRefiner createRefiner() {
-        Map<SimpleTerm, Set<SimpleTerm>> maxoAnnotsMap = resources.maxoAnnotsMap();
-        MinimalOntology hpo = resources.hpo();
-        HpoDiseases diseases = resources.hpoDiseases();
+        Map<MySimpleTerm, Set<MySimpleTerm>> maxoAnnotsMap = resources.maxoAnnotsMap();
+        Map<MySimpleTerm, Set<MySimpleTerm>> maxoToHpoMap = resources.maxoToHpoMap();
 
-
-        Map<String, Set<String>> hpoToMaxoIdMap = new HashMap<>();
-        for (Map.Entry<SimpleTerm, Set<SimpleTerm>> entry : maxoAnnotsMap.entrySet()) {
-            String hpoId = entry.getKey().termId();
-            Set<String> maxoIds = new HashSet<>();
-            maxoAnnotsMap.get(entry.getKey()).forEach(t -> maxoIds.add(t.termId()));
-            hpoToMaxoIdMap.put(hpoId, maxoIds);
-        }
-        return new DiffDiagRefinerImpl(this,  hpoToMaxoIdMap, maxoAnnotsMap);
+        return new DiffDiagRefinerImpl(this,  maxoToHpoMap, maxoAnnotsMap);
        // return new DiffDiagRefinerImpl(diseases, hpoToMaxoIdMap, maxoAnnotsMap, hpo);
     }
 

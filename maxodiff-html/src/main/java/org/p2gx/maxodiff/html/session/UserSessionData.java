@@ -28,13 +28,13 @@ public class UserSessionData implements Serializable {
     private RankMaxo rankMaxo;
     private List<DifferentialDiagnosis> orderedDiagnoses;
     private List<HpoFrequency> hpoTermCounts;
-    Map<String, Set<String>> maxoToHpoTermIdMap;
+    Map<TermId, Set<TermId>> maxoToHpoTermIdMap;
 
-    public Map<String, Set<String>> getMaxoToHpoTermIdMap() {
+    public Map<TermId, Set<TermId>> getMaxoToHpoTermIdMap() {
         return maxoToHpoTermIdMap;
     }
 
-    public void setMaxoToHpoTermIdMap(Map<String, Set<String>> maxoToHpoTermIdMap) {
+    public void setMaxoToHpoTermIdMap(Map<TermId, Set<TermId>> maxoToHpoTermIdMap) {
         this.maxoToHpoTermIdMap = maxoToHpoTermIdMap;
     }
 

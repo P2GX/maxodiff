@@ -1,5 +1,6 @@
 package org.p2gx.maxodiff.core.service;
 
+import org.p2gx.maxodiff.core.analysis.MySimpleTerm;
 import org.p2gx.maxodiff.core.analysis.SimpleTerm;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDisease;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
@@ -19,12 +20,12 @@ public class BiometadataServiceImpl implements BiometadataService {
     private final MinimalOntology ontology;
     private final Map<TermId, String> diseaseTermsMap;
 
-    public static BiometadataServiceImpl of(MinimalOntology hpo, HpoDiseases hpoDiseases, Map<SimpleTerm, Set<SimpleTerm>> maxoAnnotsMap) {
+    public static BiometadataServiceImpl of(MinimalOntology hpo, HpoDiseases hpoDiseases, Map<MySimpleTerm, Set<MySimpleTerm>> maxoAnnotsMap) {
         Map<TermId, String> diseaseToLabel = hpoDiseases.hpoDiseases().collect(Collectors.toMap(HpoDisease::id, HpoDisease::diseaseName));
         // Note, we assume that there are no MAxO terms with identical ids but different labels.
         Map<String, String> maxoTermsMap = maxoAnnotsMap.values().stream()
                 .flatMap(Collection::stream).distinct()
-                .collect(Collectors.toMap(SimpleTerm::termId, SimpleTerm::termLabel));
+                .collect(Collectors.toMap(mst -> String.valueOf(mst.tid()), MySimpleTerm::label));
         return new BiometadataServiceImpl(maxoTermsMap, hpo, diseaseToLabel);
     }
 

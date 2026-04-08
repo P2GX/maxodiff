@@ -86,17 +86,16 @@ public class MaxodiffAnalysisRunner {
         List<DifferentialDiagnosis> allOrderedDiagnoses = differentialDiagnoses.stream()
                 .sorted(Comparator.comparingDouble(DifferentialDiagnosis::score).reversed())
                 .toList();
-        List<DifferentialDiagnosis> initialDiagnoses = orderedDiagnoses.subList(0, this.mdContext.params().nDiseases());
-        Set<TermId> initialDiagnosesIds = initialDiagnoses.stream()
+        List<DifferentialDiagnosis> initialNDiagnoses = orderedDiagnoses.subList(0, this.mdContext.params().nDiseases());
+        Set<TermId> initialNDiagnosesIds = initialNDiagnoses.stream()
                 .map(DifferentialDiagnosis::diseaseId)
                 .collect(Collectors.toCollection(LinkedHashSet::new));
-        Map<String, Set<String>> maxoToHpoTermIdMap = maxoDiffRefiner.getMaxoToHpoTermIdMap(hpoFrequenciesNDiseases);
-
-        RankMaxo rankMaxo = maxoDiffRefiner.getRankMaxo(allOrderedDiagnoses, initialDiagnoses, engine,
+        Map<TermId, Set<TermId>> maxoToHpoTermIdMap = maxoDiffRefiner.getMaxoToHpoTermIdMap(hpoFrequenciesNDiseases);
+        RankMaxo rankMaxo = maxoDiffRefiner.getRankMaxo(allOrderedDiagnoses, initialNDiagnoses, engine,
                 maxoToHpoTermIdMap, hpoFrequenciesNDiseases);
 
         return maxoDiffRefiner.run(sample,
-                initialDiagnosesIds,
+                initialNDiagnosesIds,
                 rankMaxo);
     }
 

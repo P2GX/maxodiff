@@ -9,13 +9,13 @@ public class MaxoHpoTermIdMaps {
      * @param hpoToMaxoTermMap Map of HPO terms : Set of associated MAxO terms created using maxo_diagnostic_annotations file.
      * @return Map of HPO TermIds : Set of associated MAxO TermIds
      */
-    public static Map<String, Set<String>> getHpoToMaxoTermIdMap(Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxoTermMap) {
+    public static Map<String, Set<String>> getHpoToMaxoTermIdMap(Map<MySimpleTerm, Set<MySimpleTerm>> hpoToMaxoTermMap) {
         Map<String, Set<String>> hpoToMaxoTermIdMap = new HashMap<>();
-        for (Map.Entry<SimpleTerm, Set<SimpleTerm>> entry : hpoToMaxoTermMap.entrySet()) {
-            String hpoId = entry.getKey().termId();
-            Set<SimpleTerm> maxoTerms = entry.getValue();
-            for (SimpleTerm maxoTerm : maxoTerms) {
-                String maxoId = maxoTerm.termId();
+        for (Map.Entry<MySimpleTerm, Set<MySimpleTerm>> entry : hpoToMaxoTermMap.entrySet()) {
+            String hpoId = entry.getKey().tid().getValue();
+            Set<MySimpleTerm> maxoTerms = entry.getValue();
+            for (MySimpleTerm maxoTerm : maxoTerms) {
+                String maxoId = maxoTerm.tid().getValue();
                 hpoToMaxoTermIdMap.computeIfAbsent(hpoId, k -> new HashSet<>()).add(maxoId);
             }
         }
@@ -27,13 +27,13 @@ public class MaxoHpoTermIdMaps {
      * @param hpoToMaxoTermMap Map of HPO terms : Set of associated MAxO terms created using maxo_diagnostic_annotations file.
      * @return Map of MAxO TermIds : Set of associated HPO TermIds
      */
-    public static Map<String, Set<String>> getMaxoToHpoTermIdMap(Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxoTermMap) {
+    public static Map<String, Set<String>> getMaxoToHpoTermIdMap(Map<MySimpleTerm, Set<MySimpleTerm>> hpoToMaxoTermMap) {
         Map<String, Set<String>> maxoToHpoTermIdMap = new HashMap<>();
-        for (Map.Entry<SimpleTerm, Set<SimpleTerm>> entry : hpoToMaxoTermMap.entrySet()) {
-            String hpoId = entry.getKey().termId();
-            Set<SimpleTerm> maxoTerms = entry.getValue();
-            for (SimpleTerm maxoTerm : maxoTerms) {
-                String maxoId = maxoTerm.termId();
+        for (Map.Entry<MySimpleTerm, Set<MySimpleTerm>> entry : hpoToMaxoTermMap.entrySet()) {
+            String hpoId = entry.getKey().tid().getValue();
+            Set<MySimpleTerm> maxoTerms = entry.getValue();
+            for (MySimpleTerm maxoTerm : maxoTerms) {
+                String maxoId = maxoTerm.tid().getValue();
                 maxoToHpoTermIdMap.computeIfAbsent(maxoId, k -> new HashSet<>()).add(hpoId);
             }
         }

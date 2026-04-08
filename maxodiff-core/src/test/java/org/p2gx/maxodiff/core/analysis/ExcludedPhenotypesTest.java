@@ -23,7 +23,7 @@ import static org.junit.jupiter.api.Assertions.*;
 public class ExcludedPhenotypesTest {
 
      private final static HpoDiseases hpoDiseases = TestResources.hpoDiseases();
-     private final static Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxoTermMap = TestResources.hpoToMaxoToy();
+     private final static Map<MySimpleTerm, Set<MySimpleTerm>> hpoToMaxoTermMap = TestResources.hpoToMaxoToy();
 
      private final static Map<String, Set<String>> hpoToMaxoTermIdMap = MaxoHpoTermIdMaps.getHpoToMaxoTermIdMap(hpoToMaxoTermMap);
      private final static Map<String, Set<String>> maxoToHpoTermIdMap = MaxoHpoTermIdMaps.getMaxoToHpoTermIdMap(hpoToMaxoTermMap);

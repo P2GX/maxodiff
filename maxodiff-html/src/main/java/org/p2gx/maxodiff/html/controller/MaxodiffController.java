@@ -38,24 +38,15 @@ public class MaxodiffController {
 
     private DiffDiagRefiner diffDiagRefiner;
 
-    private final Map<String, Set<String>> hpoToMaxoIdMap;
-
-    private final Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxoTermMap;
-
     private static final Path UPLOAD_DIR = Paths.get(System.getProperty("user.home"), "maxodiff", "uploads");
 
     public MaxodiffController(
             UserSessionData sessionData,
             MdContext context,
-            DiffDiagRefiner diffDiagRefiner,
-            Map<String, Set<String>> hpoToMaxoIdMap,
-            Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxoTermMap
-    ) {
+            DiffDiagRefiner diffDiagRefiner) {
         this.sessionData = sessionData;
         this.mdContext = context;
         this.diffDiagRefiner = diffDiagRefiner;
-        this.hpoToMaxoIdMap = hpoToMaxoIdMap;
-        this.hpoToMaxoTermMap = hpoToMaxoTermMap;
     }
 
     @RequestMapping("/maxodiff")
@@ -86,7 +77,8 @@ public class MaxodiffController {
         model.addAttribute("differentialDiagnoses", differentialDiagnoses);
 
         // Maxodiff refiner
-        diffDiagRefiner = new DiffDiagRefinerImpl(mdContext, hpoToMaxoIdMap, hpoToMaxoTermMap);
+        diffDiagRefiner = new DiffDiagRefinerImpl(mdContext,
+                mdContext.resources().maxoToHpoMap(), mdContext.resources().maxoAnnotsMap());
 
         // maxodiff analysis parameters: n diseases to use and n simulations to run
         Integer prevNDiseases = (Integer) model.getAttribute("nDiseases");
@@ -113,10 +105,10 @@ public class MaxodiffController {
 
             // Map of MAxO term id : List of associated HPO term ids for the subset n diseases. HPO ancestors are removed
             if (sessionData.getMaxoToHpoTermIdMap() == null || !nDiseases.equals(sessionData.getDiagnosesCount())) {
-                Map<String, Set<String>> maxoToHpoTermIdMap = diffDiagRefiner.getMaxoToHpoTermIdMap(hpoTermCounts);
+                Map<TermId, Set<TermId>> maxoToHpoTermIdMap = diffDiagRefiner.getMaxoToHpoTermIdMap(hpoTermCounts);
                 sessionData.setMaxoToHpoTermIdMap(maxoToHpoTermIdMap);
             }
-            Map<String, Set<String>> maxoToHpoTermIdMap = sessionData.getMaxoToHpoTermIdMap();
+            Map<TermId, Set<TermId>> maxoToHpoTermIdMap = sessionData.getMaxoToHpoTermIdMap();
             if (orderedDiagnoses == null || orderedDiagnoses.isEmpty()) {
                 model.addAttribute("errorMessage", "No diagnoses retrieved. Please report to developers.");
                 model.addAttribute("hasError", true);

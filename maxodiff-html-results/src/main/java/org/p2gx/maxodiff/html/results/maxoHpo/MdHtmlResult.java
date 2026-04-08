@@ -31,19 +31,10 @@ public class MdHtmlResult {
         this.maxoLabel = result.maxoTerm().termLabel();
         this.rankedMaxoResult = result;
 
-        List<HpoFrequency> hpoFrequenciesMica = new ArrayList<>();
-        for (HpoFrequency hpoFrequency : result.frequencies()) {
-            TermId omimId = hpoFrequency.diseaseId();
-            TermId hpoId = hpoFrequency.hpoId();
-            float frequency = hpoFrequency.frequency();
-            float mica = htmlFrequencyMap.micaForDisease(hpoId, omimId);
-            hpoFrequenciesMica.add(new HpoFrequency(omimId, hpoId, frequency, mica));
-        }
-
         double maxMica = htmlFrequencyMap.maxMica();
         repetitionRow = MdRepetitionRow.buildRepetitionRow(nRepetitions, result);
 
-        this.resultRows = MdResultRow.createMaxoResultRows(result, nDiseases, hpoFrequenciesMica, htmlFrequencyMap, maxMica);
+        this.resultRows = MdResultRow.createMaxoResultRows(result, nDiseases, htmlFrequencyMap, maxMica);
     }
 
     public int index() {

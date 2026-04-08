@@ -1,5 +1,6 @@
 package org.p2gx.maxodiff.core;
 
+import org.p2gx.maxodiff.core.analysis.MySimpleTerm;
 import org.p2gx.maxodiff.core.analysis.SimpleTerm;
 import org.p2gx.maxodiff.core.io.MaxoDxAnnots;
 import org.p2gx.maxodiff.core.model.DifferentialDiagnosis;
@@ -37,7 +38,7 @@ public class TestResources {
     private static volatile Ontology ONTOLOGY;
     private static volatile MinimalOntology MINIMAL_ONTOLOGY;
     private static volatile HpoDiseases HPO_DISEASES;
-    private static volatile Map<SimpleTerm, Set<SimpleTerm>> HPO_2_MAXO;
+    private static volatile Map<MySimpleTerm, Set<MySimpleTerm>> HPO_2_MAXO;
 
     public static HpoDiseases hpoDiseases() {
         if (HPO_DISEASES == null) {
@@ -89,7 +90,7 @@ public class TestResources {
         return MINIMAL_ONTOLOGY;
     }
 
-    public static Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxo() {
+    public static Map<MySimpleTerm, Set<MySimpleTerm>> hpoToMaxo() {
         if (HPO_2_MAXO == null) {
             synchronized (TestResources.class) {
                 if (HPO_2_MAXO == null) {
@@ -104,8 +105,8 @@ public class TestResources {
         return HPO_2_MAXO;
     }
 
-    public static Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxoToy() {
-        Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxoToy = new HashMap<>();
+    public static Map<MySimpleTerm, Set<MySimpleTerm>> hpoToMaxoToy() {
+        Map<MySimpleTerm, Set<MySimpleTerm>> hpoToMaxoToy = new HashMap<>();
         List<TermId> hpoIdSubset = List.of(
             TermId.of("HP:0006739"),
             TermId.of("HP:0002863"),
@@ -118,11 +119,11 @@ public class TestResources {
                 TermId.of("HP:0001873")
         );
 
-        for (Map.Entry<SimpleTerm, Set<SimpleTerm>> entry : hpoToMaxo().entrySet()) {
-            SimpleTerm hpoTerm = entry.getKey();
-            Set<SimpleTerm> maxoTerms = entry.getValue();
+        for (Map.Entry<MySimpleTerm, Set<MySimpleTerm>> entry : hpoToMaxo().entrySet()) {
+            MySimpleTerm hpoTerm = entry.getKey();
+            Set<MySimpleTerm> maxoTerms = entry.getValue();
             for (TermId hpoId : hpoIdSubset) {
-                if (hpoTerm.termId().equals(hpoId.getValue())) {
+                if (hpoTerm.tid().equals(hpoId)) {
                     hpoToMaxoToy.put(hpoTerm, maxoTerms);
                 }
             }
