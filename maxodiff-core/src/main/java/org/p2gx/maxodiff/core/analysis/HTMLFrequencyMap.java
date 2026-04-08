@@ -12,14 +12,10 @@ import java.util.*;
 public class HTMLFrequencyMap {
     private final HpoDiseases diseases;
     private final Map<TermPair, Double> icMicaData;
-
-    public HTMLFrequencyMap(
-            HpoDiseases diseases,
-            Map<TermPair, Double> icMicaData
-    ) {
-        this.diseases = diseases;
-        this.icMicaData = icMicaData;
-    }
+    /** Maximum minimum informatic content of most informative common ancestor (MICA)
+     * We calculate this dynamically but this is a fall back in case there is
+     * an issue*/
+    private final static double DEFAULT_MAX_MICA = 8.343077871169383;
 
     public HTMLFrequencyMap(
            MdContext context
@@ -27,23 +23,6 @@ public class HTMLFrequencyMap {
         this.diseases = context.resources().hpoDiseases();
         this.icMicaData = context.resources().icMicaData().icMicaDict();
     }
-
-
-    /**
-     * Retrieve a flattened list of {@link HpoFrequency} records from the provided map.
-     *
-     * <p>Each {@link HpoFrequency} has an OMIM id, an HPO id, and a frequency..</p>
-     *
-     * @param hpoTermCounts a map where each key is an {@link TermId} and the value is a list of
-     *                      {@link HpoFrequency} objects associated with that term
-     * @return a combined list of all {@link HpoFrequency} objects across all HPO terms
-     */
-    public static List<HpoFrequency> getHpoFrequencies(Map<TermId, List<HpoFrequency>> hpoTermCounts) {
-        return hpoTermCounts.values().stream()
-                .flatMap(List::stream)
-                .toList();
-    }
-
 
 
 
@@ -68,6 +47,17 @@ public class HTMLFrequencyMap {
             if (m > mica) mica = (float) m;
         }
         return mica;
+    }
+
+    /**
+     * @return maximum information content of any most informative common ancestor (MICA) in HPO annotation graph
+     */
+    public double maxMica() {
+        return icMicaData.entrySet().stream()
+                .filter(e -> !e.getValue().isInfinite())
+                .max(Map.Entry.comparingByValue())
+                .map(Map.Entry::getValue)
+                .orElse(DEFAULT_MAX_MICA);
     }
 
 

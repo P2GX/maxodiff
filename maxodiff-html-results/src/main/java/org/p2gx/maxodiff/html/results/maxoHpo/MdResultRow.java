@@ -26,7 +26,8 @@ public class MdResultRow {
     public static List<MdResultRow> createMaxoResultRows(RankedMaxoResult result,
                                                          int nDiseases,
                                                          List<HpoFrequency> hpoFrequenciesMica,
-                                                         HTMLFrequencyMap htmlFrequencyMap) {
+                                                         HTMLFrequencyMap htmlFrequencyMap,
+                                                         double maxMica) {
         List<MdResultRow> rows = new ArrayList<>();
 
         for (RankedOmimTerm omimTerm : result.rankedOmimTermList()) {
@@ -43,9 +44,8 @@ public class MdResultRow {
                         (hpoFrequency.diseaseId().getValue().equals(omimId) && hpoFrequency.hpoId().getValue().equals(hpoId)))
                     .findFirst();
                 float mica = hpoFrequencyOpt.map(HpoFrequency::mica).orElseGet(() -> htmlFrequencyMap.micaForDisease(TermId.of(hpoId), TermId.of(omimId)));
-                float maxMica = 8.343077871169383f;
                 double opacity = mica / maxMica;
-                cells.add(new HpoTableCell(ct, opacity, mica));
+                cells.add(new HpoTableCell(ct, opacity, mica, maxMica));
             }
             rows.add(new MdResultRow(omimId, omimLabel, initialRank, averageRank, nDiseases, cells));
 
