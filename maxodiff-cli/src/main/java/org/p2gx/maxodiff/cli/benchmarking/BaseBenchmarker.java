@@ -2,6 +2,7 @@ package org.p2gx.maxodiff.cli.benchmarking;
 
 import org.p2gx.maxodiff.config.MaxodiffPropsConfiguration;
 import org.p2gx.maxodiff.core.analysis.HpoFrequency;
+import org.p2gx.maxodiff.core.analysis.MySimpleTerm;
 import org.p2gx.maxodiff.core.analysis.RankedMaxoResult;
 import org.p2gx.maxodiff.core.analysis.SimpleTerm;
 
@@ -28,10 +29,10 @@ public class BaseBenchmarker {
     private final int nRepetitions;
     private final DDxEngine phenomizer;
     private final HpoDiseases hpoDiseases;
-    private final Map<SimpleTerm, Set<SimpleTerm>> hpoTermToMaxoTermSetMap;
+    private final Map<MySimpleTerm, Set<MySimpleTerm>> hpoTermToMaxoTermSetMap;
     private final DiffDiagRefiner refiner;
     private final Ontology ontology;
-    private final Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxoTermMap;
+    private final Map<MySimpleTerm, Set<MySimpleTerm>> hpoToMaxoTermMap;
     private final List<HpoFrequency> hpoFrequencies;
 
     public List<DifferentialDiagnosis> getCompleteInitialDiffDiagList() {
@@ -104,9 +105,9 @@ public class BaseBenchmarker {
                 .collect(Collectors.toCollection(LinkedHashSet::new));
         List<HpoDisease> diseases = refiner.getDiseases(topNinitialDiffDiagList);
         List<HpoFrequency> hpoTermCounts = refiner.getHpoFrequenciesNDiseases(diseases, hpoFrequencies);
-        Map<String, Set<String>> maxoToHpoTermIdMap = refiner.getMaxoToHpoTermIdMap(hpoTermCounts);
+        Map<TermId, Set<TermId>> maxoToHpoTermIdMap = refiner.getMaxoToHpoTermIdMap(hpoTermCounts);
 
-        RankMaxo rankMaxo = new RankMaxo(hpoToMaxoTermMap, maxoToHpoTermIdMap,
+        RankMaxo rankMaxo = new RankMaxo(maxoToHpoTermIdMap,
                 maxoHpoTermProbabilities, phenomizer,
                 ontology, getCompleteInitialDiffDiagList(), topNinitialDiffDiagList, hpoTermCounts);
 
@@ -137,9 +138,9 @@ public class BaseBenchmarker {
 
         List<HpoDisease> diseases = refiner.getDiseases(initialDiagnosesNDiseasesRandom);
         List<HpoFrequency> hpoTermCounts = refiner.getHpoFrequenciesNDiseases(diseases, hpoFrequencies);
-        Map<String, Set<String>> maxoToHpoTermIdMap = refiner.getMaxoToHpoTermIdMap(hpoTermCounts);
+        Map<TermId, Set<TermId>> maxoToHpoTermIdMap = refiner.getMaxoToHpoTermIdMap(hpoTermCounts);
 
-        RankMaxo rankMaxo = new RankMaxo(hpoToMaxoTermMap, maxoToHpoTermIdMap,
+        RankMaxo rankMaxo = new RankMaxo(maxoToHpoTermIdMap,
                 maxoHpoTermProbabilities, phenomizer,
                 ontology, getCompleteInitialDiffDiagList(), initialDiagnosesNDiseasesRandom, hpoTermCounts);
 
@@ -164,9 +165,9 @@ public class BaseBenchmarker {
 
         List<HpoDisease> diseases = refiner.getDiseases(initialDiagnosesNDiseasesRandom);
         List<HpoFrequency> hpoTermCounts = refiner.getHpoFrequenciesNDiseases(diseases, hpoFrequencies);
-        Map<String, Set<String>> maxoToHpoTermIdMap = refiner.getMaxoToHpoTermIdMap(hpoTermCounts);
+        Map<TermId, Set<TermId>> maxoToHpoTermIdMap = refiner.getMaxoToHpoTermIdMap(hpoTermCounts);
 
-        RankMaxo rankMaxo = new RankMaxo(hpoToMaxoTermMap, maxoToHpoTermIdMap,
+        RankMaxo rankMaxo = new RankMaxo(maxoToHpoTermIdMap,
                 maxoHpoTermProbabilities, phenomizer,
                 ontology, getCompleteInitialDiffDiagList(), initialDiagnosesNDiseasesRandom, hpoTermCounts);
 

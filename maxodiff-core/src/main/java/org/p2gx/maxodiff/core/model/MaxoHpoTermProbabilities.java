@@ -1,6 +1,7 @@
 package org.p2gx.maxodiff.core.model;
 
 import org.p2gx.maxodiff.core.analysis.MaxoHpoTermIdMaps;
+import org.p2gx.maxodiff.core.analysis.MySimpleTerm;
 import org.p2gx.maxodiff.core.analysis.SimpleTerm;
 
 import org.monarchinitiative.phenol.annotations.base.Ratio;
@@ -18,7 +19,7 @@ public class MaxoHpoTermProbabilities {
     private final Map<String, Set<String>> maxoToHpoTermIdMap;
     private final DiscoverablePhenotypes discoverablePhenotypes;
 
-    public MaxoHpoTermProbabilities(HpoDiseases hpoDiseases, Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxoTermMap,
+    public MaxoHpoTermProbabilities(HpoDiseases hpoDiseases, Map<MySimpleTerm, Set<MySimpleTerm>> hpoToMaxoTermMap,
                                     List<DifferentialDiagnosis> initialDiagnoses, DiseaseModelProbability diseaseModelProbability) {
         this.hpoDiseases = hpoDiseases;
         this.initialDiagnoses = initialDiagnoses;

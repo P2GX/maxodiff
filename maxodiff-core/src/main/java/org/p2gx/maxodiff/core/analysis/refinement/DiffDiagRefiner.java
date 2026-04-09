@@ -29,12 +29,12 @@ public interface DiffDiagRefiner {
 
     List<HpoFrequency> getHpoFrequenciesNDiseases(List<HpoDisease> hpoDiseases, List<HpoFrequency> allHpoFrequencies);
 
-    Map<String, Set<String>> getMaxoToHpoTermIdMap(List<HpoFrequency> hpoTermCounts);
+    Map<TermId, Set<TermId>> getMaxoToHpoTermIdMap(List<HpoFrequency> hpoTermCounts);
 
     RankMaxo getRankMaxo(List<DifferentialDiagnosis> allInitialDiagnoses,
                          List<DifferentialDiagnosis> initialDiagnoses,
                          DDxEngine engine,
-                         Map<String, Set<String>> maxoToHpoTermIdMap,
+                         Map<TermId, Set<TermId>> maxoToHpoTermIdMap,
                          List<HpoFrequency> hpoFrequenciesNDiseases);
 
 

@@ -25,29 +25,28 @@ public class MdResultRow {
 
     public static List<MdResultRow> createMaxoResultRows(RankedMaxoResult result,
                                                          int nDiseases,
-                                                         List<HpoFrequency> hpoFrequenciesMica,
                                                          HTMLFrequencyMap htmlFrequencyMap,
                                                          double maxMica) {
         List<MdResultRow> rows = new ArrayList<>();
 
-        for (RankedOmimTerm omimTerm : result.rankedOmimTermList()) {
-            String omimId = omimTerm.omimTerm().termId();
-            String omimLabel = omimTerm.omimTerm().termLabel();
-            int initialRank = omimTerm.initialRank();
-            float averageRank = omimTerm.averageRank();
+        for (RankedOmimTerm diseaseTerm : result.rankedOmimTermList()) {
+            String diseaseId = diseaseTerm.omimTerm().termId();
+            String diseaseLabel = diseaseTerm.omimTerm().termLabel();
+            int initialRank = diseaseTerm.initialRank();
+            float averageRank = diseaseTerm.averageRank();
             List<HpoTableCell> cells = new ArrayList<>();
             for (CountedHpoTerm hpoTerm : result.hpoTermIds()) {
                 String hpoId = hpoTerm.hpoTerm().termId();
                 int ct = hpoTerm.count();
-                Optional<HpoFrequency> hpoFrequencyOpt = hpoFrequenciesMica.stream()
+                Optional<HpoFrequency> hpoFrequencyOpt = result.frequencies().stream()
                     .filter(hpoFrequency ->
-                        (hpoFrequency.diseaseId().getValue().equals(omimId) && hpoFrequency.hpoId().getValue().equals(hpoId)))
+                        (hpoFrequency.diseaseId().getValue().equals(diseaseId) && hpoFrequency.hpoId().getValue().equals(hpoId)))
                     .findFirst();
-                float mica = hpoFrequencyOpt.map(HpoFrequency::mica).orElseGet(() -> htmlFrequencyMap.micaForDisease(TermId.of(hpoId), TermId.of(omimId)));
+                float mica = hpoFrequencyOpt.map(HpoFrequency::mica).orElseGet(() -> htmlFrequencyMap.micaForDisease(TermId.of(hpoId), TermId.of(diseaseId)));
                 double opacity = mica / maxMica;
                 cells.add(new HpoTableCell(ct, opacity, mica, maxMica));
             }
-            rows.add(new MdResultRow(omimId, omimLabel, initialRank, averageRank, nDiseases, cells));
+            rows.add(new MdResultRow(diseaseId, diseaseLabel, initialRank, averageRank, nDiseases, cells));
 
         }
         return rows;

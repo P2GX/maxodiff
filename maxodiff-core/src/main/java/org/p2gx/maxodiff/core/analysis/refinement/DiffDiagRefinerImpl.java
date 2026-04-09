@@ -2,6 +2,7 @@ package org.p2gx.maxodiff.core.analysis.refinement;
 
 
 import org.monarchinitiative.phenol.ontology.data.MinimalOntology;
+import org.p2gx.maxodiff.core.analysis.MySimpleTerm;
 import org.p2gx.maxodiff.core.analysis.RankedMaxoResult;
 import org.p2gx.maxodiff.core.analysis.SimpleTerm;
 import org.p2gx.maxodiff.core.diffdg.DDxEngine;
@@ -21,44 +22,44 @@ import java.util.stream.Collectors;
 public class DiffDiagRefinerImpl implements DiffDiagRefiner {
 
     private final HpoDiseases hpoDiseases;
-    private final Map<String, Set<String>> fullHpoToMaxoTermIdMap;
-    private final Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxoTermMap;
+    private final Map<MySimpleTerm, Set<MySimpleTerm>> maxoToHpoTermMap;
+    private final Map<MySimpleTerm, Set<MySimpleTerm>> hpoToMaxoTermMap;
     private final MinimalOntology hpo;
 
     private MdContext context;
 
     public DiffDiagRefinerImpl(HpoDiseases hpoDiseases,
-                               Map<String, Set<String>> fullHpoToMaxoTermIdMap,
-                               Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxoTermMap,
+                               Map<MySimpleTerm, Set<MySimpleTerm>> maxoToHpoTermMap,
+                               Map<MySimpleTerm, Set<MySimpleTerm>> hpoToMaxoTermMap,
                                MinimalOntology hpo) {
         this.hpoDiseases = hpoDiseases;
-        this.fullHpoToMaxoTermIdMap = fullHpoToMaxoTermIdMap;
+        this.maxoToHpoTermMap = maxoToHpoTermMap;
         this.hpoToMaxoTermMap = hpoToMaxoTermMap;
         this.hpo = hpo;
-        if (this.fullHpoToMaxoTermIdMap.isEmpty()) {
-            System.err.println("DiffDiagRefinerImpl is empty");
+        if (this.maxoToHpoTermMap.isEmpty()) {
+            System.err.println("maxoToHpoTermMap (hpo Diseases) is empty");
             System.exit(1);
         }
         if (this.hpoToMaxoTermMap.isEmpty()) {
-            System.err.println("DiffDiagRefinerImpl is empty");
+            System.err.println("hpoToMaxoTermMap is empty");
             System.exit(1);
         }
     }
 
     public DiffDiagRefinerImpl(MdContext context,
-                               Map<String, Set<String>> fullHpoToMaxoTermIdMap,
-                               Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxoTermMap) {
+                               Map<MySimpleTerm, Set<MySimpleTerm>> maxoToHpoTermMap,
+                               Map<MySimpleTerm, Set<MySimpleTerm>> hpoToMaxoTermMap) {
         this.context = context;
         this.hpo = context.resources().hpo();
         this.hpoDiseases = context.resources().hpoDiseases();
-        this.fullHpoToMaxoTermIdMap = fullHpoToMaxoTermIdMap;
+        this.maxoToHpoTermMap = maxoToHpoTermMap;
         this.hpoToMaxoTermMap = hpoToMaxoTermMap;
-        if (this.fullHpoToMaxoTermIdMap.isEmpty()) {
-            System.err.println("DiffDiagRefinerImpl is empty");
+        if (this.maxoToHpoTermMap.isEmpty()) {
+            System.err.println("maxoToHpoTermMap (mdContext) is empty");
             System.exit(1);
         }
         if (this.hpoToMaxoTermMap.isEmpty()) {
-            System.err.println("DiffDiagRefinerImpl is empty");
+            System.err.println("hpoToMaxoTermMap is empty");
             System.exit(1);
         }
     }
@@ -74,7 +75,7 @@ public class DiffDiagRefinerImpl implements DiffDiagRefiner {
     public RankMaxo getRankMaxo(List<DifferentialDiagnosis> allInitialDiagnoses,
                                 List<DifferentialDiagnosis> initialDiagnoses,
                                  DDxEngine engine,
-                                Map<String, Set<String>> maxoToHpoTermIdMap,
+                                Map<TermId, Set<TermId>> maxoToHpoTermIdMap,
                                 List<HpoFrequency> hpoFrequenciesNDiseases) {
 
         DiseaseModelProbability diseaseModelProbability = DiseaseModelProbability.ranked(initialDiagnoses);
@@ -85,7 +86,7 @@ public class DiffDiagRefinerImpl implements DiffDiagRefiner {
                 diseaseModelProbability);
 
 
-        return new RankMaxo(hpoToMaxoTermMap, maxoToHpoTermIdMap, maxoHpoTermProbabilities, engine,
+        return new RankMaxo(maxoToHpoTermIdMap, maxoHpoTermProbabilities, engine,
                 hpo, allInitialDiagnoses, initialDiagnoses, hpoFrequenciesNDiseases);
     }
 
@@ -131,16 +132,43 @@ public class DiffDiagRefinerImpl implements DiffDiagRefiner {
     }
 
     @Override
-    public Map<String, Set<String>> getMaxoToHpoTermIdMap(List<HpoFrequency> hpoFrequenciesNDiseases) {
+    public Map<TermId, Set<TermId>> getMaxoToHpoTermIdMap(List<HpoFrequency> hpoFrequenciesNDiseases) {
 
 
-        Set<String> hpoIds = hpoFrequenciesNDiseases.stream().map(HpoFrequency::hpoId).map(String::valueOf).collect(Collectors.toSet());
+        Set<TermId> hpoIds = hpoFrequenciesNDiseases.stream().map(HpoFrequency::hpoId).collect(Collectors.toSet());
 
         // Get all the MaXo terms that can be used to diagnose the HPO terms, removing ancestors
-        //TODO: make MAXO:HPO term map directly from maxo_diagnostic_annotations.tsv file
-        Map<String, Set<String>> hpoToMaxoTermIdMap = AnalysisUtils.makeHpoToMaxoTermIdMap(fullHpoToMaxoTermIdMap, hpoIds);
-        Map<String, Set<String>> maxoToHpoTermIdMap = AnalysisUtils.makeMaxoToHpoTermIdMap(hpo, hpoToMaxoTermIdMap);
-
+        Map<TermId, Set<TermId>> maxoToHpoTermIdMap = new HashMap<>();
+        for (Map.Entry<MySimpleTerm, Set<MySimpleTerm>> entry : maxoToHpoTermMap.entrySet()) {
+            TermId maxoTermId = entry.getKey().tid();
+            Set<TermId> maxoHpoTermIds = entry.getValue().stream().map(MySimpleTerm::tid).collect(Collectors.toSet());
+            maxoHpoTermIds.retainAll(hpoIds);
+            for (TermId hpoTermId : maxoHpoTermIds) {
+                if (!maxoToHpoTermIdMap.containsKey(maxoTermId)) {
+                    maxoToHpoTermIdMap.put(maxoTermId, new HashSet<>(Collections.singleton(hpoTermId)));
+                } else {
+                    Set<TermId> hpoTermIds = maxoToHpoTermIdMap.get(maxoTermId);
+                    hpoTermIds.add(hpoTermId);
+                    maxoToHpoTermIdMap.replace(maxoTermId, hpoTermIds);
+                }
+            }
+        }
+        //TODO: removing ancestors possibly incorrect for excluded HPO features
+        for (Map.Entry<TermId, Set<TermId>> e : maxoToHpoTermIdMap.entrySet()) {
+            // Remove HPO ancestor term Ids from list
+            TermId mId = e.getKey();
+            Set<TermId> hpoIdSet = new HashSet<>(e.getValue());
+            for (TermId hpoId : e.getValue()) {
+                try {
+                    for (TermId ancestor : hpo.graph().getAncestors(hpoId)) {
+                        hpoIdSet.remove(ancestor);
+                    }
+                } catch (Exception ex) {
+                    System.out.println(ex.getMessage());
+                }
+            }
+            maxoToHpoTermIdMap.replace(mId, hpoIdSet);
+        }
         return maxoToHpoTermIdMap;
     }
 

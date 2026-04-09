@@ -19,7 +19,7 @@ import java.util.concurrent.atomic.AtomicInteger;
 
 public class RankMaxo {
     private final static Logger LOGGER = LoggerFactory.getLogger(RankMaxo.class);
-    private final Map<String, Set<String>> maxoToHpoTermIdMap;
+    private final Map<TermId, Set<TermId>> maxoToHpoTermIdMap;
     private final MaxoHpoTermProbabilities maxoHpoTermProbabilities;
     private final DDxEngine engine;
     double progress;
@@ -31,7 +31,6 @@ public class RankMaxo {
     /**
      * The {@code RankMaxo} ranks MAxO terms and returns results in descending order by score.
      *
-     * @param hpoToMaxoTermMap Map of HPO terms : Set of corresponding MAxO terms.
      * @param maxoToHpoTermIdMap Map of MAxO term ids : Set of corresponding HPO term ids.
      * @param maxoHpoTermProbabilities Class with methods for MAxO:HPO term probability calculations
      *                                 (e.g. Probability that the HPO term will be ascertained by a MAxO term procedure).
@@ -42,8 +41,7 @@ public class RankMaxo {
      * @author Martha Beckwith
      * @since 1.0
      */
-    public RankMaxo(Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxoTermMap,
-                    Map<String, Set<String>> maxoToHpoTermIdMap,
+    public RankMaxo(Map<TermId, Set<TermId>> maxoToHpoTermIdMap,
                     MaxoHpoTermProbabilities maxoHpoTermProbabilities,
                     DDxEngine engine,
                     MinimalOntology hpo,
@@ -81,8 +79,8 @@ public class RankMaxo {
         List<Callable<RankedMaxoResult>> tasks = new ArrayList<>();
         int maxoIdx = 0;
         ProgessBar pb = new ProgessBar(maxoIdx, maxoToHpoTermIdMap.size());
-        for (String maxoId : maxoToHpoTermIdMap.keySet()) {
-            if (ppktMaxoIds.contains(TermId.of(maxoId))) {
+        for (TermId maxoId : maxoToHpoTermIdMap.keySet()) {
+            if (ppktMaxoIds.contains(maxoId)) {
                 LOGGER.debug("Sample {}  already contains {}.", ppkt.sampleId(), maxoId);
                 continue;
             }
@@ -90,10 +88,10 @@ public class RankMaxo {
                     .initialDiagnoses(allInitialDiagnoses)
                     .ascertainablePhenotypes(ascertainablePhenotypes)
                     .maxoToHpoTermIdMap(fullMaxoToHpoTermIdMap)
-                    .maxoId(maxoId)
+                    .maxoId(maxoId.getValue())
                     .sample(ppkt.getPpktSample())
                     .nDiagnoses(500)
-                    .maxoLabel(biometadataService.maxoLabel(maxoId).get())
+                    .maxoLabel(biometadataService.maxoLabel(maxoId.getValue()).get())
                     .build();
             rankMaxoProgress = new RankMaxoProgress(maxoToHpoTermIdMap.size());
             int finalMaxoIdx = maxoIdx;
@@ -102,7 +100,7 @@ public class RankMaxo {
                         engine, maxoHpoTermProbabilities,
                         initialDiagnoses, diseaseIds, biometadataService, hpoFrequenciesNDiseases);
                 double done = completedTasks.incrementAndGet();
-                rankMaxoProgress.updateProgress(maxoId, done);
+                rankMaxoProgress.updateProgress(maxoId.getValue(), done);
                 if (JpsChecker.isMainClassRunning("org.p2gx.maxodiff.cli.Main")) {
                     pb.print(finalMaxoIdx);
                 }
