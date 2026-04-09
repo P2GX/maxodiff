@@ -3,26 +3,15 @@ package org.p2gx.maxodiff.cli.cmd;
 import org.p2gx.maxodiff.cli.benchmarking.BaseBenchmarker;
 import org.p2gx.maxodiff.cli.benchmarking.BenchmarkProcedure;
 import org.p2gx.maxodiff.cli.benchmarking.BenchmarkResult;
-import org.p2gx.maxodiff.config.MaxodiffDataResolver;
-import org.p2gx.maxodiff.config.MaxodiffPropsConfiguration;
 import org.p2gx.maxodiff.core.analysis.*;
-import org.p2gx.maxodiff.core.analysis.refinement.DiffDiagRefiner;
-import org.p2gx.maxodiff.core.analysis.refinement.RefinementOptions;
 import org.p2gx.maxodiff.core.diffdg.DDxEngine;
 import org.p2gx.maxodiff.core.io.MdContext;
 import org.p2gx.maxodiff.core.io.impl.MdContextBuilder;
 import org.p2gx.maxodiff.core.model.PhenopacketData;
-import org.p2gx.maxodiff.core.phenomizer.IcMicaData;
-import org.p2gx.maxodiff.core.phenomizer.IcMicaDictLoader;
 import org.p2gx.maxodiff.core.phenomizer.PhenomizerDDxEngine;
-import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
-import org.monarchinitiative.phenol.annotations.io.hpo.HpoDiseaseLoader;
-import org.monarchinitiative.phenol.annotations.io.hpo.HpoDiseaseLoaderOptions;
-import org.monarchinitiative.phenol.annotations.io.hpo.HpoDiseaseLoaders;
-import org.monarchinitiative.phenol.io.OntologyLoader;
-import org.monarchinitiative.phenol.ontology.data.Ontology;
+
 import org.monarchinitiative.phenol.ontology.data.TermId;
-import org.monarchinitiative.phenol.ontology.similarity.TermPair;
+import org.p2gx.maxodiff.core.service.BiometadataService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import picocli.CommandLine;
@@ -64,38 +53,21 @@ public class BenchmarkingCommand extends DDxCommand {
             description = "Directory with phenopackets for benchmarking")
     private Path ppktDir = null;
 
-
     private DDxEngine phenomizer;
-
-    private MaxodiffPropsConfiguration maxodiffPropsConfiguration;
-    private DiffDiagRefiner refiner;
-    private HpoDiseases hpoDiseases;
-    private RefinementOptions refinementOptions;
+    private MdContext context;
     private List<HpoFrequency> hpoFrequencies;
 
     @Override
     public Integer execute() throws Exception {
 
-        MdContext context = MdContextBuilder.buildContext(
+        context = MdContextBuilder.buildContext(
                 this.maxoDataPath,
                 this.nRepetitions,
                 this.nDiseases);
 
         hpoFrequencies = context.createHpoFrequencies();
 
-        MaxodiffDataResolver maxodiffDataResolver = MaxodiffDataResolver.of(maxoDataPath);
-        this.maxodiffPropsConfiguration = MaxodiffPropsConfiguration.createConfig(maxodiffDataResolver);
-        this.refiner = maxodiffPropsConfiguration.diffDiagRefiner();
-
-        Ontology ontology = OntologyLoader.loadOntology(MaxodiffDataResolver.of(maxoDataPath).hpoJson().toFile());
-        HpoDiseaseLoader loader = HpoDiseaseLoaders.defaultLoader(ontology, HpoDiseaseLoaderOptions.defaultOmim());
-        Path hpoaPath = MaxodiffDataResolver.of(maxoDataPath).phenotypeAnnotations();
-        this.hpoDiseases = loader.load(hpoaPath);
-        IcMicaData icMicaData = IcMicaDictLoader.loadIcMicaDict(MaxodiffDataResolver.of(maxoDataPath).icMicaDict());
-        Map<TermPair, Double> icMicaDict = icMicaData.icMicaDict();
-        this.phenomizer = new PhenomizerDDxEngine(hpoDiseases, icMicaDict);
-        this.refinementOptions = RefinementOptions.of(nDiseases, nRepetitions);
-
+        this.phenomizer = new PhenomizerDDxEngine(context);
         File icFile = new File("/Users/beckwm/IdeaProjects/maxodiff/data/term-to-ic.csv");
         Map<TermId, Double> termToIcMap = getTermToIcMap(icFile);
 
@@ -154,12 +126,10 @@ public class BenchmarkingCommand extends DDxCommand {
         List<BenchmarkResult> resultList = new ArrayList<>();
         try {
             PhenopacketData ppktData = PhenopacketData.readPhenopacketData(phenopacketPath);
+            BiometadataService biometadataService = context.biometadataService();
             BaseBenchmarker benchmarker = new BaseBenchmarker(ppktData,
-                    refinementOptions,
+                    context,
                     this.phenomizer,
-                    this.hpoDiseases,
-                    maxodiffPropsConfiguration,
-                    refiner,
                     hpoFrequencies);
             String ppktId = benchmarker.getSample().sampleId();
             List<RankedMaxoResult> initialResults = benchmarker.standardRun(maxodiffPropsConfiguration.biometadataService());
@@ -172,7 +142,7 @@ public class BenchmarkingCommand extends DDxCommand {
                     IntStream.range(0, 50).parallel().forEach(i -> {
                         List<RankedMaxoResult> randomizedResults;
                         try {
-                            randomizedResults = benchmarker.shuffledRandomizer(maxodiffPropsConfiguration.biometadataService());
+                            randomizedResults = benchmarker.shuffledRandomizer(biometadataService);
                         } catch (Exception e) {
                             throw new RuntimeException(e);
                         }
@@ -202,7 +172,7 @@ public class BenchmarkingCommand extends DDxCommand {
             resultList.add(bres);
             LOGGER.info("Finished benchmark of {}.", ppktPath);
         } catch (Exception ex) {
-            ex.printStackTrace();
+            LOGGER.error(ex.getMessage());
         }
         return resultList;
     }
