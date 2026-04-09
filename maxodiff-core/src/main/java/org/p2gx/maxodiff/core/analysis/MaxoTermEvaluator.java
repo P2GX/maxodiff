@@ -50,24 +50,24 @@ public class MaxoTermEvaluator implements Callable<RankedMaxoResult> {
     @Override
     public RankedMaxoResult call() {
 
-        Map<String, Double> hpoToProbabilityMap = maxoHpoDiseaseRank.getHpoToProbabiltyMap();
+        Map<TermId, Double> hpoToProbabilityMap = maxoHpoDiseaseRank.getHpoToProbabiltyMap();
         List<Integer> nHposToSample = maxoHpoDiseaseRank.getSampledHpoCounts(nRepetitions);
 
         // Separate HPO IDs and their probabilities
-        List<String> hpoIds = new ArrayList<>(hpoToProbabilityMap.keySet());
+        List<TermId> hpoIds = new ArrayList<>(hpoToProbabilityMap.keySet());
         List<Double> probabilities = new ArrayList<>(hpoToProbabilityMap.values());
 
         // Run simulations and calculate final scores
         List<List<DifferentialDiagnosis>> newMaxoDiagnosesList = new ArrayList<>();
         List<Double> scores = new ArrayList<>();
-        Set<SimpleTerm> simulatedHpoIdSet = new HashSet<>();
-        Map<String, Integer> simulatedHpoCountSet = new HashMap<>();
+        Set<MySimpleTerm> simulatedHpoIdSet = new HashSet<>();
+        Map<TermId, Integer> simulatedHpoCountSet = new HashMap<>();
         for (int i = 0; i < nRepetitions; i++) {
             // Sample and count simulated HPO terms
             int nHpos = nHposToSample.get(i);
             simulatedHpoIdSet.addAll(selectKWeightedHpoTerms(hpoIds, probabilities, nHpos, biometadataService));
 //            simulatedHpoIdSet = new HashSet<>(selectKWeightedHpoTerms(hpoIds, probabilities, nHpos));
-            simulatedHpoIdSet.forEach(hpoTerm -> simulatedHpoCountSet.merge(hpoTerm.termId(), 1, Integer::sum));
+            simulatedHpoIdSet.forEach(hpoTerm -> simulatedHpoCountSet.merge(hpoTerm.tid(), 1, Integer::sum));
 
             PhenopacketData newSample = getNewSample(ppkt, simulatedHpoIdSet);
             List<DifferentialDiagnosis> newMaxoDiagnoses = engine.run(newSample, diseaseIds);
@@ -94,7 +94,7 @@ public class MaxoTermEvaluator implements Callable<RankedMaxoResult> {
      * @param k              number of unique HPO terms to sample
      * @return a list of {@code k} sampled HPO term IDs
      */
-    public static List<SimpleTerm> selectKWeightedHpoTerms(List<String> hpoIds, List<Double> probabilities, int k, BiometadataService biometadataService) {
+    public static List<MySimpleTerm> selectKWeightedHpoTerms(List<TermId> hpoIds, List<Double> probabilities, int k, BiometadataService biometadataService) {
         // Create cumulative probabilities
         List<Double> cumulative = new ArrayList<>(probabilities.size());
         double cumSum = 0.0;
@@ -104,7 +104,7 @@ public class MaxoTermEvaluator implements Callable<RankedMaxoResult> {
         }
 
         // Perform weighted sampling without replacement
-        List<SimpleTerm> selected = new ArrayList<>();
+        List<MySimpleTerm> selected = new ArrayList<>();
         Set<Integer> usedIndices = new HashSet<>();
         Random random = new Random();
 
@@ -112,8 +112,8 @@ public class MaxoTermEvaluator implements Callable<RankedMaxoResult> {
             double r = random.nextDouble();
             for (int i = 0; i < cumulative.size(); i++) {
                 if (r <= cumulative.get(i) && !usedIndices.contains(i)) {
-                    String hpoId = hpoIds.get(i);
-                    selected.add(new SimpleTerm(hpoId, biometadataService.hpoLabel(TermId.of(hpoId)).orElse("unknown")));
+                    TermId hpoId = hpoIds.get(i);
+                    selected.add(new MySimpleTerm(hpoId, biometadataService.hpoLabel(hpoId).orElse("unknown")));
                     usedIndices.add(i);
                     break;
                 }
@@ -129,10 +129,10 @@ public class MaxoTermEvaluator implements Callable<RankedMaxoResult> {
      * @param observed A Set of simulated new observed HPO terms
      * @return The modified (simulated) phenopacket Sample.
      */
-    private PhenopacketData getNewSample(PhenopacketData ppkt, Set<SimpleTerm> observed) {
+    private PhenopacketData getNewSample(PhenopacketData ppkt, Set<MySimpleTerm> observed) {
         List<MySimpleTerm> newObservedHpos = Stream.concat(
                         ppkt.observed().stream(),
-                        observed.stream().map(st -> new MySimpleTerm(TermId.of(st.termId()), st.termLabel()))
+                        observed.stream().map(st -> new MySimpleTerm(st.tid(), st.label()))
                 )
                 .distinct() // Ensures uniqueness
                 .toList();
@@ -180,9 +180,8 @@ public class MaxoTermEvaluator implements Callable<RankedMaxoResult> {
         List<RankedOmimTerm> rankedOmimTermList = new ArrayList<>();
 
         for (TermId omimId : diseaseIds) {
-            String omimIdStr = omimId.getValue();
             String omimLabel = biometadataService.diseaseLabel(omimId).orElse("unknown");
-            SimpleTerm omimTerm = new SimpleTerm(omimIdStr, omimLabel);
+            MySimpleTerm omimTerm = new MySimpleTerm(omimId, omimLabel);
             int initialRank = findRank(initialDiagnoses, omimId);
 
             List<Integer> newRanks = new ArrayList<>();
@@ -215,13 +214,13 @@ public class MaxoTermEvaluator implements Callable<RankedMaxoResult> {
      * @return List of CountedHpoTerm objects
      */
     private List<CountedHpoTerm> getCountedHpoTerms (
-            Set<SimpleTerm> chosenHpoIds,
-            Map<String, Integer> chosenHpoTermCountsMap) {
+            Set<MySimpleTerm> chosenHpoIds,
+            Map<TermId, Integer> chosenHpoTermCountsMap) {
 
         List<CountedHpoTerm> result = new ArrayList<>();
 
-        for (SimpleTerm hpoTerm : chosenHpoIds) {
-            String hpoId = hpoTerm.termId();
+        for (MySimpleTerm hpoTerm : chosenHpoIds) {
+            TermId hpoId = hpoTerm.tid();
             CountedHpoTerm countedHpoTerm = new CountedHpoTerm(hpoTerm, chosenHpoTermCountsMap.get(hpoId));
             if (!result.contains(countedHpoTerm)) {
                 result.add(countedHpoTerm);
@@ -239,13 +238,13 @@ public class MaxoTermEvaluator implements Callable<RankedMaxoResult> {
      * @param hpoTermFrequencies Map of HPO Term Id and List of HpoFrequency objects.
      * @return List of Frequencies records
      */
-    private List<HpoFrequency> getFrequencyRecords(Set<TermId> omimIds, Set<SimpleTerm> hpoIds,
+    private List<HpoFrequency> getFrequencyRecords(Set<TermId> omimIds, Set<MySimpleTerm> hpoIds,
                                                   List<HpoFrequency> hpoTermFrequencies) {
 
         List<HpoFrequency> frequencyRecords = new ArrayList<>();
         //Set<TermId> omimIds = maxoTermScoreRecord.omimTermIds();
-        for (SimpleTerm hpoTerm : hpoIds) { //maxoTermScoreRecord.hpoTermIds()
-            TermId hpoId = TermId.of(hpoTerm.termId());
+        for (MySimpleTerm hpoTerm : hpoIds) { //maxoTermScoreRecord.hpoTermIds()
+            TermId hpoId = hpoTerm.tid();
             List<HpoFrequency> frequencies = hpoTermFrequencies.stream().filter(f->f.hpoId().equals(hpoId)).toList();
 //            if (frequencies != null) {
                 for (HpoFrequency hpoFrequency : frequencies) {
@@ -260,47 +259,18 @@ public class MaxoTermEvaluator implements Callable<RankedMaxoResult> {
         return frequencyRecords;
     }
 
-    private Map<TermId, List<Integer>> sortByRankChange(Map<TermId, List<Integer>> map) {
-        return map.entrySet().stream()
-                .sorted(Comparator.comparing(entry ->
-                        entry.getValue()
-                                .get(entry.getValue().size() - 1))) //rank change is last integer in list
-                .collect(Collectors.toMap(
-                        Map.Entry::getKey,
-                        Map.Entry::getValue,
-                        (a, b) -> b,
-                        LinkedHashMap::new
-                ));
-    }
-
-    private Map<TermId, Map<TermId, Integer>> sortHpoCountMapByRankChange(
-            Map<TermId, List<Integer>> rankChangeMap,
-            Map<TermId, Map<TermId, Integer>> hpoCountMap) {
-
-        return rankChangeMap.keySet().stream()
-                .filter(hpoCountMap::containsKey)
-                .collect(Collectors.toMap(
-                        key -> key,
-                        hpoCountMap::get,
-                        (a, b) -> b,
-                        LinkedHashMap::new
-                ));
-    }
-
-
-
     private RankedMaxoResult makeRankedMaxoResult(
-            Set<SimpleTerm> chosenHpoIds,
+            Set<MySimpleTerm> chosenHpoIds,
             double meanScore,
             List<DifferentialDiagnosis> initialDiagnoses,
             List<List<DifferentialDiagnosis>> newMaxoDiagnosesList,
-            Map<String, Integer> chosenHpoTermCountsMap,
+            Map<TermId, Integer> chosenHpoTermCountsMap,
             List<HpoFrequency> hpoFrequenciesNDiseases) {
 
         // Step 1: Make MAXO SimpleTerm
-        String maxoId = maxoHpoDiseaseRank.getMaxoId();
+        TermId maxoId = maxoHpoDiseaseRank.getMaxoId();
         String maxoLabel = maxoHpoDiseaseRank.getMaxoLabel();
-        SimpleTerm maxoTerm = new SimpleTerm(maxoId, maxoLabel);
+        MySimpleTerm maxoTerm = new MySimpleTerm(maxoId, maxoLabel);
 
         // Step 2: get OMIMs from the initial Phenomizer plus simulation with ranks (List<RankedOmimTerm>)
         Set<TermId> maxoIds = extractDiseaseIds(newMaxoDiagnosesList.getFirst());

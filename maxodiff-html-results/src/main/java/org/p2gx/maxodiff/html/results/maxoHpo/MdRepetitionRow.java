@@ -1,5 +1,6 @@
 package org.p2gx.maxodiff.html.results.maxoHpo;
 
+import org.monarchinitiative.phenol.ontology.data.TermId;
 import org.p2gx.maxodiff.core.analysis.CountedHpoTerm;
 import org.p2gx.maxodiff.core.analysis.HpoFrequency;
 import org.p2gx.maxodiff.core.analysis.RankedMaxoResult;
@@ -39,8 +40,8 @@ public class MdRepetitionRow {
             float frequency = freq.frequency();
             String percentage = String.format("%.1f%%", frequency * 100);
             String omimLabel = omimTerms.stream()
-                    .filter(ro -> ro.omimTerm().termId().equals(freq.diseaseId().getValue()))
-                    .findFirst().get().omimTerm().termLabel();
+                    .filter(ro -> ro.omimTerm().tid().equals(freq.diseaseId()))
+                    .findFirst().get().omimTerm().label();
             String name = String.join("; ", omimLabel);
             items.add(new RepetitionCellTooltipItem(name, percentage));
         }
@@ -56,8 +57,8 @@ public class MdRepetitionRow {
             Integer ct = ctHpoTerm.count();
             String ctString = MdRepetitionRow.getCountsString(ct);
             String styleString = MdRepetitionRow.getStyleString(ct, nRepetitions);
-            String hpoId = ctHpoTerm.hpoTerm().termId();
-            String hpoLabel = ctHpoTerm.hpoTerm().termLabel();
+            TermId hpoId = ctHpoTerm.hpoTerm().tid();
+            String hpoLabel = ctHpoTerm.hpoTerm().label();
             List<HpoFrequency> freqs = result.frequencies().stream()
                     .filter(f -> f.hpoId().equals(hpoId)).toList();
             List<RepetitionCellTooltipItem> tooltipitems = MdRepetitionRow.getTooltipItems(freqs,

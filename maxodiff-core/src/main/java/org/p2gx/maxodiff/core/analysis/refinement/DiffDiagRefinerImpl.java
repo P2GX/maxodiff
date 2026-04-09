@@ -4,7 +4,6 @@ package org.p2gx.maxodiff.core.analysis.refinement;
 import org.monarchinitiative.phenol.ontology.data.MinimalOntology;
 import org.p2gx.maxodiff.core.analysis.MySimpleTerm;
 import org.p2gx.maxodiff.core.analysis.RankedMaxoResult;
-import org.p2gx.maxodiff.core.analysis.SimpleTerm;
 import org.p2gx.maxodiff.core.diffdg.DDxEngine;
 
 import org.p2gx.maxodiff.core.io.MdContext;

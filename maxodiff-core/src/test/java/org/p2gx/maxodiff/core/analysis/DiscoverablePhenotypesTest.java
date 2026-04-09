@@ -5,7 +5,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.p2gx.maxodiff.core.TestResources;
 import org.p2gx.maxodiff.core.model.DiscoverablePhenotypes;
-import org.p2gx.maxodiff.core.model.PpktSample;
+import org.p2gx.maxodiff.core.model.PhenopacketData;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDisease;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
 import org.monarchinitiative.phenol.base.PhenolRuntimeException;
@@ -25,8 +25,8 @@ public class DiscoverablePhenotypesTest {
      private final static HpoDiseases hpoDiseases = TestResources.hpoDiseases();
      private final static Map<MySimpleTerm, Set<MySimpleTerm>> hpoToMaxoTermMap = TestResources.hpoToMaxoToy();
 
-     private final static Map<String, Set<String>> hpoToMaxoTermIdMap = MaxoHpoTermIdMaps.getHpoToMaxoTermIdMap(hpoToMaxoTermMap);
-     private final static Map<String, Set<String>> maxoToHpoTermIdMap = MaxoHpoTermIdMaps.getMaxoToHpoTermIdMap(hpoToMaxoTermMap);
+     private final static Map<TermId, Set<TermId>> hpoToMaxoTermIdMap = MaxoHpoTermIdMaps.getHpoToMaxoTermIdMap(hpoToMaxoTermMap);
+     private final static Map<TermId, Set<TermId>> maxoToHpoTermIdMap = MaxoHpoTermIdMaps.getMaxoToHpoTermIdMap(hpoToMaxoTermMap);
      private final static DiscoverablePhenotypes DISCOVERABLE_PHENOTYPES = new DiscoverablePhenotypes(hpoDiseases, hpoToMaxoTermIdMap, maxoToHpoTermIdMap);
 
     /**
@@ -50,41 +50,41 @@ public class DiscoverablePhenotypesTest {
      *
      * @return Sample phenopacket with one included HPO term Id and one disease Id.
      */
-    public static PpktSample getPPkt1() {
-        List<SimpleTerm> presentTerms = List.of(
-                new SimpleTerm("HP:0001888", "hpo1")
+    public static PhenopacketData getPPkt1() {
+        List<MySimpleTerm> presentTerms = List.of(
+                new MySimpleTerm(TermId.of("HP:0001888"), "hpo1")
         );
-        List<SimpleTerm> excludedTerms = List.of();
+        List<MySimpleTerm> excludedTerms = List.of();
 
-        return new PpktSample("sample1", presentTerms, excludedTerms);
+        return new PhenopacketData("sample1", presentTerms, excludedTerms, List.of(), List.of(), false);
     }
 
     /**
      *
      * @return Sample phenopacket with two included HPO term Ids and one disease Ids.
      */
-    public static PpktSample getPPkt2() {
-        List<SimpleTerm> presentTerms = List.of(
-                new SimpleTerm("HP:0001888", "hpo1"),
-                new SimpleTerm("HP:0001903", "hpo2")
+    public static PhenopacketData getPPkt2() {
+        List<MySimpleTerm> presentTerms = List.of(
+                new MySimpleTerm(TermId.of("HP:0001888"), "hpo1"),
+                new MySimpleTerm(TermId.of("HP:0001903"), "hpo2")
         );
-        List<SimpleTerm> excludedTerms = List.of();
+        List<MySimpleTerm> excludedTerms = List.of();
 
-        return new PpktSample("sample1", presentTerms, excludedTerms);
+        return new PhenopacketData("sample1", presentTerms, excludedTerms, List.of(), List.of(), false);
     }
 
     /**
      * We expect this to cause an error, because OMIM:123456 is not aa actual identifier
      * @return Sample phenopacket with one included HPO term Id and one dummy disease Id.
      */
-    public static PpktSample getPPktEmptyDisease() {
-        List<SimpleTerm> presentTerms = List.of(
-                new SimpleTerm("HP:0001888", "hpo1")
+    public static PhenopacketData getPPktEmptyDisease() {
+        List<MySimpleTerm> presentTerms = List.of(
+                new MySimpleTerm(TermId.of("HP:0001888"), "hpo1")
         );
-        List<SimpleTerm> excludedTerms = List.of();
+        List<MySimpleTerm> excludedTerms = List.of();
         List<TermId> diseaseIds = List.of(TermId.of("OMIM:123456"));
 
-        return new PpktSample("sample2", presentTerms, excludedTerms);//, diseaseIds);
+        return new PhenopacketData("sample2", presentTerms, excludedTerms, diseaseIds, List.of(), false);
     }
 
 
@@ -94,9 +94,9 @@ public class DiscoverablePhenotypesTest {
     @Test
     public void testDiscoverablePhenotypes1() {
          // Get excluded phenotypes given phenopacket
-         PpktSample s1 = getPPkt1();
+         PhenopacketData s1 = getPPkt1();
          TermId targetId = TermId.of("OMIM:620365"); //s1.diseaseIds().getFirst();
-         Set<String> discoverablePhenotypeIds = DISCOVERABLE_PHENOTYPES.getDiscoverablePhenotypeIds(
+         Set<TermId> discoverablePhenotypeIds = DISCOVERABLE_PHENOTYPES.getDiscoverablePhenotypeIds(
                 s1,
                 targetId);
 //         System.out.println(discoverablePhenotypeIds);
@@ -110,7 +110,7 @@ public class DiscoverablePhenotypesTest {
         record Error(Supplier<? extends PhenolRuntimeException> exceptionSupplier) implements TestOutcome {}
     }
 
-    public record TestIndividual(String description, PpktSample myPPkt, TestOutcome expectedOutcome) {}
+    public record TestIndividual(String description, PhenopacketData myPPkt, TestOutcome expectedOutcome) {}
 
     /**
      *
@@ -134,7 +134,7 @@ public class DiscoverablePhenotypesTest {
     @ParameterizedTest
     @MethodSource("testGetIndividualDiseaseIds")
     void testEvaluateExpression(TestIndividual testCase) {
-        PpktSample ppkti = testCase.myPPkt();
+        PhenopacketData ppkti = testCase.myPPkt();
         TermId targetId = TermId.of("OMIM:620365"); //ppkti.diseaseIds().getFirst();
         TermId targetId2 = TermId.of("OMIM:123456");
         switch (testCase.expectedOutcome()) {

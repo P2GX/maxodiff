@@ -132,8 +132,8 @@ public class DDxCommand extends BaseCommand {
                 MdMetadata mdMetadata = new MdMetadata(phenopacketData.sampleId(),
                         this.nDiseases,
                         this.nRepetitions,
-                        phenopacketData.getObservedHpoSimpleTerms(),
-                        phenopacketData.getExcludedHpoSimpleTerms(),
+                        phenopacketData.observed(),
+                        phenopacketData.excluded(),
                         resultsList);
 
                 HTMLFrequencyMap htmlFrequencyMap = new HTMLFrequencyMap(context);

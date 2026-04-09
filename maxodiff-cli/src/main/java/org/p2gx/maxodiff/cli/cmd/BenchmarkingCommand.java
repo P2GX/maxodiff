@@ -12,7 +12,6 @@ import org.p2gx.maxodiff.core.diffdg.DDxEngine;
 import org.p2gx.maxodiff.core.io.MdContext;
 import org.p2gx.maxodiff.core.io.impl.MdContextBuilder;
 import org.p2gx.maxodiff.core.model.PhenopacketData;
-import org.p2gx.maxodiff.core.model.PpktSample;
 import org.p2gx.maxodiff.core.phenomizer.IcMicaData;
 import org.p2gx.maxodiff.core.phenomizer.IcMicaDictLoader;
 import org.p2gx.maxodiff.core.phenomizer.PhenomizerDDxEngine;
@@ -98,7 +97,7 @@ public class BenchmarkingCommand extends DDxCommand {
         this.refinementOptions = RefinementOptions.of(nDiseases, nRepetitions);
 
         File icFile = new File("/Users/beckwm/IdeaProjects/maxodiff/data/term-to-ic.csv");
-        Map<String, Double> termToIcMap = getTermToIcMap(icFile);
+        Map<TermId, Double> termToIcMap = getTermToIcMap(icFile);
 
         if (this.phenopacketPath != null && this.phenopacketPath.toFile().isFile()) {
             List<BenchmarkResult> results = runShuffleOnePPkt(this.phenopacketPath, termToIcMap);
@@ -151,47 +150,7 @@ public class BenchmarkingCommand extends DDxCommand {
         }
     }
 
-    private PpktSample getPpktSample(Path ppktPath) {
-        PhenopacketData phenopacketData = PhenopacketData.readPhenopacketData(ppktPath);
-        List<SimpleTerm> observedSampleTerms = new ArrayList<>();
-        List<SimpleTerm> excludedSampleTerms = new ArrayList<>();
-        phenopacketData.observedHpoTermIds().forEach(tid ->
-                observedSampleTerms.add(new SimpleTerm(tid.getValue(), maxodiffPropsConfiguration.biometadataService().hpoLabel(tid).orElse("n/a"))));
-        phenopacketData.excludedHpoTermIds().forEach(tid ->
-                excludedSampleTerms.add(new SimpleTerm(tid.getValue(), maxodiffPropsConfiguration.biometadataService().hpoLabel(tid).orElse("n/a"))));
-        return new PpktSample(phenopacketData.sampleId(), observedSampleTerms, excludedSampleTerms);
-    }
-
-
-    private List<BenchmarkResult> runSpikeOnePPkt(Path ppktPath) {
-        List<BenchmarkResult> resultList = new ArrayList<>();
-        try {
-            PpktSample ppktSample = getPpktSample(ppktPath);
-            PhenopacketData ppktData = PhenopacketData.readPhenopacketData(phenopacketPath);
-            BaseBenchmarker benchmarker = new BaseBenchmarker(ppktData,
-                    refinementOptions,
-                    this.phenomizer,
-                    this.hpoDiseases,
-                    maxodiffPropsConfiguration,
-                    refiner,
-                    hpoFrequencies
-                    );
-            String ppktId = benchmarker.getSample().sampleId();
-            List<RankedMaxoResult> initialResults = benchmarker.standardRun(maxodiffPropsConfiguration.biometadataService());
-            for (int i = 0; i < nDiseases; i++) {
-                List<RankedMaxoResult> randomizedResults = benchmarker.spikedRandomizer(i, maxodiffPropsConfiguration.biometadataService());
-                BenchmarkResult bres = getSpikedBenchmarkResult(ppktId, i, initialResults, randomizedResults);
-                resultList.add(bres);
-            }
-            LOGGER.info("Finished benchmark of {}.", ppktPath);
-        } catch (Exception ex) {
-            System.out.println(ex.getMessage());
-        }
-        return resultList;
-    }
-
-
-    private List<BenchmarkResult> runShuffleOnePPkt(Path ppktPath, Map<String, Double> termToIcMap) {
+    private List<BenchmarkResult> runShuffleOnePPkt(Path ppktPath, Map<TermId, Double> termToIcMap) {
         List<BenchmarkResult> resultList = new ArrayList<>();
         try {
             PhenopacketData ppktData = PhenopacketData.readPhenopacketData(phenopacketPath);
@@ -204,7 +163,7 @@ public class BenchmarkingCommand extends DDxCommand {
                     hpoFrequencies);
             String ppktId = benchmarker.getSample().sampleId();
             List<RankedMaxoResult> initialResults = benchmarker.standardRun(maxodiffPropsConfiguration.biometadataService());
-            String topMaxo = initialResults.getFirst().maxoTerm().termId();
+            TermId topMaxo = initialResults.getFirst().maxoTerm().tid();
             List<Double> topRandomScores = new ArrayList<>();
             int parallelism = 8;
             ForkJoinPool customThreadPool = new ForkJoinPool(parallelism);
@@ -219,12 +178,12 @@ public class BenchmarkingCommand extends DDxCommand {
                         }
                         //TODO: compare total Information Content for Maxo Terms instead of scores
                         List<RankedMaxoResult> topResultRandomList = randomizedResults.stream()
-                                .filter(mr -> mr.maxoTerm().termId().equals(topMaxo)).toList();
+                                .filter(mr -> mr.maxoTerm().tid().equals(topMaxo)).toList();
 
                         List<CountedHpoTerm> ctHpoTerms = topResultRandomList.isEmpty() ? new ArrayList<>() :
                             topResultRandomList.getFirst().hpoTermIds();
-                        List<String> discHpoIds = ctHpoTerms.isEmpty() ? new ArrayList<>() :
-                                ctHpoTerms.stream().map(ctTerm -> ctTerm.hpoTerm().termId()).toList();
+                        List<TermId> discHpoIds = ctHpoTerms.isEmpty() ? new ArrayList<>() :
+                                ctHpoTerms.stream().map(ctTerm -> ctTerm.hpoTerm().tid()).toList();
 //
                         double maxScoreValueRandom = discHpoIds.isEmpty() ? 0.0 :
                                 discHpoIds.stream().mapToDouble(termToIcMap::get).sum();
@@ -249,36 +208,17 @@ public class BenchmarkingCommand extends DDxCommand {
     }
 
 
-
-    private BenchmarkResult getSpikedBenchmarkResult(String ppktId,
-                                                     int spikedIdx,
-                                                     List<RankedMaxoResult> initialResults,
-                                                     List<RankedMaxoResult> randomizedResults) {
-
-        String topMaxo = initialResults.getFirst().maxoTerm().termId();
-        double maxoFinalScore = initialResults.getFirst().maxoScore();
-        List<RankedMaxoResult> topResultRandomList = randomizedResults.stream()
-                .filter(mr -> mr.maxoTerm().termId().equals(topMaxo)).toList();
-        int topMaxoRandomIdx = topResultRandomList.isEmpty() ? -1 : randomizedResults.indexOf(topResultRandomList.getFirst()) + 1;
-        double maxScoreValueRandom = topResultRandomList.isEmpty() ? 0.0 : topResultRandomList.getFirst().maxoScore();
-        BenchmarkProcedure procedure = BenchmarkProcedure.SpikedInRandomization;
-        int nMaxo = initialResults.size();
-        int nMaxoRandom = randomizedResults.size();
-        return new BenchmarkResult(ppktId, nDiseases, nRepetitions, TermId.of(topMaxo), maxoFinalScore,
-                procedure, topMaxoRandomIdx, maxScoreValueRandom, nMaxo, nMaxoRandom, spikedIdx);
-    }
-
     private BenchmarkResult getShuffledBenchmarkResult(String ppktId,
                                                        List<RankedMaxoResult> initialResults,
                                                        double avgTopScoreRandom,
-                                                       Map<String, Double> termToIcMap) {
+                                                       Map<TermId, Double> termToIcMap) {
 
-        TermId topMaxo = TermId.of(initialResults.getFirst().maxoTerm().termId());
+        TermId topMaxo = initialResults.getFirst().maxoTerm().tid();
 //        double maxoFinalScore = initialResults.getFirst().rankMaxoScore().maxoScore();
         List<CountedHpoTerm> ctHpoTerms = initialResults.isEmpty() ? new ArrayList<>() :
                 initialResults.getFirst().hpoTermIds();
-        List<String> discHpoIds = ctHpoTerms.isEmpty() ? new ArrayList<>() :
-                ctHpoTerms.stream().map(ctTerm -> ctTerm.hpoTerm().termId()).toList();
+        List<TermId> discHpoIds = ctHpoTerms.isEmpty() ? new ArrayList<>() :
+                ctHpoTerms.stream().map(ctTerm -> ctTerm.hpoTerm().tid()).toList();
 //
         double maxoFinalScore = discHpoIds.isEmpty() ? 0.0 :
                 discHpoIds.stream().mapToDouble(termToIcMap::get).sum();
@@ -292,8 +232,8 @@ public class BenchmarkingCommand extends DDxCommand {
                 procedure, -1, avgTopScoreRandom, nMaxo, -1, -1);
     }
 
-    private Map<String, Double> getTermToIcMap(File icFile) {
-        Map<String, Double> termToIcMap = new HashMap<>();
+    private Map<TermId, Double> getTermToIcMap(File icFile) {
+        Map<TermId, Double> termToIcMap = new HashMap<>();
         try (
             FileInputStream fis = new FileInputStream(icFile);
             InputStreamReader isr = new InputStreamReader(fis, StandardCharsets.UTF_8);
@@ -304,7 +244,7 @@ public class BenchmarkingCommand extends DDxCommand {
             while ((line = br.readLine()) != null) {
                 if (line.startsWith("HP:")) {
                     String[] split = line.split(",");
-                    String tid = split[0];
+                    TermId tid = TermId.of(split[0]);
                     Double ic = Double.parseDouble(split[1]);
                     termToIcMap.put(tid, ic);
                 }

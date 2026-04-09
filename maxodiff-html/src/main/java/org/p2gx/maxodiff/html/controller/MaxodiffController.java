@@ -142,8 +142,8 @@ public class MaxodiffController {
             MdMetadata mdMetadata = new MdMetadata(sample.sampleId(),
                     nDiseases,
                     nRepetitions,
-                    sample.getObservedHpoSimpleTerms(),
-                    sample.getExcludedHpoSimpleTerms(),
+                    sample.observed(),
+                    sample.excluded(),
                     resultsList);
 
             HTMLFrequencyMap htmlFrequencyMap = new HTMLFrequencyMap(mdContext);
@@ -192,14 +192,14 @@ public class MaxodiffController {
         model.addAttribute("observedHpoTermIds", observedHpoTermIds);
         model.addAttribute("excludedHpoTermIds", excludedHpoTermIds);
 
-        List<SimpleTerm> observedSampleTerms = new ArrayList<>();
-        List<SimpleTerm> excludedSampleTerms = new ArrayList<>();
+        List<MySimpleTerm> observedSampleTerms = new ArrayList<>();
+        List<MySimpleTerm> excludedSampleTerms = new ArrayList<>();
         BiometadataService biometadataService = this.mdContext.biometadataService();
         observedHpoTermIds.forEach(tid ->
-                observedSampleTerms.add(new SimpleTerm(tid.getValue(), biometadataService.hpoLabel(tid).orElse("n/a"))));
+                observedSampleTerms.add(new MySimpleTerm(tid, biometadataService.hpoLabel(tid).orElse("n/a"))));
         excludedHpoTermIds.forEach(tid ->
-                excludedSampleTerms.add(new SimpleTerm(tid.getValue(), biometadataService.hpoLabel(tid).orElse("n/a"))));
-        return PhenopacketData.fromSimpleTerms(sampleId, observedSampleTerms, excludedSampleTerms);
+                excludedSampleTerms.add(new MySimpleTerm(tid, biometadataService.hpoLabel(tid).orElse("n/a"))));
+        return new PhenopacketData(sampleId, observedSampleTerms, excludedSampleTerms, List.of(), List.of(), false);
     }
 
     /**

@@ -67,8 +67,8 @@
                 <th></th>
                 <!-- Loop over HPO terms-->
                 <th th:each="entry : ${maxoData.hpoHeaders}" class="vertical-header">
-                    <a th:href="|https://hpo.jax.org/browse/term/${entry.termId}|">
-                        <div th:text="${entry.termLabel}"></div>
+                    <a th:href="|https://hpo.jax.org/browse/term/${entry.tid}|">
+                        <div th:text="${entry.label}"></div>
                     </a>
                 </th>
             </tr>

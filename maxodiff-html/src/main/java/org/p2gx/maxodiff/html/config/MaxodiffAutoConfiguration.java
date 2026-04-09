@@ -2,7 +2,6 @@ package org.p2gx.maxodiff.html.config;
 
 import org.monarchinitiative.phenol.ontology.data.TermId;
 import org.p2gx.maxodiff.core.analysis.MySimpleTerm;
-import org.p2gx.maxodiff.core.analysis.SimpleTerm;
 import org.p2gx.maxodiff.core.analysis.refinement.DiffDiagRefinerImpl;
 import org.p2gx.maxodiff.core.diffdg.DDxEngine;
 import org.p2gx.maxodiff.core.io.MaxoDxAnnots;
@@ -136,12 +135,12 @@ public class MaxodiffAutoConfiguration {
     }
 
     @Bean
-    public Map<String, Set<String>> hpoToMaxoIdMap(Map<SimpleTerm, Set<SimpleTerm>> maxoAnnotsMap) {
-        Map<String, Set<String>> hpoToMaxoIdMap = new HashMap<>();
-        for (Map.Entry<SimpleTerm, Set<SimpleTerm>> entry : maxoAnnotsMap.entrySet()) {
-            String hpoId = entry.getKey().termId();
-            Set<String> maxoIds = new HashSet<>();
-            maxoAnnotsMap.get(entry.getKey()).forEach(t -> maxoIds.add(t.termId()));
+    public Map<TermId, Set<TermId>> hpoToMaxoIdMap(Map<MySimpleTerm, Set<MySimpleTerm>> maxoAnnotsMap) {
+        Map<TermId, Set<TermId>> hpoToMaxoIdMap = new HashMap<>();
+        for (Map.Entry<MySimpleTerm, Set<MySimpleTerm>> entry : maxoAnnotsMap.entrySet()) {
+            TermId hpoId = entry.getKey().tid();
+            Set<TermId> maxoIds = new HashSet<>();
+            maxoAnnotsMap.get(entry.getKey()).forEach(t -> maxoIds.add(t.tid()));
             hpoToMaxoIdMap.put(hpoId, maxoIds);
         }
         return hpoToMaxoIdMap;
