@@ -1,5 +1,6 @@
 package org.p2gx.maxodiff.cli.benchmarking;
 
+import org.monarchinitiative.phenol.ontology.data.MinimalOntology;
 import org.p2gx.maxodiff.config.MaxodiffPropsConfiguration;
 import org.p2gx.maxodiff.core.analysis.HpoFrequency;
 import org.p2gx.maxodiff.core.analysis.MySimpleTerm;
@@ -9,6 +10,7 @@ import org.p2gx.maxodiff.core.analysis.SimpleTerm;
 import org.p2gx.maxodiff.core.analysis.refinement.DiffDiagRefiner;
 import org.p2gx.maxodiff.core.analysis.refinement.RefinementOptions;
 import org.p2gx.maxodiff.core.diffdg.DDxEngine;
+import org.p2gx.maxodiff.core.io.MdContext;
 import org.p2gx.maxodiff.core.model.*;
 import org.p2gx.maxodiff.core.service.BiometadataService;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDisease;
@@ -31,8 +33,8 @@ public class BaseBenchmarker {
     private final HpoDiseases hpoDiseases;
     private final Map<MySimpleTerm, Set<MySimpleTerm>> hpoTermToMaxoTermSetMap;
     private final DiffDiagRefiner refiner;
-    private final Ontology ontology;
-    private final Map<MySimpleTerm, Set<MySimpleTerm>> hpoToMaxoTermMap;
+    private final MinimalOntology ontology;
+ //   private final Map<MySimpleTerm, Set<MySimpleTerm>> hpoToMaxoTermMap;
     private final List<HpoFrequency> hpoFrequencies;
 
     public List<DifferentialDiagnosis> getCompleteInitialDiffDiagList() {
@@ -46,26 +48,24 @@ public class BaseBenchmarker {
         return sample;
     }
 
-    public BaseBenchmarker(PhenopacketData sample,
-                           RefinementOptions refinementOptions,
-                           DDxEngine phenomizer,
-                           HpoDiseases hpoDiseases,
-                           MaxodiffPropsConfiguration maxoDiffConfig,
-                           DiffDiagRefiner refiner, List<HpoFrequency> hpoFrequencies) {
 
-        this.nDiseases = refinementOptions.nDiseases();
-        this.nRepetitions = refinementOptions.nRepetitions();
+    public BaseBenchmarker(PhenopacketData sample,
+                           MdContext context,
+                           DDxEngine phenomizer,
+
+                           List<HpoFrequency> hpoFrequencies) {
+
+        this.nDiseases = context.params().nDiseases();
+        this.nRepetitions = context.params().nRepetitions();
         this.phenomizer = phenomizer;
-        this.hpoDiseases = hpoDiseases;
-        this.hpoTermToMaxoTermSetMap = maxoDiffConfig.maxoAnnotsMap();
-        this.refiner = refiner;
-        this.ontology = maxoDiffConfig.hpo();
-        this.hpoToMaxoTermMap = maxoDiffConfig.maxoAnnotsMap();
+        this.hpoDiseases = context.resources().hpoDiseases();
+        this.hpoTermToMaxoTermSetMap = context.resources().maxoAnnotsMap();
+        this.refiner = context.createRefiner();
+        this.ontology = context.resources().hpo();
         this.sample = sample;
         this.hpoFrequencies = hpoFrequencies;
         this.completeInitialDiffDiagList = determineInitialDiagnoses();
         this.maxoHpoTermProbabilities = calculateMaxoHpoTermProbabilities();
-
     }
 
 
