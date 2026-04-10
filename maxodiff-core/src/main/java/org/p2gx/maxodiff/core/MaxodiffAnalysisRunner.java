@@ -1,10 +1,7 @@
 package org.p2gx.maxodiff.core;
 
+import org.p2gx.maxodiff.core.analysis.*;
 import org.p2gx.maxodiff.core.io.MdContext;
-import org.p2gx.maxodiff.core.analysis.HpoFrequency;
-import org.p2gx.maxodiff.core.analysis.RankedMaxoResult;
-import org.p2gx.maxodiff.core.analysis.RankedOmimTerm;
-import org.p2gx.maxodiff.core.analysis.SimpleTerm;
 
 import org.p2gx.maxodiff.core.diffdg.DDxEngine;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDisease;
@@ -12,7 +9,6 @@ import org.monarchinitiative.phenol.ontology.data.TermId;
 import org.p2gx.maxodiff.core.analysis.refinement.DiffDiagRefiner;
 import org.p2gx.maxodiff.core.model.DifferentialDiagnosis;
 import org.p2gx.maxodiff.core.model.PhenopacketData;
-import org.p2gx.maxodiff.core.model.PpktSample;
 import org.p2gx.maxodiff.core.model.RankMaxo;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -42,7 +38,6 @@ public class MaxodiffAnalysisRunner {
 
     public List<RankedMaxoResult> analyzeSample(PhenopacketData ppktData) throws Exception {
         List<TermId> ppktMaxoIds = ppktData.maxoProcedureIds();
-        PpktSample ppktSample = ppktData.getPpktSample();
         List<DifferentialDiagnosis> differentialDiagnoses = engine.run(ppktData);
         // Get List of Refinement results: maxo term scores and frequencies
        // RefinementOptions options = RefinementOptions.of(this.nDiseases, this.nRepetitions);
@@ -57,17 +52,17 @@ public class MaxodiffAnalysisRunner {
         String phenopacket_id = ppktData.sampleId();
         String disease_id = ppktData.diseaseIds().getFirst().getValue();
         RankedMaxoResult topResult = resultsList.getFirst();
-        String maxo_id = topResult.maxoTerm().termId();
-        String maxo_label = topResult.maxoTerm().termLabel();
+        TermId maxo_id = topResult.maxoTerm().tid();
+        String maxo_label = topResult.maxoTerm().label();
         double maxScoreValue = topResult.maxoScore();
         List<RankedOmimTerm> rankedOmimTermList = topResult.rankedOmimTermList();
-        List<String> diseaseIdsStr = rankedOmimTermList.stream().map(RankedOmimTerm::omimTerm).map(SimpleTerm::termId).toList();
-        Set<TermId> diseaseIds = diseaseIdsStr.stream().map(TermId::of).collect(Collectors.toSet());
+        List<TermId> diseaseIdsStr = rankedOmimTermList.stream().map(RankedOmimTerm::omimTerm).map(MySimpleTerm::tid).toList();
+        Set<TermId> diseaseIds = new HashSet<>(diseaseIdsStr);
 
         return new MaxoDiffAnalysisResultRow(
                 phenopacket_id,
                 disease_id,
-                maxo_id,
+                maxo_id.getValue(),
                 maxo_label,
                 this.mdContext.params().nDiseases(),
                 diseaseIds,

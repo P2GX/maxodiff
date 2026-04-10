@@ -1,10 +1,9 @@
 package org.p2gx.maxodiff.core;
 
 import org.p2gx.maxodiff.core.analysis.MySimpleTerm;
-import org.p2gx.maxodiff.core.analysis.SimpleTerm;
 import org.p2gx.maxodiff.core.io.MaxoDxAnnots;
 import org.p2gx.maxodiff.core.model.DifferentialDiagnosis;
-import org.p2gx.maxodiff.core.model.PpktSample;
+import org.p2gx.maxodiff.core.model.PhenopacketData;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
 import org.monarchinitiative.phenol.annotations.io.hpo.DiseaseDatabase;
 import org.monarchinitiative.phenol.annotations.io.hpo.HpoDiseaseLoader;
@@ -132,24 +131,24 @@ public class TestResources {
         return hpoToMaxoToy;
     }
 
-    public static PpktSample getExampleSample() {
+    public static PhenopacketData getExampleSample() {
         //Example terms from phenopacket v2 PMID_11175294-Tiecke-2001-FBN1-B15.json
-        List<SimpleTerm> presentTerms = List.of(
-                new SimpleTerm("HP:0000963", "Hpo1"),
-                new SimpleTerm("HP:0001653", "Hpo2"),
-                new SimpleTerm("HP:0000545", "Hpo3"),
-                new SimpleTerm("HP:0000098", "Hpo4"),
-                new SimpleTerm("HP:0004325", "Hpo5"),
-                new SimpleTerm("HP:0002751", "Hpo6"),
-                new SimpleTerm("HP:0002650", "Hpo7"),
-                new SimpleTerm("HP:0002616", "Hpo8"),
-                new SimpleTerm("HP:0000767", "Hpo9"),
-                new SimpleTerm("HP:0012019", "Hpo10"),
-                new SimpleTerm("HP:0001166", "Hpo11")
+        List<MySimpleTerm> presentTerms = List.of(
+                new MySimpleTerm(TermId.of("HP:0000963"), "Hpo1"),
+                new MySimpleTerm(TermId.of("HP:0001653"), "Hpo2"),
+                new MySimpleTerm(TermId.of("HP:0000545"), "Hpo3"),
+                new MySimpleTerm(TermId.of("HP:0000098"), "Hpo4"),
+                new MySimpleTerm(TermId.of("HP:0004325"), "Hpo5"),
+                new MySimpleTerm(TermId.of("HP:0002751"), "Hpo6"),
+                new MySimpleTerm(TermId.of("HP:0002650"), "Hpo7"),
+                new MySimpleTerm(TermId.of("HP:0002616"), "Hpo8"),
+                new MySimpleTerm(TermId.of("HP:0000767"), "Hpo9"),
+                new MySimpleTerm(TermId.of("HP:0012019"), "Hpo10"),
+                new MySimpleTerm(TermId.of("HP:0001166"), "Hpo11")
         );
-        List<SimpleTerm> excludedTerms = List.of();
+        List<MySimpleTerm> excludedTerms = List.of();
 
-        return new PpktSample("B15", presentTerms, excludedTerms);
+        return new PhenopacketData("B15", presentTerms, excludedTerms, List.of(), List.of(), false);
     }
 
     public static Collection<DifferentialDiagnosis> getExampleDiagnoses() {

@@ -7,7 +7,7 @@ public class MdDiseaseColumnHeaderCell {
     private final String maxoLabel;
 
     public MdDiseaseColumnHeaderCell(RankedMaxoResult result) {
-        this.maxoLabel = result.maxoTerm().termLabel();
+        this.maxoLabel = result.maxoTerm().label();
     }
 
     public String getMaxoLabel() {

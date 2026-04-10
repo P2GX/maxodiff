@@ -2,7 +2,6 @@ package org.p2gx.maxodiff.core.diffdg;
 
 import org.p2gx.maxodiff.core.model.DifferentialDiagnosis;
 import org.p2gx.maxodiff.core.model.PhenopacketData;
-import org.p2gx.maxodiff.core.model.PpktSample;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 
 import java.util.Collection;
@@ -10,7 +9,7 @@ import java.util.List;
 
 /**
  * The differential diagnosis engine represents a way for performing a differential diagnosis 
- * for a provided {@link PpktSample}, where signs and symptoms are encoded into terms of Human Phenotype Ontology.
+ * for a provided {@link PhenopacketData}, where signs and symptoms are encoded into terms of Human Phenotype Ontology.
  */
 public interface DDxEngine {
 

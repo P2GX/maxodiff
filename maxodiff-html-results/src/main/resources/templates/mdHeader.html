@@ -5,8 +5,8 @@
             <td class="narrow-column">Observed HPO Terms:</td>
             <td class="wide-column">
                 <a th:each="term : ${observedHpoTerms}"
-                   th:href="|https://hpo.jax.org/browse/term/${term.termId}|" target="_blank"
-                   th:text="${term.termLabel}">
+                   th:href="|https://hpo.jax.org/browse/term/${term.tid}|" target="_blank"
+                   th:text="${term.label}">
                 </a>
             </td>
         </tr>
@@ -14,8 +14,8 @@
             <td class="narrow-column">Excluded HPO Terms:</td>
             <td class="wide-column">
                 <a th:each="term : ${excludedHpoTerms}"
-                   th:href="|https://hpo.jax.org/browse/term/${term.termId}|" target="_blank"
-                   th:text="${term.termLabel}">
+                   th:href="|https://hpo.jax.org/browse/term/${term.tid}|" target="_blank"
+                   th:text="${term.label}">
                 </a>
             </td>
         </tr>

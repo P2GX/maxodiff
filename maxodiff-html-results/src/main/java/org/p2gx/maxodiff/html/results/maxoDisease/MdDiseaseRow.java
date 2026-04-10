@@ -1,5 +1,6 @@
 package org.p2gx.maxodiff.html.results.maxoDisease;
 
+import org.monarchinitiative.phenol.ontology.data.TermId;
 import org.p2gx.maxodiff.core.analysis.RankedMaxoResult;
 import org.p2gx.maxodiff.core.analysis.RankedOmimTerm;
 
@@ -26,8 +27,8 @@ public class MdDiseaseRow {
 
         List<MdDiseaseRow> rows = new ArrayList<>();
         for (RankedOmimTerm rankedOmimTerm : results.getFirst().rankedOmimTermList()) {
-            String diseaseId = rankedOmimTerm.omimTerm().termId();
-            String diseaseLabel = rankedOmimTerm.omimTerm().termLabel();
+            TermId diseaseId = rankedOmimTerm.omimTerm().tid();
+            String diseaseLabel = rankedOmimTerm.omimTerm().label();
             List<MdDiseaseTableCell> cells = new ArrayList<>();
             double score = 0.;
             double topScore = results.getFirst().maxoScore();
@@ -35,9 +36,9 @@ public class MdDiseaseRow {
             List<MaxoDiseaseCellTooltipItem> tooltipItems = new ArrayList<>();
             for (RankedMaxoResult result : results) {
                 if (!result.frequencies().isEmpty()) {
-                    String firstMaxoDiseaseId = result.frequencies().getFirst().diseaseId().getValue();
+                    TermId firstMaxoDiseaseId = result.frequencies().getFirst().diseaseId();
                     if (firstMaxoDiseaseId.equals(diseaseId)) {
-                        String maxoLabel = result.maxoTerm().termLabel();
+                        String maxoLabel = result.maxoTerm().label();
                         score = result.maxoScore();
                         tooltipItems.add(new MaxoDiseaseCellTooltipItem(maxoLabel, String.format("%.2f", score)));
                     } else {
@@ -47,7 +48,7 @@ public class MdDiseaseRow {
                     cells.add(new MdDiseaseTableCell(score, opacity, tooltipHeader, tooltipItems));
                 }
             }
-            rows.add(new MdDiseaseRow(diseaseId, diseaseLabel, score, topScore, cells));
+            rows.add(new MdDiseaseRow(diseaseId.getValue(), diseaseLabel, score, topScore, cells));
 
         }
         return rows;

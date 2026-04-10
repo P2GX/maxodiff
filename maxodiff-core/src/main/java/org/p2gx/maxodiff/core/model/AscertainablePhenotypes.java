@@ -1,6 +1,6 @@
 package org.p2gx.maxodiff.core.model;
 
-import org.p2gx.maxodiff.core.analysis.SimpleTerm;
+import org.p2gx.maxodiff.core.analysis.MySimpleTerm;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDisease;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
 import org.monarchinitiative.phenol.base.PhenolRuntimeException;
@@ -42,17 +42,16 @@ public class AscertainablePhenotypes {
      * @return Ascertainable term Ids: HPO terms that are annotated to the disease, but are not present in the phenopacket.
      * @throws PhenolRuntimeException if that targetDiseaseId is not found.
      */
-    public Set<String> getAscertainablePhenotypeIds(
-            PpktSample myPpkt,
+    public Set<TermId> getAscertainablePhenotypeIds(
+            PhenopacketData myPpkt,
             TermId diseaseId) throws PhenolRuntimeException {
         HpoDisease disease = hpoDiseases.diseaseById(diseaseId)
                 .orElseThrow(() -> new PhenolRuntimeException("Could not find disease id " + diseaseId.getValue()));
-        Set<String> allPkktTerms = myPpkt.observedHpoTerms().stream().map(SimpleTerm::termId).collect(Collectors.toSet());
-        allPkktTerms.addAll(myPpkt.excludedHpoTerms().stream().map(SimpleTerm::termId).collect(Collectors.toSet()));
+        Set<TermId> allPkktTerms = myPpkt.observed().stream().map(MySimpleTerm::tid).collect(Collectors.toSet());
+        allPkktTerms.addAll(myPpkt.excluded().stream().map(MySimpleTerm::tid).collect(Collectors.toSet()));
         // Ascertainable phenotypes include all terms not currently mentioned
         // in the phenopacket
         return disease.annotationTermIdList().stream()
-                .map(TermId::getValue)
                 .filter(value -> !allPkktTerms.contains(value))
                 .collect(Collectors.toSet());
     }

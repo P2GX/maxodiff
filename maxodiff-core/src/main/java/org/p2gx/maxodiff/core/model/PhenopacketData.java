@@ -1,9 +1,7 @@
 package org.p2gx.maxodiff.core.model;
 
 import org.p2gx.maxodiff.core.analysis.MySimpleTerm;
-import org.p2gx.maxodiff.core.analysis.SimpleTerm;
 import org.p2gx.maxodiff.core.io.PhenopacketImporter;
-import org.p2gx.maxodiff.core.service.BiometadataService;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 
 import java.io.*;
@@ -38,12 +36,12 @@ public class PhenopacketData {
     private final List<TermId> procedures;
 
 
-    PhenopacketData(String sampleId,
-                    List<String> hpoTerms,
-                    List<String> negatedHpoTerms,
-                    List<TermId> diseaseIds,
-                    List<TermId> maxoIds
-                  ) {
+    public PhenopacketData(String sampleId,
+                           List<String> hpoTerms,
+                           List<String> negatedHpoTerms,
+                           List<TermId> diseaseIds,
+                           List<TermId> maxoIds
+    ) {
 
         this.sampleId = Objects.requireNonNull(sampleId);
         this.hpoTerms = Objects.requireNonNull(hpoTerms);
@@ -75,13 +73,6 @@ public class PhenopacketData {
                 .toList();
         this.diseaseIds = diseaseIds;
         this.procedures = maxoIds;
-    }
-
-
-    public static PhenopacketData fromSimpleTerms(String id, List<SimpleTerm> obs, List<SimpleTerm> exc) {
-        List<MySimpleTerm> observed = obs.stream().map(st -> new MySimpleTerm(TermId.of(st.termId()), st.termLabel())).toList();
-        List<MySimpleTerm> excluded = exc.stream().map(st -> new MySimpleTerm(TermId.of(st.termId()), st.termLabel())).toList();
-        return new PhenopacketData(id, observed, excluded, List.of(), List.of(), false);
     }
 
     public static PhenopacketData readPhenopacketData(Path phenopacketPath)  {
@@ -132,41 +123,12 @@ public class PhenopacketData {
     }
 
 
-
-    public PpktSample getPpktSample(BiometadataService biometadataService) {
-        List<SimpleTerm> observedSampleTerms = new ArrayList<>();
-        List<SimpleTerm> excludedSampleTerms = new ArrayList<>();
-        observedHpoTermIds().forEach(tid ->
-                observedSampleTerms.add(new SimpleTerm(tid.getValue(), biometadataService.hpoLabel(tid).orElse("n/a"))));
-        excludedHpoTermIds().forEach(tid ->
-                excludedSampleTerms.add(new SimpleTerm(tid.getValue(), biometadataService.hpoLabel(tid).orElse("n/a"))));
-        return new PpktSample(sampleId(), observedSampleTerms, excludedSampleTerms);
-    }
-
-    public List<SimpleTerm> getObservedHpoSimpleTerms() {
-        return observedHpoTerms.
-                stream()
-                .map(mst -> new SimpleTerm(mst.tid().getValue(), mst.label()))
-                .toList();
-    }
-
-    public List<SimpleTerm> getExcludedHpoSimpleTerms() {
-        return excludedHpoTerms
-                .stream()
-                .map(mst -> new SimpleTerm(mst.tid().getValue(), mst.label()))
-                .toList();
-    }
-
     public List<MySimpleTerm> observed() {
         return  observedHpoTerms;
     }
 
     public List<MySimpleTerm> excluded() {
         return  excludedHpoTerms;
-    }
-
-    public PpktSample getPpktSample() {
-        return new PpktSample(sampleId(), getObservedHpoSimpleTerms(), getExcludedHpoSimpleTerms());
     }
 
 

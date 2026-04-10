@@ -71,7 +71,7 @@ public class RankMaxo {
         List<TermId> ppktMaxoIds = ppkt.maxoProcedureIds();
         Set<TermId> sampleHpoIds = ppkt.allHpoTermIds();
         AscertainablePhenotypes ascertainablePhenotypes = new AscertainablePhenotypes(maxoHpoTermProbabilities.getHpoDiseases());
-        Map<String, Set<String>> fullMaxoToHpoTermIdMap = maxoHpoTermProbabilities.getMaxoToHpoTermIdMap();
+        Map<TermId, Set<TermId>> fullMaxoToHpoTermIdMap = maxoHpoTermProbabilities.getMaxoToHpoTermIdMap();
 
         int numThreads = Runtime.getRuntime().availableProcessors() - 1;
         ExecutorService executor = Executors.newFixedThreadPool(numThreads);
@@ -88,8 +88,8 @@ public class RankMaxo {
                     .initialDiagnoses(allInitialDiagnoses)
                     .ascertainablePhenotypes(ascertainablePhenotypes)
                     .maxoToHpoTermIdMap(fullMaxoToHpoTermIdMap)
-                    .maxoId(maxoId.getValue())
-                    .sample(ppkt.getPpktSample())
+                    .maxoId(maxoId)
+                    .sample(ppkt)
                     .nDiagnoses(500)
                     .maxoLabel(biometadataService.maxoLabel(maxoId.getValue()).get())
                     .build();

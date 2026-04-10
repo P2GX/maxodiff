@@ -37,21 +37,21 @@ public class RefinementResultsJsonDumpTest {
         String expected = """
                 [ {
                   "maxoTerm" : {
-                    "termId" : "MAXO:123"
+                    "tid" : "MAXO:123"
                   },
                   "maxoScore" : 2.0,
                   "rankedOmimTermList" : [ {
-                    "termId" : "OMIM:256000",
+                    "tid" : "OMIM:256000",
                     "averageRank" : 1.0
                   }, {
-                    "termId" : "OMIM:000128",
+                    "tid" : "OMIM:000128",
                     "averageRank" : 2.0
                   } ],
                   "hpoTermIds" : [ {
-                    "termId" : "HPO:123000",
+                    "tid" : "HPO:123000",
                     "count" : 50
                   }, {
-                    "termId" : "HPO:425000",
+                    "tid" : "HPO:425000",
                     "count" : 85
                   } ],
                   "frequencies" : [ {
@@ -70,10 +70,10 @@ public class RefinementResultsJsonDumpTest {
     }
 
     private static List<RankedMaxoResult> createResults() {
-        return List.of(new RankedMaxoResult(new SimpleTerm("MAXO:123", "MAXO Label 123"),
+        return List.of(new RankedMaxoResult(new MySimpleTerm(TermId.of("MAXO:123"), "MAXO Label 123"),
                         2.,
-                        List.of(new RankedOmimTerm(new SimpleTerm("OMIM:256000", "OMIM 256 Label"), 5, 1), new RankedOmimTerm(new SimpleTerm("OMIM:000128", "OMIM 128 Label"), 4,2)),
-                        List.of(new CountedHpoTerm(new SimpleTerm("HPO:123000", "HPO 123 Label"), 50), new CountedHpoTerm(new SimpleTerm("HPO:425000", "HPO 425 Label"), 85)),
+                        List.of(new RankedOmimTerm(new MySimpleTerm(TermId.of("OMIM:256000"), "OMIM 256 Label"), 5, 1), new RankedOmimTerm(new MySimpleTerm(TermId.of("OMIM:000128"), "OMIM 128 Label"), 4,2)),
+                        List.of(new CountedHpoTerm(new MySimpleTerm(TermId.of("HPO:123000"), "HPO 123 Label"), 50), new CountedHpoTerm(new MySimpleTerm(TermId.of("HPO:425000"), "HPO 425 Label"), 85)),
                         List.of(new HpoFrequency(TermId.of("OMIM:256000"), TermId.of("HPO:123000"),  0.5f, 5.3f), new HpoFrequency(TermId.of("OMIM:000128"), TermId.of("HPO:425000"),  0.75f, 10.6f))
                         )
         );

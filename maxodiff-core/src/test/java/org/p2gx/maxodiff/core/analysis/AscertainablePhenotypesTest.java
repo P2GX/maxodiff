@@ -5,7 +5,7 @@ import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.p2gx.maxodiff.core.TestResources;
 import org.p2gx.maxodiff.core.model.AscertainablePhenotypes;
-import org.p2gx.maxodiff.core.model.PpktSample;
+import org.p2gx.maxodiff.core.model.PhenopacketData;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDisease;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
 import org.monarchinitiative.phenol.base.PhenolRuntimeException;
@@ -44,40 +44,40 @@ public class AscertainablePhenotypesTest {
      *
      * @return Sample phenopacket with one included HPO term Id and one disease Id.
      */
-    public static PpktSample getPPkt1() {
-        List<SimpleTerm> presentTerms = List.of(
-                new SimpleTerm("HP:0008619", "hpo1")
+    public static PhenopacketData getPPkt1() {
+        List<MySimpleTerm> presentTerms = List.of(
+                new MySimpleTerm(TermId.of("HP:0008619"), "hpo1")
         );
-        List<SimpleTerm> excludedTerms = List.of();
+        List<MySimpleTerm> excludedTerms = List.of();
 
-        return new PpktSample("sample1", presentTerms, excludedTerms);
+        return new PhenopacketData("sample1", presentTerms, excludedTerms, List.of(), List.of(), false);
     }
 
     /**
      *
      * @return Sample phenopacket with two included HPO term Ids and one disease Id.
      */
-    public static PpktSample getPPkt2() {
-        List<SimpleTerm> presentTerms = List.of(
-                new SimpleTerm("HP:0008619", "hpo1"),
-                new SimpleTerm("HP:0001751", "hpo1")
+    public static PhenopacketData getPPkt2() {
+        List<MySimpleTerm> presentTerms = List.of(
+                new MySimpleTerm(TermId.of("HP:0008619"), "hpo1"),
+                new MySimpleTerm(TermId.of("HP:0001751"), "hpo1")
         );
-        List<SimpleTerm> excludedTerms = List.of();
+        List<MySimpleTerm> excludedTerms = List.of();
 
-        return new PpktSample("sample1", presentTerms, excludedTerms);
+        return new PhenopacketData("sample1", presentTerms, excludedTerms, List.of(), List.of(), false);
     }
 
     /**
      * We expect this to cause an error, because OMIM:123456 is not aa actual identifier
      * @return Sample phenopacket with one included HPO term Id and one dummy disease Id.
      */
-    public static PpktSample getPPktEmptyDisease() {
-        List<SimpleTerm> presentTerms = List.of(
-                new SimpleTerm("HP:0008619", "hpo1")
+    public static PhenopacketData getPPktEmptyDisease() {
+        List<MySimpleTerm> presentTerms = List.of(
+                new MySimpleTerm(TermId.of("HP:0008619"), "hpo1")
         );
-        List<SimpleTerm> excludedTerms = List.of();
+        List<MySimpleTerm> excludedTerms = List.of();
 
-        return new PpktSample("sample2", presentTerms, excludedTerms);
+        return new PhenopacketData("sample2", presentTerms, excludedTerms, List.of(), List.of(), false);
     }
 
     /**
@@ -86,19 +86,19 @@ public class AscertainablePhenotypesTest {
     @Test
     public void testPotentialPhenotypes1() {
          // Get potential phenotypes given phenopacket
-         PpktSample s1 = getPPkt1();
+         PhenopacketData s1 = getPPkt1();
          TermId targetId = TermId.of("OMIM:615837"); //s1.diseaseIds().getFirst();
-         Set<String> ascertainablePhenotypeIds = ASCERTAINABLE_PHENOTYPES.getAscertainablePhenotypeIds(s1, targetId);
+         Set<TermId> ascertainablePhenotypeIds = ASCERTAINABLE_PHENOTYPES.getAscertainablePhenotypeIds(s1, targetId);
          // Disease associated with ppkt has 3 phenotype terms, example ppkt already has 1, so expect 2 here
         assertEquals(2, ascertainablePhenotypeIds.size());
      }
 
     public sealed interface TestOutcome {
-        record Ok(Set<String> termIdSet) implements TestOutcome {}
+        record Ok(Set<TermId> termIdSet) implements TestOutcome {}
         record Error(Supplier<? extends PhenolRuntimeException> exceptionSupplier) implements TestOutcome {}
     }
 
-    public record TestIndividual(String description, PpktSample myPPkt, TestOutcome expectedOutcome) {}
+    public record TestIndividual(String description, PhenopacketData myPPkt, TestOutcome expectedOutcome) {}
 
     /**
      *
@@ -109,10 +109,10 @@ public class AscertainablePhenotypesTest {
         return Stream.of(
                 new TestIndividual("46 year old female, infantile onset (1 term)",
                         getPPkt1(),
-                        new TestOutcome.Ok(Set.of("HP:0000505", "HP:0001751"))),
+                        new TestOutcome.Ok(Set.of(TermId.of("HP:0000505"), TermId.of("HP:0001751")))),
                 new TestIndividual("46 year old female, infantile onset (2 terms)",
                         getPPkt2(),
-                        new TestOutcome.Ok(new HashSet<>(Collections.singleton("HP:0000505")))),
+                        new TestOutcome.Ok(Set.of(TermId.of("HP:0000505")))),
                 new TestIndividual("No disease id",
                         getPPktEmptyDisease(),
                         new TestOutcome.Error(() -> new PhenolRuntimeException("No disease id found")))
@@ -122,11 +122,11 @@ public class AscertainablePhenotypesTest {
     @ParameterizedTest
     @MethodSource("testGetIndividualDiseaseIds")
     void testEvaluateExpression(TestIndividual testCase) {
-        PpktSample ppkti = testCase.myPPkt();
+        PhenopacketData ppkti = testCase.myPPkt();
         TermId targetId = TermId.of("OMIM:615837"); //ppkti.diseaseIds().getFirst();
         TermId targetId2 = TermId.of("OMIM:123456");
         switch (testCase.expectedOutcome()) {
-            case TestOutcome.Ok(Set<String> expectedResult) ->
+            case TestOutcome.Ok(Set<TermId> expectedResult) ->
                     assertEquals(expectedResult, ASCERTAINABLE_PHENOTYPES.getAscertainablePhenotypeIds(ppkti, targetId),
                             "Incorrect evaluation for: " + testCase.description());
             case TestOutcome.Error(Supplier<? extends RuntimeException> exceptionSupplier) ->

@@ -22,6 +22,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.*;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ForkJoinPool;
 import java.util.stream.IntStream;
 
@@ -69,7 +70,7 @@ public class BenchmarkingCommand extends DDxCommand {
 
         this.phenomizer = new PhenomizerDDxEngine(context);
         File icFile = new File("/Users/beckwm/IdeaProjects/maxodiff/data/term-to-ic.csv");
-        Map<String, Double> termToIcMap = getTermToIcMap(icFile);
+        Map<TermId, Double> termToIcMap = getTermToIcMap(icFile);
 
         if (this.phenopacketPath != null && this.phenopacketPath.toFile().isFile()) {
             List<BenchmarkResult> results = runShuffleOnePPkt(this.phenopacketPath, termToIcMap);
@@ -122,8 +123,7 @@ public class BenchmarkingCommand extends DDxCommand {
         }
     }
 
-
-    private List<BenchmarkResult> runShuffleOnePPkt(Path ppktPath, Map<String, Double> termToIcMap) {
+    private List<BenchmarkResult> runShuffleOnePPkt(Path ppktPath, Map<TermId, Double> termToIcMap) {
         List<BenchmarkResult> resultList = new ArrayList<>();
         try {
             PhenopacketData ppktData = PhenopacketData.readPhenopacketData(phenopacketPath);
@@ -134,38 +134,45 @@ public class BenchmarkingCommand extends DDxCommand {
                     hpoFrequencies);
             String ppktId = benchmarker.getSample().sampleId();
             List<RankedMaxoResult> initialResults = benchmarker.standardRun(biometadataService);
-            String topMaxo = initialResults.getFirst().maxoTerm().termId();
-            List<Double> topRandomScores = new ArrayList<>();
+            TermId topMaxo = initialResults.getFirst().maxoTerm().tid();
+            List<Double> topRandomScores = Collections.synchronizedList(new ArrayList<>());
             int parallelism = 8;
-            ForkJoinPool customThreadPool = new ForkJoinPool(parallelism);
-            try {
+            try (ForkJoinPool customThreadPool = new ForkJoinPool(parallelism)) {
                 customThreadPool.submit(() ->
-                    IntStream.range(0, 50).parallel().forEach(i -> {
-                        List<RankedMaxoResult> randomizedResults;
-                        try {
-                            randomizedResults = benchmarker.shuffledRandomizer(biometadataService);
-                        } catch (Exception e) {
-                            throw new RuntimeException(e);
-                        }
-                        //TODO: compare total Information Content for Maxo Terms instead of scores
-                        List<RankedMaxoResult> topResultRandomList = randomizedResults.stream()
-                                .filter(mr -> mr.maxoTerm().termId().equals(topMaxo)).toList();
+                        IntStream.range(0, 50).parallel().forEach(i -> {
+                            try {
+                                List<RankedMaxoResult> randomizedResults = benchmarker.shuffledRandomizer(biometadataService);
 
-                        List<CountedHpoTerm> ctHpoTerms = topResultRandomList.isEmpty() ? new ArrayList<>() :
-                            topResultRandomList.getFirst().hpoTermIds();
-                        List<String> discHpoIds = ctHpoTerms.isEmpty() ? new ArrayList<>() :
-                                ctHpoTerms.stream().map(ctTerm -> ctTerm.hpoTerm().termId()).toList();
-//
-                        double maxScoreValueRandom = discHpoIds.isEmpty() ? 0.0 :
-                                discHpoIds.stream().mapToDouble(termToIcMap::get).sum();
-                        topRandomScores.add(maxScoreValueRandom);
-                        if (i % 10 == 0) {
-                            LOGGER.info("Finished index {}", i);
-                        }
-                    })
-                ).get();
-            } finally {
-                customThreadPool.shutdown();
+                                List<RankedMaxoResult> topResultRandomList = randomizedResults.stream()
+                                        .filter(mr -> mr.maxoTerm().tid().equals(topMaxo))
+                                        .toList();
+
+                                List<CountedHpoTerm> ctHpoTerms = topResultRandomList.isEmpty() ?
+                                        new ArrayList<>() : topResultRandomList.getFirst().hpoTermIds();
+
+                                List<TermId> discHpoIds = ctHpoTerms.stream()
+                                        .map(ctTerm -> ctTerm.hpoTerm().tid())
+                                        .toList();
+
+                                double maxScoreValueRandom = discHpoIds.stream()
+                                        .mapToDouble(id -> termToIcMap.getOrDefault(id, 0.0))
+                                        .sum();
+
+                                topRandomScores.add(maxScoreValueRandom);
+
+                                if (i % 10 == 0) {
+                                    LOGGER.info("Finished index {}", i);
+                                }
+                            } catch (Exception e) {
+                                // Ensure exceptions inside the parallel stream are logged/handled
+                                LOGGER.error("Error at index {}", i, e);
+                                throw new RuntimeException(e);
+                            }
+                        })
+                ).get(); // .get() waits for the submission to complete
+            } catch (InterruptedException | ExecutionException e) {
+                LOGGER.error("Parallel execution failed", e);
+                Thread.currentThread().interrupt();
             }
             System.out.println(topRandomScores);
             double avgTopRandomScore = topRandomScores.stream().mapToDouble(Double::valueOf).average().orElse(0);
@@ -182,14 +189,15 @@ public class BenchmarkingCommand extends DDxCommand {
     private BenchmarkResult getShuffledBenchmarkResult(String ppktId,
                                                        List<RankedMaxoResult> initialResults,
                                                        double avgTopScoreRandom,
-                                                       Map<String, Double> termToIcMap) {
+                                                       Map<TermId, Double> termToIcMap) {
 
-        TermId topMaxo = TermId.of(initialResults.getFirst().maxoTerm().termId());
+        TermId topMaxo = initialResults.getFirst().maxoTerm().tid();
 //        double maxoFinalScore = initialResults.getFirst().rankMaxoScore().maxoScore();
         List<CountedHpoTerm> ctHpoTerms = initialResults.isEmpty() ? new ArrayList<>() :
                 initialResults.getFirst().hpoTermIds();
-        List<String> discHpoIds = ctHpoTerms.isEmpty() ? new ArrayList<>() :
-                ctHpoTerms.stream().map(ctTerm -> ctTerm.hpoTerm().termId()).toList();
+        List<TermId> discHpoIds = ctHpoTerms.isEmpty() ? new ArrayList<>() :
+                ctHpoTerms.stream().map(ctTerm -> ctTerm.hpoTerm().tid()).toList();
+//
         double maxoFinalScore = discHpoIds.isEmpty() ? 0.0 :
                 discHpoIds.stream().mapToDouble(termToIcMap::get).sum();
         LOGGER.info("standard run results:");
@@ -202,8 +210,8 @@ public class BenchmarkingCommand extends DDxCommand {
                 procedure, -1, avgTopScoreRandom, nMaxo, -1, -1);
     }
 
-    private Map<String, Double> getTermToIcMap(File icFile) {
-        Map<String, Double> termToIcMap = new HashMap<>();
+    private Map<TermId, Double> getTermToIcMap(File icFile) {
+        Map<TermId, Double> termToIcMap = new HashMap<>();
         try (
             FileInputStream fis = new FileInputStream(icFile);
             InputStreamReader isr = new InputStreamReader(fis, StandardCharsets.UTF_8);
@@ -214,7 +222,7 @@ public class BenchmarkingCommand extends DDxCommand {
             while ((line = br.readLine()) != null) {
                 if (line.startsWith("HP:")) {
                     String[] split = line.split(",");
-                    String tid = split[0];
+                    TermId tid = TermId.of(split[0]);
                     Double ic = Double.parseDouble(split[1]);
                     termToIcMap.put(tid, ic);
                 }
