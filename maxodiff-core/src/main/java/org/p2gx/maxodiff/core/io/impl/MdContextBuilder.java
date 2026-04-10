@@ -30,9 +30,9 @@ public class MdContextBuilder {
 
 
     public static MdContext buildContext(Path maxoDataPath,
-                                         int nRepetions,
+                                         int nRepetitions,
                                          int nDiseases) throws Exception{
-        MdParams params = new MdParams(nRepetions, nDiseases);
+        MdParams params = new MdParams(nRepetitions, nDiseases);
         Path dataDir = Objects.requireNonNull(maxoDataPath,
                 "Data directory must not be null!");
         Path hpoJsonPath = Objects.requireNonNull(dataDir.resolve("hp.json"),

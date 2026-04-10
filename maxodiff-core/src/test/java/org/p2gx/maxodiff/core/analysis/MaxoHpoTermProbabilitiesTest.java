@@ -19,7 +19,6 @@ public class MaxoHpoTermProbabilitiesTest {
     private final static HpoDiseases hpoDiseases = TestResources.hpoDiseases();
     private final static Map<MySimpleTerm, Set<MySimpleTerm>> hpoToMaxoTermMap = TestResources.hpoToMaxo();
     private final static List<DifferentialDiagnosis> initialDiagnoses = TestResources.getExampleDiagnoses().stream().toList(); //top K diagnoses only
-    private final static DiseaseModelProbability diseaseModelProbability = DiseaseModelProbability.ranked(initialDiagnoses);
     private final static PhenopacketData samplePhenopacket = TestResources.getExampleSample();
 
     private final static MaxoHpoTermProbabilities MAXO_HPO_TERM_PROBABILITIES = new MaxoHpoTermProbabilities(hpoDiseases,

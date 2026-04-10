@@ -2,7 +2,7 @@ package org.p2gx.maxodiff.html;
 
 import org.hamcrest.MatcherAssert;
 import org.junit.jupiter.api.Test;
-import org.p2gx.maxodiff.config.MaxodiffDataResolver;
+import org.p2gx.maxodiff.core.io.MdContext;
 import org.p2gx.maxodiff.core.service.BiometadataService;
 import org.p2gx.maxodiff.html.config.MaxodiffAutoConfiguration;
 import org.p2gx.maxodiff.html.config.MaxodiffProperties;
@@ -34,12 +34,12 @@ public class MaxodiffAutoConfigurationTest extends AbstractAutoConfigurationTest
     }
 
     @Test
-    public void testDataPath() {
+    public void testHpoLoaded() {
         load(MaxodiffAutoConfiguration.class, "maxodiff.data-directory=" + TEST_DATA);
 
-        MaxodiffDataResolver resolver = context.getBean(MaxodiffDataResolver.class);
+        MdContext mdContext = context.getBean(MdContext.class);
 
-        assertThat(resolver.dataDirectory(), is(notNullValue()));
+        assertThat(mdContext.resources().hpo(), is(notNullValue()));
     }
 
     @Test
