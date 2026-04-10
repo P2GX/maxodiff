@@ -2,13 +2,10 @@ package org.p2gx.maxodiff.core.io;
 
 import org.monarchinitiative.phenol.annotations.base.Ratio;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDisease;
-import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
-import org.monarchinitiative.phenol.ontology.data.MinimalOntology;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 import org.p2gx.maxodiff.core.analysis.HTMLFrequencyMap;
 import org.p2gx.maxodiff.core.analysis.HpoFrequency;
 import org.p2gx.maxodiff.core.analysis.MySimpleTerm;
-import org.p2gx.maxodiff.core.analysis.SimpleTerm;
 import org.p2gx.maxodiff.core.analysis.refinement.DiffDiagRefiner;
 import org.p2gx.maxodiff.core.analysis.refinement.DiffDiagRefinerImpl;
 import org.p2gx.maxodiff.core.service.BiometadataService;

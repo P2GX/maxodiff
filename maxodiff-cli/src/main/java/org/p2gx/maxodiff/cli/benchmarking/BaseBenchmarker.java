@@ -1,11 +1,9 @@
 package org.p2gx.maxodiff.cli.benchmarking;
 
 import org.monarchinitiative.phenol.ontology.data.MinimalOntology;
-import org.p2gx.maxodiff.config.MaxodiffPropsConfiguration;
 import org.p2gx.maxodiff.core.analysis.HpoFrequency;
 import org.p2gx.maxodiff.core.analysis.MySimpleTerm;
 import org.p2gx.maxodiff.core.analysis.RankedMaxoResult;
-import org.p2gx.maxodiff.core.analysis.SimpleTerm;
 
 import org.p2gx.maxodiff.core.analysis.refinement.DiffDiagRefiner;
 import org.p2gx.maxodiff.core.analysis.refinement.RefinementOptions;
@@ -15,7 +13,6 @@ import org.p2gx.maxodiff.core.model.*;
 import org.p2gx.maxodiff.core.service.BiometadataService;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDisease;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
-import org.monarchinitiative.phenol.ontology.data.Ontology;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -89,11 +86,9 @@ public class BaseBenchmarker {
     }
 
     private MaxoHpoTermProbabilities calculateMaxoHpoTermProbabilities() {
-        DiseaseModelProbability diseaseModelProbability = DiseaseModelProbability.ranked(getTopNInitialDiffDiagList());
         return new MaxoHpoTermProbabilities(hpoDiseases,
                 hpoTermToMaxoTermSetMap,
-                getTopNInitialDiffDiagList(),
-                diseaseModelProbability);
+                getTopNInitialDiffDiagList());
     }
 
     public List<RankedMaxoResult> standardRun(BiometadataService biometadataService) throws Exception {

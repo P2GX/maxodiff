@@ -1,6 +1,5 @@
 package org.p2gx.maxodiff.html.results.maxoHpo;
 
-import org.monarchinitiative.phenol.ontology.data.TermId;
 import org.p2gx.maxodiff.core.analysis.*;
 
 import java.util.*;
