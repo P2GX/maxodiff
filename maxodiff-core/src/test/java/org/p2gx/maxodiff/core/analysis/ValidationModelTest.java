@@ -14,15 +14,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class ValidationModelTest {
 
     private final static List<DifferentialDiagnosis> initialDiagnoses = TestResources.getExampleDiagnoses().stream().toList();
-    private final static Map<MySimpleTerm, Set<MySimpleTerm>> hpoToMaxoTermMap = TestResources.hpoToMaxo();
-
-    private final static Map<TermId, Set<TermId>> maxoToHpoTermIdMap = MaxoHpoTermIdMaps.getMaxoToHpoTermIdMap(hpoToMaxoTermMap);
-    private final static MaxoHpoTermProbabilities maxoHpoTermProbabilities =
-            new MaxoHpoTermProbabilities(hpoDiseases,
-                                         hpoToMaxoTermMap,
-                                         initialDiagnoses,
-                                         DiseaseModelProbability.ranked(initialDiagnoses));
-
     private final static List<DifferentialDiagnosis> maxoDiagnoses = TestResources.getExampleMaxoDiagnoses().stream().toList();
 
 
