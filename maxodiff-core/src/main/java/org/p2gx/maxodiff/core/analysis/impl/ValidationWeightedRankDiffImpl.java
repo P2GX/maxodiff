@@ -12,13 +12,12 @@ import java.util.Map;
  * Validate the effectiveness of the maxodiff algorithm using the weighted sum of differences of disease ranks before and after
  * applying the maxodiff algorithm.
  */
-public final class ValidationWeightedRankDiffImpl extends ValidationModelImpl  implements ValidationModel {
+public final class ValidationWeightedRankDiffImpl implements ValidationModel {
 
     private final Map<TermId, Double> rankChanges = new HashMap<>();
 
     public ValidationWeightedRankDiffImpl(List<DifferentialDiagnosis> initialDifferentialDiagnoses,
                                           List<DifferentialDiagnosis> maxoDifferentialDiagnoses) {
-        super(initialDifferentialDiagnoses, maxoDifferentialDiagnoses);
 
         for (DifferentialDiagnosis initialDiagnosis : initialDifferentialDiagnoses) {
             TermId termId = initialDiagnosis.diseaseId();

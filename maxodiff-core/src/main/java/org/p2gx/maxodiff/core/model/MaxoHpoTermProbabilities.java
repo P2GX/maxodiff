@@ -2,10 +2,7 @@ package org.p2gx.maxodiff.core.model;
 
 import org.p2gx.maxodiff.core.analysis.MaxoHpoTermIdMaps;
 import org.p2gx.maxodiff.core.analysis.MySimpleTerm;
-import org.p2gx.maxodiff.core.analysis.SimpleTerm;
 
-import org.monarchinitiative.phenol.annotations.base.Ratio;
-import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDisease;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 
@@ -15,15 +12,14 @@ public class MaxoHpoTermProbabilities {
 
     private final HpoDiseases hpoDiseases;
     private final List<DifferentialDiagnosis> initialDiagnoses; //top K diagnoses only
-    private final DiseaseModelProbability diseaseModelProbability;
     private final Map<String, Set<String>> maxoToHpoTermIdMap;
     private final DiscoverablePhenotypes discoverablePhenotypes;
 
-    public MaxoHpoTermProbabilities(HpoDiseases hpoDiseases, Map<MySimpleTerm, Set<MySimpleTerm>> hpoToMaxoTermMap,
-                                    List<DifferentialDiagnosis> initialDiagnoses, DiseaseModelProbability diseaseModelProbability) {
+    public MaxoHpoTermProbabilities(HpoDiseases hpoDiseases,
+                                    Map<MySimpleTerm, Set<MySimpleTerm>> hpoToMaxoTermMap,
+                                    List<DifferentialDiagnosis> initialDiagnoses) {
         this.hpoDiseases = hpoDiseases;
         this.initialDiagnoses = initialDiagnoses;
-        this.diseaseModelProbability = diseaseModelProbability;
         Map<String, Set<String>> hpoToMaxoTermIdMap = MaxoHpoTermIdMaps.getHpoToMaxoTermIdMap(hpoToMaxoTermMap);
         this.maxoToHpoTermIdMap = MaxoHpoTermIdMaps.getMaxoToHpoTermIdMap(hpoToMaxoTermMap);
         this.discoverablePhenotypes = new DiscoverablePhenotypes(hpoDiseases, hpoToMaxoTermIdMap, maxoToHpoTermIdMap);
@@ -65,29 +61,6 @@ public class MaxoHpoTermProbabilities {
 
         return maxoAssociatedHpoIds;
 
-    }
-
-    /**
-     *
-     * @param hpoId HPO term of interest
-     * @return Probability that the HPO term will be ascertained by a diagnostic procedure
-     */
-    public double calculateProbabilityOfMaxoTermRevealingPresenceOfHpoTerm(TermId hpoId) {
-        double p = 0.;
-        for (DifferentialDiagnosis diagnosis : initialDiagnoses) {
-            double diseaseProbability = diseaseModelProbability.probability(diagnosis.diseaseId()); //1./initialDiagnoses.size()
-            Optional<HpoDisease> hpoDiseaseOpt = hpoDiseases.diseaseById(diagnosis.diseaseId());
-            if (hpoDiseaseOpt.isPresent()) {
-                HpoDisease hpoDisease = hpoDiseaseOpt.get();
-                Optional<Ratio> frequencyOfTermInDiseaseOpt = hpoDisease.getFrequencyOfTermInDisease(hpoId);
-                if (frequencyOfTermInDiseaseOpt.isPresent()) {
-                    float termFrequencyInDisease = frequencyOfTermInDiseaseOpt.get().frequency();
-                    p += termFrequencyInDisease * diseaseProbability;
-                }
-            }
-        }
-
-        return p;
     }
 
     public int nDiseases() { return initialDiagnoses.size(); }
