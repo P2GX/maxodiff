@@ -22,6 +22,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.*;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ForkJoinPool;
 import java.util.stream.IntStream;
 
@@ -132,39 +133,46 @@ public class BenchmarkingCommand extends DDxCommand {
                     this.phenomizer,
                     hpoFrequencies);
             String ppktId = benchmarker.getSample().sampleId();
-            List<RankedMaxoResult> initialResults = benchmarker.standardRun(maxodiffPropsConfiguration.biometadataService());
+            List<RankedMaxoResult> initialResults = benchmarker.standardRun(biometadataService);
             TermId topMaxo = initialResults.getFirst().maxoTerm().tid();
-            List<Double> topRandomScores = new ArrayList<>();
+            List<Double> topRandomScores = Collections.synchronizedList(new ArrayList<>());
             int parallelism = 8;
-            ForkJoinPool customThreadPool = new ForkJoinPool(parallelism);
-            try {
+            try (ForkJoinPool customThreadPool = new ForkJoinPool(parallelism)) {
                 customThreadPool.submit(() ->
-                    IntStream.range(0, 50).parallel().forEach(i -> {
-                        List<RankedMaxoResult> randomizedResults;
-                        try {
-                            randomizedResults = benchmarker.shuffledRandomizer(biometadataService);
-                        } catch (Exception e) {
-                            throw new RuntimeException(e);
-                        }
-                        //TODO: compare total Information Content for Maxo Terms instead of scores
-                        List<RankedMaxoResult> topResultRandomList = randomizedResults.stream()
-                                .filter(mr -> mr.maxoTerm().tid().equals(topMaxo)).toList();
+                        IntStream.range(0, 50).parallel().forEach(i -> {
+                            try {
+                                List<RankedMaxoResult> randomizedResults = benchmarker.shuffledRandomizer(biometadataService);
 
-                        List<CountedHpoTerm> ctHpoTerms = topResultRandomList.isEmpty() ? new ArrayList<>() :
-                            topResultRandomList.getFirst().hpoTermIds();
-                        List<TermId> discHpoIds = ctHpoTerms.isEmpty() ? new ArrayList<>() :
-                                ctHpoTerms.stream().map(ctTerm -> ctTerm.hpoTerm().tid()).toList();
-//
-                        double maxScoreValueRandom = discHpoIds.isEmpty() ? 0.0 :
-                                discHpoIds.stream().mapToDouble(termToIcMap::get).sum();
-                        topRandomScores.add(maxScoreValueRandom);
-                        if (i % 10 == 0) {
-                            LOGGER.info("Finished index {}", i);
-                        }
-                    })
-                ).get();
-            } finally {
-                customThreadPool.shutdown();
+                                List<RankedMaxoResult> topResultRandomList = randomizedResults.stream()
+                                        .filter(mr -> mr.maxoTerm().tid().equals(topMaxo))
+                                        .toList();
+
+                                List<CountedHpoTerm> ctHpoTerms = topResultRandomList.isEmpty() ?
+                                        new ArrayList<>() : topResultRandomList.getFirst().hpoTermIds();
+
+                                List<TermId> discHpoIds = ctHpoTerms.stream()
+                                        .map(ctTerm -> ctTerm.hpoTerm().tid())
+                                        .toList();
+
+                                double maxScoreValueRandom = discHpoIds.stream()
+                                        .mapToDouble(id -> termToIcMap.getOrDefault(id, 0.0))
+                                        .sum();
+
+                                topRandomScores.add(maxScoreValueRandom);
+
+                                if (i % 10 == 0) {
+                                    LOGGER.info("Finished index {}", i);
+                                }
+                            } catch (Exception e) {
+                                // Ensure exceptions inside the parallel stream are logged/handled
+                                LOGGER.error("Error at index {}", i, e);
+                                throw new RuntimeException(e);
+                            }
+                        })
+                ).get(); // .get() waits for the submission to complete
+            } catch (InterruptedException | ExecutionException e) {
+                LOGGER.error("Parallel execution failed", e);
+                Thread.currentThread().interrupt();
             }
             System.out.println(topRandomScores);
             double avgTopRandomScore = topRandomScores.stream().mapToDouble(Double::valueOf).average().orElse(0);
