@@ -1,8 +1,8 @@
 package org.p2gx.maxodiff.core.model;
 
+
 import org.monarchinitiative.phenol.ontology.data.TermId;
 import org.p2gx.maxodiff.core.analysis.MySimpleTerm;
-
 import java.util.*;
 import java.util.stream.Collectors;
 

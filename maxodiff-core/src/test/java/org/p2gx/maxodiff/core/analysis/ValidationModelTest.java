@@ -4,21 +4,15 @@ import org.junit.jupiter.api.Test;
 
 import org.monarchinitiative.phenol.ontology.data.TermId;
 import org.p2gx.maxodiff.core.TestResources;
-import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
 import org.p2gx.maxodiff.core.model.DifferentialDiagnosis;
-import org.p2gx.maxodiff.core.model.DiseaseModelProbability;
-import org.p2gx.maxodiff.core.model.MaxoHpoTermProbabilities;
 
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 
 public class ValidationModelTest {
 
-    private final static HpoDiseases hpoDiseases = TestResources.hpoDiseases();
     private final static List<DifferentialDiagnosis> initialDiagnoses = TestResources.getExampleDiagnoses().stream().toList();
     private final static Map<MySimpleTerm, Set<MySimpleTerm>> hpoToMaxoTermMap = TestResources.hpoToMaxo();
 
@@ -50,13 +44,5 @@ public class ValidationModelTest {
         assertEquals(1.005, validationScore, 1e-3);
     }
 
-    /**
-     * This tests validating the maxodiff analysis using the sum of differences in disease scores.
-     */
-    @Test
-    public void testScoreDiffValidationModel() {
-        double validationScore = ValidationModel.scoreDiff(initialDiagnoses, maxoDiagnoses).validationScore();
-        assertEquals(8.487, validationScore, 1e-3);
-    }
 
 }

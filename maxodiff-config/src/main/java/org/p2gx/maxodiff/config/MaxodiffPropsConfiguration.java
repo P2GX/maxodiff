@@ -2,7 +2,6 @@ package org.p2gx.maxodiff.config;
 
 import org.monarchinitiative.phenol.ontology.data.TermId;
 import org.p2gx.maxodiff.core.analysis.MySimpleTerm;
-import org.p2gx.maxodiff.core.analysis.MySimpleTerm;
 
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
 import org.monarchinitiative.phenol.annotations.io.hpo.HpoDiseaseLoaderOptions;
@@ -24,7 +23,6 @@ import java.io.BufferedReader;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.*;
-import java.util.stream.Collectors;
 
 
 public record MaxodiffPropsConfiguration(

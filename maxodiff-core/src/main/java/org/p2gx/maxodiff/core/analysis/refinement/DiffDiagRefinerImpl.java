@@ -77,12 +77,10 @@ public class DiffDiagRefinerImpl implements DiffDiagRefiner {
                                 Map<TermId, Set<TermId>> maxoToHpoTermIdMap,
                                 List<HpoFrequency> hpoFrequenciesNDiseases) {
 
-        DiseaseModelProbability diseaseModelProbability = DiseaseModelProbability.ranked(initialDiagnoses);
 
         MaxoHpoTermProbabilities maxoHpoTermProbabilities = new MaxoHpoTermProbabilities(hpoDiseases,
                 hpoToMaxoTermMap,
-                initialDiagnoses,
-                diseaseModelProbability);
+                initialDiagnoses);
 
 
         return new RankMaxo(maxoToHpoTermIdMap, maxoHpoTermProbabilities, engine,

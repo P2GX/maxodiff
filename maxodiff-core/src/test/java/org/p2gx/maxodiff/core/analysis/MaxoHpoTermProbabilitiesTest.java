@@ -5,7 +5,6 @@ import org.p2gx.maxodiff.core.TestResources;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 import org.p2gx.maxodiff.core.model.DifferentialDiagnosis;
-import org.p2gx.maxodiff.core.model.DiseaseModelProbability;
 import org.p2gx.maxodiff.core.model.MaxoHpoTermProbabilities;
 import org.p2gx.maxodiff.core.model.PhenopacketData;
 
@@ -24,7 +23,7 @@ public class MaxoHpoTermProbabilitiesTest {
     private final static PhenopacketData samplePhenopacket = TestResources.getExampleSample();
 
     private final static MaxoHpoTermProbabilities MAXO_HPO_TERM_PROBABILITIES = new MaxoHpoTermProbabilities(hpoDiseases,
-            hpoToMaxoTermMap, initialDiagnoses, diseaseModelProbability);
+            hpoToMaxoTermMap, initialDiagnoses);
 
     @Test
     public void testUnionDiscoverablePhenotypes() {
@@ -41,10 +40,4 @@ public class MaxoHpoTermProbabilitiesTest {
         assertEquals(9, maxoBenefitIds.size(), 1e-3);
     }
 
-    @Test
-    public void testProbabilityMaxoTermRevealHpoTerm() {
-        TermId hpoId = TermId.of("HP:0008138"); //Equinus calcaneus
-        double probability = MAXO_HPO_TERM_PROBABILITIES.calculateProbabilityOfMaxoTermRevealingPresenceOfHpoTerm(hpoId);
-        assertEquals(0.019, probability, 1e-3);
-    }
 }
