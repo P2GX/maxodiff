@@ -14,7 +14,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class ValidationModelTest {
 
     private final static List<DifferentialDiagnosis> initialDiagnoses = TestResources.getExampleDiagnoses().stream().toList();
-
     private final static List<DifferentialDiagnosis> maxoDiagnoses = TestResources.getExampleMaxoDiagnoses().stream().toList();
 
 
