@@ -20,6 +20,7 @@ import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
@@ -69,7 +70,9 @@ public class BenchmarkingCommand extends DDxCommand {
         hpoFrequencies = context.createHpoFrequencies();
 
         this.phenomizer = new PhenomizerDDxEngine(context);
-        File icFile = new File("/Users/beckwm/IdeaProjects/maxodiff/data/term-to-ic.csv");
+        String currentDir = Paths.get("").toAbsolutePath().toString();
+        String icFileDir = String.join(File.separator, currentDir, "data", "term-to-ic.csv");
+        File icFile = new File(icFileDir);
         Map<TermId, Double> termToIcMap = getTermToIcMap(icFile);
 
         if (this.phenopacketPath != null && this.phenopacketPath.toFile().isFile()) {
