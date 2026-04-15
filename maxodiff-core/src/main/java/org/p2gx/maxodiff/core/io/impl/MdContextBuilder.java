@@ -21,6 +21,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.*;
@@ -30,26 +31,38 @@ public class MdContextBuilder {
 
 
     public static MdContext buildContext(Path maxoDataPath,
-                                         int nRepetions,
-                                         int nDiseases) throws Exception{
-        MdParams params = new MdParams(nRepetions, nDiseases);
+                                         int nRepetitions,
+                                         int nDiseases,
+                                         boolean buildICData) throws Exception {
+
+        MdParams params = new MdParams(nRepetitions, nDiseases);
         Path dataDir = Objects.requireNonNull(maxoDataPath,
                 "Data directory must not be null!");
+        MinimalOntology hpo = getHpo(dataDir);
+        HpoDiseases hpoDiseases = getHpoDiseases(dataDir, hpo);
+        Map<MySimpleTerm, Set<MySimpleTerm>> maxoAnnotsMap = getMaxoAnnotsMap(dataDir);
+        BiometadataService biometadataService = getBiometadataService(hpo, hpoDiseases, maxoAnnotsMap);
+        MdResources resources = buildMdResources(maxoDataPath, hpo, hpoDiseases, maxoAnnotsMap, buildICData);
+        return new MdContext(resources, params, biometadataService);
+    }
+
+    private static MinimalOntology getHpo(Path dataDir) {
         Path hpoJsonPath = Objects.requireNonNull(dataDir.resolve("hp.json"),
                 "Did not find hp.json in data directory!");
+        return MinimalOntologyLoader.loadOntology(hpoJsonPath.toFile());
+    }
+
+    private static HpoDiseases getHpoDiseases(Path dataDir,
+                                              MinimalOntology hpo) throws IOException {
         Path phenotypeHpoaPath = Objects.requireNonNull(dataDir.resolve("phenotype.hpoa"),
                 "Did not find phenotype.hpoa in data directory!");
-        Path maxoJsonPath = Objects.requireNonNull(dataDir.resolve("maxo.json"),
-                "Did not find maxo.json in data directory");
+        HpoDiseaseLoader loader = HpoDiseaseLoaders.defaultLoader(hpo, HpoDiseaseLoaderOptions.defaultOmim());
+        return loader.load(phenotypeHpoaPath);
+    }
+
+    private static Map<MySimpleTerm, Set<MySimpleTerm>> getMaxoAnnotsMap(Path dataDir) throws IOException {
         Path maxoDxPath = Objects.requireNonNull(dataDir.resolve("maxo_diagnostic_annotations.tsv"),
                 "Did not find maxo.json in data directory");
-        Path termPairSimFile = Objects.requireNonNull(dataDir.resolve("term-pair-similarity.csv.gz"),
-            "Did not find term-pair-similarity.csv.gz in data directory");
-        MinimalOntology hpo = MinimalOntologyLoader.loadOntology(hpoJsonPath.toFile());
-        MinimalOntology maxo = MinimalOntologyLoader.loadOntology(maxoJsonPath.toFile(), "HP");
-        HpoDiseaseLoader loader = HpoDiseaseLoaders.defaultLoader(hpo, HpoDiseaseLoaderOptions.defaultOmim());
-        HpoDiseases hpoDiseases = loader.load(phenotypeHpoaPath);
-        IcMicaData icData = IcMicaDictLoader.loadIcMicaDict(termPairSimFile);
         Map<MySimpleTerm, Set<MySimpleTerm>> maxoAnnotsMap;
         try (BufferedReader reader = Files.newBufferedReader(maxoDxPath)) {
             maxoAnnotsMap = MaxoDxAnnots.parseHpoToMaxo(reader);
@@ -60,6 +73,21 @@ public class MdContextBuilder {
         for (Set<MySimpleTerm> mterms : maxoAnnotsMap.values()) {
             mterms.removeAll(generalMaxoTerms);
         }
+
+        return maxoAnnotsMap;
+    }
+
+    private static BiometadataService getBiometadataService(MinimalOntology hpo,
+                                                            HpoDiseases hpoDiseases,
+                                                            Map<MySimpleTerm, Set<MySimpleTerm>> maxoAnnotsMap) {
+        return BiometadataServiceImpl.of(hpo, hpoDiseases, maxoAnnotsMap);
+    }
+
+    private static MdResources buildMdResources(Path maxoDataPath,
+                                                MinimalOntology hpo,
+                                                HpoDiseases hpoDiseases,
+                                                Map<MySimpleTerm, Set<MySimpleTerm>> maxoAnnotsMap,
+                                                boolean buildIcData) throws IOException {
 
         Map<MySimpleTerm, Set<MySimpleTerm>> maxoToHpoMap = new HashMap<>();
         for (Map.Entry<MySimpleTerm, Set<MySimpleTerm>> e : maxoAnnotsMap.entrySet()) {
@@ -78,10 +106,15 @@ public class MdContextBuilder {
             }
         }
 
-        BiometadataService biometadataService = BiometadataServiceImpl.of(hpo, hpoDiseases, maxoAnnotsMap);
-        MdResources resources = new MdResources(hpo, hpoDiseases, maxoAnnotsMap, maxoToHpoMap, icData);
+        IcMicaData icData = null;
+        if (buildIcData) {
+            Path termPairSimFile = Objects.requireNonNull(maxoDataPath.resolve("term-pair-similarity.csv.gz"),
+                    "Did not find term-pair-similarity.csv.gz in data directory");
+            icData = IcMicaDictLoader.loadIcMicaDict(termPairSimFile);
+        }
 
-        return new MdContext(resources, params, biometadataService);
+        return new MdResources(hpo, hpoDiseases, maxoAnnotsMap, maxoToHpoMap, icData);
+
     }
 
 
