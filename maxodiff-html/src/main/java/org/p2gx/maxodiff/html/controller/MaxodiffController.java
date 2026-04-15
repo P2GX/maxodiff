@@ -5,6 +5,7 @@ import org.p2gx.maxodiff.core.analysis.refinement.DiffDiagRefinerImpl;
 import org.p2gx.maxodiff.core.analysis.refinement.DiffDiagRefiner;
 import org.p2gx.maxodiff.core.analysis.refinement.RefinementOptions;
 import org.p2gx.maxodiff.core.diffdg.DDxEngine;
+import org.p2gx.maxodiff.core.io.JsonWriter;
 import org.p2gx.maxodiff.core.io.MdContext;
 import org.p2gx.maxodiff.core.model.DifferentialDiagnosis;
 import org.p2gx.maxodiff.core.model.PhenopacketData;
@@ -23,6 +24,7 @@ import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -52,6 +54,7 @@ public class MaxodiffController {
     @RequestMapping("/maxodiff")
     public String showResults(@RequestParam(value = "nDiseases", defaultValue = "20") Integer nDiseases,
                               @RequestParam(value = "nRepetitions", defaultValue = "100") Integer nRepetitions,
+                              @RequestParam(value = "outputJson", required = false) boolean outputJson,
                               Model model) throws Exception {
         // reset in case user starts second analysis
         sessionData.setRankMaxo(null);
@@ -146,11 +149,22 @@ public class MaxodiffController {
                     sample.excluded(),
                     resultsList);
 
-            HTMLFrequencyMap htmlFrequencyMap = new HTMLFrequencyMap(mdContext);
+            model.addAttribute("outputJson", outputJson);
+            if (outputJson) {
+                String jsonFilename = String.join("_", sample.sampleId(),
+                        nDiseases.toString(), nRepetitions.toString(), "maxodiff_results.json");
+                Path outputDir = Path.of(".");
+                Path jsonPath = Path.of(String.join(File.separator, outputDir.toString(), jsonFilename));
+                JsonWriter.writeToJsonFile(jsonPath, resultsList);
+                System.out.println("Wrote Output to JSON file " + jsonPath + ".");
+            } else {
+                HTMLFrequencyMap htmlFrequencyMap = new HTMLFrequencyMap(mdContext);
 
-            String htmlString = TleafResults.writeHTMLResults(mdMetadata, resultsList, htmlFrequencyMap);
-            model.addAttribute("htmlTemplateString", htmlString);
-            model.addAttribute("showMDresults", true);
+                String htmlString = TleafResults.writeHTMLResults(mdMetadata, resultsList, htmlFrequencyMap);
+                model.addAttribute("htmlTemplateString", htmlString);
+                model.addAttribute("showMDresults", true);
+            }
+
         }
         // Spring finds maxodiff.html, injects the data, and sends page to the user's browser.
         return "maxodiff";

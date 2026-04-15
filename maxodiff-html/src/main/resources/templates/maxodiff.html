@@ -252,7 +252,12 @@
 
             <p><input type="submit" value="Run Differential Diagnosis Calculation" id="submitButton"
                       th:disabled="${sample == null}"
-                      onclick="startTask()"/></p>
+                      onclick="startTask()"/>
+                <td>Output:</td>
+                <td><select th:value="${outputJson}" name="outputJson" id="outputJson">
+                    <option th:selected="${outputJson} == true ? selected" value="true">JSON</option>
+                    <option th:selected="${outputJson} == false ? selected" value="false">HTML</option></select>
+                </td></p>
 
             <div id="progressBarContainer1">
                 <div id="progressBar1">0%</div>
