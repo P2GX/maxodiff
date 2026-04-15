@@ -45,7 +45,7 @@ public class MaxodiffAutoConfigurationTest extends AbstractAutoConfigurationTest
 
         @Bean
         public MdContext mdContext(Path maxodiffDataDirectory) throws Exception {
-            return MdContextBuilder.buildTestContext(maxodiffDataDirectory, 100, 20);
+            return MdContextBuilder.buildContext(maxodiffDataDirectory, 100, 20, false);
         }
     }
 

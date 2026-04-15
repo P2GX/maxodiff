@@ -32,42 +32,28 @@ public class MdContextBuilder {
 
     public static MdContext buildContext(Path maxoDataPath,
                                          int nRepetitions,
-                                         int nDiseases) throws Exception {
+                                         int nDiseases,
+                                         boolean buildICData) throws Exception {
 
         MdParams params = new MdParams(nRepetitions, nDiseases);
-        MinimalOntology hpo = getHpo(maxoDataPath);
-        HpoDiseases hpoDiseases = getHpoDiseases(maxoDataPath, hpo);
-        Map<MySimpleTerm, Set<MySimpleTerm>> maxoAnnotsMap = getMaxoAnnotsMap(maxoDataPath);
-        BiometadataService biometadataService = getBiometadataService(hpo, hpoDiseases, maxoAnnotsMap);
-        MdResources resources = buildMdResources(maxoDataPath, hpo, hpoDiseases, maxoAnnotsMap,true);
-        return new MdContext(resources, params, biometadataService);
-    }
-
-    public static MdContext buildTestContext(Path maxoDataPath,
-                                         int nRepetitions,
-                                         int nDiseases) throws Exception {
-
-        MdParams params = new MdParams(nRepetitions, nDiseases);
-        MinimalOntology hpo = getHpo(maxoDataPath);
-        HpoDiseases hpoDiseases = getHpoDiseases(maxoDataPath, hpo);
-        Map<MySimpleTerm, Set<MySimpleTerm>> maxoAnnotsMap = getMaxoAnnotsMap(maxoDataPath);
-        BiometadataService biometadataService = getBiometadataService(hpo, hpoDiseases, maxoAnnotsMap);
-        MdResources resources = buildMdResources(maxoDataPath, hpo, hpoDiseases, maxoAnnotsMap,false);
-        return new MdContext(resources, params, biometadataService);
-    }
-
-    private static MinimalOntology getHpo(Path maxoDataPath) {
         Path dataDir = Objects.requireNonNull(maxoDataPath,
                 "Data directory must not be null!");
+        MinimalOntology hpo = getHpo(dataDir);
+        HpoDiseases hpoDiseases = getHpoDiseases(dataDir, hpo);
+        Map<MySimpleTerm, Set<MySimpleTerm>> maxoAnnotsMap = getMaxoAnnotsMap(dataDir);
+        BiometadataService biometadataService = getBiometadataService(hpo, hpoDiseases, maxoAnnotsMap);
+        MdResources resources = buildMdResources(maxoDataPath, hpo, hpoDiseases, maxoAnnotsMap, buildICData);
+        return new MdContext(resources, params, biometadataService);
+    }
+
+    private static MinimalOntology getHpo(Path dataDir) {
         Path hpoJsonPath = Objects.requireNonNull(dataDir.resolve("hp.json"),
                 "Did not find hp.json in data directory!");
         return MinimalOntologyLoader.loadOntology(hpoJsonPath.toFile());
     }
 
-    private static HpoDiseases getHpoDiseases(Path maxoDataPath,
+    private static HpoDiseases getHpoDiseases(Path dataDir,
                                               MinimalOntology hpo) throws IOException {
-        Path dataDir = Objects.requireNonNull(maxoDataPath,
-                "Data directory must not be null!");
         Path phenotypeHpoaPath = Objects.requireNonNull(dataDir.resolve("phenotype.hpoa"),
                 "Did not find phenotype.hpoa in data directory!");
         HpoDiseaseLoader loader = HpoDiseaseLoaders.defaultLoader(hpo, HpoDiseaseLoaderOptions.defaultOmim());

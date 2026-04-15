@@ -92,7 +92,8 @@ public class DDxCommand extends BaseCommand {
         MdContext context = MdContextBuilder.buildContext(
                 this.maxoDataPath,
                 this.nRepetitions,
-                this.nDiseases);
+                this.nDiseases,
+                true);
         LOGGER.info("{}", context);
         try {
             List<HpoFrequency> allHpoFrequencies = context.createHpoFrequencies();

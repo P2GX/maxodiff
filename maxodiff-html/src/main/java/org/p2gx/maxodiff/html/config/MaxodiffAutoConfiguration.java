@@ -47,7 +47,7 @@ public class MaxodiffAutoConfiguration {
 
     @Bean
     public MdContext mdContext(Path maxodiffDataDirectory) throws Exception {
-        return MdContextBuilder.buildContext(maxodiffDataDirectory, 100, 20);
+        return MdContextBuilder.buildContext(maxodiffDataDirectory, 100, 20, true);
     }
 
     @Bean

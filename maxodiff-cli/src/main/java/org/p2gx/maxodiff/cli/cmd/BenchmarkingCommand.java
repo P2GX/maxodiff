@@ -65,7 +65,8 @@ public class BenchmarkingCommand extends DDxCommand {
         context = MdContextBuilder.buildContext(
                 this.maxoDataPath,
                 this.nRepetitions,
-                this.nDiseases);
+                this.nDiseases,
+                true);
 
         hpoFrequencies = context.createHpoFrequencies();
 
