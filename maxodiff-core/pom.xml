@@ -5,9 +5,9 @@
     <modelVersion>4.0.0</modelVersion>
 
     <parent>
-        <groupId>org.monarchinitiative.maxodiff</groupId>
+        <groupId>org.p2gx.maxodiff</groupId>
         <artifactId>maxodiff</artifactId>
-        <version>0.4.2</version>
+        <version>0.4.3</version>
     </parent>
 
     <artifactId>maxodiff-core</artifactId>
@@ -16,6 +16,10 @@
         <dependency>
             <groupId>org.monarchinitiative.phenol</groupId>
             <artifactId>phenol-core</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.monarchinitiative.phenol</groupId>
+            <artifactId>phenol-io</artifactId>
         </dependency>
         <dependency>
             <groupId>org.monarchinitiative.phenol</groupId>
@@ -40,11 +44,7 @@
         <dependency>
             <groupId>org.apache.commons</groupId>
             <artifactId>commons-lang3</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.monarchinitiative.phenol</groupId>
-            <artifactId>phenol-io</artifactId>
-            <scope>test</scope>
+            <version>3.18.0</version>
         </dependency>
         <dependency>
             <groupId>org.phenopackets</groupId>
@@ -54,17 +54,27 @@
         <dependency>
             <groupId>org.phenopackets.phenopackettools</groupId>
             <artifactId>phenopacket-tools-core</artifactId>
-            <version>1.0.0-RC3</version>
+            <version>${phenopacket-tools.version}</version>
         </dependency>
         <dependency>
             <groupId>org.phenopackets.phenopackettools</groupId>
             <artifactId>phenopacket-tools-io</artifactId>
-            <version>1.0.0-RC3</version>
+            <version>${phenopacket-tools.version}</version>
         </dependency>
         <dependency>
             <groupId>org.phenopackets.phenopackettools</groupId>
             <artifactId>phenopacket-tools-util</artifactId>
-            <version>1.0.0-RC3</version>
+            <version>${phenopacket-tools.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.phenopackets.phenopackettools</groupId>
+            <artifactId>phenopacket-tools-validator-core</artifactId>
+            <version>${phenopacket-tools.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.phenopackets.phenopackettools</groupId>
+            <artifactId>phenopacket-tools-validator-jsonschema</artifactId>
+            <version>${phenopacket-tools.version}</version>
         </dependency>
         <dependency>
             <groupId>com.fasterxml.jackson.datatype</groupId>
@@ -78,8 +88,8 @@
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-compiler-plugin</artifactId>
                 <configuration>
-                    <source>${java.version}</source>
-                    <target>${java.version}</target>
+                    <source>22</source>
+                    <target>22</target>
                 </configuration>
             </plugin>
         </plugins>

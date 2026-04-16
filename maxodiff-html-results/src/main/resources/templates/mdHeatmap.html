@@ -25,7 +25,7 @@
                     <div style="text-align:center; margin: 40px 0;">
                         <!-- Title above the chart -->
                         <h2>Average Rank Change per Disease</h2>
-                        <div th:id="'TornadoBarChartContainer_' + ${maxoData.index}" style="height:500px; width:1000px; border: 1px solid black; display:block;margin:0 auto;">
+                        <div th:id="'TornadoBarChartContainer_' + ${maxoData.index()}" style="height:500px; width:1000px; border: 1px solid black; display:block;margin:0 auto;">
                         </div>
                     </div>
                 </td>
@@ -34,14 +34,14 @@
         </table>
         <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
         <script th:inline="javascript">
-            var rankedOmimTerms = [[${maxoData.getRankedOmimTermList}]];
+            var resultRows = [[${maxoData.resultRows}]];
             var nDiseases = [[${maxoData.nDiseases}]];
-            var chartIdx = [[${maxoData.index}]]
+            var chartIdx = [[${maxoData.index()}]]
             var tornadoBarChart = document.querySelector("#TornadoBarChartContainer_" + chartIdx);
         </script>
         <script th:inline="javascript">
-            var diseaseLabels = rankedOmimTerms.map(rt => rt.omimTerm.termLabel);
-            var rankChanges = rankedOmimTerms.map(rt => rt.initialRank - rt.averageRank);
+            var diseaseLabels = resultRows.map(rt => rt.omimLabel);
+            var rankChanges = resultRows.map(rt => rt.initialRank - rt.averageRank);
 
             var options = {
                 series: [{ name: 'Average Rank Change', data: rankChanges }],
@@ -51,6 +51,7 @@
                 dataLabels: { enabled: false },
                 legend: { show: false },
                 xaxis: { categories: diseaseLabels, min: -(nDiseases-1), max: nDiseases-1 },
+                yaxis: { labels: { maxWidth: 1000 } },
                 tooltip: {
                     y: { formatter: value => (value >=0 ? 'Decline' : 'Improve') + ' by ' + Math.abs(value) }
                 }
@@ -66,8 +67,8 @@
                 <th></th>
                 <!-- Loop over HPO terms-->
                 <th th:each="entry : ${maxoData.hpoHeaders}" class="vertical-header">
-                    <a th:href="|https://hpo.jax.org/browse/term/${entry.termId}|">
-                        <div th:text="${entry.termLabel}"></div>
+                    <a th:href="|https://hpo.jax.org/browse/term/${entry.tid}|">
+                        <div th:text="${entry.label}"></div>
                     </a>
                 </th>
             </tr>
@@ -84,14 +85,18 @@
                     </div>
                     <div class="tooltip">
                         <div class="tooltip-header" th:text="${cell.toolTipHeader}">Header</div>
-                        <div class="tooltip-subheader">Annotation frequency</div>
-                        <ul  class="tooltip-list">
-                            <li th:each="item: ${cell.toolTipItems}">
-                                <span th:text="${item.hpo}">HPO Term</span>:
-                                <strong th:text="${item.percentage}">0%</strong>
-                            </li>
-                        </ul>
-                    </div>
+                        <div th:if="${not #lists.isEmpty(cell.toolTipItems)}">
+                            <div class="tooltip-subheader">Annotation frequency</div>
+                            <ul class="tooltip-list">
+                                <li th:each="item: ${cell.toolTipItems}">
+                                    <span th:text="${item.hpo}">HPO Term</span>:
+                                    <strong th:text="${item.percentage}">0%</strong>
+                                </li>
+                            </ul>
+                        </div>
+                        <div th:unless="${not #lists.isEmpty(cell.toolTipItems)}" class="tooltip-empty">
+                            <p>No direct HPO annotations.</p>
+                        </div>
                 </td>
             </tr>
             <!-- Now add one row for each of the diseases -->
