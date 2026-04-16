@@ -18,6 +18,7 @@ import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDisease;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 import org.monarchinitiative.phenol.ontology.similarity.TermPair;
 import org.p2gx.maxodiff.html.session.UserSessionData;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -52,7 +53,7 @@ public class MaxodiffController {
     }
 
     @RequestMapping("/maxodiff")
-    public String showResults(@RequestParam(value = "nDiseases", defaultValue = "20") Integer nDiseases,
+    public Object showResults(@RequestParam(value = "nDiseases", defaultValue = "20") Integer nDiseases,
                               @RequestParam(value = "nRepetitions", defaultValue = "100") Integer nRepetitions,
                               @RequestParam(value = "outputJson", required = false) boolean outputJson,
                               Model model) throws Exception {
@@ -151,12 +152,7 @@ public class MaxodiffController {
 
             model.addAttribute("outputJson", outputJson);
             if (outputJson) {
-                String jsonFilename = String.join("_", sample.sampleId(),
-                        nDiseases.toString(), nRepetitions.toString(), "maxodiff_results.json");
-                Path outputDir = Path.of(".");
-                Path jsonPath = Path.of(String.join(File.separator, outputDir.toString(), jsonFilename));
-                JsonWriter.writeToJsonFile(jsonPath, resultsList);
-                System.out.println("Wrote Output to JSON file " + jsonPath + ".");
+               return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(mdMetadata);
             } else {
                 HTMLFrequencyMap htmlFrequencyMap = new HTMLFrequencyMap(mdContext);
 
