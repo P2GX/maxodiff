@@ -2,7 +2,6 @@ package org.p2gx.maxodiff.core.analysis;
 
 import org.junit.jupiter.api.Test;
 
-import org.monarchinitiative.phenol.ontology.data.TermId;
 import org.p2gx.maxodiff.core.TestResources;
 import org.p2gx.maxodiff.core.model.DifferentialDiagnosis;
 
