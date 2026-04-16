@@ -17,6 +17,7 @@ import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDisease;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 import org.monarchinitiative.phenol.ontology.similarity.TermPair;
 import org.p2gx.maxodiff.html.session.UserSessionData;
+import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
@@ -50,8 +51,9 @@ public class MaxodiffController {
     }
 
     @RequestMapping("/maxodiff")
-    public String showResults(@RequestParam(value = "nDiseases", defaultValue = "20") Integer nDiseases,
+    public Object showResults(@RequestParam(value = "nDiseases", defaultValue = "20") Integer nDiseases,
                               @RequestParam(value = "nRepetitions", defaultValue = "100") Integer nRepetitions,
+                              @RequestParam(value = "outputJson", required = false) boolean outputJson,
                               Model model) throws Exception {
         // reset in case user starts second analysis
         sessionData.setRankMaxo(null);
@@ -146,11 +148,17 @@ public class MaxodiffController {
                     sample.excluded(),
                     resultsList);
 
-            HTMLFrequencyMap htmlFrequencyMap = new HTMLFrequencyMap(mdContext);
+            model.addAttribute("outputJson", outputJson);
+            if (outputJson) {
+               return ResponseEntity.ok().contentType(MediaType.APPLICATION_JSON).body(mdMetadata);
+            } else {
+                HTMLFrequencyMap htmlFrequencyMap = new HTMLFrequencyMap(mdContext);
 
-            String htmlString = TleafResults.writeHTMLResults(mdMetadata, resultsList, htmlFrequencyMap);
-            model.addAttribute("htmlTemplateString", htmlString);
-            model.addAttribute("showMDresults", true);
+                String htmlString = TleafResults.writeHTMLResults(mdMetadata, resultsList, htmlFrequencyMap);
+                model.addAttribute("htmlTemplateString", htmlString);
+                model.addAttribute("showMDresults", true);
+            }
+
         }
         // Spring finds maxodiff.html, injects the data, and sends page to the user's browser.
         return "maxodiff";

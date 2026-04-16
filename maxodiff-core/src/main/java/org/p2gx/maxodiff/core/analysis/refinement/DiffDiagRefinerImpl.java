@@ -120,10 +120,8 @@ public class DiffDiagRefinerImpl implements DiffDiagRefiner {
                                                          List<HpoFrequency> allHpoFrequencies) {
 
         List<HpoFrequency> hpoFrequenciesNDiseases = new ArrayList<>();
-        allHpoFrequencies.forEach(freq -> {
-            diseases.stream().filter(disease -> freq.diseaseId().equals(disease.id()))
-                    .map(disease -> freq).forEach(hpoFrequenciesNDiseases::add);
-        });
+        allHpoFrequencies.forEach(freq -> diseases.stream().filter(disease -> freq.diseaseId().equals(disease.id()))
+                .map(disease -> freq).forEach(hpoFrequenciesNDiseases::add));
 
         return hpoFrequenciesNDiseases;
     }

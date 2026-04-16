@@ -11,7 +11,7 @@ record RefinementResultsImpl(Collection<RankedMaxoResult> maxodiffResults) imple
     @Override
     public Collection<RankedMaxoResult> maxodiffResults() {
         return maxodiffResults. stream()
-                .sorted(Comparator.<RankedMaxoResult>comparingDouble(mr -> mr.maxoScore()).reversed())
+                .sorted(Comparator.<RankedMaxoResult>comparingDouble(RankedMaxoResult::maxoScore).reversed())
                 .toList();
     }
 

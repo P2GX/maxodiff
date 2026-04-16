@@ -68,7 +68,9 @@ markdown_extensions:
   - attr_list
   - md_in_html
   - tables
-
+  - pymdownx.tabbed:
+      alternate_style: true
+  - pymdownx.superfences
 
 copyright: |
   &copy; 2025 <a href="https://github.com/pnrobinson"  target="_blank" rel="noopener">Peter N Robinson</a>
