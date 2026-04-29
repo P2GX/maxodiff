@@ -71,10 +71,7 @@ public class BenchmarkingCommand extends DDxCommand {
         hpoFrequencies = context.createHpoFrequencies();
 
         this.phenomizer = new PhenomizerDDxEngine(context);
-        String currentDir = Paths.get("").toAbsolutePath().toString();
-        String icFileDir = String.join(File.separator, currentDir, "data", "term-to-ic.csv");
-        File icFile = new File(icFileDir);
-        Map<TermId, Double> termToIcMap = getTermToIcMap(icFile);
+        Map<TermId, Double> termToIcMap = context.resources().termToIcMap();
 
         if (this.phenopacketPath != null && this.phenopacketPath.toFile().isFile()) {
             List<BenchmarkResult> results = runShuffleOnePPkt(this.phenopacketPath, termToIcMap);

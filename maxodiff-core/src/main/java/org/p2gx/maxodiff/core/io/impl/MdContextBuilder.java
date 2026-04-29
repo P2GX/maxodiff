@@ -21,6 +21,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -107,13 +108,17 @@ public class MdContextBuilder {
         }
 
         IcMicaData icData = null;
+        Map<TermId, Double> termToIcMap = null;
         if (buildIcData) {
             Path termPairSimFile = Objects.requireNonNull(maxoDataPath.resolve("term-pair-similarity.csv.gz"),
                     "Did not find term-pair-similarity.csv.gz in data directory");
             icData = IcMicaDictLoader.loadIcMicaDict(termPairSimFile);
+            Path termToIcFile = Objects.requireNonNull(maxoDataPath.resolve("term-to-ic.csv"),
+                    "Did not find term-to-ic.csv in data directory");
+            termToIcMap = IcMicaDictLoader.loadTermToIcMap(new File(termToIcFile.toUri()));
         }
 
-        return new MdResources(hpo, hpoDiseases, maxoAnnotsMap, maxoToHpoMap, icData);
+        return new MdResources(hpo, hpoDiseases, maxoAnnotsMap, maxoToHpoMap, icData, termToIcMap);
 
     }
 

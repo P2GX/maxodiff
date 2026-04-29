@@ -2,6 +2,7 @@ package org.p2gx.maxodiff.core.analysis.refinement;
 
 import org.p2gx.maxodiff.core.analysis.HpoFrequency;
 import org.p2gx.maxodiff.core.analysis.RankedMaxoResult;
+import org.p2gx.maxodiff.core.analysis.RankedMaxoResultSingleDisease;
 import org.p2gx.maxodiff.core.diffdg.DDxEngine;
 import org.p2gx.maxodiff.core.model.DifferentialDiagnosis;
 import org.p2gx.maxodiff.core.model.PhenopacketData;
@@ -22,6 +23,11 @@ public interface DiffDiagRefiner {
     List<RankedMaxoResult> run(PhenopacketData sample,
                                Set<TermId> initialDiagnosesIds,
                                RankMaxo rankMaxo) throws Exception;
+
+    List<RankedMaxoResultSingleDisease> runSingleDisease(PhenopacketData sample,
+                                                         TermId targetDiseaseId,
+                                                         Set<TermId> initialDiagnosesIds,
+                                                         RankMaxo rankMaxo) throws Exception;
 
     List<DifferentialDiagnosis> getOrderedDiagnoses(Collection<DifferentialDiagnosis> originalDifferentialDiagnoses);
 

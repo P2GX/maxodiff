@@ -167,6 +167,8 @@ public class MaxoHpoDiseaseRank {
         return initialDiagnoses;
     }
 
+    public Set<TermId> getAllMaxoAscertainedHpoIds() {return allMaxoAscertainedHpoIds;}
+
     public List<Integer> getSampledHpoCounts(int total) {
 
         List<Integer> result = new ArrayList<>();
