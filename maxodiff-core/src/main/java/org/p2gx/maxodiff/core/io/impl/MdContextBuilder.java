@@ -4,15 +4,19 @@ import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
 import org.monarchinitiative.phenol.annotations.io.hpo.HpoDiseaseLoader;
 import org.monarchinitiative.phenol.annotations.io.hpo.HpoDiseaseLoaderOptions;
 import org.monarchinitiative.phenol.annotations.io.hpo.HpoDiseaseLoaders;
+import org.monarchinitiative.phenol.cli.demo.MicaCalculator;
 import org.monarchinitiative.phenol.ontology.data.MinimalOntology;
 import org.monarchinitiative.phenol.io.MinimalOntologyLoader;
 import org.monarchinitiative.phenol.ontology.data.TermId;
+import org.monarchinitiative.phenol.ontology.similarity.HpoResnikSimilarityPrecompute;
+import org.monarchinitiative.phenol.ontology.similarity.TermPair;
 import org.p2gx.maxodiff.core.analysis.MySimpleTerm;
 import org.p2gx.maxodiff.core.io.MdContext;
 import org.p2gx.maxodiff.core.io.MdParams;
 import org.p2gx.maxodiff.core.io.MdResources;
 import org.p2gx.maxodiff.core.io.MaxoDxAnnots;
 import org.p2gx.maxodiff.core.model.GeneralMaxoTerms;
+import org.p2gx.maxodiff.core.phenomizer.IcMicaDictMetadata;
 import org.p2gx.maxodiff.core.service.BiometadataService;
 import org.p2gx.maxodiff.core.service.BiometadataServiceImpl;
 import org.p2gx.maxodiff.core.phenomizer.IcMicaData;
@@ -25,6 +29,7 @@ import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.LocalDate;
 import java.util.*;
 
 public class MdContextBuilder {
@@ -113,9 +118,9 @@ public class MdContextBuilder {
             Path termPairSimFile = Objects.requireNonNull(maxoDataPath.resolve("term-pair-similarity.csv.gz"),
                     "Did not find term-pair-similarity.csv.gz in data directory");
             icData = IcMicaDictLoader.loadIcMicaDict(termPairSimFile);
-            Path termToIcFile = Objects.requireNonNull(maxoDataPath.resolve("term-to-ic.csv"),
-                    "Did not find term-to-ic.csv in data directory");
-            termToIcMap = IcMicaDictLoader.loadTermToIcMap(new File(termToIcFile.toUri()));
+            boolean assumeAnnotated = true;
+            MicaCalculator micaCalculator = new MicaCalculator(hpo, assumeAnnotated);
+            termToIcMap = micaCalculator.calculateMica(hpoDiseases).termToIc();
         }
 
         return new MdResources(hpo, hpoDiseases, maxoAnnotsMap, maxoToHpoMap, icData, termToIcMap);
