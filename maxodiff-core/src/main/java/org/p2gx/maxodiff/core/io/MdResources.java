@@ -2,6 +2,7 @@ package org.p2gx.maxodiff.core.io;
 
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
 import org.monarchinitiative.phenol.ontology.data.MinimalOntology;
+import org.monarchinitiative.phenol.ontology.data.TermId;
 import org.p2gx.maxodiff.core.analysis.MySimpleTerm;
 import org.p2gx.maxodiff.core.phenomizer.IcMicaData;
 
@@ -12,5 +13,6 @@ public record MdResources(MinimalOntology hpo,
                           HpoDiseases hpoDiseases,
                           Map<MySimpleTerm, Set<MySimpleTerm>> maxoAnnotsMap,
                           Map<MySimpleTerm, Set<MySimpleTerm>> maxoToHpoMap,
-                          IcMicaData icMicaData) {
+                          IcMicaData icMicaData,
+                          Map<TermId, Double> termToIcMap) {
 }

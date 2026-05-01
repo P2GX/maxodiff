@@ -4,6 +4,7 @@ package org.p2gx.maxodiff.core.analysis.refinement;
 import org.monarchinitiative.phenol.ontology.data.MinimalOntology;
 import org.p2gx.maxodiff.core.analysis.MySimpleTerm;
 import org.p2gx.maxodiff.core.analysis.RankedMaxoResult;
+import org.p2gx.maxodiff.core.analysis.RankedMaxoResultSingleDisease;
 import org.p2gx.maxodiff.core.diffdg.DDxEngine;
 
 import org.p2gx.maxodiff.core.io.MdContext;
@@ -71,9 +72,16 @@ public class DiffDiagRefinerImpl implements DiffDiagRefiner {
         return rankMaxo.rankMaxoTerms(sample, initialDiagnosesIds, context);
     }
 
+    public List<RankedMaxoResultSingleDisease> runSingleDisease(PhenopacketData sample,
+                                                                TermId targetDiseaseId,
+                                                                Set<TermId> initialDiagnosesIds,
+                                                                RankMaxo rankMaxo) throws Exception {
+        return rankMaxo.getDiseaseBestMaxoTerms(sample, targetDiseaseId, initialDiagnosesIds, context);
+    }
+
     public RankMaxo getRankMaxo(List<DifferentialDiagnosis> allInitialDiagnoses,
                                 List<DifferentialDiagnosis> initialDiagnoses,
-                                 DDxEngine engine,
+                                DDxEngine engine,
                                 Map<TermId, Set<TermId>> maxoToHpoTermIdMap,
                                 List<HpoFrequency> hpoFrequenciesNDiseases) {
 

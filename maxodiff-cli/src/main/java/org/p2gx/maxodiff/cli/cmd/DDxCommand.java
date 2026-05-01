@@ -2,14 +2,12 @@ package org.p2gx.maxodiff.cli.cmd;
 
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
-import org.p2gx.maxodiff.core.analysis.HpoFrequency;
+import org.monarchinitiative.phenol.ontology.data.TermId;
+import org.p2gx.maxodiff.core.analysis.*;
 import org.p2gx.maxodiff.core.io.MdContext;
 import org.p2gx.maxodiff.core.io.impl.MdContextBuilder;
 import org.p2gx.maxodiff.core.MaxoDiffAnalysisResultRow;
 import org.p2gx.maxodiff.core.MaxodiffAnalysisRunner;
-import org.p2gx.maxodiff.core.analysis.HTMLFrequencyMap;
-import org.p2gx.maxodiff.core.analysis.MdMetadata;
-import org.p2gx.maxodiff.core.analysis.RankedMaxoResult;
 import org.p2gx.maxodiff.core.analysis.refinement.DiffDiagRefiner;
 import org.p2gx.maxodiff.core.diffdg.DDxEngine;
 import org.p2gx.maxodiff.core.io.JsonWriter;
@@ -74,6 +72,10 @@ public class DDxCommand extends BaseCommand {
             description = "Number of repetitions for running differential diagnosis.")
     protected Integer nRepetitions = 100;
 
+    @CommandLine.Option(names = {"-sd", "--singleDisease"},
+            description = "Single Disease Id for analysis.")
+    protected String singleDisease = null;
+
     @Override
     public Integer execute() throws Exception {
         if (!Files.exists(phenopacketPath)) {
@@ -108,6 +110,23 @@ public class DDxCommand extends BaseCommand {
             if (writeCsv) {
                 MaxoDiffAnalysisResultRow row = runner.batchAnalysis(phenopacketData);
                 writeCsvResults(phenopacketData.sampleId(), row);
+            } else if (singleDisease != null) {
+                TermId targetDiseaseId = TermId.of(singleDisease);
+                List<RankedMaxoResultSingleDisease> resultsList = runner.analyzeSampleSingleDisease(phenopacketData,
+                                                                                                    targetDiseaseId);
+                if (resultsList.isEmpty()) {
+                    // should never happen...
+                    System.err.println("No results found for phenopacket: " + phenopacketPath);
+                    return 1;
+                }
+
+                RankedMaxoResultSingleDisease topResult = resultsList.getFirst();
+                String maxIcMaxoTerm = topResult.maxoTerm().toString();
+                double maxIcValue = topResult.totalIC();
+                System.out.println("Target Disease: " + topResult.targetDisease());
+                System.out.println("Max IC: " + maxIcMaxoTerm + " = " + maxIcValue);
+                System.out.println(resultsList.subList(0,10));
+
             } else {
                 List<RankedMaxoResult> resultsList = runner.analyzeSample(phenopacketData);
                 if (resultsList.isEmpty()) {
