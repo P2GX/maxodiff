@@ -46,7 +46,7 @@ public class DDxCommand extends BaseCommand {
 
     @CommandLine.Option(
             names = {"-p", "--phenopacket"},
-            required = true,
+            required = false,
             description = "Path to phenopacket JSON file.")
     protected Path phenopacketPath;
 

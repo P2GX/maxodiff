@@ -127,7 +127,7 @@ public class BenchmarkingCommand extends DDxCommand {
     private List<BenchmarkResult> runShuffleOnePPkt(Path ppktPath, Map<TermId, Double> termToIcMap) {
         List<BenchmarkResult> resultList = new ArrayList<>();
         try {
-            PhenopacketData ppktData = PhenopacketData.readPhenopacketData(phenopacketPath);
+            PhenopacketData ppktData = PhenopacketData.readPhenopacketData(ppktPath);
             BiometadataService biometadataService = context.biometadataService();
             BaseBenchmarker benchmarker = new BaseBenchmarker(ppktData,
                     context,
@@ -136,7 +136,8 @@ public class BenchmarkingCommand extends DDxCommand {
             String ppktId = benchmarker.getSample().sampleId();
             List<RankedMaxoResult> initialResults = benchmarker.standardRun(biometadataService);
             TermId topMaxo = initialResults.getFirst().maxoTerm().tid();
-            List<Double> topRandomScores = Collections.synchronizedList(new ArrayList<>());
+            List<Double> topMaxoScoresRandom = Collections.synchronizedList(new ArrayList<>());
+            List<Double> icSumsRandom = Collections.synchronizedList(new ArrayList<>());
             int parallelism = 8;
             try (ForkJoinPool customThreadPool = new ForkJoinPool(parallelism)) {
                 customThreadPool.submit(() ->
@@ -155,11 +156,15 @@ public class BenchmarkingCommand extends DDxCommand {
                                         .map(ctTerm -> ctTerm.hpoTerm().tid())
                                         .toList();
 
-                                double maxScoreValueRandom = discHpoIds.stream()
+                                double maxoScoreTopResultRandom = topResultRandomList.isEmpty() ? -1.0 :
+                                        topResultRandomList.getFirst().maxoScore();
+
+                                double icSumRandom = discHpoIds.stream()
                                         .mapToDouble(id -> termToIcMap.getOrDefault(id, 0.0))
                                         .sum();
 
-                                topRandomScores.add(maxScoreValueRandom);
+                                topMaxoScoresRandom.add(maxoScoreTopResultRandom);
+                                icSumsRandom.add(icSumRandom);
 
                                 if (i % 10 == 0) {
                                     LOGGER.info("Finished index {}", i);
@@ -175,9 +180,11 @@ public class BenchmarkingCommand extends DDxCommand {
                 LOGGER.error("Parallel execution failed", e);
                 Thread.currentThread().interrupt();
             }
-            System.out.println(topRandomScores);
-            double avgTopRandomScore = topRandomScores.stream().mapToDouble(Double::valueOf).average().orElse(0);
-            BenchmarkResult bres = getShuffledBenchmarkResult(ppktId, initialResults, avgTopRandomScore, termToIcMap);
+            System.out.println(icSumsRandom);
+            double avgTopMaxoScoreRandom = topMaxoScoresRandom.stream().mapToDouble(Double::valueOf).average().orElse(0);
+            double avgIcSumRandom = icSumsRandom.stream().mapToDouble(Double::valueOf).average().orElse(0);
+            BenchmarkResult bres = getShuffledBenchmarkResult(ppktId, initialResults, avgTopMaxoScoreRandom,
+                    avgIcSumRandom, termToIcMap);
             resultList.add(bres);
             LOGGER.info("Finished benchmark of {}.", ppktPath);
         } catch (Exception ex) {
@@ -190,25 +197,39 @@ public class BenchmarkingCommand extends DDxCommand {
     private BenchmarkResult getShuffledBenchmarkResult(String ppktId,
                                                        List<RankedMaxoResult> initialResults,
                                                        double avgTopScoreRandom,
+                                                       double avgIcSumRandom,
                                                        Map<TermId, Double> termToIcMap) {
 
         TermId topMaxo = initialResults.getFirst().maxoTerm().tid();
-//        double maxoFinalScore = initialResults.getFirst().rankMaxoScore().maxoScore();
-        List<CountedHpoTerm> ctHpoTerms = initialResults.isEmpty() ? new ArrayList<>() :
-                initialResults.getFirst().hpoTermIds();
-        List<TermId> discHpoIds = ctHpoTerms.isEmpty() ? new ArrayList<>() :
-                ctHpoTerms.stream().map(ctTerm -> ctTerm.hpoTerm().tid()).toList();
+        double maxoFinalScore = initialResults.getFirst().maxoScore();
+        List<Integer> nDiscoverablePhenotypes = new ArrayList<>();
+        List<TermId> topDiscHpoIds = new ArrayList<>();
+        double topMaxoIcSum = 0.0;
+        for (int i=0; i<10; i++) {
+            List<CountedHpoTerm> ctHpoTerms = (initialResults.isEmpty() | initialResults.get(i) == null) ?
+                    new ArrayList<>() : initialResults.get(i).hpoTermIds();
+            List<TermId> discHpoIds = ctHpoTerms.isEmpty() ? new ArrayList<>() :
+                    ctHpoTerms.stream().map(ctTerm -> ctTerm.hpoTerm().tid()).toList();
+            nDiscoverablePhenotypes.add(discHpoIds.size());
+            if (i == 0 ) {
+                topDiscHpoIds = discHpoIds;
+                topMaxoIcSum = discHpoIds.isEmpty() ? 0.0 :
+                        discHpoIds.stream().mapToDouble(termToIcMap::get).sum();
+            }
+        }
+
 //
-        double maxoFinalScore = discHpoIds.isEmpty() ? 0.0 :
-                discHpoIds.stream().mapToDouble(termToIcMap::get).sum();
+//        double topMaxoIcSum = discHpoIds.isEmpty() ? 0.0 :
+//                discHpoIds.stream().mapToDouble(termToIcMap::get).sum();
         LOGGER.info("standard run results:");
         LOGGER.info("initial " + initialResults.getFirst().maxoTerm());
         LOGGER.info("initial " + initialResults.getFirst().rankedOmimTermList());
-        LOGGER.info("{} IC Sum = {}.", discHpoIds, maxoFinalScore);
+        LOGGER.info("{} IC Sum = {}.", topDiscHpoIds, topMaxoIcSum);
         BenchmarkProcedure procedure = BenchmarkProcedure.ShuffledRandomization;
         int nMaxo = initialResults.size();
         return new BenchmarkResult(ppktId, nDiseases, nRepetitions, topMaxo, maxoFinalScore,
-                procedure, -1, avgTopScoreRandom, nMaxo, -1, -1);
+                procedure, -1, avgTopScoreRandom, nMaxo, -1,
+                nDiscoverablePhenotypes, topMaxoIcSum, avgIcSumRandom,-1);
     }
 
     private Map<TermId, Double> getTermToIcMap(File icFile) {
