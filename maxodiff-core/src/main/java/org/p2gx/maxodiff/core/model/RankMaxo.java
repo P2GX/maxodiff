@@ -75,16 +75,19 @@ public class RankMaxo {
 //        Map<TermId, Set<TermId>> fullMaxoToHpoTermIdMap = MaxoHpoTermIdMaps.getMaxoToHpoTermIdMap(context.resources().maxoAnnotsMap());
 
         int numThreads = Runtime.getRuntime().availableProcessors() - 1;
+        LOGGER.info("Making ExecutorService using " + numThreads + " threads.");
         ExecutorService executor = Executors.newFixedThreadPool(numThreads);
         AtomicInteger completedTasks = new AtomicInteger(0);
         List<Callable<RankedMaxoResult>> tasks = new ArrayList<>();
         int maxoIdx = 0;
         ProgessBar pb = new ProgessBar(maxoIdx, maxoToHpoTermIdMap.size());
         for (TermId maxoId : maxoToHpoTermIdMap.keySet()) {
+            LOGGER.info("MAxO Id = " + maxoId);
             if (ppktMaxoIds.contains(maxoId)) {
                 LOGGER.debug("Sample {}  already contains {}.", ppkt.sampleId(), maxoId);
                 continue;
             }
+            LOGGER.info("Making MaxoHpoDiseaseRank Object");
             MaxoHpoDiseaseRank maxoHpoDiseaseRank = MaxoHpoDiseaseRank.Builder.builder()
                     .initialDiagnoses(allInitialDiagnoses)
                     .ascertainablePhenotypes(ascertainablePhenotypes)
@@ -94,6 +97,7 @@ public class RankMaxo {
                     .nDiagnoses(500)
                     .maxoLabel(biometadataService.maxoLabel(maxoId.getValue()).get())
                     .build();
+            LOGGER.info("Making RankMaxoProgressObject");
             rankMaxoProgress = new RankMaxoProgress(maxoToHpoTermIdMap.size());
             int finalMaxoIdx = maxoIdx;
             tasks.add(() -> {

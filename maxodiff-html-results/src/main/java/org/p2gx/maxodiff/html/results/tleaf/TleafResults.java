@@ -6,6 +6,8 @@ import org.p2gx.maxodiff.core.analysis.RankedMaxoResult;
 
 import org.p2gx.maxodiff.html.results.maxoDisease.MdDiseaseHTML;
 import org.p2gx.maxodiff.html.results.maxoHpo.MdHtmlResult;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.thymeleaf.context.Context;
 import org.thymeleaf.spring6.SpringTemplateEngine;
 import org.thymeleaf.templateresolver.ClassLoaderTemplateResolver;
@@ -13,12 +15,14 @@ import org.thymeleaf.templateresolver.ClassLoaderTemplateResolver;
 import java.util.List;
 
 public class TleafResults {
+    private static final Logger LOGGER = LoggerFactory.getLogger(TleafResults.class);
 
     public static String writeHTMLResults(
             MdMetadata mdMetadata,
             List<RankedMaxoResult> resultList,
             HTMLFrequencyMap  htmlFrequencyMap)  {
 
+        LOGGER.info("Making Spring Template Engine.");
         SpringTemplateEngine templateEngine = templateEngine();
 
         Context context = new Context();
@@ -37,9 +41,11 @@ public class TleafResults {
                 .filter(result -> result.maxoScore() == 0.)
                 .findFirst().map(resultList::indexOf).orElse(resultList.size());
         int nDisplayed = Math.min(resultList.size(), zeroIdx);
+        LOGGER.info("Get Top " + nDisplayed + " results.");
         List<RankedMaxoResult> results = resultList.subList(0, nDisplayed);
 
         // Disease : MAxO term result box
+        LOGGER.info("Make Disease:MAxO term result box.");
         MdDiseaseHTML mdDiseaseData = new MdDiseaseHTML(results);
         context.setVariable("maxoDiseaseData", mdDiseaseData);
 
@@ -50,6 +56,7 @@ public class TleafResults {
         StringBuilder resultsString = new StringBuilder();
         for (RankedMaxoResult result : results) {
             int idx = resultList.indexOf(result) + 1;
+            LOGGER.info("Make Disease:MAxO term result box " + results.indexOf(result) + " of " + results.size());
             MdHtmlResult maxoData = new MdHtmlResult(
                     result,
                     idx,
@@ -63,6 +70,7 @@ public class TleafResults {
         }
 
         context.setVariable("maxoResults", resultsString);
+        LOGGER.info("Process template");
         return templateEngine.process("mdResults", context);
 
     }

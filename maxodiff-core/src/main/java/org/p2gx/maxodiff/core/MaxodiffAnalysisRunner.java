@@ -17,7 +17,7 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 public class MaxodiffAnalysisRunner {
-    private final static Logger LOGGER = LoggerFactory.getLogger(MaxoDiffAnalysisResultRow.class);
+    private final static Logger LOGGER = LoggerFactory.getLogger(MaxodiffAnalysisRunner.class);
     private final MdContext mdContext;
     private final DDxEngine engine;
     private final DiffDiagRefiner maxoDiffRefiner;
@@ -37,6 +37,7 @@ public class MaxodiffAnalysisRunner {
 
 
     public List<RankedMaxoResult> analyzeSample(PhenopacketData ppktData) throws Exception {
+        LOGGER.info("Analyzing " + ppktData.sampleId());
         List<TermId> ppktMaxoIds = ppktData.maxoProcedureIds();
         List<DifferentialDiagnosis> differentialDiagnoses = engine.run(ppktData);
         // Get List of Refinement results: maxo term scores and frequencies
@@ -96,7 +97,9 @@ public class MaxodiffAnalysisRunner {
         Set<TermId> initialNDiagnosesIds = initialNDiagnoses.stream()
                 .map(DifferentialDiagnosis::diseaseId)
                 .collect(Collectors.toCollection(LinkedHashSet::new));
+        LOGGER.info("Making MAxO:HPO Term Id Map");
         Map<TermId, Set<TermId>> maxoToHpoTermIdMap = MaxoHpoTermIdMaps.getMaxoToHpoTermIdMap(this.mdContext.resources().maxoAnnotsMap());//maxoDiffRefiner.getMaxoToHpoTermIdMap(hpoFrequenciesNDiseases);
+        LOGGER.info("Making RankMaxo object");
         RankMaxo rankMaxo = maxoDiffRefiner.getRankMaxo(allOrderedDiagnoses, initialNDiagnoses, engine,
                 maxoToHpoTermIdMap, hpoFrequenciesNDiseases);
 
