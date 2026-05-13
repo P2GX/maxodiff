@@ -4,6 +4,7 @@ import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
 import org.monarchinitiative.phenol.annotations.io.hpo.HpoDiseaseLoader;
 import org.monarchinitiative.phenol.annotations.io.hpo.HpoDiseaseLoaderOptions;
 import org.monarchinitiative.phenol.annotations.io.hpo.HpoDiseaseLoaders;
+import org.monarchinitiative.phenol.cli.demo.MicaCalculator;
 import org.monarchinitiative.phenol.ontology.data.MinimalOntology;
 import org.monarchinitiative.phenol.io.MinimalOntologyLoader;
 import org.monarchinitiative.phenol.ontology.data.TermId;
@@ -113,9 +114,9 @@ public class MdContextBuilder {
             Path termPairSimFile = Objects.requireNonNull(maxoDataPath.resolve("term-pair-similarity.csv.gz"),
                     "Did not find term-pair-similarity.csv.gz in data directory");
             icData = IcMicaDictLoader.loadIcMicaDict(termPairSimFile);
-            Path termToIcFile = Objects.requireNonNull(maxoDataPath.resolve("term-to-ic.csv"),
-                    "Did not find term-to-ic.csv in data directory");
-            termToIcMap = IcMicaDictLoader.loadTermToIcMap(new File(termToIcFile.toUri()));
+            boolean assumeAnnotated = true;
+            MicaCalculator micaCalculator = new MicaCalculator(hpo, assumeAnnotated);
+            termToIcMap = micaCalculator.calculateMica(hpoDiseases).termToIc();
         }
 
         return new MdResources(hpo, hpoDiseases, maxoAnnotsMap, maxoToHpoMap, icData, termToIcMap);
