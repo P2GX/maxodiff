@@ -97,9 +97,9 @@ public class MaxodiffAnalysisRunner {
         Set<TermId> initialNDiagnosesIds = initialNDiagnoses.stream()
                 .map(DifferentialDiagnosis::diseaseId)
                 .collect(Collectors.toCollection(LinkedHashSet::new));
-        LOGGER.info("Making MAxO:HPO Term Id Map");
+        LOGGER.debug("Making MAxO:HPO Term Id Map");
         Map<TermId, Set<TermId>> maxoToHpoTermIdMap = MaxoHpoTermIdMaps.getMaxoToHpoTermIdMap(this.mdContext.resources().maxoAnnotsMap());//maxoDiffRefiner.getMaxoToHpoTermIdMap(hpoFrequenciesNDiseases);
-        LOGGER.info("Making RankMaxo object");
+        LOGGER.debug("Making RankMaxo object");
         RankMaxo rankMaxo = maxoDiffRefiner.getRankMaxo(allOrderedDiagnoses, initialNDiagnoses, engine,
                 maxoToHpoTermIdMap, hpoFrequenciesNDiseases);
 

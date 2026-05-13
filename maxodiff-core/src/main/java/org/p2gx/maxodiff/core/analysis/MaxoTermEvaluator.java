@@ -63,7 +63,7 @@ public class MaxoTermEvaluator implements Callable<RankedMaxoResult> {
         Set<MySimpleTerm> simulatedHpoIdSet = new HashSet<>();
         Map<TermId, Integer> simulatedHpoCountSet = new HashMap<>();
         for (int i = 0; i < nRepetitions; i++) {
-            LOGGER.info("Running repetition " + i + " of " + nRepetitions);
+            LOGGER.debug("Running repetition " + i + " of " + nRepetitions);
             // Sample and count simulated HPO terms
             int nHpos = nHposToSample.get(i);
             simulatedHpoIdSet.addAll(selectKWeightedHpoTerms(hpoIds, probabilities, nHpos, biometadataService));
@@ -268,7 +268,7 @@ public class MaxoTermEvaluator implements Callable<RankedMaxoResult> {
             Map<TermId, Integer> chosenHpoTermCountsMap,
             List<HpoFrequency> hpoFrequenciesNDiseases) {
 
-        LOGGER.info("Making final results list");
+        LOGGER.debug("Making final results list");
         // Step 1: Make MAXO SimpleTerm
         TermId maxoId = maxoHpoDiseaseRank.getMaxoId();
         String maxoLabel = maxoHpoDiseaseRank.getMaxoLabel();
