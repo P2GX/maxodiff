@@ -138,6 +138,7 @@ public class DDxCommand extends BaseCommand {
                     System.err.println("No results found for phenopacket: " + phenopacketPath);
                     return 1;
                 }
+                LOGGER.debug("Analysis complete.");
                 // Take the MaXo term that has the highest score
                 RankedMaxoResult topResult = resultsList.getFirst();
                 String maxScoreMaxoTerm = topResult.maxoTerm().toString();
@@ -150,12 +151,14 @@ public class DDxCommand extends BaseCommand {
                     jsonFilename = outputFilenameArg + ".json";
                 }
                 if (outputJson) {
+                    LOGGER.debug("Creating JSON file.");
                     Path jsonPath = Path.of(String.join(File.separator, outputDir.toString(), jsonFilename));
                     JsonWriter.writeToJsonFile(jsonPath, resultsList);
-                    LOGGER.info("Wrote JSON file to {}.", jsonPath);
+                    LOGGER.debug("Wrote JSON file to {}.", jsonPath);
                     return 0;
                 }
 
+                LOGGER.debug("Writing HTML file.");
                 MdMetadata mdMetadata = new MdMetadata(phenopacketData.sampleId(),
                         this.nDiseases,
                         this.nRepetitions,

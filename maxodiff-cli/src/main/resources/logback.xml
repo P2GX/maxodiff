@@ -20,4 +20,20 @@
     <!-- Suppress all other libraries -->
     <root level="OFF"/>
 
+    <!-- We write DEBUG and above events into the maxodiff.log file. -->
+    <appender name="FILE" class="ch.qos.logback.core.FileAppender">
+        <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
+            <level>DEBUG</level>
+        </filter>
+        <file>maxodiff_cli.log</file>
+        <append>false</append>
+        <encoder>
+            <pattern>${pattern}</pattern>
+        </encoder>
+    </appender>
+
+    <root>
+        <appender-ref ref="FILE" />
+    </root>
+
 </configuration>
