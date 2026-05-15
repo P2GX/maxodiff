@@ -3,7 +3,7 @@
     <!-- Suppress logging status messages -->
     <statusListener class="ch.qos.logback.core.status.NopStatusListener" />
     <!-- Console output pattern -->
-    <property name="pattern" value="%d{HH:mm:ss.SSS} [%thread] %-5level %logger{1} - %msg%n"/>
+    <property name="pattern" value="[%level] [CLI] [%d{yyyy-MM-dd'T'HH:mm:ss}] - %class{0} - %msg%n"/>
 
     <!-- Console appender -->
     <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
@@ -25,7 +25,7 @@
         <filter class="ch.qos.logback.classic.filter.ThresholdFilter">
             <level>DEBUG</level>
         </filter>
-        <file>maxodiff_cli.log</file>
+        <file>maxodiff.log</file>
         <append>false</append>
         <encoder>
             <pattern>${pattern}</pattern>
