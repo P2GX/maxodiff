@@ -1,13 +1,10 @@
-# Tutorial
+# Command line application
 
-This tutorial explains how to set up and run the command-line interface (CLI) version of maxodiff. Instructions for the online version of maxodiff can be found here 
-!!! danger "🚨 TODO"
-    <span class="todo-pulse">Fill in the correct link to the online version of maxodiff!</span>
-
+This tutorial explains how to set up and run the command-line interface (CLI) version of maxodiff. 
 
 ## Requirements
 
-maxodiff requires a Java environment with version 21 or newer. We recommend installing the full JDK, since separate runtime environments are no longer shipped by most vendors. Major operating systems have package managers that are often the best option. For instance, on Apple, one can install Java with homebrew.
+`maxodiff` requires a [Java](https://www.java.com/) environment with version 21 or newer. We recommend installing the full JDK, since separate runtime environments are no longer shipped by most vendors. Major operating systems have package managers that are often the best option. For instance, on Apple, one can install Java with homebrew.
 
 ```bash
 brew install openjdk@21
@@ -97,31 +94,23 @@ the place where the other data files are kept).
 The CLI version of maxodiff can be run with default values using the analyze command, specifying a path to a phenopacket of interest:
 
 ```bash
-java -jar maxodiff-cli/target/maxodiff-cli.jar analyze -p <path to phenopacket file> 
+java -jar maxodiff-cli/target/maxodiff-cli.jar analyze \
+  -p <path to phenopacket file> 
 ```
 
 To have the program output a JSON file with the results instead of the HTML file, use the above command but add a ``-j/--json``.
 
 ```bash
-java -jar maxodiff-cli/target/maxodiff-cli.jar analyze -p <path to phenopacket file> -j 
+java -jar maxodiff-cli/target/maxodiff-cli.jar analyze \
+  -p <path to phenopacket file> -j 
 ```
 
-
-# Server
-We can start a local server as follows. First download the files as mentioned above.
-Then enter
-
+## Custom output file name
+If you want to call the output file `custom`, use the `-f` argument
 ```bash
-java -jar maxodiff-html/target/maxodiff-html.jar
+java -jar maxodiff-cli/target/maxodiff-cli.jar analyze \
+ -p <path to phenopacket file> -f <custom> 
 ```
 
-If a Java heap space error occurs, more memory can be allocated by adding VM options:
+The app will append the correct suffix (`.html` or - if the json output option is chosen - `.json`).
 
-```shell
-java -Xmx8g -jar maxodiff-html/target/maxodiff-html.jar
-```
-
-A server will start at ``http://localhost:8080/maxodiff``
-
-We see a data entry page with Clinician and Researcher view (Note: We will combine these later on so that the results page has both).
-The styling is still preliminary, but it works.

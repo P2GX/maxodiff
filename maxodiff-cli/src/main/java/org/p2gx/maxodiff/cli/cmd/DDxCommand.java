@@ -2,14 +2,12 @@ package org.p2gx.maxodiff.cli.cmd;
 
 import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVPrinter;
-import org.p2gx.maxodiff.core.analysis.HpoFrequency;
+import org.monarchinitiative.phenol.ontology.data.TermId;
+import org.p2gx.maxodiff.core.analysis.*;
 import org.p2gx.maxodiff.core.io.MdContext;
 import org.p2gx.maxodiff.core.io.impl.MdContextBuilder;
 import org.p2gx.maxodiff.core.MaxoDiffAnalysisResultRow;
 import org.p2gx.maxodiff.core.MaxodiffAnalysisRunner;
-import org.p2gx.maxodiff.core.analysis.HTMLFrequencyMap;
-import org.p2gx.maxodiff.core.analysis.MdMetadata;
-import org.p2gx.maxodiff.core.analysis.RankedMaxoResult;
 import org.p2gx.maxodiff.core.analysis.refinement.DiffDiagRefiner;
 import org.p2gx.maxodiff.core.diffdg.DDxEngine;
 import org.p2gx.maxodiff.core.io.JsonWriter;
@@ -56,6 +54,10 @@ public class DDxCommand extends BaseCommand {
             description = "Where to write the results files (default: ${DEFAULT-VALUE}).")
     protected Path outputDir = Path.of(".");
 
+    @CommandLine.Option(names = {"-f", "--outFilename"},
+            description = "Specific results output file name (default: ${DEFAULT-VALUE}).")
+    protected String outputFilenameArg = "";
+
     @CommandLine.Option(names = {"-j", "--json"},
         description = "output results to JSON file")
     private boolean outputJson = false;
@@ -73,6 +75,10 @@ public class DDxCommand extends BaseCommand {
     @CommandLine.Option(names = {"-nr", "--nRepetitions"},
             description = "Number of repetitions for running differential diagnosis.")
     protected Integer nRepetitions = 100;
+
+    @CommandLine.Option(names = {"-sd", "--singleDisease"},
+            description = "Single Disease Id for analysis.")
+    protected String singleDisease = null;
 
     @Override
     public Integer execute() throws Exception {
@@ -108,6 +114,23 @@ public class DDxCommand extends BaseCommand {
             if (writeCsv) {
                 MaxoDiffAnalysisResultRow row = runner.batchAnalysis(phenopacketData);
                 writeCsvResults(phenopacketData.sampleId(), row);
+            } else if (singleDisease != null) {
+                TermId targetDiseaseId = TermId.of(singleDisease);
+                List<RankedMaxoResultSingleDisease> resultsList = runner.analyzeSampleSingleDisease(phenopacketData,
+                                                                                                    targetDiseaseId);
+                if (resultsList.isEmpty()) {
+                    // should never happen...
+                    System.err.println("No results found for phenopacket: " + phenopacketPath);
+                    return 1;
+                }
+
+                RankedMaxoResultSingleDisease topResult = resultsList.getFirst();
+                String maxIcMaxoTerm = topResult.maxoTerm().toString();
+                double maxIcValue = topResult.totalIC();
+                System.out.println("Target Disease: " + topResult.targetDisease());
+                System.out.println("Max IC: " + maxIcMaxoTerm + " = " + maxIcValue);
+                System.out.println(resultsList.subList(0,10));
+
             } else {
                 List<RankedMaxoResult> resultsList = runner.analyzeSample(phenopacketData);
                 if (resultsList.isEmpty()) {
@@ -115,6 +138,7 @@ public class DDxCommand extends BaseCommand {
                     System.err.println("No results found for phenopacket: " + phenopacketPath);
                     return 1;
                 }
+                LOGGER.debug("Analysis complete.");
                 // Take the MaXo term that has the highest score
                 RankedMaxoResult topResult = resultsList.getFirst();
                 String maxScoreMaxoTerm = topResult.maxoTerm().toString();
@@ -123,13 +147,18 @@ public class DDxCommand extends BaseCommand {
 
                 String jsonFilename = String.join("_", phenopacketData.sampleId(),
                         nDiseases.toString(), nRepetitions.toString(), "maxodiff_results.json");
+                if (!outputFilenameArg.isEmpty()) {
+                    jsonFilename = outputFilenameArg + ".json";
+                }
                 if (outputJson) {
+                    LOGGER.debug("Creating JSON file.");
                     Path jsonPath = Path.of(String.join(File.separator, outputDir.toString(), jsonFilename));
                     JsonWriter.writeToJsonFile(jsonPath, resultsList);
-                    LOGGER.info("Wrote JSON file to {}.", jsonPath);
+                    LOGGER.debug("Wrote JSON file to {}.", jsonPath);
                     return 0;
                 }
 
+                LOGGER.debug("Writing HTML file.");
                 MdMetadata mdMetadata = new MdMetadata(phenopacketData.sampleId(),
                         this.nDiseases,
                         this.nRepetitions,
@@ -139,7 +168,11 @@ public class DDxCommand extends BaseCommand {
 
                 HTMLFrequencyMap htmlFrequencyMap = new HTMLFrequencyMap(context);
                 String headerHtml = TleafResults.writeHTMLResults(mdMetadata, resultsList, htmlFrequencyMap);
-                Path maxodiffResultsHTMLPath = Path.of(String.join(File.separator, outputDir.toString(), "mdResults.html"));
+                String fileName = "mdResults.html";
+                if (!outputFilenameArg.isEmpty()) {
+                    fileName = outputFilenameArg + ".html";
+                }
+                Path maxodiffResultsHTMLPath = Path.of(String.join(File.separator, outputDir.toString(), fileName));
                 Files.writeString(maxodiffResultsHTMLPath, headerHtml);
                 LOGGER.info("Wrote HTML file to {}", maxodiffResultsHTMLPath);
             }
@@ -153,6 +186,9 @@ public class DDxCommand extends BaseCommand {
 
     private int writeCsvResults(String phenopacketName, MaxoDiffAnalysisResultRow row)  {
         String outputFilename = String.join("_", phenopacketName, "maxodiff", "results.csv");
+        if (!outputFilenameArg.isEmpty()) {
+            outputFilename = outputFilenameArg + ".csv";
+        }
         if (!outputDir.toFile().isDirectory()) {
             System.err.println("Output directory does not exist: '" + outputDir +
                     "'. Create the directory and rerun this command.");

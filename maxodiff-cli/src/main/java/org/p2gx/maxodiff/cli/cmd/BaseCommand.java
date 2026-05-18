@@ -86,7 +86,7 @@ abstract class BaseCommand implements Callable<Integer> {
     }
 
     private static void printBanner() {
-        System.err.println(readBanner());
+        System.out.println(readBanner());
     }
 
 

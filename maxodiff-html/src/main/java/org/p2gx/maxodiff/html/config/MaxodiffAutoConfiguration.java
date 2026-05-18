@@ -16,8 +16,12 @@ import org.p2gx.maxodiff.html.service.DifferentialDiagnosisEngineServiceImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
+import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.core.Ordered;
+import org.springframework.http.HttpStatus;
+import org.springframework.web.filter.UrlHandlerFilter;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -103,4 +107,18 @@ public class MaxodiffAutoConfiguration {
         Map<String, DDxEngine> engines = Map.of();
         return DifferentialDiagnosisEngineServiceImpl.of(engines);
     }
+
+
+    @Bean
+    public FilterRegistrationBean<UrlHandlerFilter> trailingSlashFilter() {
+        UrlHandlerFilter filter = UrlHandlerFilter
+                .trailingSlashHandler("/**")
+                .redirect(HttpStatus.PERMANENT_REDIRECT)
+                .build();
+
+        FilterRegistrationBean<UrlHandlerFilter> registrationBean = new FilterRegistrationBean<>(filter);
+        registrationBean.setOrder(Ordered.HIGHEST_PRECEDENCE);
+        return registrationBean;
+    }
+
 }

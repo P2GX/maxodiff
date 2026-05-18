@@ -74,4 +74,6 @@ public class MaxoHpoTermProbabilities {
     public Map<TermId, Set<TermId>> getMaxoToHpoTermIdMap() {
         return maxoToHpoTermIdMap;
     }
+
+    public DiscoverablePhenotypes getDiscoverablePhenotypes() {return discoverablePhenotypes;}
 }

@@ -1,6 +1,6 @@
-# 🛠️ JSON Output (Beta)
+# 🛠️ Webserver: HTML/JSON Output 
 
-We are implementing code to allow the **maxodiff** server to output JSON payloads. This transition enables our analysis engine to be consumed by external front-end applications and automated pipelines.
+The **maxodiff** server can output JSON payloads. 
 
 !!! info "Pilot Phase"
     The JSON output feature is currently in a pilot stage. We are actively seeking feedback to refine the data structure!
@@ -10,24 +10,7 @@ We are implementing code to allow the **maxodiff** server to output JSON payload
 ## 🚀 Server Setup
 
 Before testing the JSON output, ensure your local environment is configured. For a full deep-dive, see the [Setup Guide](setup.md).
-
-### 1. Build and Prepare
-Use the tabs below to follow the initialization steps:
-
-=== "Step 1: Compile"
-    Build the project using Maven:
-    ```shell
-    mvn clean package
-    ```
-
-=== "Step 2: Data Download"
-    Download the necessary input data:
-    ```shell
-    java -jar maxodiff-cli/target/maxodiff-cli.jar download
-    ```
-
-### 2. Start the Server
-Run the HTML module to host the web interface:
+After your environment is setup, run the HTML module to host the web interface:
 
 ```shell
 java -jar maxodiff-html/target/maxodiff-html.jar
@@ -38,14 +21,21 @@ Once started, navigate to:
 
 👉 http://localhost:8080/maxodiff
 
-🧪 Requesting JSON Results
-To test the new programmatic output, follow these steps in the web interface:
+To run the web interface, follow these steps:
 
-Toggle Output Mode: In the configuration panel, set the output type to JSON.
+- Select a phenopacket using the Sample Input box (on the top)
+- Set the output to **HTML** or **JSON** as desired
+- Click the **RUn differential diagnosis calculation** button
+- You should then see a progress bar. 
 
-Upload Phenopacket: Select your target phenopacket file.
 
-Run Analysis: Click the start button.
+On our laptops, `maxodiff` needs about 20 seconds to load the IC file (which only needs ot happen when the server is first started), and then takes about 30 seconds to run the actual algorithm. The time depends on the number of repetitions and then number of terms in the phenopacket.
 
-!!! success "Expected Result"
-  The server will bypass the standard Thymeleaf HTML rendering and return a raw JSON stream. You should see the structured data directly in your browser window.
+!!! success "JSON output mode"
+    The server will bypass the standard Thymeleaf HTML rendering and return a raw JSON stream. You should see the structured data directly in your browser window.
+
+!!! success "HTML output mode"  
+    You should see an HTML page with tables and graphics that illustrate the result (TODO add documentation when final SAMS version is ready!)
+
+
+  
