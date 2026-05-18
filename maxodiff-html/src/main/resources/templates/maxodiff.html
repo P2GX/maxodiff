@@ -196,8 +196,8 @@
                         newItem.appendChild(newLink);
                         listContainer.appendChild(newItem);
                     }
-                };
-            };
+                }
+            }
 
             function uploadFile() {
                 const fileInput = document.getElementById('fileInput');
@@ -250,7 +250,7 @@
                 </tbody>
             </table>
 
-            <p><input type="submit" value="Run Differential Diagnosis Calculation" id="submitButton"
+            <p><input type="submit" value="Run maxodiff" id="submitButton"
                       th:disabled="${sample == null}"
                       onclick="startTask()"/>
                 <td>Output:</td>
