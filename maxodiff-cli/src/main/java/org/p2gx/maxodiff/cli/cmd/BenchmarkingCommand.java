@@ -143,7 +143,8 @@ public class BenchmarkingCommand extends DDxCommand {
                 customThreadPool.submit(() ->
                         IntStream.range(0, 50).parallel().forEach(i -> {
                             try {
-                                List<RankedMaxoResult> randomizedResults = benchmarker.shuffledRandomizer(biometadataService);
+                                long seed = 1000L; //10L; //i * 10L;
+                                List<RankedMaxoResult> randomizedResults = benchmarker.shuffledRandomizer(seed, i);
 
                                 List<RankedMaxoResult> topResultRandomList = randomizedResults.stream()
                                         .filter(mr -> mr.maxoTerm().tid().equals(topMaxo))

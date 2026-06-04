@@ -150,10 +150,15 @@ public class BaseBenchmarker {
      * @return
      * @throws Exception
      */
-    public List<RankedMaxoResult> shuffledRandomizer(BiometadataService biometadataService) throws Exception {
+    public List<RankedMaxoResult> shuffledRandomizer(long seed, int i) throws Exception {
         List<DifferentialDiagnosis> shuffledDiagnoses = new ArrayList<>(getCompleteInitialDiffDiagList());
-        Collections.shuffle(shuffledDiagnoses);
+        if (i < 2)
+            System.out.println("initial Diagnoses = " + shuffledDiagnoses.subList(0, nDiseases));
+        Random randomSeed = new Random(seed);
+        Collections.shuffle(shuffledDiagnoses, randomSeed);
         List<DifferentialDiagnosis> initialDiagnosesNDiseasesRandom = shuffledDiagnoses.subList(0, nDiseases);
+        if (i < 2)
+            System.out.println("shuffled Diagnoses = " + initialDiagnosesNDiseasesRandom + "\n");
         Set<TermId> topNInitialDiagnosesIdsRandom = initialDiagnosesNDiseasesRandom.stream()
                 .map(DifferentialDiagnosis::diseaseId)
                 .collect(Collectors.toCollection(LinkedHashSet::new));
