@@ -79,7 +79,8 @@ public class MaxodiffController {
         model.addAttribute("differentialDiagnoses", differentialDiagnoses);
 
         // Maxodiff refiner
-        diffDiagRefiner = new DiffDiagRefinerImpl(mdContext,
+        MdContext mdContextNewParams = mdContext.updateContext(nRepetitions, nDiseases);
+        diffDiagRefiner = new DiffDiagRefinerImpl(mdContextNewParams,
                 mdContext.resources().maxoToHpoMap(), mdContext.resources().maxoAnnotsMap());
 
         // maxodiff analysis parameters: n diseases to use and n simulations to run
