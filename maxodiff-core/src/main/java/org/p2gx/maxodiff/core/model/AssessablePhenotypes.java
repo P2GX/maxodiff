@@ -22,7 +22,7 @@ import java.util.stream.Collectors;
  * that get the ascertainable phenotypes for a given disease/phenopacket
  * </p>
  */
-public class AscertainablePhenotypes {
+public class AssessablePhenotypes {
     /**
      * Reference to an object containing information about all diseases.
      */
@@ -31,7 +31,7 @@ public class AscertainablePhenotypes {
     /**
      * @param hpoDiseases HpoDisease object
      */
-    public AscertainablePhenotypes(HpoDiseases hpoDiseases) {
+    public AssessablePhenotypes(HpoDiseases hpoDiseases) {
         this.hpoDiseases = hpoDiseases;
     }
 
@@ -42,7 +42,7 @@ public class AscertainablePhenotypes {
      * @return Ascertainable term Ids: HPO terms that are annotated to the disease, but are not present in the phenopacket.
      * @throws PhenolRuntimeException if that targetDiseaseId is not found.
      */
-    public Set<TermId> getAscertainablePhenotypeIds(
+    public Set<TermId> getAssessablePhenotypeIds(
             PhenopacketData myPpkt,
             TermId diseaseId) throws PhenolRuntimeException {
         HpoDisease disease = hpoDiseases.diseaseById(diseaseId)

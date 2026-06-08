@@ -29,7 +29,7 @@ public class MaxoHpoDiseaseRank {
     /** The ranked list of initial differential diagnoses produced by Phenomizer */
     private final List<DifferentialDiagnosis> initialDiagnoses;
     /** Object used to determine which phenotypes are ascertainable from a given sample. */
-    private final AscertainablePhenotypes ascertainablePhenotypes;
+    private final AssessablePhenotypes ascertainablePhenotypes;
     /** The set of all HPO term IDs that can be ascertained for this MAXO term. */
     private final Set<TermId> allMaxoAscertainedHpoIds;
     /** The MAXO term ID representing the diagnostic test being analyzed. */
@@ -55,7 +55,7 @@ public class MaxoHpoDiseaseRank {
      * @param maxoLabel               the MAXO term label
      */
     public MaxoHpoDiseaseRank(List<DifferentialDiagnosis> initialDiagnoses,
-                              AscertainablePhenotypes ascertainablePhenotypes,
+                              AssessablePhenotypes ascertainablePhenotypes,
                               Map<TermId, Set<TermId>> maxoToHpoTermIdMap,
                               TermId maxoId,
                               PhenopacketData sample,
@@ -93,7 +93,7 @@ public class MaxoHpoDiseaseRank {
 
         for (DifferentialDiagnosis diagnosis : initialDiagnoses.subList(0, nDiagnoses)) {
             double diseaseRankFactor = 1.0 / (initialDiagnoses.indexOf(diagnosis) + 1);
-            Set<TermId> diseaseAnnotatedHpoIds = ascertainablePhenotypes.getAscertainablePhenotypeIds(sample, diagnosis.diseaseId());
+            Set<TermId> diseaseAnnotatedHpoIds = ascertainablePhenotypes.getAssessablePhenotypeIds(sample, diagnosis.diseaseId());
             // HpoToRankMap
             for (TermId hpoId : diseaseAnnotatedHpoIds) {
                 hpoToRankMap.putIfAbsent(hpoId, new ArrayList<>());
@@ -208,7 +208,7 @@ public class MaxoHpoDiseaseRank {
      */
     public static class Builder {
         private List<DifferentialDiagnosis> initialDiagnoses;
-        private AscertainablePhenotypes ascertainablePhenotypes;
+        private AssessablePhenotypes ascertainablePhenotypes;
         private Map<TermId, Set<TermId>> maxoToHpoTermIdMap;
         private TermId maxoId = null;
         private Integer nDiagnoses = null;
@@ -231,7 +231,7 @@ public class MaxoHpoDiseaseRank {
             return this;
         }
 
-        public Builder ascertainablePhenotypes(AscertainablePhenotypes ascertainablePhenotypes) {
+        public Builder ascertainablePhenotypes(AssessablePhenotypes ascertainablePhenotypes) {
             this.ascertainablePhenotypes = ascertainablePhenotypes;
             return this;
         }

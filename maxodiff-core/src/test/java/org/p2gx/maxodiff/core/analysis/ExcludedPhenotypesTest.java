@@ -86,7 +86,7 @@ public class ExcludedPhenotypesTest {
     public void testExcludedPhenotypes1() {
          // Get excluded phenotypes given phenopacket
          PhenopacketData s1 = getPPkt1();
-         Set<TermId> excludedPhenotypeIds = excludedPhenotypes.getExcludedPhenotypes(s1);
+         Set<TermId> excludedPhenotypeIds = excludedPhenotypes.getExcludedPhenotypeIds(s1);
 
          // HPO term in phenopacket can be ascertained by 2 Maxo terms (MAXO:0000671 and MAXO:0000691)
          // 4 total HPO terms can ascertained by both Maxo terms in toy example
@@ -127,11 +127,11 @@ public class ExcludedPhenotypesTest {
 //        TermId targetId = ppkti.diseaseIds().get(0);
         switch (testCase.expectedOutcome()) {
             case TestOutcome.Ok(int expectedResult) ->
-                    assertEquals(expectedResult, excludedPhenotypes.getExcludedPhenotypes(ppkti).size(),
+                    assertEquals(expectedResult, excludedPhenotypes.getExcludedPhenotypeIds(ppkti).size(),
                             "Incorrect evaluation for: " + testCase.description());
             case TestOutcome.Error(Supplier<? extends RuntimeException> exceptionSupplier) ->
                     assertThrows(exceptionSupplier.get().getClass(),
-                            () -> excludedPhenotypes.getExcludedPhenotypes(ppkti),
+                            () -> excludedPhenotypes.getExcludedPhenotypeIds(ppkti),
                             "Incorrect error handling for: " + testCase.description());
         }
     }

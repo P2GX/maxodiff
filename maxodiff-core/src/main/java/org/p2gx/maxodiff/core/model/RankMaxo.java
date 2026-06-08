@@ -70,7 +70,7 @@ public class RankMaxo {
         BiometadataService biometadataService = context.biometadataService();
         List<TermId> ppktMaxoIds = ppkt.maxoProcedureIds();
         Set<TermId> sampleHpoIds = ppkt.allHpoTermIds();
-        AscertainablePhenotypes ascertainablePhenotypes = new AscertainablePhenotypes(maxoHpoTermProbabilities.getHpoDiseases());
+        AssessablePhenotypes ascertainablePhenotypes = new AssessablePhenotypes(maxoHpoTermProbabilities.getHpoDiseases());
         Map<TermId, Set<TermId>> fullMaxoToHpoTermIdMap = maxoHpoTermProbabilities.getMaxoToHpoTermIdMap();
 //        Map<TermId, Set<TermId>> fullMaxoToHpoTermIdMap = MaxoHpoTermIdMaps.getMaxoToHpoTermIdMap(context.resources().maxoAnnotsMap());
 
@@ -153,8 +153,8 @@ public class RankMaxo {
                 continue;
             }
 
-            AscertainablePhenotypes ascertainablePhenotypes =
-                    new AscertainablePhenotypes(maxoHpoTermProbabilities.getHpoDiseases());
+            AssessablePhenotypes ascertainablePhenotypes =
+                    new AssessablePhenotypes(maxoHpoTermProbabilities.getHpoDiseases());
             MaxoHpoDiseaseRank maxoHpoDiseaseRank = MaxoHpoDiseaseRank.Builder.builder()
                     .initialDiagnoses(allInitialDiagnoses)
                     .ascertainablePhenotypes(ascertainablePhenotypes)

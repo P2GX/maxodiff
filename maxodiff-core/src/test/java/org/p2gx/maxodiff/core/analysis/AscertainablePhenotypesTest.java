@@ -4,7 +4,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.MethodSource;
 import org.p2gx.maxodiff.core.TestResources;
-import org.p2gx.maxodiff.core.model.AscertainablePhenotypes;
+import org.p2gx.maxodiff.core.model.AssessablePhenotypes;
 import org.p2gx.maxodiff.core.model.PhenopacketData;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDisease;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
@@ -21,7 +21,7 @@ public class AscertainablePhenotypesTest {
 
      private final static HpoDiseases hpoDiseases = TestResources.hpoDiseases();
 
-     private final static AscertainablePhenotypes ASCERTAINABLE_PHENOTYPES = new AscertainablePhenotypes(hpoDiseases);
+     private final static AssessablePhenotypes ASCERTAINABLE_PHENOTYPES = new AssessablePhenotypes(hpoDiseases);
 
     /**
      * This tests if the right disease is obtained from HpoDiseases, and if it has the correct HPO TermIds.
@@ -88,7 +88,7 @@ public class AscertainablePhenotypesTest {
          // Get potential phenotypes given phenopacket
          PhenopacketData s1 = getPPkt1();
          TermId targetId = TermId.of("OMIM:615837"); //s1.diseaseIds().getFirst();
-         Set<TermId> ascertainablePhenotypeIds = ASCERTAINABLE_PHENOTYPES.getAscertainablePhenotypeIds(s1, targetId);
+         Set<TermId> ascertainablePhenotypeIds = ASCERTAINABLE_PHENOTYPES.getAssessablePhenotypeIds(s1, targetId);
          // Disease associated with ppkt has 3 phenotype terms, example ppkt already has 1, so expect 2 here
         assertEquals(2, ascertainablePhenotypeIds.size());
      }
@@ -127,11 +127,11 @@ public class AscertainablePhenotypesTest {
         TermId targetId2 = TermId.of("OMIM:123456");
         switch (testCase.expectedOutcome()) {
             case TestOutcome.Ok(Set<TermId> expectedResult) ->
-                    assertEquals(expectedResult, ASCERTAINABLE_PHENOTYPES.getAscertainablePhenotypeIds(ppkti, targetId),
+                    assertEquals(expectedResult, ASCERTAINABLE_PHENOTYPES.getAssessablePhenotypeIds(ppkti, targetId),
                             "Incorrect evaluation for: " + testCase.description());
             case TestOutcome.Error(Supplier<? extends RuntimeException> exceptionSupplier) ->
                     assertThrows(exceptionSupplier.get().getClass(),
-                            () -> ASCERTAINABLE_PHENOTYPES.getAscertainablePhenotypeIds(ppkti, targetId2),
+                            () -> ASCERTAINABLE_PHENOTYPES.getAssessablePhenotypeIds(ppkti, targetId2),
                             "Incorrect error handling for: " + testCase.description());
         }
     }
