@@ -7,7 +7,7 @@
     <parent>
         <groupId>org.p2gx.maxodiff</groupId>
         <artifactId>maxodiff</artifactId>
-        <version>0.4.5</version>
+        <version>0.4.6</version>
     </parent>
 
     <artifactId>maxodiff-cli</artifactId>

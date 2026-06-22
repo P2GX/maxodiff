@@ -84,7 +84,6 @@ public class MaxodiffController {
                 mdContext.resources().maxoToHpoMap(), mdContext.resources().maxoAnnotsMap());
 
         // maxodiff analysis parameters: n diseases to use and n simulations to run
-        Integer prevNDiseases = (Integer) model.getAttribute("nDiseases");
         model.addAttribute("nDiseases", nDiseases);
         model.addAttribute("nRepetitions", nRepetitions);
 

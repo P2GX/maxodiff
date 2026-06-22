@@ -17,10 +17,8 @@ import org.slf4j.LoggerFactory;
 import picocli.CommandLine;
 
 import java.io.*;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
@@ -210,39 +208,5 @@ public class BenchmarkingCommand extends DDxCommand {
         return new BenchmarkResult(ppktId, nDiseases, nRepetitions, topMaxo, maxoFinalScore,
                 procedure, -1, avgTopScoreRandom, nMaxo, -1, -1);
     }
-
-    private Map<TermId, Double> getTermToIcMap(File icFile) {
-        Map<TermId, Double> termToIcMap = new HashMap<>();
-        try (
-            FileInputStream fis = new FileInputStream(icFile);
-            InputStreamReader isr = new InputStreamReader(fis, StandardCharsets.UTF_8);
-            BufferedReader br = new BufferedReader(isr)
-        ) {
-            String line;
-            // Read lines until readLine() returns null (end of stream)
-            while ((line = br.readLine()) != null) {
-                if (line.startsWith("HP:")) {
-                    String[] split = line.split(",");
-                    TermId tid = TermId.of(split[0]);
-                    Double ic = Double.parseDouble(split[1]);
-                    termToIcMap.put(tid, ic);
-                }
-
-            }
-        } catch (IOException e) {
-            System.err.println("Error reading file: " + e.getMessage());
-        }
-
-        return termToIcMap;
-    }
-
-
-
-
-
-
-
-
-
 
 }

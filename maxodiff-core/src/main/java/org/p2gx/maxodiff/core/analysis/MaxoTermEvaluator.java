@@ -3,7 +3,6 @@ package org.p2gx.maxodiff.core.analysis;
 import org.p2gx.maxodiff.core.diffdg.DDxEngine;
 import org.p2gx.maxodiff.core.model.*;
 import org.p2gx.maxodiff.core.service.BiometadataService;
-import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDisease;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -21,7 +20,6 @@ public class MaxoTermEvaluator implements Callable<RankedMaxoResult> {
     private final int nRepetitions;
     private final PhenopacketData ppkt;
     private final DDxEngine engine;
-    private final MaxoHpoTermProbabilities maxoHpoTermProbabilities;
     private final Set<TermId> diseaseIds;
     private final List<DifferentialDiagnosis> initialDiagnoses;
     private final BiometadataService biometadataService;
@@ -40,7 +38,6 @@ public class MaxoTermEvaluator implements Callable<RankedMaxoResult> {
         this.nRepetitions = nRepetitions;
         this.ppkt = ppkt;
         this.engine = engine;
-        this.maxoHpoTermProbabilities = maxoHpoTermProbabilities;
         this.diseaseIds = diseaseIds;
         this.initialDiagnoses = initialDiagnoses;
         this.biometadataService = biometadataService;
