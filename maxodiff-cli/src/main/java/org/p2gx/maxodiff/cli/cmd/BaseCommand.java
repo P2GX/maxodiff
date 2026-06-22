@@ -18,8 +18,6 @@ import java.util.stream.Collectors;
  */
 abstract class BaseCommand implements Callable<Integer> {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(BaseCommand.class);
-
     protected static final String BANNER = readBanner();
 
     static String readBanner() {

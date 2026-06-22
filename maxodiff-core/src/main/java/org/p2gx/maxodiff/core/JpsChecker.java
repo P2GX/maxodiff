@@ -2,32 +2,25 @@ package org.p2gx.maxodiff.core;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-
-import java.io.BufferedReader;
-import java.io.InputStreamReader;
-import java.io.IOException;
+import java.util.Optional;
 
 /**
  * Java Virtual Machine Process Status Tool.
  */
 public class JpsChecker {
     private static final Logger LOGGER = LoggerFactory.getLogger(JpsChecker.class);
+
     public static boolean isMainClassRunning(String mainClassName) {
         try {
-            Process process = Runtime.getRuntime().exec("jps -l");
-            BufferedReader reader = new BufferedReader(new InputStreamReader(process.getInputStream()));
-            String line;
-            while ((line = reader.readLine()) != null) {
-                // Example line: "12345 com.example.MyApplication"
-                if (line.contains(mainClassName)) {
-                    return true; // Main class found
-                }
-            }
-            reader.close();
-        } catch (IOException e) {
-            LOGGER.error(e.getMessage());
+            return ProcessHandle.allProcesses()
+                .map(ProcessHandle::info)
+                .map(ProcessHandle.Info::commandLine)
+                .flatMap(Optional::stream)
+                .anyMatch(cmdLine -> cmdLine.contains(mainClassName));
+        } catch (SecurityException e) {
+            LOGGER.error("Permission denied while accessing process list: {}", e.getMessage());
+            return false;
         }
-        return false; // Main class not found
     }
 
 }

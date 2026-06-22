@@ -8,15 +8,12 @@ import org.monarchinitiative.phenol.cli.demo.MicaCalculator;
 import org.monarchinitiative.phenol.ontology.data.MinimalOntology;
 import org.monarchinitiative.phenol.io.MinimalOntologyLoader;
 import org.monarchinitiative.phenol.ontology.data.TermId;
-import org.monarchinitiative.phenol.ontology.similarity.HpoResnikSimilarityPrecompute;
-import org.monarchinitiative.phenol.ontology.similarity.TermPair;
 import org.p2gx.maxodiff.core.analysis.MySimpleTerm;
 import org.p2gx.maxodiff.core.io.MdContext;
 import org.p2gx.maxodiff.core.io.MdParams;
 import org.p2gx.maxodiff.core.io.MdResources;
 import org.p2gx.maxodiff.core.io.MaxoDxAnnots;
 import org.p2gx.maxodiff.core.model.GeneralMaxoTerms;
-import org.p2gx.maxodiff.core.phenomizer.IcMicaDictMetadata;
 import org.p2gx.maxodiff.core.service.BiometadataService;
 import org.p2gx.maxodiff.core.service.BiometadataServiceImpl;
 import org.p2gx.maxodiff.core.phenomizer.IcMicaData;
@@ -25,11 +22,9 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
-import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.time.LocalDate;
 import java.util.*;
 
 public class MdContextBuilder {

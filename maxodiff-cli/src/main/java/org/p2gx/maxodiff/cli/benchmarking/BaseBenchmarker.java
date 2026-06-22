@@ -6,7 +6,6 @@ import org.p2gx.maxodiff.core.analysis.MySimpleTerm;
 import org.p2gx.maxodiff.core.analysis.RankedMaxoResult;
 
 import org.p2gx.maxodiff.core.analysis.refinement.DiffDiagRefiner;
-import org.p2gx.maxodiff.core.analysis.refinement.RefinementOptions;
 import org.p2gx.maxodiff.core.diffdg.DDxEngine;
 import org.p2gx.maxodiff.core.io.MdContext;
 import org.p2gx.maxodiff.core.model.*;
@@ -92,7 +91,6 @@ public class BaseBenchmarker {
     }
 
     public List<RankedMaxoResult> standardRun(BiometadataService biometadataService) throws Exception {
-        RefinementOptions options = RefinementOptions.of(nDiseases, nRepetitions);
         LOGGER.info("sample = {}, n Diseases = {}, n Repetitions = {}", this.sample.sampleId(), nDiseases, nRepetitions);
         List<DifferentialDiagnosis> topNinitialDiffDiagList = getTopNInitialDiffDiagList();
         Set<TermId> topNInitialDiagnosesIds = topNinitialDiffDiagList.stream()

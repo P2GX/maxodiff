@@ -138,14 +138,15 @@ public class PrecomputeResnikMapCommand implements Callable<Integer> {
   }
 
     // Write Term:IC Map for benchmarking
+    @SuppressWarnings("unused")
     private void writeTermToIc(Map<TermId, Double> termToIc,
                                LocalDate now,
                                String hpoVersion,
                                String hpoaVersion) throws IOException {
         try (Writer writer = openWriter();
-             CSVPrinter printer = CSVFormat.Builder.create(CSVFormat.DEFAULT)
+             CSVPrinter printer = CSVFormat.DEFAULT.builder()
                      .setCommentMarker('#')
-                     .build()
+                     .get()
                      .print(writer)) {
             // Metadata
             printer.printComment("Information content of the most informative common ancestor for term pairs");

@@ -69,7 +69,6 @@ public class RankMaxo {
         int nRepetitions = context.params().nRepetitions();
         BiometadataService biometadataService = context.biometadataService();
         List<TermId> ppktMaxoIds = ppkt.maxoProcedureIds();
-        Set<TermId> sampleHpoIds = ppkt.allHpoTermIds();
         AssessablePhenotypes ascertainablePhenotypes = new AssessablePhenotypes(maxoHpoTermProbabilities.getHpoDiseases());
         Map<TermId, Set<TermId>> fullMaxoToHpoTermIdMap = maxoHpoTermProbabilities.getMaxoToHpoTermIdMap();
 //        Map<TermId, Set<TermId>> fullMaxoToHpoTermIdMap = MaxoHpoTermIdMaps.getMaxoToHpoTermIdMap(context.resources().maxoAnnotsMap());
