@@ -28,32 +28,12 @@ public class DiffDiagRefinerImpl implements DiffDiagRefiner {
 
     private MdContext context;
 
-    public DiffDiagRefinerImpl(HpoDiseases hpoDiseases,
-                               Map<MySimpleTerm, Set<MySimpleTerm>> maxoToHpoTermMap,
-                               Map<MySimpleTerm, Set<MySimpleTerm>> hpoToMaxoTermMap,
-                               MinimalOntology hpo) {
-        this.hpoDiseases = hpoDiseases;
-        this.maxoToHpoTermMap = maxoToHpoTermMap;
-        this.hpoToMaxoTermMap = hpoToMaxoTermMap;
-        this.hpo = hpo;
-        if (this.maxoToHpoTermMap.isEmpty()) {
-            System.err.println("maxoToHpoTermMap (hpo Diseases) is empty");
-            System.exit(1);
-        }
-        if (this.hpoToMaxoTermMap.isEmpty()) {
-            System.err.println("hpoToMaxoTermMap is empty");
-            System.exit(1);
-        }
-    }
-
-    public DiffDiagRefinerImpl(MdContext context,
-                               Map<MySimpleTerm, Set<MySimpleTerm>> maxoToHpoTermMap,
-                               Map<MySimpleTerm, Set<MySimpleTerm>> hpoToMaxoTermMap) {
+    public DiffDiagRefinerImpl(MdContext context) {
         this.context = context;
         this.hpo = context.resources().hpo();
         this.hpoDiseases = context.resources().hpoDiseases();
-        this.maxoToHpoTermMap = maxoToHpoTermMap;
-        this.hpoToMaxoTermMap = hpoToMaxoTermMap;
+        this.maxoToHpoTermMap = context.resources().maxoToHpoMap();
+        this.hpoToMaxoTermMap = context.resources().maxoAnnotsMap();
         if (this.maxoToHpoTermMap.isEmpty()) {
             System.err.println("maxoToHpoTermMap (mdContext) is empty");
             System.exit(1);

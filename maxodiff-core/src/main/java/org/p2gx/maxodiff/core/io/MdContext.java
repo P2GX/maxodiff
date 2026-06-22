@@ -45,10 +45,8 @@ public record MdContext(MdResources resources,
     }
 
     public DiffDiagRefiner createRefiner() {
-        Map<MySimpleTerm, Set<MySimpleTerm>> maxoAnnotsMap = resources.maxoAnnotsMap();
-        Map<MySimpleTerm, Set<MySimpleTerm>> maxoToHpoMap = resources.maxoToHpoMap();
 
-        return new DiffDiagRefinerImpl(this,  maxoToHpoMap, maxoAnnotsMap);
+        return new DiffDiagRefinerImpl(this);
        // return new DiffDiagRefinerImpl(diseases, hpoToMaxoIdMap, maxoAnnotsMap, hpo);
     }
 
