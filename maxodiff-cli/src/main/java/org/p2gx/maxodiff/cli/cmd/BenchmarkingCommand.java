@@ -132,7 +132,7 @@ public class BenchmarkingCommand extends DDxCommand {
                     this.phenomizer,
                     hpoFrequencies);
             String ppktId = benchmarker.getSample().sampleId();
-            List<RankedMaxoResult> initialResults = benchmarker.standardRun(biometadataService);
+            List<RankedMaxoResult> initialResults = benchmarker.standardRun(nThreads);
             TermId topMaxo = initialResults.getFirst().maxoTerm().tid();
             List<Double> topRandomScores = Collections.synchronizedList(new ArrayList<>());
             int parallelism = 8;
@@ -140,7 +140,7 @@ public class BenchmarkingCommand extends DDxCommand {
                 customThreadPool.submit(() ->
                         IntStream.range(0, 50).parallel().forEach(i -> {
                             try {
-                                List<RankedMaxoResult> randomizedResults = benchmarker.shuffledRandomizer(biometadataService);
+                                List<RankedMaxoResult> randomizedResults = benchmarker.shuffledRandomizer(parallelism);
 
                                 List<RankedMaxoResult> topResultRandomList = randomizedResults.stream()
                                         .filter(mr -> mr.maxoTerm().tid().equals(topMaxo))

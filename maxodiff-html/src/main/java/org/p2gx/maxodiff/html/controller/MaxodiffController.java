@@ -136,9 +136,11 @@ public class MaxodiffController {
                     maxoToHpoTermIdMap,
                     hpoTermCounts);
             this.sessionData.setRankMaxo(rankMaxo);
+            int nThreads = Runtime.getRuntime().availableProcessors() - 1;
             List<RankedMaxoResult> resultsList = diffDiagRefiner.run(sample,
                     initialDiagnosesIds,
-                    rankMaxo
+                    rankMaxo,
+                    nThreads
             );
             // Write final results to HTML
             MdMetadata mdMetadata = new MdMetadata(sample.sampleId(),
