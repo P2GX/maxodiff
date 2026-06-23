@@ -80,8 +80,7 @@ public class MaxodiffController {
 
         // Maxodiff refiner
         MdContext mdContextNewParams = mdContext.updateContext(nRepetitions, nDiseases);
-        diffDiagRefiner = new DiffDiagRefinerImpl(mdContextNewParams,
-                mdContext.resources().maxoToHpoMap(), mdContext.resources().maxoAnnotsMap());
+        diffDiagRefiner = new DiffDiagRefinerImpl(mdContextNewParams);
 
         // maxodiff analysis parameters: n diseases to use and n simulations to run
         model.addAttribute("nDiseases", nDiseases);
