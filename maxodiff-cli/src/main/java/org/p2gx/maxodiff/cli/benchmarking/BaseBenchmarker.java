@@ -2,11 +2,10 @@ package org.p2gx.maxodiff.cli.benchmarking;
 
 import org.monarchinitiative.phenol.ontology.data.MinimalOntology;
 import org.p2gx.maxodiff.core.analysis.HpoFrequency;
-import org.p2gx.maxodiff.core.analysis.MySimpleTerm;
+import org.p2gx.maxodiff.core.analysis.SimpleTerm;
 import org.p2gx.maxodiff.core.analysis.RankedMaxoResult;
 
 import org.p2gx.maxodiff.core.analysis.refinement.DiffDiagRefiner;
-import org.p2gx.maxodiff.core.analysis.refinement.RefinementOptions;
 import org.p2gx.maxodiff.core.diffdg.DDxEngine;
 import org.p2gx.maxodiff.core.io.MdContext;
 import org.p2gx.maxodiff.core.model.*;
@@ -28,7 +27,7 @@ public class BaseBenchmarker {
     private final int nRepetitions;
     private final DDxEngine phenomizer;
     private final HpoDiseases hpoDiseases;
-    private final Map<MySimpleTerm, Set<MySimpleTerm>> hpoTermToMaxoTermSetMap;
+    private final Map<SimpleTerm, Set<SimpleTerm>> hpoTermToMaxoTermSetMap;
     private final DiffDiagRefiner refiner;
     private final MinimalOntology ontology;
  //   private final Map<MySimpleTerm, Set<MySimpleTerm>> hpoToMaxoTermMap;
@@ -91,8 +90,7 @@ public class BaseBenchmarker {
                 getTopNInitialDiffDiagList());
     }
 
-    public List<RankedMaxoResult> standardRun(BiometadataService biometadataService) throws Exception {
-        RefinementOptions options = RefinementOptions.of(nDiseases, nRepetitions);
+    public List<RankedMaxoResult> standardRun(int nThreads) throws Exception {
         LOGGER.info("sample = {}, n Diseases = {}, n Repetitions = {}", this.sample.sampleId(), nDiseases, nRepetitions);
         List<DifferentialDiagnosis> topNinitialDiffDiagList = getTopNInitialDiffDiagList();
         Set<TermId> topNInitialDiagnosesIds = topNinitialDiffDiagList.stream()
@@ -108,7 +106,8 @@ public class BaseBenchmarker {
 
         return refiner.run(sample,
                 topNInitialDiagnosesIds,
-                rankMaxo);
+                rankMaxo,
+                nThreads);
     }
 
     /**
@@ -119,7 +118,7 @@ public class BaseBenchmarker {
      * @return
      * @throws Exception
      */
-    public List<RankedMaxoResult> spikedRandomizer(int diseaseIndex, BiometadataService biometadataService) throws Exception {
+    public List<RankedMaxoResult> spikedRandomizer(int diseaseIndex, int nThreads) throws Exception {
         List<DifferentialDiagnosis> diseaseTopNList = getTopNInitialDiffDiagList();
         List<DifferentialDiagnosis> shuffledDiagnoses = new ArrayList<>(getCompleteInitialDiffDiagList());
         Collections.shuffle(shuffledDiagnoses);
@@ -141,7 +140,8 @@ public class BaseBenchmarker {
 
         return refiner.run(sample,
                 topNInitialDiagnosesIdsRandom,
-                rankMaxo);
+                rankMaxo,
+                nThreads);
     }
 
     /**
@@ -150,7 +150,7 @@ public class BaseBenchmarker {
      * @return
      * @throws Exception
      */
-    public List<RankedMaxoResult> shuffledRandomizer(BiometadataService biometadataService) throws Exception {
+    public List<RankedMaxoResult> shuffledRandomizer(int nThreads) throws Exception {
         List<DifferentialDiagnosis> shuffledDiagnoses = new ArrayList<>(getCompleteInitialDiffDiagList());
         Collections.shuffle(shuffledDiagnoses);
         List<DifferentialDiagnosis> initialDiagnosesNDiseasesRandom = shuffledDiagnoses.subList(0, nDiseases);
@@ -168,7 +168,8 @@ public class BaseBenchmarker {
 
         return refiner.run(sample,
                 topNInitialDiagnosesIdsRandom,
-                rankMaxo);
+                rankMaxo,
+                nThreads);
     }
 
 

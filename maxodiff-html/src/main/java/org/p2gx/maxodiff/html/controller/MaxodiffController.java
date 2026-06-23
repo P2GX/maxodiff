@@ -17,6 +17,7 @@ import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDisease;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 import org.monarchinitiative.phenol.ontology.similarity.TermPair;
 import org.p2gx.maxodiff.html.session.UserSessionData;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -39,15 +40,20 @@ public class MaxodiffController {
 
     private DiffDiagRefiner diffDiagRefiner;
 
+
+    private final int nThreads;
+
     private static final Path UPLOAD_DIR = Paths.get(System.getProperty("user.home"), "maxodiff", "uploads");
 
     public MaxodiffController(
             UserSessionData sessionData,
             MdContext context,
-            DiffDiagRefiner diffDiagRefiner) {
+            DiffDiagRefiner diffDiagRefiner,
+            @Value("${maxodiff.threads:4}") int nthreads) {
         this.sessionData = sessionData;
         this.mdContext = context;
         this.diffDiagRefiner = diffDiagRefiner;
+        this.nThreads = nthreads;
     }
 
     @RequestMapping("/maxodiff")
@@ -79,11 +85,10 @@ public class MaxodiffController {
         model.addAttribute("differentialDiagnoses", differentialDiagnoses);
 
         // Maxodiff refiner
-        diffDiagRefiner = new DiffDiagRefinerImpl(mdContext,
-                mdContext.resources().maxoToHpoMap(), mdContext.resources().maxoAnnotsMap());
+        MdContext mdContextNewParams = mdContext.updateContext(nRepetitions, nDiseases);
+        diffDiagRefiner = new DiffDiagRefinerImpl(mdContextNewParams);
 
         // maxodiff analysis parameters: n diseases to use and n simulations to run
-        Integer prevNDiseases = (Integer) model.getAttribute("nDiseases");
         model.addAttribute("nDiseases", nDiseases);
         model.addAttribute("nRepetitions", nRepetitions);
 
@@ -138,7 +143,8 @@ public class MaxodiffController {
             this.sessionData.setRankMaxo(rankMaxo);
             List<RankedMaxoResult> resultsList = diffDiagRefiner.run(sample,
                     initialDiagnosesIds,
-                    rankMaxo
+                    rankMaxo,
+                    nThreads
             );
             // Write final results to HTML
             MdMetadata mdMetadata = new MdMetadata(sample.sampleId(),
@@ -200,13 +206,13 @@ public class MaxodiffController {
         model.addAttribute("observedHpoTermIds", observedHpoTermIds);
         model.addAttribute("excludedHpoTermIds", excludedHpoTermIds);
 
-        List<MySimpleTerm> observedSampleTerms = new ArrayList<>();
-        List<MySimpleTerm> excludedSampleTerms = new ArrayList<>();
+        List<SimpleTerm> observedSampleTerms = new ArrayList<>();
+        List<SimpleTerm> excludedSampleTerms = new ArrayList<>();
         BiometadataService biometadataService = this.mdContext.biometadataService();
         observedHpoTermIds.forEach(tid ->
-                observedSampleTerms.add(new MySimpleTerm(tid, biometadataService.hpoLabel(tid).orElse("n/a"))));
+                observedSampleTerms.add(new SimpleTerm(tid, biometadataService.hpoLabel(tid).orElse("n/a"))));
         excludedHpoTermIds.forEach(tid ->
-                excludedSampleTerms.add(new MySimpleTerm(tid, biometadataService.hpoLabel(tid).orElse("n/a"))));
+                excludedSampleTerms.add(new SimpleTerm(tid, biometadataService.hpoLabel(tid).orElse("n/a"))));
         return new PhenopacketData(sampleId, observedSampleTerms, excludedSampleTerms, List.of(), List.of(), false);
     }
 

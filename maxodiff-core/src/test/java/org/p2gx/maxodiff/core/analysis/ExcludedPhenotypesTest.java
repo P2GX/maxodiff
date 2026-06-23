@@ -23,7 +23,7 @@ import static org.junit.jupiter.api.Assertions.*;
 public class ExcludedPhenotypesTest {
 
      private final static HpoDiseases hpoDiseases = TestResources.hpoDiseases();
-     private final static Map<MySimpleTerm, Set<MySimpleTerm>> hpoToMaxoTermMap = TestResources.hpoToMaxoToy();
+     private final static Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxoTermMap = TestResources.hpoToMaxoToy();
 
      private final static Map<TermId, Set<TermId>> hpoToMaxoTermIdMap = MaxoHpoTermIdMaps.getHpoToMaxoTermIdMap(hpoToMaxoTermMap);
      private final static Map<TermId, Set<TermId>> maxoToHpoTermIdMap = MaxoHpoTermIdMaps.getMaxoToHpoTermIdMap(hpoToMaxoTermMap);
@@ -51,10 +51,10 @@ public class ExcludedPhenotypesTest {
      * @return Sample phenopacket with one included HPO term Id and one disease Id.
      */
     public static PhenopacketData getPPkt1() {
-        List<MySimpleTerm> presentTerms = List.of(
-                new MySimpleTerm(TermId.of("HP:0006739"), "Hpo1")
+        List<SimpleTerm> presentTerms = List.of(
+                new SimpleTerm(TermId.of("HP:0006739"), "Hpo1")
         );
-        List<MySimpleTerm> excludedTerms = List.of();
+        List<SimpleTerm> excludedTerms = List.of();
         List<TermId> diseaseIds = List.of(TermId.of("OMIM:620365"));
         List<TermId> maxoIds = List.of();
 
@@ -66,11 +66,11 @@ public class ExcludedPhenotypesTest {
      * @return Sample phenopacket with two included HPO term Ids and one disease Ids.
      */
     public static PhenopacketData getPPkt2() {
-        List<MySimpleTerm> presentTerms = List.of(
-                new MySimpleTerm(TermId.of("HP:0006739"), "Hpo1"),
-                new MySimpleTerm(TermId.of("HP:0002863"), "Hpo2")
+        List<SimpleTerm> presentTerms = List.of(
+                new SimpleTerm(TermId.of("HP:0006739"), "Hpo1"),
+                new SimpleTerm(TermId.of("HP:0002863"), "Hpo2")
         );
-        List<MySimpleTerm> excludedTerms = List.of();
+        List<SimpleTerm> excludedTerms = List.of();
         List<TermId> diseaseIds = List.of(TermId.of("OMIM:620365"));
         List<TermId> maxoIds = List.of();
 
@@ -86,7 +86,7 @@ public class ExcludedPhenotypesTest {
     public void testExcludedPhenotypes1() {
          // Get excluded phenotypes given phenopacket
          PhenopacketData s1 = getPPkt1();
-         Set<TermId> excludedPhenotypeIds = excludedPhenotypes.getExcludedPhenotypes(s1);
+         Set<TermId> excludedPhenotypeIds = excludedPhenotypes.getExcludedPhenotypeIds(s1);
 
          // HPO term in phenopacket can be ascertained by 2 Maxo terms (MAXO:0000671 and MAXO:0000691)
          // 4 total HPO terms can ascertained by both Maxo terms in toy example
@@ -127,11 +127,11 @@ public class ExcludedPhenotypesTest {
 //        TermId targetId = ppkti.diseaseIds().get(0);
         switch (testCase.expectedOutcome()) {
             case TestOutcome.Ok(int expectedResult) ->
-                    assertEquals(expectedResult, excludedPhenotypes.getExcludedPhenotypes(ppkti).size(),
+                    assertEquals(expectedResult, excludedPhenotypes.getExcludedPhenotypeIds(ppkti).size(),
                             "Incorrect evaluation for: " + testCase.description());
             case TestOutcome.Error(Supplier<? extends RuntimeException> exceptionSupplier) ->
                     assertThrows(exceptionSupplier.get().getClass(),
-                            () -> excludedPhenotypes.getExcludedPhenotypes(ppkti),
+                            () -> excludedPhenotypes.getExcludedPhenotypeIds(ppkti),
                             "Incorrect error handling for: " + testCase.description());
         }
     }

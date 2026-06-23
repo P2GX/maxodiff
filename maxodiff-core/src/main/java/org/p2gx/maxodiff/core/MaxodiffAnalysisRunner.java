@@ -19,17 +19,20 @@ import java.util.stream.Collectors;
 public class MaxodiffAnalysisRunner {
     private final static Logger LOGGER = LoggerFactory.getLogger(MaxodiffAnalysisRunner.class);
     private final MdContext mdContext;
+    private final int nThreads;
     private final DDxEngine engine;
     private final DiffDiagRefiner maxoDiffRefiner;
     private final List<HpoFrequency> hpoFrequencies;
 
     public MaxodiffAnalysisRunner(
             MdContext mdContext,
+            int nThreads,
             DDxEngine engine,
             DiffDiagRefiner maxoDiffRefiner,
             List<HpoFrequency> hpoFrequencies
     ) {
         this.mdContext = mdContext;
+        this.nThreads = nThreads;
         this.engine = engine;
         this.maxoDiffRefiner = maxoDiffRefiner;
         this.hpoFrequencies = hpoFrequencies;
@@ -68,7 +71,7 @@ public class MaxodiffAnalysisRunner {
         String maxo_label = topResult.maxoTerm().label();
         double maxScoreValue = topResult.maxoScore();
         List<RankedOmimTerm> rankedOmimTermList = topResult.rankedOmimTermList();
-        List<TermId> diseaseIdsStr = rankedOmimTermList.stream().map(RankedOmimTerm::omimTerm).map(MySimpleTerm::tid).toList();
+        List<TermId> diseaseIdsStr = rankedOmimTermList.stream().map(RankedOmimTerm::omimTerm).map(SimpleTerm::tid).toList();
         Set<TermId> diseaseIds = new HashSet<>(diseaseIdsStr);
 
         return new MaxoDiffAnalysisResultRow(
@@ -105,7 +108,8 @@ public class MaxodiffAnalysisRunner {
 
         return maxoDiffRefiner.run(sample,
                 initialNDiagnosesIds,
-                rankMaxo);
+                rankMaxo,
+                nThreads);
     }
 
     private List<RankedMaxoResultSingleDisease> getRefinementResultsSingleDisease(
@@ -128,7 +132,8 @@ public class MaxodiffAnalysisRunner {
         return maxoDiffRefiner.runSingleDisease(sample,
                 targetDiseaseId,
                 initialNDiagnosesIds,
-                rankMaxo);
+                rankMaxo,
+                nThreads);
     }
 
 

@@ -2,7 +2,7 @@ package org.p2gx.maxodiff.core.analysis.refinement;
 
 
 import org.monarchinitiative.phenol.ontology.data.MinimalOntology;
-import org.p2gx.maxodiff.core.analysis.MySimpleTerm;
+import org.p2gx.maxodiff.core.analysis.SimpleTerm;
 import org.p2gx.maxodiff.core.analysis.RankedMaxoResult;
 import org.p2gx.maxodiff.core.analysis.RankedMaxoResultSingleDisease;
 import org.p2gx.maxodiff.core.diffdg.DDxEngine;
@@ -22,38 +22,18 @@ import java.util.stream.Collectors;
 public class DiffDiagRefinerImpl implements DiffDiagRefiner {
 
     private final HpoDiseases hpoDiseases;
-    private final Map<MySimpleTerm, Set<MySimpleTerm>> maxoToHpoTermMap;
-    private final Map<MySimpleTerm, Set<MySimpleTerm>> hpoToMaxoTermMap;
+    private final Map<SimpleTerm, Set<SimpleTerm>> maxoToHpoTermMap;
+    private final Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxoTermMap;
     private final MinimalOntology hpo;
 
     private MdContext context;
 
-    public DiffDiagRefinerImpl(HpoDiseases hpoDiseases,
-                               Map<MySimpleTerm, Set<MySimpleTerm>> maxoToHpoTermMap,
-                               Map<MySimpleTerm, Set<MySimpleTerm>> hpoToMaxoTermMap,
-                               MinimalOntology hpo) {
-        this.hpoDiseases = hpoDiseases;
-        this.maxoToHpoTermMap = maxoToHpoTermMap;
-        this.hpoToMaxoTermMap = hpoToMaxoTermMap;
-        this.hpo = hpo;
-        if (this.maxoToHpoTermMap.isEmpty()) {
-            System.err.println("maxoToHpoTermMap (hpo Diseases) is empty");
-            System.exit(1);
-        }
-        if (this.hpoToMaxoTermMap.isEmpty()) {
-            System.err.println("hpoToMaxoTermMap is empty");
-            System.exit(1);
-        }
-    }
-
-    public DiffDiagRefinerImpl(MdContext context,
-                               Map<MySimpleTerm, Set<MySimpleTerm>> maxoToHpoTermMap,
-                               Map<MySimpleTerm, Set<MySimpleTerm>> hpoToMaxoTermMap) {
+    public DiffDiagRefinerImpl(MdContext context) {
         this.context = context;
         this.hpo = context.resources().hpo();
         this.hpoDiseases = context.resources().hpoDiseases();
-        this.maxoToHpoTermMap = maxoToHpoTermMap;
-        this.hpoToMaxoTermMap = hpoToMaxoTermMap;
+        this.maxoToHpoTermMap = context.resources().maxoToHpoMap();
+        this.hpoToMaxoTermMap = context.resources().maxoAnnotsMap();
         if (this.maxoToHpoTermMap.isEmpty()) {
             System.err.println("maxoToHpoTermMap (mdContext) is empty");
             System.exit(1);
@@ -68,15 +48,17 @@ public class DiffDiagRefinerImpl implements DiffDiagRefiner {
     @Override
     public List<RankedMaxoResult> run(PhenopacketData sample,
                                       Set<TermId> initialDiagnosesIds,
-                                      RankMaxo rankMaxo) throws Exception {
-        return rankMaxo.rankMaxoTerms(sample, initialDiagnosesIds, context);
+                                      RankMaxo rankMaxo,
+                                      int nThreads) throws Exception {
+        return rankMaxo.rankMaxoTerms(sample, initialDiagnosesIds, context, nThreads);
     }
 
     public List<RankedMaxoResultSingleDisease> runSingleDisease(PhenopacketData sample,
                                                                 TermId targetDiseaseId,
                                                                 Set<TermId> initialDiagnosesIds,
-                                                                RankMaxo rankMaxo) throws Exception {
-        return rankMaxo.getDiseaseBestMaxoTerms(sample, targetDiseaseId, initialDiagnosesIds, context);
+                                                                RankMaxo rankMaxo,
+                                                                int nThreads) throws Exception {
+        return rankMaxo.getDiseaseBestMaxoTerms(sample, targetDiseaseId, initialDiagnosesIds, context, nThreads);
     }
 
     public RankMaxo getRankMaxo(List<DifferentialDiagnosis> allInitialDiagnoses,
@@ -142,9 +124,9 @@ public class DiffDiagRefinerImpl implements DiffDiagRefiner {
 
         // Get all the MaXo terms that can be used to diagnose the HPO terms, removing ancestors
         Map<TermId, Set<TermId>> maxoToHpoTermIdMap = new HashMap<>();
-        for (Map.Entry<MySimpleTerm, Set<MySimpleTerm>> entry : maxoToHpoTermMap.entrySet()) {
+        for (Map.Entry<SimpleTerm, Set<SimpleTerm>> entry : maxoToHpoTermMap.entrySet()) {
             TermId maxoTermId = entry.getKey().tid();
-            Set<TermId> maxoHpoTermIds = entry.getValue().stream().map(MySimpleTerm::tid).collect(Collectors.toSet());
+            Set<TermId> maxoHpoTermIds = entry.getValue().stream().map(SimpleTerm::tid).collect(Collectors.toSet());
             maxoHpoTermIds.retainAll(hpoIds);
             for (TermId hpoTermId : maxoHpoTermIds) {
                 if (!maxoToHpoTermIdMap.containsKey(maxoTermId)) {

@@ -22,12 +22,14 @@ public interface DiffDiagRefiner {
 
     List<RankedMaxoResult> run(PhenopacketData sample,
                                Set<TermId> initialDiagnosesIds,
-                               RankMaxo rankMaxo) throws Exception;
+                               RankMaxo rankMaxo,
+                               int nThreads) throws Exception;
 
     List<RankedMaxoResultSingleDisease> runSingleDisease(PhenopacketData sample,
                                                          TermId targetDiseaseId,
                                                          Set<TermId> initialDiagnosesIds,
-                                                         RankMaxo rankMaxo) throws Exception;
+                                                         RankMaxo rankMaxo,
+                                                         int nThreads) throws Exception;
 
     List<DifferentialDiagnosis> getOrderedDiagnoses(Collection<DifferentialDiagnosis> originalDifferentialDiagnoses);
 
