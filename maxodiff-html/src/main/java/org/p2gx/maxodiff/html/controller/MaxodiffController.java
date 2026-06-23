@@ -17,6 +17,7 @@ import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDisease;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 import org.monarchinitiative.phenol.ontology.similarity.TermPair;
 import org.p2gx.maxodiff.html.session.UserSessionData;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -39,15 +40,20 @@ public class MaxodiffController {
 
     private DiffDiagRefiner diffDiagRefiner;
 
+
+    private final int nThreads;
+
     private static final Path UPLOAD_DIR = Paths.get(System.getProperty("user.home"), "maxodiff", "uploads");
 
     public MaxodiffController(
             UserSessionData sessionData,
             MdContext context,
-            DiffDiagRefiner diffDiagRefiner) {
+            DiffDiagRefiner diffDiagRefiner,
+            @Value("${maxodiff.threads:4}") int nthreads) {
         this.sessionData = sessionData;
         this.mdContext = context;
         this.diffDiagRefiner = diffDiagRefiner;
+        this.nThreads = nthreads;
     }
 
     @RequestMapping("/maxodiff")
@@ -136,7 +142,6 @@ public class MaxodiffController {
                     maxoToHpoTermIdMap,
                     hpoTermCounts);
             this.sessionData.setRankMaxo(rankMaxo);
-            int nThreads = Runtime.getRuntime().availableProcessors() - 1;
             List<RankedMaxoResult> resultsList = diffDiagRefiner.run(sample,
                     initialDiagnosesIds,
                     rankMaxo,
