@@ -1,7 +1,7 @@
 package org.p2gx.maxodiff.core.model;
 
 import org.p2gx.maxodiff.core.analysis.MaxoHpoTermIdMaps;
-import org.p2gx.maxodiff.core.analysis.MySimpleTerm;
+import org.p2gx.maxodiff.core.analysis.SimpleTerm;
 
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
 import org.monarchinitiative.phenol.ontology.data.TermId;
@@ -16,7 +16,7 @@ public class MaxoHpoTermProbabilities {
     private final DiscoverablePhenotypes discoverablePhenotypes;
 
     public MaxoHpoTermProbabilities(HpoDiseases hpoDiseases,
-                                    Map<MySimpleTerm, Set<MySimpleTerm>> hpoToMaxoTermMap,
+                                    Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxoTermMap,
                                     List<DifferentialDiagnosis> initialDiagnoses) {
         this.hpoDiseases = hpoDiseases;
         this.initialDiagnoses = initialDiagnoses;

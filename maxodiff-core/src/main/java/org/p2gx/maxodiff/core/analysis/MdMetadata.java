@@ -6,8 +6,8 @@ public record MdMetadata(
         String ppktId,
         int nDiseases,
         int nRepetitions,
-        List<MySimpleTerm> observedHpoTerms,
-        List<MySimpleTerm> excludedHpoTerms,
+        List<SimpleTerm> observedHpoTerms,
+        List<SimpleTerm> excludedHpoTerms,
         List<RankedMaxoResult> resultList
 
 ) {

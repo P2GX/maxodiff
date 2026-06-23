@@ -199,13 +199,13 @@ public class MaxodiffController {
         model.addAttribute("observedHpoTermIds", observedHpoTermIds);
         model.addAttribute("excludedHpoTermIds", excludedHpoTermIds);
 
-        List<MySimpleTerm> observedSampleTerms = new ArrayList<>();
-        List<MySimpleTerm> excludedSampleTerms = new ArrayList<>();
+        List<SimpleTerm> observedSampleTerms = new ArrayList<>();
+        List<SimpleTerm> excludedSampleTerms = new ArrayList<>();
         BiometadataService biometadataService = this.mdContext.biometadataService();
         observedHpoTermIds.forEach(tid ->
-                observedSampleTerms.add(new MySimpleTerm(tid, biometadataService.hpoLabel(tid).orElse("n/a"))));
+                observedSampleTerms.add(new SimpleTerm(tid, biometadataService.hpoLabel(tid).orElse("n/a"))));
         excludedHpoTermIds.forEach(tid ->
-                excludedSampleTerms.add(new MySimpleTerm(tid, biometadataService.hpoLabel(tid).orElse("n/a"))));
+                excludedSampleTerms.add(new SimpleTerm(tid, biometadataService.hpoLabel(tid).orElse("n/a"))));
         return new PhenopacketData(sampleId, observedSampleTerms, excludedSampleTerms, List.of(), List.of(), false);
     }
 

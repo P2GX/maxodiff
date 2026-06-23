@@ -1,6 +1,6 @@
 package org.p2gx.maxodiff.core.model;
 
-import org.p2gx.maxodiff.core.analysis.MySimpleTerm;
+import org.p2gx.maxodiff.core.analysis.SimpleTerm;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDisease;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
 import org.monarchinitiative.phenol.base.PhenolRuntimeException;
@@ -47,8 +47,8 @@ public class AssessablePhenotypes {
             TermId diseaseId) throws PhenolRuntimeException {
         HpoDisease disease = hpoDiseases.diseaseById(diseaseId)
                 .orElseThrow(() -> new PhenolRuntimeException("Could not find disease id " + diseaseId.getValue()));
-        Set<TermId> allPkktTerms = myPpkt.observed().stream().map(MySimpleTerm::tid).collect(Collectors.toSet());
-        allPkktTerms.addAll(myPpkt.excluded().stream().map(MySimpleTerm::tid).collect(Collectors.toSet()));
+        Set<TermId> allPkktTerms = myPpkt.observed().stream().map(SimpleTerm::tid).collect(Collectors.toSet());
+        allPkktTerms.addAll(myPpkt.excluded().stream().map(SimpleTerm::tid).collect(Collectors.toSet()));
         // Ascertainable phenotypes include all terms not currently mentioned
         // in the phenopacket
         return disease.annotationTermIdList().stream()

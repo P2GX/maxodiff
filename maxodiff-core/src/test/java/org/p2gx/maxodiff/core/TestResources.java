@@ -1,6 +1,6 @@
 package org.p2gx.maxodiff.core;
 
-import org.p2gx.maxodiff.core.analysis.MySimpleTerm;
+import org.p2gx.maxodiff.core.analysis.SimpleTerm;
 import org.p2gx.maxodiff.core.io.MaxoDxAnnots;
 import org.p2gx.maxodiff.core.model.DifferentialDiagnosis;
 import org.p2gx.maxodiff.core.model.PhenopacketData;
@@ -37,7 +37,7 @@ public class TestResources {
     private static volatile Ontology ONTOLOGY;
     private static volatile MinimalOntology MINIMAL_ONTOLOGY;
     private static volatile HpoDiseases HPO_DISEASES;
-    private static volatile Map<MySimpleTerm, Set<MySimpleTerm>> HPO_2_MAXO;
+    private static volatile Map<SimpleTerm, Set<SimpleTerm>> HPO_2_MAXO;
 
     public static HpoDiseases hpoDiseases() {
         if (HPO_DISEASES == null) {
@@ -89,7 +89,7 @@ public class TestResources {
         return MINIMAL_ONTOLOGY;
     }
 
-    public static Map<MySimpleTerm, Set<MySimpleTerm>> hpoToMaxo() {
+    public static Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxo() {
         if (HPO_2_MAXO == null) {
             synchronized (TestResources.class) {
                 if (HPO_2_MAXO == null) {
@@ -104,8 +104,8 @@ public class TestResources {
         return HPO_2_MAXO;
     }
 
-    public static Map<MySimpleTerm, Set<MySimpleTerm>> hpoToMaxoToy() {
-        Map<MySimpleTerm, Set<MySimpleTerm>> hpoToMaxoToy = new HashMap<>();
+    public static Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxoToy() {
+        Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxoToy = new HashMap<>();
         List<TermId> hpoIdSubset = List.of(
             TermId.of("HP:0006739"),
             TermId.of("HP:0002863"),
@@ -118,9 +118,9 @@ public class TestResources {
                 TermId.of("HP:0001873")
         );
 
-        for (Map.Entry<MySimpleTerm, Set<MySimpleTerm>> entry : hpoToMaxo().entrySet()) {
-            MySimpleTerm hpoTerm = entry.getKey();
-            Set<MySimpleTerm> maxoTerms = entry.getValue();
+        for (Map.Entry<SimpleTerm, Set<SimpleTerm>> entry : hpoToMaxo().entrySet()) {
+            SimpleTerm hpoTerm = entry.getKey();
+            Set<SimpleTerm> maxoTerms = entry.getValue();
             for (TermId hpoId : hpoIdSubset) {
                 if (hpoTerm.tid().equals(hpoId)) {
                     hpoToMaxoToy.put(hpoTerm, maxoTerms);
@@ -133,20 +133,20 @@ public class TestResources {
 
     public static PhenopacketData getExampleSample() {
         //Example terms from phenopacket v2 PMID_11175294-Tiecke-2001-FBN1-B15.json
-        List<MySimpleTerm> presentTerms = List.of(
-                new MySimpleTerm(TermId.of("HP:0000963"), "Hpo1"),
-                new MySimpleTerm(TermId.of("HP:0001653"), "Hpo2"),
-                new MySimpleTerm(TermId.of("HP:0000545"), "Hpo3"),
-                new MySimpleTerm(TermId.of("HP:0000098"), "Hpo4"),
-                new MySimpleTerm(TermId.of("HP:0004325"), "Hpo5"),
-                new MySimpleTerm(TermId.of("HP:0002751"), "Hpo6"),
-                new MySimpleTerm(TermId.of("HP:0002650"), "Hpo7"),
-                new MySimpleTerm(TermId.of("HP:0002616"), "Hpo8"),
-                new MySimpleTerm(TermId.of("HP:0000767"), "Hpo9"),
-                new MySimpleTerm(TermId.of("HP:0012019"), "Hpo10"),
-                new MySimpleTerm(TermId.of("HP:0001166"), "Hpo11")
+        List<SimpleTerm> presentTerms = List.of(
+                new SimpleTerm(TermId.of("HP:0000963"), "Hpo1"),
+                new SimpleTerm(TermId.of("HP:0001653"), "Hpo2"),
+                new SimpleTerm(TermId.of("HP:0000545"), "Hpo3"),
+                new SimpleTerm(TermId.of("HP:0000098"), "Hpo4"),
+                new SimpleTerm(TermId.of("HP:0004325"), "Hpo5"),
+                new SimpleTerm(TermId.of("HP:0002751"), "Hpo6"),
+                new SimpleTerm(TermId.of("HP:0002650"), "Hpo7"),
+                new SimpleTerm(TermId.of("HP:0002616"), "Hpo8"),
+                new SimpleTerm(TermId.of("HP:0000767"), "Hpo9"),
+                new SimpleTerm(TermId.of("HP:0012019"), "Hpo10"),
+                new SimpleTerm(TermId.of("HP:0001166"), "Hpo11")
         );
-        List<MySimpleTerm> excludedTerms = List.of();
+        List<SimpleTerm> excludedTerms = List.of();
 
         return new PhenopacketData("B15", presentTerms, excludedTerms, List.of(), List.of(), false);
     }

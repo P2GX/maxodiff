@@ -10,8 +10,8 @@ package org.p2gx.maxodiff.core.analysis;
  *
  */
 public record RankedMaxoResultSingleDisease(
-        MySimpleTerm targetDisease,
-        MySimpleTerm maxoTerm,
+        SimpleTerm targetDisease,
+        SimpleTerm maxoTerm,
         int nMaxoPhenotypes,
         double totalIC,
         double maxoScore,

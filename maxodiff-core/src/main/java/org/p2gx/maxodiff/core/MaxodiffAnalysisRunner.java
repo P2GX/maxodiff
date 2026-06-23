@@ -68,7 +68,7 @@ public class MaxodiffAnalysisRunner {
         String maxo_label = topResult.maxoTerm().label();
         double maxScoreValue = topResult.maxoScore();
         List<RankedOmimTerm> rankedOmimTermList = topResult.rankedOmimTermList();
-        List<TermId> diseaseIdsStr = rankedOmimTermList.stream().map(RankedOmimTerm::omimTerm).map(MySimpleTerm::tid).toList();
+        List<TermId> diseaseIdsStr = rankedOmimTermList.stream().map(RankedOmimTerm::omimTerm).map(SimpleTerm::tid).toList();
         Set<TermId> diseaseIds = new HashSet<>(diseaseIdsStr);
 
         return new MaxoDiffAnalysisResultRow(

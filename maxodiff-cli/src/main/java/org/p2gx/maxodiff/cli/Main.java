@@ -3,12 +3,21 @@ package org.p2gx.maxodiff.cli;
 import org.p2gx.maxodiff.cli.cmd.BenchmarkingCommand;
 import org.p2gx.maxodiff.cli.cmd.DDxCommand;
 import org.p2gx.maxodiff.cli.cmd.DownloadCommand;
+import org.p2gx.maxodiff.cli.cmd.ManifestVersionProvider;
 import org.p2gx.maxodiff.cli.cmd.PrecomputeResnikMapCommand;
 import picocli.CommandLine;
 import java.util.concurrent.Callable;
 
-@CommandLine.Command(name = "maxodiff", mixinStandardHelpOptions = true, version = "0.0.1",
-        description = "maxo terms for differential diagnosis")
+@CommandLine.Command(
+    name = "maxodiff", 
+    mixinStandardHelpOptions = true, 
+    versionProvider = ManifestVersionProvider.class,
+    description = "maxo terms for differential diagnosis",
+    footer = {
+            "", // Empty string creates a newline space
+            "For detailed documentation, visit https://github.com/p2gx/maxodiff",
+            "Enter a subcommand name with -h for help"
+        })
 public class Main implements Callable<Integer> {
 
     public static void main(String[] args){
