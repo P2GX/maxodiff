@@ -45,10 +45,10 @@ public class AscertainablePhenotypesTest {
      * @return Sample phenopacket with one included HPO term Id and one disease Id.
      */
     public static PhenopacketData getPPkt1() {
-        List<MySimpleTerm> presentTerms = List.of(
-                new MySimpleTerm(TermId.of("HP:0008619"), "hpo1")
+        List<SimpleTerm> presentTerms = List.of(
+                new SimpleTerm(TermId.of("HP:0008619"), "hpo1")
         );
-        List<MySimpleTerm> excludedTerms = List.of();
+        List<SimpleTerm> excludedTerms = List.of();
 
         return new PhenopacketData("sample1", presentTerms, excludedTerms, List.of(), List.of(), false);
     }
@@ -58,11 +58,11 @@ public class AscertainablePhenotypesTest {
      * @return Sample phenopacket with two included HPO term Ids and one disease Id.
      */
     public static PhenopacketData getPPkt2() {
-        List<MySimpleTerm> presentTerms = List.of(
-                new MySimpleTerm(TermId.of("HP:0008619"), "hpo1"),
-                new MySimpleTerm(TermId.of("HP:0001751"), "hpo1")
+        List<SimpleTerm> presentTerms = List.of(
+                new SimpleTerm(TermId.of("HP:0008619"), "hpo1"),
+                new SimpleTerm(TermId.of("HP:0001751"), "hpo1")
         );
-        List<MySimpleTerm> excludedTerms = List.of();
+        List<SimpleTerm> excludedTerms = List.of();
 
         return new PhenopacketData("sample1", presentTerms, excludedTerms, List.of(), List.of(), false);
     }
@@ -72,10 +72,10 @@ public class AscertainablePhenotypesTest {
      * @return Sample phenopacket with one included HPO term Id and one dummy disease Id.
      */
     public static PhenopacketData getPPktEmptyDisease() {
-        List<MySimpleTerm> presentTerms = List.of(
-                new MySimpleTerm(TermId.of("HP:0008619"), "hpo1")
+        List<SimpleTerm> presentTerms = List.of(
+                new SimpleTerm(TermId.of("HP:0008619"), "hpo1")
         );
-        List<MySimpleTerm> excludedTerms = List.of();
+        List<SimpleTerm> excludedTerms = List.of();
 
         return new PhenopacketData("sample2", presentTerms, excludedTerms, List.of(), List.of(), false);
     }

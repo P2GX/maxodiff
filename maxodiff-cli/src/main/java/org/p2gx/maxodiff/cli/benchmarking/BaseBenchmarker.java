@@ -2,7 +2,7 @@ package org.p2gx.maxodiff.cli.benchmarking;
 
 import org.monarchinitiative.phenol.ontology.data.MinimalOntology;
 import org.p2gx.maxodiff.core.analysis.HpoFrequency;
-import org.p2gx.maxodiff.core.analysis.MySimpleTerm;
+import org.p2gx.maxodiff.core.analysis.SimpleTerm;
 import org.p2gx.maxodiff.core.analysis.RankedMaxoResult;
 
 import org.p2gx.maxodiff.core.analysis.refinement.DiffDiagRefiner;
@@ -27,7 +27,7 @@ public class BaseBenchmarker {
     private final int nRepetitions;
     private final DDxEngine phenomizer;
     private final HpoDiseases hpoDiseases;
-    private final Map<MySimpleTerm, Set<MySimpleTerm>> hpoTermToMaxoTermSetMap;
+    private final Map<SimpleTerm, Set<SimpleTerm>> hpoTermToMaxoTermSetMap;
     private final DiffDiagRefiner refiner;
     private final MinimalOntology ontology;
  //   private final Map<MySimpleTerm, Set<MySimpleTerm>> hpoToMaxoTermMap;

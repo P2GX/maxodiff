@@ -60,7 +60,7 @@ public class MdHtmlResult {
         return this.rankedMaxoResult.hpoTermIds().size();
     }
 
-    public List<MySimpleTerm> getHpoHeaders() {
+    public List<SimpleTerm> getHpoHeaders() {
         return this.rankedMaxoResult.hpoTermIds().stream().map(CountedHpoTerm::hpoTerm).collect(Collectors.toList());
     }
 

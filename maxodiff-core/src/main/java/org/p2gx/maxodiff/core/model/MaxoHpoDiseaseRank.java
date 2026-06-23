@@ -2,7 +2,7 @@ package org.p2gx.maxodiff.core.model;
 
 
 import org.monarchinitiative.phenol.ontology.data.TermId;
-import org.p2gx.maxodiff.core.analysis.MySimpleTerm;
+import org.p2gx.maxodiff.core.analysis.SimpleTerm;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -118,8 +118,8 @@ public class MaxoHpoDiseaseRank {
      */
     public void makeHpoToProbabilityMap(PhenopacketData sample) {
 
-        Set<TermId> sampleTerms = sample.observed().stream().map(MySimpleTerm::tid).collect(Collectors.toSet());
-        sampleTerms.addAll(sample.excluded().stream().map(MySimpleTerm::tid).collect(Collectors.toSet()));
+        Set<TermId> sampleTerms = sample.observed().stream().map(SimpleTerm::tid).collect(Collectors.toSet());
+        sampleTerms.addAll(sample.excluded().stream().map(SimpleTerm::tid).collect(Collectors.toSet()));
         List<TermId> maxoAscertainedHpoIdsExclSample = new ArrayList<>(allMaxoAscertainedHpoIds);
         maxoAscertainedHpoIdsExclSample.removeAll(sampleTerms); // ascertainable terms  not in phenopacket
 

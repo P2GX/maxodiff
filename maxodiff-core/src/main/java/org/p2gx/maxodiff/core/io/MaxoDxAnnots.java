@@ -1,7 +1,7 @@
 package org.p2gx.maxodiff.core.io;
 
 import org.monarchinitiative.phenol.ontology.data.TermId;
-import org.p2gx.maxodiff.core.analysis.MySimpleTerm;
+import org.p2gx.maxodiff.core.analysis.SimpleTerm;
 
 
 import java.io.*;
@@ -17,8 +17,8 @@ public class MaxoDxAnnots {
     /**
      * TODO DOCUMENT ME. THIS IS THE CORRECT METHOD BUT IT WAS LISTED AS DEPRECATED!
      */
-    public static Map<MySimpleTerm, Set<MySimpleTerm>> parseHpoToMaxo(BufferedReader reader) throws IOException {
-        Map<MySimpleTerm, Set<MySimpleTerm>> hpoToMaxo = new HashMap<>();
+    public static Map<SimpleTerm, Set<SimpleTerm>> parseHpoToMaxo(BufferedReader reader) throws IOException {
+        Map<SimpleTerm, Set<SimpleTerm>> hpoToMaxo = new HashMap<>();
 
         String line;
         while ((line = reader.readLine()) != null) {
@@ -31,12 +31,12 @@ public class MaxoDxAnnots {
             }
             TermId hpoid = TermId.of(fields[0]);
             String hpoLabel = fields[1];
-            MySimpleTerm hterm = new MySimpleTerm(hpoid, hpoLabel);
+            SimpleTerm hterm = new SimpleTerm(hpoid, hpoLabel);
             String predicate = fields[2];
             if (predicate.equals("is_observable_through")) {
                 TermId maxoId = TermId.of(fields[3]);
                 String maxoLabel = fields[4];
-                MySimpleTerm mterm = new MySimpleTerm(maxoId, maxoLabel);
+                SimpleTerm mterm = new SimpleTerm(maxoId, maxoLabel);
                 hpoToMaxo.computeIfAbsent(hterm, whatever -> new HashSet<>()).add(mterm);
             } else if (! predicate.equals("is_prenatally_observable_through")) {
                 // skip prenatal for current analysis

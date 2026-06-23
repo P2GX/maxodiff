@@ -5,7 +5,7 @@ import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDisease;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 import org.p2gx.maxodiff.core.analysis.HTMLFrequencyMap;
 import org.p2gx.maxodiff.core.analysis.HpoFrequency;
-import org.p2gx.maxodiff.core.analysis.MySimpleTerm;
+import org.p2gx.maxodiff.core.analysis.SimpleTerm;
 import org.p2gx.maxodiff.core.analysis.refinement.DiffDiagRefiner;
 import org.p2gx.maxodiff.core.analysis.refinement.DiffDiagRefinerImpl;
 import org.p2gx.maxodiff.core.service.BiometadataService;
@@ -45,8 +45,8 @@ public record MdContext(MdResources resources,
     }
 
     public DiffDiagRefiner createRefiner() {
-        Map<MySimpleTerm, Set<MySimpleTerm>> maxoAnnotsMap = resources.maxoAnnotsMap();
-        Map<MySimpleTerm, Set<MySimpleTerm>> maxoToHpoMap = resources.maxoToHpoMap();
+        Map<SimpleTerm, Set<SimpleTerm>> maxoAnnotsMap = resources.maxoAnnotsMap();
+        Map<SimpleTerm, Set<SimpleTerm>> maxoToHpoMap = resources.maxoToHpoMap();
 
         return new DiffDiagRefinerImpl(this,  maxoToHpoMap, maxoAnnotsMap);
        // return new DiffDiagRefinerImpl(diseases, hpoToMaxoIdMap, maxoAnnotsMap, hpo);

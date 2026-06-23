@@ -4,7 +4,7 @@ import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
 import org.monarchinitiative.phenol.ontology.data.MinimalOntology;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 import org.p2gx.maxodiff.config.MaxodiffDataException;
-import org.p2gx.maxodiff.core.analysis.MySimpleTerm;
+import org.p2gx.maxodiff.core.analysis.SimpleTerm;
 import org.p2gx.maxodiff.core.analysis.refinement.DiffDiagRefiner;
 import org.p2gx.maxodiff.core.diffdg.DDxEngine;
 import org.p2gx.maxodiff.core.io.MdContext;
@@ -65,12 +65,12 @@ public class MaxodiffAutoConfiguration {
     }
 
     @Bean
-    public Map<MySimpleTerm, Set<MySimpleTerm>> maxoAnnotsMap(MdContext mdContext) {
+    public Map<SimpleTerm, Set<SimpleTerm>> maxoAnnotsMap(MdContext mdContext) {
         return mdContext.resources().maxoAnnotsMap();
     }
 
     @Bean
-    public Map<MySimpleTerm, Set<MySimpleTerm>> maxoToHpoMap(MdContext mdContext) {
+    public Map<SimpleTerm, Set<SimpleTerm>> maxoToHpoMap(MdContext mdContext) {
         return mdContext.resources().maxoToHpoMap();
     }
 
@@ -80,9 +80,9 @@ public class MaxodiffAutoConfiguration {
     }
 
     @Bean
-    public Map<TermId, Set<TermId>> hpoToMaxoIdMap(Map<MySimpleTerm, Set<MySimpleTerm>> maxoAnnotsMap) {
+    public Map<TermId, Set<TermId>> hpoToMaxoIdMap(Map<SimpleTerm, Set<SimpleTerm>> maxoAnnotsMap) {
         Map<TermId, Set<TermId>> hpoToMaxoIdMap = new HashMap<>();
-        for (Map.Entry<MySimpleTerm, Set<MySimpleTerm>> entry : maxoAnnotsMap.entrySet()) {
+        for (Map.Entry<SimpleTerm, Set<SimpleTerm>> entry : maxoAnnotsMap.entrySet()) {
             TermId hpoId = entry.getKey().tid();
             Set<TermId> maxoIds = new HashSet<>();
             maxoAnnotsMap.get(entry.getKey()).forEach(t -> maxoIds.add(t.tid()));

@@ -1,7 +1,7 @@
 package org.p2gx.maxodiff.core.model;
 
 import org.monarchinitiative.phenol.ontology.data.TermId;
-import org.p2gx.maxodiff.core.analysis.MySimpleTerm;
+import org.p2gx.maxodiff.core.analysis.SimpleTerm;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -57,8 +57,8 @@ public class ExcludedPhenotypes {
      */
     public Set<TermId> getExcludedPhenotypeIds(PhenopacketData samplePpkt) {
         Set<TermId> existingTerms = new HashSet<>();
-        existingTerms.addAll(samplePpkt.observed().stream().map(MySimpleTerm::tid).collect(Collectors.toSet()));
-        existingTerms.addAll(samplePpkt.excluded().stream().map(MySimpleTerm::tid).collect(Collectors.toSet()));
+        existingTerms.addAll(samplePpkt.observed().stream().map(SimpleTerm::tid).collect(Collectors.toSet()));
+        existingTerms.addAll(samplePpkt.excluded().stream().map(SimpleTerm::tid).collect(Collectors.toSet()));
         Set<TermId> excludedPhenotypes = new HashSet<>();
         existingTerms.forEach(tid -> excludedPhenotypes.addAll(getExcludedForHpoTerm(tid)));
         excludedPhenotypes.removeAll(existingTerms);
