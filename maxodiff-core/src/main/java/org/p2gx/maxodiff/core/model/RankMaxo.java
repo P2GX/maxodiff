@@ -64,7 +64,8 @@ public class RankMaxo {
      */
     public List<RankedMaxoResult> rankMaxoTerms(PhenopacketData ppkt,
                                                 Set<TermId> diseaseIds,
-                                                MdContext context) throws Exception {
+                                                MdContext context,
+                                                int nThreads) throws Exception {
 
         int nRepetitions = context.params().nRepetitions();
         BiometadataService biometadataService = context.biometadataService();
@@ -73,9 +74,8 @@ public class RankMaxo {
         Map<TermId, Set<TermId>> fullMaxoToHpoTermIdMap = maxoHpoTermProbabilities.getMaxoToHpoTermIdMap();
 //        Map<TermId, Set<TermId>> fullMaxoToHpoTermIdMap = MaxoHpoTermIdMaps.getMaxoToHpoTermIdMap(context.resources().maxoAnnotsMap());
 
-        int numThreads = Runtime.getRuntime().availableProcessors() - 1;
-        LOGGER.info("Making ExecutorService using " + numThreads + " threads.");
-        ExecutorService executor = Executors.newFixedThreadPool(numThreads);
+        LOGGER.info("Making ExecutorService using " + nThreads + " threads.");
+        ExecutorService executor = Executors.newFixedThreadPool(nThreads);
         AtomicInteger completedTasks = new AtomicInteger(0);
         List<Callable<RankedMaxoResult>> tasks = new ArrayList<>();
         int maxoIdx = 0;
@@ -133,15 +133,15 @@ public class RankMaxo {
     public List<RankedMaxoResultSingleDisease> getDiseaseBestMaxoTerms(PhenopacketData ppkt,
                                                                       TermId targetDiseaseId,
                                                                       Set<TermId> diseaseIds,
-                                                                      MdContext context) throws InterruptedException {
+                                                                      MdContext context,
+                                                                       int nThreads) throws InterruptedException {
 
         int nRepetitions = context.params().nRepetitions();
         BiometadataService biometadataService = context.biometadataService();
         List<TermId> ppktMaxoIds = ppkt.maxoProcedureIds();
         Map<TermId, Set<TermId>> fullMaxoToHpoTermIdMap = maxoHpoTermProbabilities.getMaxoToHpoTermIdMap();
 
-        int numThreads = Runtime.getRuntime().availableProcessors() - 1;
-        ExecutorService executor = Executors.newFixedThreadPool(numThreads);
+        ExecutorService executor = Executors.newFixedThreadPool(nThreads);
         AtomicInteger completedTasks = new AtomicInteger(0);
         List<Callable<RankedMaxoResultSingleDisease>> tasks = new ArrayList<>();
         int maxoIdx = 0;

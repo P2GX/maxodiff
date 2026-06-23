@@ -80,6 +80,10 @@ public class DDxCommand extends BaseCommand {
             description = "Single Disease Id for analysis.")
     protected String singleDisease = null;
 
+    @CommandLine.Option(names = {"-t", "--nThreads"},
+            description = "Number of threads to use for analysis.")
+    protected int nThreads = Runtime.getRuntime().availableProcessors() - 1;
+
     @Override
     public Integer execute() throws Exception {
         if (!Files.exists(phenopacketPath)) {
@@ -108,6 +112,7 @@ public class DDxCommand extends BaseCommand {
             PhenopacketData phenopacketData = PhenopacketData.readPhenopacketData(phenopacketPath);
             MaxodiffAnalysisRunner runner = new MaxodiffAnalysisRunner(
                     context,
+                    nThreads,
                     engine,
                     maxoDiffRefiner,
                     allHpoFrequencies);
