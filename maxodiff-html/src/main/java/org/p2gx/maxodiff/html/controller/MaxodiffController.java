@@ -5,6 +5,7 @@ import org.p2gx.maxodiff.core.analysis.refinement.DiffDiagRefinerImpl;
 import org.p2gx.maxodiff.core.analysis.refinement.DiffDiagRefiner;
 import org.p2gx.maxodiff.core.analysis.refinement.RefinementOptions;
 import org.p2gx.maxodiff.core.diffdg.DDxEngine;
+import org.p2gx.maxodiff.core.io.JsonWriter;
 import org.p2gx.maxodiff.core.io.MdContext;
 import org.p2gx.maxodiff.core.model.DifferentialDiagnosis;
 import org.p2gx.maxodiff.core.model.PhenopacketData;
@@ -147,6 +148,11 @@ public class MaxodiffController {
                     rankMaxo,
                     nThreads
             );
+            int zeroIdx = resultsList.stream()
+                    .filter(result -> result.maxoScore() == 0.)
+                    .findFirst().map(resultsList::indexOf).orElse(resultsList.size());
+            int nDisplayed = Math.min(resultsList.size(), zeroIdx);
+            resultsList = resultsList.subList(0, nDisplayed);
             // Write final results to HTML
             MdMetadata mdMetadata = new MdMetadata(sample.sampleId(),
                     nDiseases,
