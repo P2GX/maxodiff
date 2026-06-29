@@ -91,7 +91,7 @@ public class PhenopacketData {
         }
     }
 
-    private static PhenopacketData fromPpkt(Phenopacket ppkt) {
+    public static PhenopacketData fromPpkt(Phenopacket ppkt) {
         String sampleId = ppkt.getId();
         List<SimpleTerm> observedTerms = ppkt.getPhenotypicFeaturesList()
                 .stream().filter(Predicate.not(PhenotypicFeature::getExcluded))

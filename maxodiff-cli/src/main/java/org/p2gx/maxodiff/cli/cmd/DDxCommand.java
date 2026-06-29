@@ -158,7 +158,11 @@ public class DDxCommand extends BaseCommand {
                 if (outputJson) {
                     LOGGER.debug("Creating JSON file.");
                     Path jsonPath = Path.of(String.join(File.separator, outputDir.toString(), jsonFilename));
-                    JsonWriter.writeToJsonFile(jsonPath, resultsList);
+                    int zeroIdx = resultsList.stream()
+                            .filter(result -> result.maxoScore() == 0.)
+                            .findFirst().map(resultsList::indexOf).orElse(resultsList.size());
+                    int nDisplayed = Math.min(resultsList.size(), zeroIdx);
+                    JsonWriter.writeToJsonFile(jsonPath, resultsList.subList(0, nDisplayed));
                     LOGGER.debug("Wrote JSON file to {}.", jsonPath);
                     return 0;
                 }

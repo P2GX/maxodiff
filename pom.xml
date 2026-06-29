@@ -6,7 +6,7 @@
 
     <groupId>org.p2gx.maxodiff</groupId>
     <artifactId>maxodiff</artifactId>
-    <version>0.4.7</version>
+    <version>0.4.8</version>
     <packaging>pom</packaging>
 
     <name>maxodiff</name>
@@ -75,7 +75,11 @@
                 <artifactId>jackson-datatype-jdk8</artifactId>
                 <version>${jackson.version}</version>
             </dependency>
-
+            <dependency>
+                <groupId>com.google.protobuf</groupId>
+                <artifactId>protobuf-java-util</artifactId>
+                <version>3.25.1</version> 
+            </dependency>
             <dependency>
                 <groupId>org.monarchinitiative.biodownload</groupId>
                 <artifactId>biodownload</artifactId>
