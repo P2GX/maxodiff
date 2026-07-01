@@ -1,6 +1,7 @@
 package org.p2gx.maxodiff.cli;
 
 import org.p2gx.maxodiff.cli.cmd.BenchmarkingCommand;
+import org.p2gx.maxodiff.cli.cmd.BestDxModalityCommand;
 import org.p2gx.maxodiff.cli.cmd.DDxCommand;
 import org.p2gx.maxodiff.cli.cmd.DownloadCommand;
 import org.p2gx.maxodiff.cli.cmd.ManifestVersionProvider;
@@ -28,6 +29,7 @@ public class Main implements Callable<Integer> {
         CommandLine cline = new CommandLine(new Main())
                 .addSubcommand("download", new DownloadCommand())
                 .addSubcommand("analyze", new DDxCommand())
+                .addSubcommand("modality", new BestDxModalityCommand())
                 .addSubcommand("benchmarking", new BenchmarkingCommand())
                 .addSubcommand("precompute-resnik", new PrecomputeResnikMapCommand())
                 ;

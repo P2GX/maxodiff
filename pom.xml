@@ -6,7 +6,7 @@
 
     <groupId>org.p2gx.maxodiff</groupId>
     <artifactId>maxodiff</artifactId>
-    <version>0.4.8</version>
+    <version>0.4.9</version>
     <packaging>pom</packaging>
 
     <name>maxodiff</name>

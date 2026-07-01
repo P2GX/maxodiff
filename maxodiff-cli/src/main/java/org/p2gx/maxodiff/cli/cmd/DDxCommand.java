@@ -119,23 +119,6 @@ public class DDxCommand extends BaseCommand {
             if (writeCsv) {
                 MaxoDiffAnalysisResultRow row = runner.batchAnalysis(phenopacketData);
                 writeCsvResults(phenopacketData.sampleId(), row);
-            } else if (singleDisease != null) {
-                TermId targetDiseaseId = TermId.of(singleDisease);
-                List<RankedMaxoResultSingleDisease> resultsList = runner.analyzeSampleSingleDisease(phenopacketData,
-                                                                                                    targetDiseaseId);
-                if (resultsList.isEmpty()) {
-                    // should never happen...
-                    System.err.println("No results found for phenopacket: " + phenopacketPath);
-                    return 1;
-                }
-
-                RankedMaxoResultSingleDisease topResult = resultsList.getFirst();
-                String maxIcMaxoTerm = topResult.maxoTerm().toString();
-                double maxIcValue = topResult.totalIC();
-                System.out.println("Target Disease: " + topResult.targetDisease());
-                System.out.println("Max IC: " + maxIcMaxoTerm + " = " + maxIcValue);
-                System.out.println(resultsList.subList(0,10));
-
             } else {
                 List<RankedMaxoResult> resultsList = runner.analyzeSample(phenopacketData);
                 if (resultsList.isEmpty()) {
