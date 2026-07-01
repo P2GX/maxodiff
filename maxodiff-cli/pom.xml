@@ -20,11 +20,6 @@
         </dependency>
         <dependency>
             <groupId>org.p2gx.maxodiff</groupId>
-            <artifactId>maxodiff-config</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.p2gx.maxodiff</groupId>
             <artifactId>maxodiff-phenomizer</artifactId>
             <version>${project.version}</version>
         </dependency>

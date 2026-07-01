@@ -1,4 +1,4 @@
-package org.p2gx.maxodiff.config;
+package org.p2gx.maxodiff.core.model.exceptions;
 
 
 /**

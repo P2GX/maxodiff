@@ -20,7 +20,6 @@
 
     <modules>
         <module>maxodiff-core</module>
-        <module>maxodiff-config</module>
         <module>maxodiff-phenomizer</module>
         <module>maxodiff-cli</module>
         <module>maxodiff-html</module>
