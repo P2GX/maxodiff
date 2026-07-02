@@ -1,5 +1,6 @@
 package org.p2gx.maxodiff.html.controller;
 
+import org.p2gx.maxodiff.core.MaxodiffAnalysisRunner;
 import org.p2gx.maxodiff.core.analysis.*;
 import org.p2gx.maxodiff.core.analysis.refinement.DiffDiagRefinerImpl;
 import org.p2gx.maxodiff.core.analysis.refinement.DiffDiagRefiner;
@@ -7,6 +8,7 @@ import org.p2gx.maxodiff.core.analysis.refinement.RefinementOptions;
 import org.p2gx.maxodiff.core.diffdg.DDxEngine;
 import org.p2gx.maxodiff.core.io.JsonWriter;
 import org.p2gx.maxodiff.core.io.MdContext;
+import org.p2gx.maxodiff.core.io.impl.MdContextBuilder;
 import org.p2gx.maxodiff.core.model.DifferentialDiagnosis;
 import org.p2gx.maxodiff.core.model.PhenopacketData;
 import org.p2gx.maxodiff.core.model.RankMaxo;
@@ -333,6 +335,70 @@ public class MaxodiffController {
 
         // 4. Wrap up the core computation metadata object and return it as JSON
         MdMetadata mdMetadata = new MdMetadata(
+                ppktData.sampleId(),
+                nDiseases,
+                nRepetitions,
+                ppktData.observed(),
+                ppktData.excluded(),
+                resultsList);
+
+        return ResponseEntity.ok(mdMetadata);
+    }
+
+    @PostMapping(
+            value = "/api/modality",
+            consumes = MediaType.APPLICATION_JSON_VALUE,
+            produces = MediaType.APPLICATION_JSON_VALUE
+    )
+    public ResponseEntity<MdMetadataSingleDisease> analyzeJsonDxModality(@RequestBody Phenopacket payload,
+                                                            @RequestParam(value = "targetDisease") String targetDisease) throws Exception {
+
+        if (payload == null || payload.getId() == null) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        PhenopacketData ppktData = PhenopacketData.fromPpkt(payload);
+
+        int nDiseases = 20;
+        int nRepetitions = 80;
+
+        // 1. Initial Differential Diagnosis Engine (Phenomizer)
+        Map<TermPair, Double> icMicaDict = this.mdContext.resources().icMicaData().icMicaDict();
+        if (icMicaDict.isEmpty()) {
+            throw new IllegalStateException("Phenomizer resource MICA information content is empty.");
+        }
+
+        DDxEngine phenomizer = new PhenomizerDDxEngine(mdContext.resources().hpoDiseases(), icMicaDict);
+        List<DifferentialDiagnosis> differentialDiagnoses = phenomizer.run(ppktData);
+
+        // 2. Maxodiff Refiner Engine (Using updated parameters from RequestParams)
+        MdContext mdContextNewParams = mdContext.updateContext(nRepetitions, nDiseases);
+        DiffDiagRefiner customRefiner = new DiffDiagRefinerImpl(mdContextNewParams);
+
+        // 3. Process RankMaxo and Refinement Math Pipelines
+        List<DifferentialDiagnosis> orderedDiagnoses = customRefiner.getOrderedDiagnoses(differentialDiagnoses);
+        List<HpoDisease> diseases = customRefiner.getDiseases(orderedDiagnoses);
+        List<HpoFrequency> hpoTermCounts = customRefiner.getHpoFrequenciesNDiseases(diseases, mdContext.createHpoFrequencies());
+        Map<TermId, Set<TermId>> maxoToHpoTermIdMap = customRefiner.getMaxoToHpoTermIdMap(hpoTermCounts);
+
+        int limit = Math.min(orderedDiagnoses.size(), nDiseases);
+        List<DifferentialDiagnosis> initialDiagnoses = orderedDiagnoses.subList(0, limit);
+        Set<TermId> initialDiagnosesIds = initialDiagnoses.stream()
+                .map(DifferentialDiagnosis::diseaseId)
+                .collect(Collectors.toCollection(LinkedHashSet::new));
+
+        RankMaxo rankMaxo = customRefiner.getRankMaxo(
+                differentialDiagnoses,
+                orderedDiagnoses,
+                phenomizer,
+                maxoToHpoTermIdMap,
+                hpoTermCounts);
+
+        TermId targetDiseaseId = TermId.of(targetDisease);
+        List<RankedMaxoResultSingleDisease> resultsList = customRefiner.runSingleDisease(ppktData, targetDiseaseId, initialDiagnosesIds, rankMaxo, nThreads);
+
+        // 4. Wrap up the core computation metadata object and return it as JSON
+        MdMetadataSingleDisease mdMetadata = new MdMetadataSingleDisease(
                 ppktData.sampleId(),
                 nDiseases,
                 nRepetitions,
