@@ -1,5 +1,6 @@
 package org.p2gx.maxodiff.html.controller;
 
+import org.p2gx.maxodiff.core.MaxodiffAnalysisRunner;
 import org.p2gx.maxodiff.core.analysis.*;
 import org.p2gx.maxodiff.core.analysis.refinement.DiffDiagRefinerImpl;
 import org.p2gx.maxodiff.core.analysis.refinement.DiffDiagRefiner;
@@ -309,7 +310,7 @@ public class MaxodiffController {
         // 2. Maxodiff Refiner Engine (Using updated parameters from RequestParams)
         MdContext mdContextNewParams = mdContext.updateContext(nRepetitions, nDiseases);
         DiffDiagRefiner customRefiner = new DiffDiagRefinerImpl(mdContextNewParams);
-
+       
         // 3. Process RankMaxo and Refinement Math Pipelines
         List<DifferentialDiagnosis> orderedDiagnoses = customRefiner.getOrderedDiagnoses(differentialDiagnoses);
         List<HpoDisease> diseases = customRefiner.getDiseases(orderedDiagnoses);
@@ -341,6 +342,56 @@ public class MaxodiffController {
                 resultsList);
 
         return ResponseEntity.ok(mdMetadata);
+    }
+
+    @PostMapping(
+        value = "/api/modality", 
+        consumes = MediaType.APPLICATION_JSON_VALUE, 
+        produces = MediaType.APPLICATION_JSON_VALUE
+    )
+    public ResponseEntity<List<RankedMaxoResultSingleDisease>> analyzeBestModalityJson(@RequestBody Phenopacket payload,  @RequestParam(value = "targetDiseaseId", required = true) String targetDiseaseId) throws Exception {
+
+        if (payload == null || payload.getId() == null) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        PhenopacketData ppktData = PhenopacketData.fromPpkt(payload);
+
+        int nDiseases = 20;
+        int nRepetitions = 80;
+
+        // 1. Initial Differential Diagnosis Engine (Phenomizer)
+        Map<TermPair, Double> icMicaDict = this.mdContext.resources().icMicaData().icMicaDict();
+        if (icMicaDict.isEmpty()) {
+            throw new IllegalStateException("Phenomizer resource MICA information content is empty.");
+        }
+        
+        DDxEngine phenomizer = new PhenomizerDDxEngine(mdContext.resources().hpoDiseases(), icMicaDict);
+        List<DifferentialDiagnosis> differentialDiagnoses = phenomizer.run(ppktData);
+
+        // 2. Maxodiff Refiner Engine (Using updated parameters from RequestParams)
+        MdContext mdContextNewParams = mdContext.updateContext(nRepetitions, nDiseases);
+        DiffDiagRefiner customRefiner = new DiffDiagRefinerImpl(mdContextNewParams);
+        TermId targetId = TermId.of(targetDiseaseId); 
+        
+
+
+        // 3. Process RankMaxo and Refinement Math Pipelines
+        List<DifferentialDiagnosis> orderedDiagnoses = customRefiner.getOrderedDiagnoses(differentialDiagnoses);
+        List<HpoDisease> diseases = customRefiner.getDiseases(orderedDiagnoses);
+        List<HpoFrequency> hpoTermCounts = customRefiner.getHpoFrequenciesNDiseases(diseases, mdContext.createHpoFrequencies());
+         DDxEngine engine = new PhenomizerDDxEngine(mdContext);
+            MaxodiffAnalysisRunner runner = new MaxodiffAnalysisRunner(
+                    mdContext,
+                    nThreads,
+                    engine,
+                    customRefiner,
+                    hpoTermCounts);
+        List<RankedMaxoResultSingleDisease> resultsList = runner.analyzeSampleSingleDisease(ppktData,
+                                                                                            targetId);
+        
+        // Make a Record that has enough data to show HTML page on SAMS, e.g., also show name of phenopacket, and some other things (check with DS)
+        return ResponseEntity.ok(resultsList);
     }
 
 }
