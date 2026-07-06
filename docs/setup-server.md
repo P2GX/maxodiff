@@ -44,10 +44,13 @@ To create the docker container
 docker build --no-cache -f maxodiff-html/Dockerfile -t maxodiff-html:latest .
 ```
 
-Assuming this runs without error, we can now start the Docker process
+Assuming this runs without error, we can now start the Docker process.
+
+- Because your JVM heap alone requires 8GB, the total memory consumed by the container will be higher
+- Make sure the global Docker virtual machine has enough resources allocated to it. Go to Settings > Resources > Virtual manual / Advanced and ensure the memory slider is set to at least 12GB.
 
 ```shell
-docker run -dp 8080:8080 --name maxodiff-html-app maxodiff-html:latest
+docker run -m 10g -p 8080:8080 --name maxodiff-html-app maxodiff-html:latest
 ```
 
 Explanations:
@@ -57,6 +60,10 @@ Explanations:
 - `--name maxodiff-html-app`: Gives the running container a name so it's easy to stop or check logs later.
 
 You should now see `maxodiff-html-app` in the list of Containers in the Docker GUI.
+
+
+- The docker process should now be visible at http://localhost:8080/maxodiff.
+- To test the single-disease modality tool, use 
 
 
 
@@ -109,7 +116,10 @@ docker run -it -p 8080:8080 \
   maxodiff-html:latest
 ```
 
-### Testing
+### Testing with Postman
+
+
+1. maxodiff (standard algorithm)
 
 - To test the container, we can use [postman](https://www.postman.com/).        
 - Use Postman Desktop app (Note: do not use the Postman Agent app, it is not suited for this)
@@ -118,4 +128,48 @@ docker run -it -p 8080:8080 \
 - Click on Send
 - The calculations will take 10 seconds, and then JSON code will be returned.
 
+
+2. maxodiff single-disease
+
+- enter POST
+- use the API http://localhost:8080/api/modality?targetDiseaseId=OMIM:157700. (substitute any OMIM id)
+- as body, paste in a complete phenopacket
+- click on SEND
+- This will return JSON like this:
+
+```json
+[
+    {
+        "targetDisease": {
+            "tid": "OMIM:157700"
+        },
+        "maxoTerm": {
+            "tid": "MAXO:0035050"
+        },
+        "nMaxoPhenotypes": 1,
+        "totalIC": 9.061724347647399,
+        "maxoScore": 8.499235179380303,
+        "rankedOmimTerm": {
+            "tid": "OMIM:157700",
+            "averageRank": 0.0
+        }
+    },
+    {
+        "targetDisease": {
+            "tid": "OMIM:157700"
+        },
+        "maxoTerm": {
+            "tid": "MAXO:0000706"
+        },
+        "nMaxoPhenotypes": 2,
+        "totalIC": 7.263296516746243,
+        "maxoScore": 16.172687354838573,
+        "rankedOmimTerm": {
+            "tid": "OMIM:157700",
+            "averageRank": 0.0
+        }
+    },
+(,,,)
+]
+```
 

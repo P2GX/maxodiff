@@ -34,4 +34,4 @@ COPY data /app/data
 
 ENV JAVA_OPTS="-Xms8g -Xmx8g"
 EXPOSE 8080
-ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar maxodiff-html.jar"]
+ENTRYPOINT ["java", "-jar", "maxodiff-html.jar"]

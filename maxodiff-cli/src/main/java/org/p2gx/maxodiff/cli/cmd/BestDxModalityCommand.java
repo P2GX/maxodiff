@@ -44,7 +44,7 @@ public class BestDxModalityCommand extends BaseCommand {
         description = "Number of threads to use for analysis.")
     protected int nThreads = Runtime.getRuntime().availableProcessors() - 1;
 
-    @CommandLine.Option(names = {"--targetDisease"},
+    @CommandLine.Option(names = {"--targetDisease"},required=true,
         description="OMIM Identifier of the target disease"
     )
     private String targetDiseaseId;
