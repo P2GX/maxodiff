@@ -379,7 +379,7 @@ public class MaxodiffController {
         List<DifferentialDiagnosis> orderedDiagnoses = customRefiner.getOrderedDiagnoses(differentialDiagnoses);
         List<HpoDisease> diseases = customRefiner.getDiseases(orderedDiagnoses);
         List<HpoFrequency> hpoTermCounts = customRefiner.getHpoFrequenciesNDiseases(diseases, mdContext.createHpoFrequencies());
-//1
+
         DDxEngine engine = new PhenomizerDDxEngine(mdContext);
         MaxodiffAnalysisRunner runner = new MaxodiffAnalysisRunner(
                     mdContext,
@@ -391,37 +391,9 @@ public class MaxodiffController {
                                                                                             targetId);
         
         // Make a Record that has enough data to show HTML page on SAMS, e.g., also show name of phenopacket, and some other things (check with DS)
-        return ResponseEntity.ok(resultsList);
-/* 
-        Map<TermId, Set<TermId>> maxoToHpoTermIdMap = customRefiner.getMaxoToHpoTermIdMap(hpoTermCounts);
-
-        int limit = Math.min(orderedDiagnoses.size(), nDiseases);
-        List<DifferentialDiagnosis> initialDiagnoses = orderedDiagnoses.subList(0, limit);
-        Set<TermId> initialDiagnosesIds = initialDiagnoses.stream()
-                .map(DifferentialDiagnosis::diseaseId)
-                .collect(Collectors.toCollection(LinkedHashSet::new));
-
-        RankMaxo rankMaxo = customRefiner.getRankMaxo(
-                differentialDiagnoses,
-                orderedDiagnoses,
-                phenomizer,
-                maxoToHpoTermIdMap,
-                hpoTermCounts);
-
-        TermId targetDiseaseId = TermId.of(targetDisease);
-        List<RankedMaxoResultSingleDisease> resultsList = customRefiner.runSingleDisease(ppktData, targetDiseaseId, initialDiagnosesIds, rankMaxo, nThreads);
-
-        // 4. Wrap up the core computation metadata object and return it as JSON
-        MdMetadataSingleDisease mdMetadata = new MdMetadataSingleDisease(
-                ppktData.sampleId(),
-                nDiseases,
-                nRepetitions,
-                ppktData.observed(),
-                ppktData.excluded(),
-                resultsList);
-
-        return ResponseEntity.ok(mdMetadata);
-*/
+        return ResponseEntity.ok(resultsList.stream()
+                .sorted(Comparator.comparingDouble(RankedMaxoResultSingleDisease::maxoScore).reversed())
+                .toList());
     }
 
 }
