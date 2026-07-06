@@ -47,8 +47,6 @@ public class MaxodiffController {
     private final static int MAX_THREADS_PER_SESSION = 4;
     private final int nThreads;
 
-    private static final Path UPLOAD_DIR = Paths.get(System.getProperty("user.home"), "maxodiff", "uploads");
-
     public MaxodiffController(
             UserSessionData sessionData,
             MdContext context,
@@ -239,11 +237,7 @@ public class MaxodiffController {
         Map<String, Object> result = new HashMap<>();
         try {
 
-            if (!Files.exists(UPLOAD_DIR)) {
-                Files.createDirectories(UPLOAD_DIR);
-            }
-
-            Path phenopacketPath = UPLOAD_DIR.resolve(Objects.requireNonNull(file.getOriginalFilename()));
+            Path phenopacketPath = Files.createTempFile("", file.getOriginalFilename());
             file.transferTo(phenopacketPath.toFile());
 
             String sampleId = "";
