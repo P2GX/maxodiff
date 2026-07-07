@@ -7,7 +7,7 @@
     <parent>
         <groupId>org.p2gx.maxodiff</groupId>
         <artifactId>maxodiff</artifactId>
-        <version>0.4.8</version>
+        <version>0.4.10</version>
     </parent>
 
     <artifactId>maxodiff-cli</artifactId>
@@ -16,11 +16,6 @@
         <dependency>
             <groupId>org.p2gx.maxodiff</groupId>
             <artifactId>maxodiff-core</artifactId>
-            <version>${project.version}</version>
-        </dependency>
-        <dependency>
-            <groupId>org.p2gx.maxodiff</groupId>
-            <artifactId>maxodiff-config</artifactId>
             <version>${project.version}</version>
         </dependency>
         <dependency>

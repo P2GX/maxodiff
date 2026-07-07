@@ -4,6 +4,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.databind.ObjectWriter;
 import org.p2gx.maxodiff.core.analysis.RankedMaxoResult;
+import org.p2gx.maxodiff.core.analysis.RankedMaxoResultSingleDisease;
 
 import java.io.File;
 import java.io.IOException;
@@ -12,7 +13,7 @@ import java.util.List;
 
 public class JsonWriter {
 
-    public static void writeToJsonFile(Path filePath, String results) throws IOException {
+    public static void writeModalitiesToJsonFile(Path filePath, List<RankedMaxoResultSingleDisease> results) throws IOException {
         ObjectMapper objectMapper = new ObjectMapper();
         ObjectWriter writer = objectMapper.writerWithDefaultPrettyPrinter();
         writer.writeValue(new File(filePath.toString()), results);
