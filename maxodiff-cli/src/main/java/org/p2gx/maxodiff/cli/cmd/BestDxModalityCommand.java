@@ -6,6 +6,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 
+import org.monarchinitiative.phenol.base.PhenolException;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 import org.p2gx.maxodiff.core.MaxodiffAnalysisRunner;
 import org.p2gx.maxodiff.core.analysis.HpoFrequency;
@@ -92,6 +93,13 @@ public class BestDxModalityCommand extends BaseCommand {
                 maxoDiffRefiner,
                 allHpoFrequencies);
         TermId targetTermId = TermId.of(targetDiseaseId);
+        String prefix = targetTermId.getPrefix();
+        if (!(prefix.equals("OMIM")
+                || prefix.equals("ORPHA")
+                || prefix.equals("DECIPHER"))) {
+            throw new PhenolException("TermId Prefix " + prefix + " is not valid.");
+        }
+
         List<RankedMaxoResultSingleDisease> resultsList = runner.analyzeSampleSingleDisease(phenopacketData,
                                                                                             targetTermId);
        
