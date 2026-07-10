@@ -25,7 +25,7 @@ To run the web interface, follow these steps:
 
 - Select a phenopacket using the Sample Input box (on the top)
 - Set the output to **HTML** or **JSON** as desired
-- Click the **RUn differential diagnosis calculation** button
+- Click the **Run differential diagnosis calculation** button
 - You should then see a progress bar. 
 
 
