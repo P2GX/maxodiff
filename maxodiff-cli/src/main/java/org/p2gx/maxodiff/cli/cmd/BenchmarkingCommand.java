@@ -22,6 +22,8 @@ import java.nio.file.Path;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.ForkJoinPool;
 import java.util.stream.IntStream;
 
@@ -56,6 +58,7 @@ public class BenchmarkingCommand extends DDxCommand {
     private DDxEngine phenomizer;
     private MdContext context;
     private List<HpoFrequency> hpoFrequencies;
+    private ExecutorService executorService;
 
     @Override
     public Integer execute() throws Exception {
@@ -126,13 +129,13 @@ public class BenchmarkingCommand extends DDxCommand {
         List<BenchmarkResult> resultList = new ArrayList<>();
         try {
             PhenopacketData ppktData = PhenopacketData.readPhenopacketData(phenopacketPath);
-            BiometadataService biometadataService = context.biometadataService();
+            this.executorService = Executors.newFixedThreadPool(nThreads);
             BaseBenchmarker benchmarker = new BaseBenchmarker(ppktData,
                     context,
                     this.phenomizer,
                     hpoFrequencies);
             String ppktId = benchmarker.getSample().sampleId();
-            List<RankedMaxoResult> initialResults = benchmarker.standardRun(nThreads);
+            List<RankedMaxoResult> initialResults = benchmarker.standardRun(nThreads, executorService);
             TermId topMaxo = initialResults.getFirst().maxoTerm().tid();
             List<Double> topRandomScores = Collections.synchronizedList(new ArrayList<>());
             int parallelism = 8;
@@ -140,7 +143,7 @@ public class BenchmarkingCommand extends DDxCommand {
                 customThreadPool.submit(() ->
                         IntStream.range(0, 50).parallel().forEach(i -> {
                             try {
-                                List<RankedMaxoResult> randomizedResults = benchmarker.shuffledRandomizer(parallelism);
+                                List<RankedMaxoResult> randomizedResults = benchmarker.shuffledRandomizer(parallelism, executorService);
 
                                 List<RankedMaxoResult> topResultRandomList = randomizedResults.stream()
                                         .filter(mr -> mr.maxoTerm().tid().equals(topMaxo))

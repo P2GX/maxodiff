@@ -65,7 +65,8 @@ public class RankMaxo {
     public List<RankedMaxoResult> rankMaxoTerms(PhenopacketData ppkt,
                                                 Set<TermId> diseaseIds,
                                                 MdContext context,
-                                                int nThreads) throws Exception {
+                                                int nThreads,
+                                                ExecutorService sharedExecutorService) throws Exception {
 
         int nRepetitions = context.params().nRepetitions();
         BiometadataService biometadataService = context.biometadataService();
@@ -75,7 +76,7 @@ public class RankMaxo {
 //        Map<TermId, Set<TermId>> fullMaxoToHpoTermIdMap = MaxoHpoTermIdMaps.getMaxoToHpoTermIdMap(context.resources().maxoAnnotsMap());
 
         LOGGER.info("Making ExecutorService using " + nThreads + " threads.");
-        ExecutorService executor = Executors.newFixedThreadPool(nThreads);
+//        ExecutorService executor = Executors.newFixedThreadPool(nThreads);
         AtomicInteger completedTasks = new AtomicInteger(0);
         List<Callable<RankedMaxoResult>> tasks = new ArrayList<>();
         int maxoIdx = 0;
@@ -113,7 +114,7 @@ public class RankMaxo {
             maxoIdx++;
         }
 
-        List<Future<RankedMaxoResult>> futures = executor.invokeAll(tasks);
+        List<Future<RankedMaxoResult>> futures = sharedExecutorService.invokeAll(tasks);
 
         List<RankedMaxoResult> results = new ArrayList<>();
         for (Future<RankedMaxoResult> future : futures) {
@@ -123,7 +124,7 @@ public class RankMaxo {
                 LOGGER.error(e.getMessage());
             }
         }
-        executor.shutdown();
+        sharedExecutorService.shutdown();
 
         return results.stream()
                 .sorted(Comparator.comparing(RankedMaxoResult :: maxoScore).reversed())
@@ -131,17 +132,17 @@ public class RankMaxo {
     }
 
     public List<RankedMaxoResultSingleDisease> getDiseaseBestMaxoTerms(PhenopacketData ppkt,
-                                                                      TermId targetDiseaseId,
-                                                                      Set<TermId> diseaseIds,
-                                                                      MdContext context,
-                                                                       int nThreads) throws InterruptedException {
+                                                                       TermId targetDiseaseId,
+                                                                       Set<TermId> diseaseIds,
+                                                                       MdContext context,
+                                                                       ExecutorService sharedExecutorService) throws InterruptedException {
 
         int nRepetitions = context.params().nRepetitions();
         BiometadataService biometadataService = context.biometadataService();
         List<TermId> ppktMaxoIds = ppkt.maxoProcedureIds();
         Map<TermId, Set<TermId>> fullMaxoToHpoTermIdMap = maxoHpoTermProbabilities.getMaxoToHpoTermIdMap();
 
-        ExecutorService executor = Executors.newFixedThreadPool(nThreads);
+//        ExecutorService executor = Executors.newFixedThreadPool(nThreads);
         AtomicInteger completedTasks = new AtomicInteger(0);
         List<Callable<RankedMaxoResultSingleDisease>> tasks = new ArrayList<>();
         int maxoIdx = 0;
@@ -179,7 +180,7 @@ public class RankMaxo {
             maxoIdx++;
         }
 
-        List<Future<RankedMaxoResultSingleDisease>> futures = executor.invokeAll(tasks);
+        List<Future<RankedMaxoResultSingleDisease>> futures = sharedExecutorService.invokeAll(tasks);
 
         List<RankedMaxoResultSingleDisease> results = new ArrayList<>();
         for (Future<RankedMaxoResultSingleDisease> future : futures) {
@@ -189,7 +190,7 @@ public class RankMaxo {
                 LOGGER.error(e.getMessage());
             }
         }
-        executor.shutdown();
+        sharedExecutorService.shutdown();
 
 
         return results.stream()
