@@ -13,6 +13,7 @@ import org.monarchinitiative.phenol.ontology.data.MinimalOntology;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 import org.monarchinitiative.phenol.ontology.similarity.HpoResnikSimilarityPrecompute;
 import org.monarchinitiative.phenol.ontology.similarity.TermPair;
+import org.p2gx.maxodiff.core.mica.ResnikComputation;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import picocli.CommandLine;
@@ -57,7 +58,7 @@ public class PrecomputeResnikMapCommand implements Callable<Integer> {
   /** By default, put the file in the data directory */
   @CommandLine.Option(names = {"--output"},
     description = "Where to write the term pair similarity table (default: ${DEFAULT-VALUE})")
-  public Path output = Path.of("data", "term-pair-similarity.csv.gz");
+  public Path output = Path.of("data", "term-pair-similarity.ser");
 
   @Override
   public Integer call() throws Exception {
@@ -80,6 +81,7 @@ public class PrecomputeResnikMapCommand implements Callable<Integer> {
     HpoDiseaseLoader loader = HpoDiseaseLoaders.defaultLoader(hpo, options);
     HpoDiseases diseases = loader.load(hpoaPath);
 
+    /* 
     LOGGER.info("Calculating information content using {} diseases", diseases.size());
     Map<TermId, Double> termToIc = calculateTermToIc(hpo, diseases);
 
@@ -96,7 +98,8 @@ public class PrecomputeResnikMapCommand implements Callable<Integer> {
     String hpoVersion = hpo.version().orElse("N/A");
     String hpoaVersion = diseases.version().orElse("N/A");
     writeTermPairMap(termPairResnikSimilarityMap, date, hpoVersion, hpoaVersion);
-
+*/
+    ResnikComputation.precomputeAndOutput(hpo, diseases, assumeAnnotated, output);
     LOGGER.info("Done!");
     return 0;
   }
