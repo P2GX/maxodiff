@@ -22,6 +22,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.BufferedReader;
+import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -88,7 +89,7 @@ public class MdContextBuilder {
                                                 MinimalOntology hpo,
                                                 HpoDiseases hpoDiseases,
                                                 Map<SimpleTerm, Set<SimpleTerm>> maxoAnnotsMap,
-                                                boolean buildIcData) throws IOException {
+                                                boolean buildIcData) throws IOException, ClassNotFoundException {
 
         Map<SimpleTerm, Set<SimpleTerm>> maxoToHpoMap = new HashMap<>();
         for (Map.Entry<SimpleTerm, Set<SimpleTerm>> e : maxoAnnotsMap.entrySet()) {
@@ -110,9 +111,9 @@ public class MdContextBuilder {
         IcMicaData icData = null;
         Map<TermId, Double> termToIcMap = null;
         if (buildIcData) {
-            Path termPairSimFile = Objects.requireNonNull(maxoDataPath.resolve("term-pair-similarity.csv.gz"),
-                    "Did not find term-pair-similarity.csv.gz in data directory");
-            icData = IcMicaDictLoader.loadIcMicaDict(termPairSimFile);
+            Path termPairSimFile = Objects.requireNonNull(maxoDataPath.resolve("term-pair-similarity.ser"),
+                    "Did not find term-pair-similarity.ser in data directory");
+            icData = IcMicaDictLoader.loadIcMicaDictSer(termPairSimFile);
             boolean assumeAnnotated = true;
             MicaCalculator micaCalculator = new MicaCalculator(hpo, assumeAnnotated);
             termToIcMap = micaCalculator.calculateMica(hpoDiseases).termToIc();

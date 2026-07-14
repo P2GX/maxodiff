@@ -61,10 +61,10 @@ The file will have been generated automatically by the download command. If you 
 java -jar maxodiff-cli/target/maxodiff-cli.jar precompute-resnik
 ```
 On a modern commodity laptop, this command will require a few minutes to complete.
-By default, the output file will be created here. Currently, it occupies 117 Mb.
+By default, the serialized output file will be created here. Currently, it occupies 100 Mb.
 
 ```shell
-data/term-pair-similarity.csv.gz
+data/term-pair-similarity.ser
 ```
 
 

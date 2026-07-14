@@ -10,8 +10,10 @@ import java.io.OutputStream;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.time.LocalDate;
+import java.util.Arrays;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.zip.GZIPInputStream;
 import java.util.zip.GZIPOutputStream;
 
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
@@ -94,7 +96,7 @@ public class ResnikComputation {
         System.err.println("Loading serialized binary block from disk...");
         long startTime = System.currentTimeMillis();
         try (InputStream fis = Files.newInputStream(input);
-                ObjectInputStream ois = new ObjectInputStream(new BufferedInputStream(fis))) {
+                ObjectInputStream ois = new ObjectInputStream(new BufferedInputStream(new GZIPInputStream(fis)))) {
             flatData = (ResnikFlatData) ois.readObject();
         }
 
