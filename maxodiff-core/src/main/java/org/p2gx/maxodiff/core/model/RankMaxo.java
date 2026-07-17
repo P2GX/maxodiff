@@ -80,7 +80,8 @@ public class RankMaxo {
         List<Callable<RankedMaxoResult>> tasks = new ArrayList<>();
         int maxoIdx = 0;
         ProgessBar pb = new ProgessBar(maxoIdx, maxoToHpoTermIdMap.size());
-        for (TermId maxoId : maxoToHpoTermIdMap.keySet()) {
+        Set<TermId> maxoIds = maxoToHpoTermIdMap.keySet();
+        for (TermId maxoId : maxoIds) {
             LOGGER.debug("MAxO Id = " + maxoId);
             if (ppktMaxoIds.contains(maxoId)) {
                 LOGGER.debug("Sample {}  already contains {}.", ppkt.sampleId(), maxoId);
@@ -146,7 +147,8 @@ public class RankMaxo {
         List<Callable<RankedMaxoResultSingleDisease>> tasks = new ArrayList<>();
         int maxoIdx = 0;
         ProgessBar pb = new ProgessBar(maxoIdx, maxoToHpoTermIdMap.size());
-        for (TermId maxoId : maxoToHpoTermIdMap.keySet()) {
+        Set<TermId> maxoIds = maxoToHpoTermIdMap.keySet();
+        for (TermId maxoId : maxoIds) {
             if (ppktMaxoIds.contains(maxoId)) {
                 LOGGER.debug("Sample {}  already contains {}.", ppkt.sampleId(), maxoId);
                 continue;
