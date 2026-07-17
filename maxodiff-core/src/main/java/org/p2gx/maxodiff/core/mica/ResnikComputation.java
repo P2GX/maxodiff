@@ -19,7 +19,7 @@ import java.util.zip.GZIPOutputStream;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
 import org.monarchinitiative.phenol.ontology.data.MinimalOntology;
 import org.monarchinitiative.phenol.ontology.data.TermId;
-import org.monarchinitiative.phenol.ontology.similarity.TermPair;
+import org.p2gx.maxodiff.core.model.TermPair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -59,8 +59,8 @@ public class ResnikComputation {
       
         ProgressBar progress = new ProgressBar("Serializing", effectiveSize);
         for (Map.Entry<TermPair, Double> e : map.entrySet()) {
-            termsA[i] = e.getKey().getTidA().getValue();
-            termsB[i] = e.getKey().getTidB().getValue();
+            termsA[i] = e.getKey().tidA().getValue();
+            termsB[i] = e.getKey().tidB().getValue();
             icMicas[i] = e.getValue();
 
             if (i % progressStep == 0 || i == size - 1) {
@@ -85,7 +85,7 @@ public class ResnikComputation {
         return micaCalculator.calculateMica(diseases).termToIc();
     }
 
-    private static Map<TermPair, Double> assignMicaToTermPairs(MinimalOntology hpo, Map<TermId, Double> termToIc) {
+    public static Map<TermPair, Double> assignMicaToTermPairs(MinimalOntology hpo, Map<TermId, Double> termToIc) {
         return HpoResnikSimilarityPrecomputer.precomputeSimilaritiesForTermPairs(hpo, termToIc);
     }
 

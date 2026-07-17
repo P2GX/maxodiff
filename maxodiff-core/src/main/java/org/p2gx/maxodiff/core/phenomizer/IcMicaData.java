@@ -1,7 +1,7 @@
 package org.p2gx.maxodiff.core.phenomizer;
 
 import org.monarchinitiative.phenol.ontology.data.TermId;
-import org.monarchinitiative.phenol.ontology.similarity.TermPair;
+import org.p2gx.maxodiff.core.model.TermPair;
 
 import java.util.List;
 import java.util.Map;

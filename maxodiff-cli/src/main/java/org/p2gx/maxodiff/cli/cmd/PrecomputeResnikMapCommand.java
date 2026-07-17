@@ -11,9 +11,8 @@ import org.monarchinitiative.phenol.cli.demo.MicaCalculator;
 import org.monarchinitiative.phenol.io.MinimalOntologyLoader;
 import org.monarchinitiative.phenol.ontology.data.MinimalOntology;
 import org.monarchinitiative.phenol.ontology.data.TermId;
-import org.monarchinitiative.phenol.ontology.similarity.HpoResnikSimilarityPrecompute;
-import org.monarchinitiative.phenol.ontology.similarity.TermPair;
 import org.p2gx.maxodiff.core.mica.ResnikComputation;
+import org.p2gx.maxodiff.core.model.TermPair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import picocli.CommandLine;
@@ -81,24 +80,6 @@ public class PrecomputeResnikMapCommand implements Callable<Integer> {
     HpoDiseaseLoader loader = HpoDiseaseLoaders.defaultLoader(hpo, options);
     HpoDiseases diseases = loader.load(hpoaPath);
 
-    /* 
-    LOGGER.info("Calculating information content using {} diseases", diseases.size());
-    Map<TermId, Double> termToIc = calculateTermToIc(hpo, diseases);
-
-    LOGGER.info("Assigning MICA information content to term pairs");
-    Map<TermPair, Double> termPairResnikSimilarityMap = assignMicaToTermPairs(hpo, termToIc);
-    //Optionally write Term:IC Map for benchmarking
-//    LocalDate date0 = LocalDate.now();
-//    String hpoVersion0 = hpo.version().orElse("N/A");
-//    String hpoaVersion0 = diseases.version().orElse("N/A");
-//    writeTermToIc(termToIc, date0, hpoVersion0, hpoaVersion0);
-
-    LOGGER.info("Writing term pair similarity to {}", output.toAbsolutePath());
-    LocalDate date = LocalDate.now();
-    String hpoVersion = hpo.version().orElse("N/A");
-    String hpoaVersion = diseases.version().orElse("N/A");
-    writeTermPairMap(termPairResnikSimilarityMap, date, hpoVersion, hpoaVersion);
-*/
     ResnikComputation.precomputeAndOutput(hpo, diseases, assumeAnnotated, output);
     LOGGER.info("Done!");
     return 0;
@@ -110,7 +91,7 @@ public class PrecomputeResnikMapCommand implements Callable<Integer> {
   }
 
   private static Map<TermPair, Double> assignMicaToTermPairs(MinimalOntology hpo, Map<TermId, Double> termToIc) {
-    return HpoResnikSimilarityPrecompute.precomputeSimilaritiesForTermPairs(hpo, termToIc);
+    return ResnikComputation.assignMicaToTermPairs(hpo, termToIc);
   }
 
   private void writeTermPairMap(Map<TermPair, Double> termPairResnikSimilarityMap,
@@ -132,8 +113,8 @@ public class PrecomputeResnikMapCommand implements Callable<Integer> {
       // Content
       for (Map.Entry<TermPair, Double> e : termPairResnikSimilarityMap.entrySet()) {
         TermPair pair = e.getKey();
-        printer.print(pair.getTidA().getValue());
-        printer.print(pair.getTidB().getValue());
+        printer.print(pair.tidA().getValue());
+        printer.print(pair.tidB().getValue());
         printer.print(e.getValue());
         printer.println();
       }
