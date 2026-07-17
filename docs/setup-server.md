@@ -63,7 +63,6 @@ You should now see `maxodiff-html-app` in the list of Containers in the Docker G
 
 
 - The docker process should now be visible at http://localhost:8080/maxodiff.
-- To test the single-disease modality tool, use 
 
 
 
@@ -119,22 +118,22 @@ docker run -it -p 8080:8080 \
 ### Testing with Postman
 
 
-1. maxodiff (standard algorithm)
+#### maxodiff (standard algorithm)
 
 - To test the container, we can use [postman](https://www.postman.com/).        
-- Use Postman Desktop app (Note: do not use the Postman Agent app, it is not suited for this)
-- Create a new request, set it to POST at http://localhost:8080/api/analyze, 
-- Set the BODY to JSON and paste the JSON file for a phenopacket
-- Click on Send
+- Use Postman Desktop app (Note: do not use the Postman Agent app, it is not suited for this).
+- Create a new request, set it to POST at http://localhost:8080/api/analyze. 
+- Set the BODY to JSON and paste the JSON file for a phenopacket.
+- Click on Send.
 - The calculations will take 10 seconds, and then JSON code will be returned.
 
 
-2. maxodiff single-disease
+#### maxodiff single-disease
 
-- enter POST
-- use the API http://localhost:8080/api/modality?targetDiseaseId=OMIM:157700. (substitute any OMIM id)
-- as body, paste in a complete phenopacket
-- click on SEND
+- Enter POST.
+- Use the API http://localhost:8080/api/modality?targetDiseaseId=OMIM:157700. (substitute any OMIM id).
+- As body, paste in a complete phenopacket.
+- Click on SEND.
 - This will return JSON like this:
 
 ```json
