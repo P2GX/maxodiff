@@ -4,8 +4,8 @@ import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 import org.monarchinitiative.phenol.ontology.data.TermId;
-import org.monarchinitiative.phenol.ontology.similarity.TermPair;
 import org.p2gx.maxodiff.core.mica.ResnikComputation;
+import org.p2gx.maxodiff.core.model.TermPair;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;

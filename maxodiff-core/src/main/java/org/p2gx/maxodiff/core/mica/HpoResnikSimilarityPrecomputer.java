@@ -3,7 +3,7 @@ package org.p2gx.maxodiff.core.mica;
 
 import org.monarchinitiative.phenol.ontology.data.MinimalOntology;
 import org.monarchinitiative.phenol.ontology.data.TermId;
-import org.monarchinitiative.phenol.ontology.similarity.TermPair;
+import org.p2gx.maxodiff.core.model.TermPair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
