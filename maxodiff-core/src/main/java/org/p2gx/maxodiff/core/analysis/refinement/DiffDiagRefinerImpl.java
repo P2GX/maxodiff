@@ -141,7 +141,7 @@ public class DiffDiagRefinerImpl implements DiffDiagRefiner {
                 }
             }
         }
-        //TODO: removing ancestors possibly incorrect for excluded HPO features
+
         for (Map.Entry<TermId, Set<TermId>> e : maxoToHpoTermIdMap.entrySet()) {
             // Remove HPO ancestor term Ids from list
             TermId mId = e.getKey();
