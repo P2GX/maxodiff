@@ -5,6 +5,7 @@ import org.apache.commons.csv.CSVPrinter;
 import org.p2gx.maxodiff.core.analysis.*;
 import org.p2gx.maxodiff.core.io.MdContext;
 import org.p2gx.maxodiff.core.io.impl.MdContextBuilder;
+import org.p2gx.maxodiff.cli.util.IoUtil;
 import org.p2gx.maxodiff.core.MaxoDiffAnalysisResultRow;
 import org.p2gx.maxodiff.core.MaxodiffAnalysisRunner;
 import org.p2gx.maxodiff.core.analysis.refinement.DiffDiagRefiner;
@@ -26,61 +27,45 @@ import java.nio.file.Path;
 import java.util.List;
 import java.util.zip.GZIPOutputStream;
 
-
 /**
  * This command performs the maxodiff algorithm for a single phenopacket.
  */
-@CommandLine.Command(
-        name = "analyze",
-        aliases = {"A"},
-        mixinStandardHelpOptions = true,
-        description = "Analyze one Phenopacket")
+@CommandLine.Command(name = "analyze", aliases = {
+        "A" }, mixinStandardHelpOptions = true, description = "Analyze one Phenopacket")
 public class DDxCommand extends BaseCommand {
     private static final Logger LOGGER = LoggerFactory.getLogger(DDxCommand.class);
 
-    @CommandLine.Option(
-            names = {"-m", "--maxoData"},
-            description = "Path to maxo data directory (default: ${DEFAULT-VALUE}).")
+    @CommandLine.Option(names = { "-m",
+            "--maxoData" }, description = "Path to maxo data directory (default: ${DEFAULT-VALUE}).")
     protected Path maxoDataPath = Path.of("data");
 
-    @CommandLine.Option(
-            names = {"-p", "--phenopacket"},
-            required = true,
-            description = "Path to phenopacket JSON file.")
+    @CommandLine.Option(names = { "-p",
+            "--phenopacket" }, required = true, description = "Path to phenopacket JSON file.")
     protected Path phenopacketPath;
 
-    @CommandLine.Option(names = {"-O", "--outputDirectory"},
-            description = "Where to write the results files (default: ${DEFAULT-VALUE}).")
+    @CommandLine.Option(names = { "-O",
+            "--outputDirectory" }, description = "Where to write the results files (default: ${DEFAULT-VALUE}).")
     protected Path outputDir = Path.of(".");
 
-    @CommandLine.Option(names = {"-f", "--outFilename"},
-            description = "Specific results output file name (default: ${DEFAULT-VALUE}).")
+    @CommandLine.Option(names = { "-f",
+            "--outFilename" }, description = "Specific results output file name (default: ${DEFAULT-VALUE}).")
     protected String outputFilenameArg = "";
 
-    @CommandLine.Option(names = {"-j", "--json"},
-        description = "output results to JSON file")
+    @CommandLine.Option(names = { "-j", "--json" }, description = "output results to JSON file")
     private boolean outputJson = false;
 
-
-    @CommandLine.Option(names = {"--csv"},
-            description = "Output results as CSV.")
-    private boolean writeCsv = false;
-
-    @CommandLine.Option(names = {"--diseaseProbModel"},
-            paramLabel = "{ranked}",
-            description = "Disease Probability Model to use for Rank MAxO algorithm (\"ranked\", \"softmax\", \"expDecay\". Default: ${DEFAULT-VALUE}).")
+    @CommandLine.Option(names = {
+            "--diseaseProbModel" }, paramLabel = "{ranked}", description = "Disease Probability Model to use for Rank MAxO algorithm (\"ranked\", \"softmax\", \"expDecay\". Default: ${DEFAULT-VALUE}).")
     protected String diseaseProbModel = "ranked";
 
-    @CommandLine.Option(names = {"-nr", "--nRepetitions"},
-            description = "Number of repetitions for running differential diagnosis.")
+    @CommandLine.Option(names = { "-nr",
+            "--nRepetitions" }, description = "Number of repetitions for running differential diagnosis.")
     protected Integer nRepetitions = 100;
 
-    @CommandLine.Option(names = {"-sd", "--singleDisease"},
-            description = "Single Disease Id for analysis.")
+    @CommandLine.Option(names = { "-sd", "--singleDisease" }, description = "Single Disease Id for analysis.")
     protected String singleDisease = null;
 
-    @CommandLine.Option(names = {"-t", "--nThreads"},
-            description = "Number of threads to use for analysis.")
+    @CommandLine.Option(names = { "-t", "--nThreads" }, description = "Number of threads to use for analysis.")
     protected int nThreads = Runtime.getRuntime().availableProcessors() - 1;
 
     @Override
@@ -115,87 +100,55 @@ public class DDxCommand extends BaseCommand {
                     engine,
                     maxoDiffRefiner,
                     allHpoFrequencies);
-            if (writeCsv) {
-                MaxoDiffAnalysisResultRow row = runner.batchAnalysis(phenopacketData);
-                writeCsvResults(phenopacketData.sampleId(), row);
-            } else {
-                List<RankedMaxoResult> resultsList = runner.analyzeSample(phenopacketData);
-                if (resultsList.isEmpty()) {
-                    // should never happen...
-                    System.err.println("No results found for phenopacket: " + phenopacketPath);
-                    return 1;
-                }
-                LOGGER.debug("Analysis complete.");
-                // Take the MaXo term that has the highest score
-                RankedMaxoResult topResult = resultsList.getFirst();
-                String maxScoreMaxoTerm = topResult.maxoTerm().toString();
-                double maxScoreValue = topResult.maxoScore();
-                System.out.println("Max Score: " + maxScoreMaxoTerm + " = " + maxScoreValue);
-
-                String jsonFilename = String.join("_", phenopacketData.sampleId(),
-                        nDiseases.toString(), nRepetitions.toString(), "maxodiff_results.json");
-                if (!outputFilenameArg.isEmpty()) {
-                    jsonFilename = outputFilenameArg + ".json";
-                }
-                if (outputJson) {
-                    LOGGER.debug("Creating JSON file.");
-                    Path jsonPath = Path.of(String.join(File.separator, outputDir.toString(), jsonFilename));
-                    int zeroIdx = resultsList.stream()
-                            .filter(result -> result.maxoScore() == 0.)
-                            .findFirst().map(resultsList::indexOf).orElse(resultsList.size());
-                    int nDisplayed = Math.min(resultsList.size(), zeroIdx);
-                    JsonWriter.writeToJsonFile(jsonPath, resultsList.subList(0, nDisplayed));
-                    LOGGER.debug("Wrote JSON file to {}.", jsonPath);
-                    return 0;
-                }
-
-                LOGGER.debug("Writing HTML file.");
-                MdMetadata mdMetadata = new MdMetadata(phenopacketData.sampleId(),
-                        this.nDiseases,
-                        this.nRepetitions,
-                        phenopacketData.observed(),
-                        phenopacketData.excluded(),
-                        resultsList);
-
-                HTMLFrequencyMap htmlFrequencyMap = new HTMLFrequencyMap(context);
-                String headerHtml = TleafResults.writeHTMLResults(mdMetadata, resultsList, htmlFrequencyMap);
-                String fileName = "mdResults.html";
-                if (!outputFilenameArg.isEmpty()) {
-                    fileName = outputFilenameArg + ".html";
-                }
-                Path maxodiffResultsHTMLPath = Path.of(String.join(File.separator, outputDir.toString(), fileName));
-                Files.writeString(maxodiffResultsHTMLPath, headerHtml);
-                LOGGER.info("Wrote HTML file to {}", maxodiffResultsHTMLPath);
+            List<RankedMaxoResult> resultsList = runner.analyzeSample(phenopacketData);
+            if (resultsList.isEmpty()) {
+                // should never happen...
+                System.err.println("No results found for phenopacket: " + phenopacketPath);
+                return 1;
             }
+            LOGGER.debug("Analysis complete.");
+            // Take the MaXo term that has the highest score
+            RankedMaxoResult topResult = resultsList.getFirst();
+            String maxScoreMaxoTerm = topResult.maxoTerm().toString();
+            double maxScoreValue = topResult.maxoScore();
+            System.out.println("Max Score: " + maxScoreMaxoTerm + " = " + maxScoreValue);
+
+            if (outputJson) {
+                Path jsonPath = IoUtil.defaultPath(phenopacketData.sampleId(), nDiseases, nRepetitions, "json");
+                if (!outputFilenameArg.isEmpty()) {
+                    jsonPath = IoUtil.resolveOutputFile(outputFilenameArg, outputDir, "json");
+                }
+                LOGGER.debug("Creating JSON file: {}.", jsonPath);
+                int zeroIdx = resultsList.stream()
+                        .filter(result -> result.maxoScore() == 0.)
+                        .findFirst().map(resultsList::indexOf).orElse(resultsList.size());
+                int nDisplayed = Math.min(resultsList.size(), zeroIdx);
+                JsonWriter.writeToJsonFile(jsonPath, resultsList.subList(0, nDisplayed));
+                LOGGER.debug("Wrote JSON file to {}.", jsonPath);
+                return 0;
+            }
+
+            LOGGER.debug("Writing HTML file.");
+            MdMetadata mdMetadata = new MdMetadata(phenopacketData.sampleId(),
+                    this.nDiseases,
+                    this.nRepetitions,
+                    phenopacketData.observed(),
+                    phenopacketData.excluded(),
+                    resultsList);
+
+            HTMLFrequencyMap htmlFrequencyMap = new HTMLFrequencyMap(context);
+            String headerHtml = TleafResults.writeHTMLResults(mdMetadata, resultsList, htmlFrequencyMap);
+            Path htmlPath = IoUtil.defaultPath(phenopacketData.sampleId(), nDiseases, nRepetitions, "html");
+            if (!outputFilenameArg.isEmpty()) {
+                htmlPath = IoUtil.resolveOutputFile(outputFilenameArg, outputDir, "json");
+            }
+            Files.writeString(htmlPath, headerHtml);
+            LOGGER.info("Wrote HTML file to {}", htmlPath);
+
         } catch (Exception ex) {
             LOGGER.error(ex.getMessage(), ex);
             return 1;
         }
-        return 0;
-    }
-
-
-    private int writeCsvResults(String phenopacketName, MaxoDiffAnalysisResultRow row)  {
-        String outputFilename = String.join("_", phenopacketName, "maxodiff", "results.csv");
-        if (!outputFilenameArg.isEmpty()) {
-            outputFilename = outputFilenameArg + ".csv";
-        }
-        if (!outputDir.toFile().isDirectory()) {
-            System.err.println("Output directory does not exist: '" + outputDir +
-                    "'. Create the directory and rerun this command.");
-            return 1;
-        }
-        Path maxodiffResultsFilePath = Path.of(String.join(File.separator, outputDir.toString(), outputFilename));
-        try (BufferedWriter writer = openOutputFileWriter(maxodiffResultsFilePath);
-             CSVPrinter printer = CSVFormat.DEFAULT.print(writer)) {
-            printer.printRecord(MaxoDiffAnalysisResultRow.headerFields());
-            printer.printRecord(row.getFields());
-        } catch (IOException e) {
-            LOGGER.error(e.getMessage(), e);
-            return 1;
-        }
-
-        System.out.println("Wrote output to " + outputFilename);
         return 0;
     }
 
@@ -204,6 +157,5 @@ public class DDxCommand extends BaseCommand {
                 ? new BufferedWriter(new OutputStreamWriter(new GZIPOutputStream(Files.newOutputStream(outputPath))))
                 : Files.newBufferedWriter(outputPath);
     }
-
 
 }
