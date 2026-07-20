@@ -146,8 +146,7 @@ public class RankMaxo {
         List<Callable<RankedMaxoResultSingleDisease>> tasks = new ArrayList<>();
         int maxoIdx = 0;
         ProgessBar pb = new ProgessBar(maxoIdx, maxoToHpoTermIdMap.size());
-        Set<TermId> maxoIds = maxoToHpoTermIdMap.keySet();
-        for (TermId maxoId : maxoIds) {
+        for (TermId maxoId : maxoToHpoTermIdMap.keySet()) {
             if (ppktMaxoIds.contains(maxoId)) {
                 LOGGER.debug("Sample {}  already contains {}.", ppkt.sampleId(), maxoId);
                 continue;
