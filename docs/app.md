@@ -109,7 +109,7 @@ java -jar maxodiff-cli/target/maxodiff-cli.jar analyze \
 If you want to call the output file `custom`, use the `-f` argument
 ```bash
 java -jar maxodiff-cli/target/maxodiff-cli.jar analyze \
- -p <path to phenopacket file> -f <custom> 
+ -p <path to phenopacket file> -O <path to output directory> -f <custom> 
 ```
 
 The app will append the correct suffix (`.html` or - if the json output option is chosen - `.json`).

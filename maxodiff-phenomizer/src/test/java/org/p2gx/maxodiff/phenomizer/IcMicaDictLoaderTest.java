@@ -2,7 +2,7 @@ package org.p2gx.maxodiff.phenomizer;
 
 import org.junit.jupiter.api.Test;
 import org.monarchinitiative.phenol.ontology.data.TermId;
-import org.monarchinitiative.phenol.ontology.similarity.TermPair;
+import org.p2gx.maxodiff.core.model.TermPair;
 import org.p2gx.maxodiff.core.phenomizer.IcMicaData;
 import org.p2gx.maxodiff.core.phenomizer.IcMicaDictLoader;
 

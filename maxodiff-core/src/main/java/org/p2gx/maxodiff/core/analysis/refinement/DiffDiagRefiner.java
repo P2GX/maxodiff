@@ -11,6 +11,7 @@ import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDisease;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 
 import java.util.*;
+import java.util.concurrent.ExecutorService;
 
 /**
  * Differential diagnosis results come from some source.
@@ -23,13 +24,14 @@ public interface DiffDiagRefiner {
     List<RankedMaxoResult> run(PhenopacketData sample,
                                Set<TermId> initialDiagnosesIds,
                                RankMaxo rankMaxo,
-                               int nThreads) throws Exception;
+                               int nThreads,
+                               ExecutorService sharedExecutorService) throws Exception;
 
     List<RankedMaxoResultSingleDisease> runSingleDisease(PhenopacketData sample,
                                                          TermId targetDiseaseId,
                                                          Set<TermId> initialDiagnosesIds,
                                                          RankMaxo rankMaxo,
-                                                         int nThreads) throws Exception;
+                                                         ExecutorService sharedExecutorService) throws Exception;
 
     List<DifferentialDiagnosis> getOrderedDiagnoses(Collection<DifferentialDiagnosis> originalDifferentialDiagnoses);
 

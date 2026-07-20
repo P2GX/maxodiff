@@ -4,7 +4,8 @@ import org.apache.commons.csv.CSVFormat;
 import org.apache.commons.csv.CSVParser;
 import org.apache.commons.csv.CSVRecord;
 import org.monarchinitiative.phenol.ontology.data.TermId;
-import org.monarchinitiative.phenol.ontology.similarity.TermPair;
+import org.p2gx.maxodiff.core.mica.ResnikComputation;
+import org.p2gx.maxodiff.core.model.TermPair;
 
 import java.io.*;
 import java.nio.charset.StandardCharsets;
@@ -129,6 +130,20 @@ public class IcMicaDictLoader {
                 if (percent == 100) System.out.println();
             }
         }
+    }
+
+    /**
+     * Load IC MICA dictionary from a serialized file.
+     *
+     * @param icFile term-pair similarity serialized IC file.
+     */
+    public static IcMicaData loadIcMicaDictSer(Path icFile) throws IOException, ClassNotFoundException {
+        IcMicaDictMetadata metadata = parseMetadata("");
+
+        Map<TermPair, Double> icMicaDict = ResnikComputation.loadSerializedResnik(icFile);
+
+        System.out.println("Finished loading serialized information content dictionary");
+        return new IcMicaData(icMicaDict, metadata);
     }
 
     /**

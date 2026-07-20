@@ -54,6 +54,7 @@ public class TleafResults {
 
         // Disease : MAxO HPO result box
         StringBuilder resultsString = new StringBuilder();
+        double maxMica = htmlFrequencyMap.maxMica();
         for (RankedMaxoResult result : results) {
             int idx = resultList.indexOf(result) + 1;
             LOGGER.debug("Make Disease:MAxO term result box " + results.indexOf(result) + " of " + results.size());
@@ -62,7 +63,8 @@ public class TleafResults {
                     idx,
                     mdMetadata.nDiseases(),
                     mdMetadata.nRepetitions(),
-                    htmlFrequencyMap
+                    htmlFrequencyMap,
+                    maxMica
             );
             context.setVariable("maxoData", maxoData);
             String mdHeatmap = templateEngine.process("mdHeatmap", context);

@@ -14,6 +14,8 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
 public class MaxodiffAnalysisRunner {
@@ -23,6 +25,7 @@ public class MaxodiffAnalysisRunner {
     private final DDxEngine engine;
     private final DiffDiagRefiner maxoDiffRefiner;
     private final List<HpoFrequency> hpoFrequencies;
+    private final ExecutorService sharedExecutorService;
 
     public MaxodiffAnalysisRunner(
             MdContext mdContext,
@@ -36,6 +39,7 @@ public class MaxodiffAnalysisRunner {
         this.engine = engine;
         this.maxoDiffRefiner = maxoDiffRefiner;
         this.hpoFrequencies = hpoFrequencies;
+        this.sharedExecutorService = Executors.newFixedThreadPool(nThreads);
     }
 
 
@@ -109,7 +113,8 @@ public class MaxodiffAnalysisRunner {
         return maxoDiffRefiner.run(sample,
                 initialNDiagnosesIds,
                 rankMaxo,
-                nThreads);
+                nThreads,
+                sharedExecutorService);
     }
 
     private List<RankedMaxoResultSingleDisease> getRefinementResultsSingleDisease(
@@ -133,7 +138,7 @@ public class MaxodiffAnalysisRunner {
                 targetDiseaseId,
                 initialNDiagnosesIds,
                 rankMaxo,
-                nThreads);
+                sharedExecutorService);
     }
 
 

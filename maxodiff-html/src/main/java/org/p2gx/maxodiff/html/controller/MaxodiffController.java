@@ -12,13 +12,13 @@ import org.p2gx.maxodiff.core.io.impl.MdContextBuilder;
 import org.p2gx.maxodiff.core.model.DifferentialDiagnosis;
 import org.p2gx.maxodiff.core.model.PhenopacketData;
 import org.p2gx.maxodiff.core.model.RankMaxo;
+import org.p2gx.maxodiff.core.model.TermPair;
 import org.p2gx.maxodiff.core.service.BiometadataService;
 import org.p2gx.maxodiff.html.results.tleaf.TleafResults;
 import org.p2gx.maxodiff.core.phenomizer.PhenomizerDDxEngine;
 import org.p2gx.maxodiff.core.phenomizer.ScoringMode;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDisease;
 import org.monarchinitiative.phenol.ontology.data.TermId;
-import org.monarchinitiative.phenol.ontology.similarity.TermPair;
 import org.p2gx.maxodiff.html.session.UserSessionData;
 import org.phenopackets.schema.v2.Phenopacket;
 import org.springframework.beans.factory.annotation.Value;
@@ -33,6 +33,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
 @Controller("/maxodiff")
@@ -46,16 +48,19 @@ public class MaxodiffController {
 
     private final static int MAX_THREADS_PER_SESSION = 4;
     private final int nThreads;
+    private final ExecutorService sharedExecutorService;
 
     public MaxodiffController(
             UserSessionData sessionData,
             MdContext context,
-            DiffDiagRefiner diffDiagRefiner) {
+            DiffDiagRefiner diffDiagRefiner,
+            ExecutorService sharedExecutorService) {
         this.sessionData = sessionData;
         this.mdContext = context;
         this.diffDiagRefiner = diffDiagRefiner;
         int available = Math.max(1, Runtime.getRuntime().availableProcessors() - 1);
         this.nThreads = Math.min(MAX_THREADS_PER_SESSION, available);
+        this.sharedExecutorService = sharedExecutorService;
     }
 
     @RequestMapping("/maxodiff")
@@ -146,7 +151,8 @@ public class MaxodiffController {
             List<RankedMaxoResult> resultsList = diffDiagRefiner.run(sample,
                     initialDiagnosesIds,
                     rankMaxo,
-                    nThreads
+                    nThreads,
+                    sharedExecutorService
             );
             int zeroIdx = resultsList.stream()
                     .filter(result -> result.maxoScore() == 0.)
@@ -325,7 +331,7 @@ public class MaxodiffController {
                 maxoToHpoTermIdMap,
                 hpoTermCounts);
 
-        List<RankedMaxoResult> resultsList = customRefiner.run(ppktData, initialDiagnosesIds, rankMaxo, nThreads);
+        List<RankedMaxoResult> resultsList = customRefiner.run(ppktData, initialDiagnosesIds, rankMaxo, nThreads, sharedExecutorService);
 
         // 4. Wrap up the core computation metadata object and return it as JSON
         MdMetadata mdMetadata = new MdMetadata(

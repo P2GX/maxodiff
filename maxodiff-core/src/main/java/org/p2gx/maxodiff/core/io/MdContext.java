@@ -5,7 +5,6 @@ import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDisease;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 import org.p2gx.maxodiff.core.analysis.HTMLFrequencyMap;
 import org.p2gx.maxodiff.core.analysis.HpoFrequency;
-import org.p2gx.maxodiff.core.analysis.SimpleTerm;
 import org.p2gx.maxodiff.core.analysis.refinement.DiffDiagRefiner;
 import org.p2gx.maxodiff.core.analysis.refinement.DiffDiagRefinerImpl;
 import org.p2gx.maxodiff.core.service.BiometadataService;
@@ -34,7 +33,6 @@ public record MdContext(MdResources resources,
         for (HpoDisease disease : resources.hpoDiseases()) {
             TermId diseaseId = disease.id();
             for (TermId hpoId : disease.annotationTermIdList()) {
-//                List<HpoFrequency> freqRecords = hpoFrequencies.computeIfAbsent(hpoId.getValue(), id -> new ArrayList<>());
                 float freq = disease.getFrequencyOfTermInDisease(hpoId).map(Ratio::frequency).orElse(1f);
                 HTMLFrequencyMap htmlFrequencyMap = new HTMLFrequencyMap(resources.hpoDiseases(), resources.icMicaData());
                 float mica = htmlFrequencyMap.micaForDisease(hpoId, diseaseId);
@@ -45,9 +43,7 @@ public record MdContext(MdResources resources,
     }
 
     public DiffDiagRefiner createRefiner() {
-
         return new DiffDiagRefinerImpl(this);
-       // return new DiffDiagRefinerImpl(diseases, hpoToMaxoIdMap, maxoAnnotsMap, hpo);
     }
 
     @Override
