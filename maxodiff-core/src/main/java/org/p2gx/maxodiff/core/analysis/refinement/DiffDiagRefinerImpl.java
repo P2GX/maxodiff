@@ -17,6 +17,8 @@ import org.p2gx.maxodiff.core.model.*;
 
 
 import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
 public class DiffDiagRefinerImpl implements DiffDiagRefiner {
@@ -49,16 +51,17 @@ public class DiffDiagRefinerImpl implements DiffDiagRefiner {
     public List<RankedMaxoResult> run(PhenopacketData sample,
                                       Set<TermId> initialDiagnosesIds,
                                       RankMaxo rankMaxo,
-                                      int nThreads) throws Exception {
-        return rankMaxo.rankMaxoTerms(sample, initialDiagnosesIds, context, nThreads);
+                                      int nThreads,
+                                      ExecutorService sharedExecutorService) throws Exception {
+        return rankMaxo.rankMaxoTerms(sample, initialDiagnosesIds, context, nThreads, sharedExecutorService);
     }
 
     public List<RankedMaxoResultSingleDisease> runSingleDisease(PhenopacketData sample,
                                                                 TermId targetDiseaseId,
                                                                 Set<TermId> initialDiagnosesIds,
                                                                 RankMaxo rankMaxo,
-                                                                int nThreads) throws Exception {
-        return rankMaxo.getDiseaseBestMaxoTerms(sample, targetDiseaseId, initialDiagnosesIds, context, nThreads);
+                                                                ExecutorService sharedExecutorService) throws Exception {
+        return rankMaxo.getDiseaseBestMaxoTerms(sample, targetDiseaseId, initialDiagnosesIds, context, sharedExecutorService);
     }
 
     public RankMaxo getRankMaxo(List<DifferentialDiagnosis> allInitialDiagnoses,
