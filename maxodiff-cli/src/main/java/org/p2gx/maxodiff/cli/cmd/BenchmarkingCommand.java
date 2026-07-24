@@ -144,7 +144,7 @@ public class BenchmarkingCommand extends DDxCommand {
                         IntStream.range(0, 50).parallel().forEach(i -> {
                             try {
                                 long seed = 1000L; //10L; //i * 10L;
-                                List<RankedMaxoResult> randomizedResults = benchmarker.shuffledRandomizer(seed, i);
+                                List<RankedMaxoResult> randomizedResults = benchmarker.shuffledRandomizer(seed);
 
                                 List<RankedMaxoResult> topResultRandomList = randomizedResults.stream()
                                         .filter(mr -> mr.maxoTerm().tid().equals(topMaxo))

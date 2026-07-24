@@ -89,7 +89,7 @@ public class MdContextBuilder {
                                                 MinimalOntology hpo,
                                                 HpoDiseases hpoDiseases,
                                                 Map<MySimpleTerm, Set<MySimpleTerm>> maxoAnnotsMap,
-                                                boolean buildIcData) throws IOException {
+                                                boolean buildIcData) throws IOException, ClassNotFoundException {
 
         Map<MySimpleTerm, Set<MySimpleTerm>> maxoToHpoMap = new HashMap<>();
         for (Map.Entry<MySimpleTerm, Set<MySimpleTerm>> e : maxoAnnotsMap.entrySet()) {
@@ -111,9 +111,9 @@ public class MdContextBuilder {
         IcMicaData icData = null;
         Map<TermId, Double> termToIcMap = null;
         if (buildIcData) {
-            Path termPairSimFile = Objects.requireNonNull(maxoDataPath.resolve("term-pair-similarity.csv.gz"),
-                    "Did not find term-pair-similarity.csv.gz in data directory");
-            icData = IcMicaDictLoader.loadIcMicaDict(termPairSimFile);
+            Path termPairSimFile = Objects.requireNonNull(maxoDataPath.resolve("term-pair-similarity.ser"),
+                    "Did not find term-pair-similarity.ser in data directory");
+            icData = IcMicaDictLoader.loadIcMicaDictSer(termPairSimFile);
             boolean assumeAnnotated = true;
             MicaCalculator micaCalculator = new MicaCalculator(hpo, assumeAnnotated);
             termToIcMap = micaCalculator.calculateMica(hpoDiseases).termToIc();
