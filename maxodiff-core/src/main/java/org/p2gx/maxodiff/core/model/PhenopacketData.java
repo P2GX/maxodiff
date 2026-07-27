@@ -1,6 +1,6 @@
 package org.p2gx.maxodiff.core.model;
 
-import org.p2gx.maxodiff.core.analysis.MySimpleTerm;
+import org.p2gx.maxodiff.core.analysis.SimpleTerm;
 import org.p2gx.maxodiff.core.io.PhenopacketImporter;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 
@@ -26,8 +26,8 @@ public class PhenopacketData {
     private final String sampleId;
     private final List<String> hpoTerms;
     private final List<String> negatedHpoTerms;
-    private List<MySimpleTerm> observedHpoTerms = new ArrayList<>();
-    private List<MySimpleTerm> excludedHpoTerms = new ArrayList<>();
+    private List<SimpleTerm> observedHpoTerms = new ArrayList<>();
+    private List<SimpleTerm> excludedHpoTerms = new ArrayList<>();
     private final List<TermId> diseaseIds;
     /* Medical action ontology terms used in the Phenopacket. We will use this information
      in oder to not suggest a MAxO term that was previosly performed (e.g., do not suggest
@@ -53,8 +53,8 @@ public class PhenopacketData {
     /// Masked needed only to distinguish the constructor, it
     // can be deleted later on
    public PhenopacketData(String sampleId,
-                    List<MySimpleTerm> observed,
-                    List<MySimpleTerm> excluded,
+                    List<SimpleTerm> observed,
+                    List<SimpleTerm> excluded,
                     List<TermId> diseaseIds,
                     List<TermId> maxoIds,
                     boolean masked
@@ -64,11 +64,11 @@ public class PhenopacketData {
         this.observedHpoTerms = Objects.requireNonNull(observed);
         this.excludedHpoTerms = Objects.requireNonNull(excluded);
         this.hpoTerms = this.observedHpoTerms.stream()
-                .map(MySimpleTerm::tid)
+                .map(SimpleTerm::tid)
                 .map(TermId::getValue)
                 .toList();
         this.negatedHpoTerms = this.excludedHpoTerms.stream()
-                .map(MySimpleTerm::tid)
+                .map(SimpleTerm::tid)
                 .map(TermId::getValue)
                 .toList();
         this.diseaseIds = diseaseIds;
@@ -91,18 +91,18 @@ public class PhenopacketData {
         }
     }
 
-    private static PhenopacketData fromPpkt(Phenopacket ppkt) {
+    public static PhenopacketData fromPpkt(Phenopacket ppkt) {
         String sampleId = ppkt.getId();
-        List<MySimpleTerm> observedTerms = ppkt.getPhenotypicFeaturesList()
+        List<SimpleTerm> observedTerms = ppkt.getPhenotypicFeaturesList()
                 .stream().filter(Predicate.not(PhenotypicFeature::getExcluded))
                 .map(PhenotypicFeature::getType)
-                .map(oc -> MySimpleTerm.fromStrings(oc.getId(), oc.getLabel()))
+                .map(oc -> SimpleTerm.fromStrings(oc.getId(), oc.getLabel()))
                 .toList();
-        List<MySimpleTerm> excludedTerms = ppkt.getPhenotypicFeaturesList()
+        List<SimpleTerm> excludedTerms = ppkt.getPhenotypicFeaturesList()
                 .stream()
                 .filter(PhenotypicFeature::getExcluded)
                 .map(PhenotypicFeature::getType)
-                .map(oc -> MySimpleTerm.fromStrings(oc.getId(), oc.getLabel()))
+                .map(oc -> SimpleTerm.fromStrings(oc.getId(), oc.getLabel()))
                 .toList();
         List<TermId> diseaseIds = ppkt.getDiseasesList()
                 .stream()
@@ -123,11 +123,11 @@ public class PhenopacketData {
     }
 
 
-    public List<MySimpleTerm> observed() {
+    public List<SimpleTerm> observed() {
         return  observedHpoTerms;
     }
 
-    public List<MySimpleTerm> excluded() {
+    public List<SimpleTerm> excluded() {
         return  excludedHpoTerms;
     }
 

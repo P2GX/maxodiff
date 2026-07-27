@@ -31,6 +31,15 @@ theme:
     - content.code.copy
 
 
+nav:
+- Home: 'index.md'
+- Background: 'background.md'
+- Setup: 'setup.md'
+- Server setup: 'setup-server.md'
+- Web server: 'json.md'
+- Command line: 'app.md'
+
+
 extra_css:
   - stylesheets/extra.css
 

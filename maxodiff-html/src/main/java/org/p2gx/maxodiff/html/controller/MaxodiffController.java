@@ -1,22 +1,27 @@
 package org.p2gx.maxodiff.html.controller;
 
+import org.p2gx.maxodiff.core.MaxodiffAnalysisRunner;
 import org.p2gx.maxodiff.core.analysis.*;
 import org.p2gx.maxodiff.core.analysis.refinement.DiffDiagRefinerImpl;
 import org.p2gx.maxodiff.core.analysis.refinement.DiffDiagRefiner;
 import org.p2gx.maxodiff.core.analysis.refinement.RefinementOptions;
 import org.p2gx.maxodiff.core.diffdg.DDxEngine;
+import org.p2gx.maxodiff.core.io.JsonWriter;
 import org.p2gx.maxodiff.core.io.MdContext;
+import org.p2gx.maxodiff.core.io.impl.MdContextBuilder;
 import org.p2gx.maxodiff.core.model.DifferentialDiagnosis;
 import org.p2gx.maxodiff.core.model.PhenopacketData;
 import org.p2gx.maxodiff.core.model.RankMaxo;
+import org.p2gx.maxodiff.core.model.TermPair;
 import org.p2gx.maxodiff.core.service.BiometadataService;
 import org.p2gx.maxodiff.html.results.tleaf.TleafResults;
 import org.p2gx.maxodiff.core.phenomizer.PhenomizerDDxEngine;
 import org.p2gx.maxodiff.core.phenomizer.ScoringMode;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDisease;
 import org.monarchinitiative.phenol.ontology.data.TermId;
-import org.monarchinitiative.phenol.ontology.similarity.TermPair;
 import org.p2gx.maxodiff.html.session.UserSessionData;
+import org.phenopackets.schema.v2.Phenopacket;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -28,6 +33,8 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
 @Controller("/maxodiff")
@@ -39,15 +46,21 @@ public class MaxodiffController {
 
     private DiffDiagRefiner diffDiagRefiner;
 
-    private static final Path UPLOAD_DIR = Paths.get(System.getProperty("user.home"), "maxodiff", "uploads");
+    private final static int MAX_THREADS_PER_SESSION = 4;
+    private final int nThreads;
+    private final ExecutorService sharedExecutorService;
 
     public MaxodiffController(
             UserSessionData sessionData,
             MdContext context,
-            DiffDiagRefiner diffDiagRefiner) {
+            DiffDiagRefiner diffDiagRefiner,
+            ExecutorService sharedExecutorService) {
         this.sessionData = sessionData;
         this.mdContext = context;
         this.diffDiagRefiner = diffDiagRefiner;
+        int available = Math.max(1, Runtime.getRuntime().availableProcessors() - 1);
+        this.nThreads = Math.min(MAX_THREADS_PER_SESSION, available);
+        this.sharedExecutorService = sharedExecutorService;
     }
 
     @RequestMapping("/maxodiff")
@@ -79,11 +92,10 @@ public class MaxodiffController {
         model.addAttribute("differentialDiagnoses", differentialDiagnoses);
 
         // Maxodiff refiner
-        diffDiagRefiner = new DiffDiagRefinerImpl(mdContext,
-                mdContext.resources().maxoToHpoMap(), mdContext.resources().maxoAnnotsMap());
+        MdContext mdContextNewParams = mdContext.updateContext(nRepetitions, nDiseases);
+        diffDiagRefiner = new DiffDiagRefinerImpl(mdContextNewParams);
 
         // maxodiff analysis parameters: n diseases to use and n simulations to run
-        Integer prevNDiseases = (Integer) model.getAttribute("nDiseases");
         model.addAttribute("nDiseases", nDiseases);
         model.addAttribute("nRepetitions", nRepetitions);
 
@@ -138,8 +150,15 @@ public class MaxodiffController {
             this.sessionData.setRankMaxo(rankMaxo);
             List<RankedMaxoResult> resultsList = diffDiagRefiner.run(sample,
                     initialDiagnosesIds,
-                    rankMaxo
+                    rankMaxo,
+                    nThreads,
+                    sharedExecutorService
             );
+            int zeroIdx = resultsList.stream()
+                    .filter(result -> result.maxoScore() == 0.)
+                    .findFirst().map(resultsList::indexOf).orElse(resultsList.size());
+            int nDisplayed = Math.min(resultsList.size(), zeroIdx);
+            resultsList = resultsList.subList(0, nDisplayed);
             // Write final results to HTML
             MdMetadata mdMetadata = new MdMetadata(sample.sampleId(),
                     nDiseases,
@@ -200,13 +219,13 @@ public class MaxodiffController {
         model.addAttribute("observedHpoTermIds", observedHpoTermIds);
         model.addAttribute("excludedHpoTermIds", excludedHpoTermIds);
 
-        List<MySimpleTerm> observedSampleTerms = new ArrayList<>();
-        List<MySimpleTerm> excludedSampleTerms = new ArrayList<>();
+        List<SimpleTerm> observedSampleTerms = new ArrayList<>();
+        List<SimpleTerm> excludedSampleTerms = new ArrayList<>();
         BiometadataService biometadataService = this.mdContext.biometadataService();
         observedHpoTermIds.forEach(tid ->
-                observedSampleTerms.add(new MySimpleTerm(tid, biometadataService.hpoLabel(tid).orElse("n/a"))));
+                observedSampleTerms.add(new SimpleTerm(tid, biometadataService.hpoLabel(tid).orElse("n/a"))));
         excludedHpoTermIds.forEach(tid ->
-                excludedSampleTerms.add(new MySimpleTerm(tid, biometadataService.hpoLabel(tid).orElse("n/a"))));
+                excludedSampleTerms.add(new SimpleTerm(tid, biometadataService.hpoLabel(tid).orElse("n/a"))));
         return new PhenopacketData(sampleId, observedSampleTerms, excludedSampleTerms, List.of(), List.of(), false);
     }
 
@@ -224,11 +243,7 @@ public class MaxodiffController {
         Map<String, Object> result = new HashMap<>();
         try {
 
-            if (!Files.exists(UPLOAD_DIR)) {
-                Files.createDirectories(UPLOAD_DIR);
-            }
-
-            Path phenopacketPath = UPLOAD_DIR.resolve(Objects.requireNonNull(file.getOriginalFilename()));
+            Path phenopacketPath = Files.createTempFile("", file.getOriginalFilename());
             file.transferTo(phenopacketPath.toFile());
 
             String sampleId = "";
@@ -266,6 +281,119 @@ public class MaxodiffController {
         } catch (Exception e) {
             throw new RuntimeException(e);
         }
+    }
+
+    @PostMapping(
+        value = "/api/analyze", 
+        consumes = MediaType.APPLICATION_JSON_VALUE, 
+        produces = MediaType.APPLICATION_JSON_VALUE
+    )
+    public ResponseEntity<MdMetadata> analyzeJson(@RequestBody Phenopacket payload) throws Exception {
+
+        if (payload == null || payload.getId() == null) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        PhenopacketData ppktData = PhenopacketData.fromPpkt(payload);
+
+        int nDiseases = 20;
+        int nRepetitions = 80;
+
+        // 1. Initial Differential Diagnosis Engine (Phenomizer)
+        Map<TermPair, Double> icMicaDict = this.mdContext.resources().icMicaData().icMicaDict();
+        if (icMicaDict.isEmpty()) {
+            throw new IllegalStateException("Phenomizer resource MICA information content is empty.");
+        }
+        
+        DDxEngine phenomizer = new PhenomizerDDxEngine(mdContext.resources().hpoDiseases(), icMicaDict);
+        List<DifferentialDiagnosis> differentialDiagnoses = phenomizer.run(ppktData);
+
+        // 2. Maxodiff Refiner Engine (Using updated parameters from RequestParams)
+        MdContext mdContextNewParams = mdContext.updateContext(nRepetitions, nDiseases);
+        DiffDiagRefiner customRefiner = new DiffDiagRefinerImpl(mdContextNewParams);
+       
+        // 3. Process RankMaxo and Refinement Math Pipelines
+        List<DifferentialDiagnosis> orderedDiagnoses = customRefiner.getOrderedDiagnoses(differentialDiagnoses);
+        List<HpoDisease> diseases = customRefiner.getDiseases(orderedDiagnoses);
+        List<HpoFrequency> hpoTermCounts = customRefiner.getHpoFrequenciesNDiseases(diseases, mdContext.createHpoFrequencies());
+        Map<TermId, Set<TermId>> maxoToHpoTermIdMap = customRefiner.getMaxoToHpoTermIdMap(hpoTermCounts);
+
+        int limit = Math.min(orderedDiagnoses.size(), nDiseases);
+        List<DifferentialDiagnosis> initialDiagnoses = orderedDiagnoses.subList(0, limit);
+        Set<TermId> initialDiagnosesIds = initialDiagnoses.stream()
+                .map(DifferentialDiagnosis::diseaseId)
+                .collect(Collectors.toCollection(LinkedHashSet::new));
+
+        RankMaxo rankMaxo = customRefiner.getRankMaxo(
+                differentialDiagnoses,
+                orderedDiagnoses,
+                phenomizer,
+                maxoToHpoTermIdMap,
+                hpoTermCounts);
+
+        List<RankedMaxoResult> resultsList = customRefiner.run(ppktData, initialDiagnosesIds, rankMaxo, nThreads, sharedExecutorService);
+
+        // 4. Wrap up the core computation metadata object and return it as JSON
+        MdMetadata mdMetadata = new MdMetadata(
+                ppktData.sampleId(),
+                nDiseases,
+                nRepetitions,
+                ppktData.observed(),
+                ppktData.excluded(),
+                resultsList);
+
+        return ResponseEntity.ok(mdMetadata);
+    }
+
+    @PostMapping(
+        value = "/api/modality", 
+        consumes = MediaType.APPLICATION_JSON_VALUE, 
+        produces = MediaType.APPLICATION_JSON_VALUE
+    )
+    public ResponseEntity<List<RankedMaxoResultSingleDisease>> analyzeBestModalityJson(@RequestBody Phenopacket payload,  @RequestParam(value = "targetDiseaseId", required = true) String targetDiseaseId) throws Exception {
+
+        if (payload == null || payload.getId() == null) {
+            return ResponseEntity.badRequest().build();
+        }
+
+        PhenopacketData ppktData = PhenopacketData.fromPpkt(payload);
+
+        int nDiseases = 20;
+        int nRepetitions = 80;
+
+        // 1. Initial Differential Diagnosis Engine (Phenomizer)
+        Map<TermPair, Double> icMicaDict = this.mdContext.resources().icMicaData().icMicaDict();
+        if (icMicaDict.isEmpty()) {
+            throw new IllegalStateException("Phenomizer resource MICA information content is empty.");
+        }
+        
+        DDxEngine phenomizer = new PhenomizerDDxEngine(mdContext.resources().hpoDiseases(), icMicaDict);
+        List<DifferentialDiagnosis> differentialDiagnoses = phenomizer.run(ppktData);
+
+        // 2. Maxodiff Refiner Engine (Using updated parameters from RequestParams)
+        MdContext mdContextNewParams = mdContext.updateContext(nRepetitions, nDiseases);
+        DiffDiagRefiner customRefiner = new DiffDiagRefinerImpl(mdContextNewParams);
+        TermId targetId = TermId.of(targetDiseaseId); 
+        
+        // 3. Process RankMaxo and Refinement Math Pipelines
+        List<DifferentialDiagnosis> orderedDiagnoses = customRefiner.getOrderedDiagnoses(differentialDiagnoses);
+        List<HpoDisease> diseases = customRefiner.getDiseases(orderedDiagnoses);
+        List<HpoFrequency> hpoTermCounts = customRefiner.getHpoFrequenciesNDiseases(diseases, mdContext.createHpoFrequencies());
+
+        DDxEngine engine = new PhenomizerDDxEngine(mdContext);
+        MaxodiffAnalysisRunner runner = new MaxodiffAnalysisRunner(
+                    mdContext,
+                    nThreads,
+                    engine,
+                    customRefiner,
+                    hpoTermCounts);
+        List<RankedMaxoResultSingleDisease> resultsList = runner.analyzeSampleSingleDisease(ppktData,
+                                                                                            targetId);
+        
+        // Make a Record that has enough data to show HTML page on SAMS, e.g., also show name of phenopacket, and some other things (check with DS)
+        return ResponseEntity.ok(resultsList.stream()
+                .sorted(Comparator.comparingDouble(RankedMaxoResultSingleDisease::maxoScore).reversed())
+                .toList());
     }
 
 }

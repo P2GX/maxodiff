@@ -42,10 +42,10 @@ public class DiscoverablePhenotypes {
      * @return Set of discoverable phenotypes, i.e. potential phenotypes not including assumed excluded phenotypes.
      */
     public Set<TermId> getDiscoverablePhenotypeIds(PhenopacketData samplePhenopacket, TermId targetDiseaseId) throws PhenolRuntimeException {
-        AscertainablePhenotypes ascertainablePhenotypes = new AscertainablePhenotypes(hpoDiseases);
-        ExcludedPhenotypes excludedPhenotypes = new ExcludedPhenotypes(hpoToMaxoTermIdMap, maxoToHpoTermIdMap);
-        Set<TermId> ascertainablePhenotypeIds = ascertainablePhenotypes.getAscertainablePhenotypeIds(samplePhenopacket, targetDiseaseId);
-        Set<TermId> excludedPhenotypeIds = excludedPhenotypes.getExcludedPhenotypes(samplePhenopacket);
+        AssessablePhenotypes assessablePhenotypes = new AssessablePhenotypes(hpoDiseases);
+        ExcludedPhenotypes assumedExcludedPhenotypes = new ExcludedPhenotypes(hpoToMaxoTermIdMap, maxoToHpoTermIdMap);
+        Set<TermId> ascertainablePhenotypeIds = assessablePhenotypes.getAssessablePhenotypeIds(samplePhenopacket, targetDiseaseId);
+        Set<TermId> excludedPhenotypeIds = assumedExcludedPhenotypes.getExcludedPhenotypeIds(samplePhenopacket);
 
         Set<TermId> discoverablePhenotypes = new HashSet<>(ascertainablePhenotypeIds);
         excludedPhenotypeIds.forEach(discoverablePhenotypes::remove);

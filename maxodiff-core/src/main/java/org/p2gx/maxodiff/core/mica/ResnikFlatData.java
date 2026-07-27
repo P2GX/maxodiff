@@ -7,9 +7,11 @@ import java.io.Serializable;
  * Storing data as parallel arrays completely eliminates object overhead.
  */
 public record ResnikFlatData(
-        String[] termsA,
-        String[] termsB,
-        double[] icMicas
+    String[] termsA,
+    String[] termsB,
+    double[] icMicas
 ) implements Serializable {
     private static final long serialVersionUID = 1L;
 }
+
+

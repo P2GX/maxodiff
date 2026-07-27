@@ -24,13 +24,13 @@ public class MdHtmlResult {
             int idx,
             int nDiseases,
             int nRepetitions,
-            HTMLFrequencyMap htmlFrequencyMap) {
+            HTMLFrequencyMap htmlFrequencyMap,
+            double maxMica) {
         this.index = idx;
         this.maxoId = result.maxoTerm().tid().getValue();
         this.maxoLabel = result.maxoTerm().label();
         this.rankedMaxoResult = result;
 
-        double maxMica = htmlFrequencyMap.maxMica();
         repetitionRow = MdRepetitionRow.buildRepetitionRow(nRepetitions, result);
 
         this.resultRows = MdResultRow.createMaxoResultRows(result, nDiseases, htmlFrequencyMap, maxMica);
@@ -60,7 +60,7 @@ public class MdHtmlResult {
         return this.rankedMaxoResult.hpoTermIds().size();
     }
 
-    public List<MySimpleTerm> getHpoHeaders() {
+    public List<SimpleTerm> getHpoHeaders() {
         return this.rankedMaxoResult.hpoTermIds().stream().map(CountedHpoTerm::hpoTerm).collect(Collectors.toList());
     }
 

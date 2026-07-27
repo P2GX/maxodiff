@@ -34,7 +34,7 @@ public class ProgressBar {
 
         String bar =
                 "█".repeat(completed) +
-                        "░".repeat(BAR_WIDTH - completed);
+                "░".repeat(BAR_WIDTH - completed);
 
         System.err.printf(
                 "\r%s: [%s] %5.1f%% (%d/%d)",

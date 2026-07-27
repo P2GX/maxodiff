@@ -14,29 +14,37 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.util.*;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.stream.Collectors;
 
 public class MaxodiffAnalysisRunner {
-    private final static Logger LOGGER = LoggerFactory.getLogger(MaxoDiffAnalysisResultRow.class);
+    private final static Logger LOGGER = LoggerFactory.getLogger(MaxodiffAnalysisRunner.class);
     private final MdContext mdContext;
+    private final int nThreads;
     private final DDxEngine engine;
     private final DiffDiagRefiner maxoDiffRefiner;
     private final List<HpoFrequency> hpoFrequencies;
+    private final ExecutorService sharedExecutorService;
 
     public MaxodiffAnalysisRunner(
             MdContext mdContext,
+            int nThreads,
             DDxEngine engine,
             DiffDiagRefiner maxoDiffRefiner,
             List<HpoFrequency> hpoFrequencies
     ) {
         this.mdContext = mdContext;
+        this.nThreads = nThreads;
         this.engine = engine;
         this.maxoDiffRefiner = maxoDiffRefiner;
         this.hpoFrequencies = hpoFrequencies;
+        this.sharedExecutorService = Executors.newFixedThreadPool(nThreads);
     }
 
 
     public List<RankedMaxoResult> analyzeSample(PhenopacketData ppktData) throws Exception {
+        LOGGER.info("Analyzing " + ppktData.sampleId());
         List<TermId> ppktMaxoIds = ppktData.maxoProcedureIds();
         List<DifferentialDiagnosis> differentialDiagnoses = engine.run(ppktData);
         // Get List of Refinement results: maxo term scores and frequencies
@@ -67,7 +75,7 @@ public class MaxodiffAnalysisRunner {
         String maxo_label = topResult.maxoTerm().label();
         double maxScoreValue = topResult.maxoScore();
         List<RankedOmimTerm> rankedOmimTermList = topResult.rankedOmimTermList();
-        List<TermId> diseaseIdsStr = rankedOmimTermList.stream().map(RankedOmimTerm::omimTerm).map(MySimpleTerm::tid).toList();
+        List<TermId> diseaseIdsStr = rankedOmimTermList.stream().map(RankedOmimTerm::omimTerm).map(SimpleTerm::tid).toList();
         Set<TermId> diseaseIds = new HashSet<>(diseaseIdsStr);
 
         return new MaxoDiffAnalysisResultRow(
@@ -96,13 +104,17 @@ public class MaxodiffAnalysisRunner {
         Set<TermId> initialNDiagnosesIds = initialNDiagnoses.stream()
                 .map(DifferentialDiagnosis::diseaseId)
                 .collect(Collectors.toCollection(LinkedHashSet::new));
+        LOGGER.debug("Making MAxO:HPO Term Id Map");
         Map<TermId, Set<TermId>> maxoToHpoTermIdMap = MaxoHpoTermIdMaps.getMaxoToHpoTermIdMap(this.mdContext.resources().maxoAnnotsMap());//maxoDiffRefiner.getMaxoToHpoTermIdMap(hpoFrequenciesNDiseases);
+        LOGGER.debug("Making RankMaxo object");
         RankMaxo rankMaxo = maxoDiffRefiner.getRankMaxo(allOrderedDiagnoses, initialNDiagnoses, engine,
                 maxoToHpoTermIdMap, hpoFrequenciesNDiseases);
 
         return maxoDiffRefiner.run(sample,
                 initialNDiagnosesIds,
-                rankMaxo);
+                rankMaxo,
+                nThreads,
+                sharedExecutorService);
     }
 
     private List<RankedMaxoResultSingleDisease> getRefinementResultsSingleDisease(
@@ -125,7 +137,8 @@ public class MaxodiffAnalysisRunner {
         return maxoDiffRefiner.runSingleDisease(sample,
                 targetDiseaseId,
                 initialNDiagnosesIds,
-                rankMaxo);
+                rankMaxo,
+                sharedExecutorService);
     }
 
 

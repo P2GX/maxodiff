@@ -17,13 +17,13 @@ import org.slf4j.LoggerFactory;
 import picocli.CommandLine;
 
 import java.io.*;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.nio.file.attribute.BasicFileAttributes;
 import java.util.*;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.concurrent.ForkJoinPool;
 import java.util.stream.IntStream;
 
@@ -58,6 +58,7 @@ public class BenchmarkingCommand extends DDxCommand {
     private DDxEngine phenomizer;
     private MdContext context;
     private List<HpoFrequency> hpoFrequencies;
+    private ExecutorService executorService;
 
     @Override
     public Integer execute() throws Exception {
@@ -127,14 +128,14 @@ public class BenchmarkingCommand extends DDxCommand {
     private List<BenchmarkResult> runShuffleOnePPkt(Path ppktPath, Map<TermId, Double> termToIcMap) {
         List<BenchmarkResult> resultList = new ArrayList<>();
         try {
-            PhenopacketData ppktData = PhenopacketData.readPhenopacketData(ppktPath);
-            BiometadataService biometadataService = context.biometadataService();
+            PhenopacketData ppktData = PhenopacketData.readPhenopacketData(phenopacketPath);
+            this.executorService = Executors.newFixedThreadPool(nThreads);
             BaseBenchmarker benchmarker = new BaseBenchmarker(ppktData,
                     context,
                     this.phenomizer,
                     hpoFrequencies);
             String ppktId = benchmarker.getSample().sampleId();
-            List<RankedMaxoResult> initialResults = benchmarker.standardRun(biometadataService);
+            List<RankedMaxoResult> initialResults = benchmarker.standardRun(nThreads, executorService);
             TermId topMaxo = initialResults.getFirst().maxoTerm().tid();
             List<Double> topMaxoScoresRandom = Collections.synchronizedList(new ArrayList<>());
             List<Double> icSumsRandom = Collections.synchronizedList(new ArrayList<>());
@@ -144,7 +145,7 @@ public class BenchmarkingCommand extends DDxCommand {
                         IntStream.range(0, 50).parallel().forEach(i -> {
                             try {
                                 long seed = 1000L; //10L; //i * 10L;
-                                List<RankedMaxoResult> randomizedResults = benchmarker.shuffledRandomizer(seed);
+                                List<RankedMaxoResult> randomizedResults = benchmarker.shuffledRandomizer(parallelism, executorService, seed);
 
                                 List<RankedMaxoResult> topResultRandomList = randomizedResults.stream()
                                         .filter(mr -> mr.maxoTerm().tid().equals(topMaxo))
@@ -232,39 +233,5 @@ public class BenchmarkingCommand extends DDxCommand {
                 procedure, -1, avgTopScoreRandom, nMaxo, -1,
                 nDiscoverablePhenotypes, topMaxoIcSum, avgIcSumRandom,-1);
     }
-
-    private Map<TermId, Double> getTermToIcMap(File icFile) {
-        Map<TermId, Double> termToIcMap = new HashMap<>();
-        try (
-            FileInputStream fis = new FileInputStream(icFile);
-            InputStreamReader isr = new InputStreamReader(fis, StandardCharsets.UTF_8);
-            BufferedReader br = new BufferedReader(isr)
-        ) {
-            String line;
-            // Read lines until readLine() returns null (end of stream)
-            while ((line = br.readLine()) != null) {
-                if (line.startsWith("HP:")) {
-                    String[] split = line.split(",");
-                    TermId tid = TermId.of(split[0]);
-                    Double ic = Double.parseDouble(split[1]);
-                    termToIcMap.put(tid, ic);
-                }
-
-            }
-        } catch (IOException e) {
-            System.err.println("Error reading file: " + e.getMessage());
-        }
-
-        return termToIcMap;
-    }
-
-
-
-
-
-
-
-
-
 
 }

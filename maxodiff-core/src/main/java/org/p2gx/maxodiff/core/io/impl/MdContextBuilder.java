@@ -8,7 +8,7 @@ import org.monarchinitiative.phenol.cli.demo.MicaCalculator;
 import org.monarchinitiative.phenol.ontology.data.MinimalOntology;
 import org.monarchinitiative.phenol.io.MinimalOntologyLoader;
 import org.monarchinitiative.phenol.ontology.data.TermId;
-import org.p2gx.maxodiff.core.analysis.MySimpleTerm;
+import org.p2gx.maxodiff.core.analysis.SimpleTerm;
 import org.p2gx.maxodiff.core.io.MdContext;
 import org.p2gx.maxodiff.core.io.MdParams;
 import org.p2gx.maxodiff.core.io.MdResources;
@@ -42,7 +42,7 @@ public class MdContextBuilder {
                 "Data directory must not be null!");
         MinimalOntology hpo = getHpo(dataDir);
         HpoDiseases hpoDiseases = getHpoDiseases(dataDir, hpo);
-        Map<MySimpleTerm, Set<MySimpleTerm>> maxoAnnotsMap = getMaxoAnnotsMap(dataDir);
+        Map<SimpleTerm, Set<SimpleTerm>> maxoAnnotsMap = getMaxoAnnotsMap(dataDir);
         BiometadataService biometadataService = getBiometadataService(hpo, hpoDiseases, maxoAnnotsMap);
         MdResources resources = buildMdResources(maxoDataPath, hpo, hpoDiseases, maxoAnnotsMap, buildICData);
         return new MdContext(resources, params, biometadataService);
@@ -62,17 +62,17 @@ public class MdContextBuilder {
         return loader.load(phenotypeHpoaPath);
     }
 
-    private static Map<MySimpleTerm, Set<MySimpleTerm>> getMaxoAnnotsMap(Path dataDir) throws IOException {
+    private static Map<SimpleTerm, Set<SimpleTerm>> getMaxoAnnotsMap(Path dataDir) throws IOException {
         Path maxoDxPath = Objects.requireNonNull(dataDir.resolve("maxo_diagnostic_annotations.tsv"),
                 "Did not find maxo.json in data directory");
-        Map<MySimpleTerm, Set<MySimpleTerm>> maxoAnnotsMap;
+        Map<SimpleTerm, Set<SimpleTerm>> maxoAnnotsMap;
         try (BufferedReader reader = Files.newBufferedReader(maxoDxPath)) {
             maxoAnnotsMap = MaxoDxAnnots.parseHpoToMaxo(reader);
         }
         Map<String, String> generalMaxoTermsMap = GeneralMaxoTerms.getGeneralMaxoTerms();
-        Set<MySimpleTerm> generalMaxoTerms = new HashSet<>();
-        generalMaxoTermsMap.forEach((key, value) -> generalMaxoTerms.add(new MySimpleTerm(TermId.of(key), value)));
-        for (Set<MySimpleTerm> mterms : maxoAnnotsMap.values()) {
+        Set<SimpleTerm> generalMaxoTerms = new HashSet<>();
+        generalMaxoTermsMap.forEach((key, value) -> generalMaxoTerms.add(new SimpleTerm(TermId.of(key), value)));
+        for (Set<SimpleTerm> mterms : maxoAnnotsMap.values()) {
             mterms.removeAll(generalMaxoTerms);
         }
 
@@ -81,27 +81,27 @@ public class MdContextBuilder {
 
     private static BiometadataService getBiometadataService(MinimalOntology hpo,
                                                             HpoDiseases hpoDiseases,
-                                                            Map<MySimpleTerm, Set<MySimpleTerm>> maxoAnnotsMap) {
+                                                            Map<SimpleTerm, Set<SimpleTerm>> maxoAnnotsMap) {
         return BiometadataServiceImpl.of(hpo, hpoDiseases, maxoAnnotsMap);
     }
 
     private static MdResources buildMdResources(Path maxoDataPath,
                                                 MinimalOntology hpo,
                                                 HpoDiseases hpoDiseases,
-                                                Map<MySimpleTerm, Set<MySimpleTerm>> maxoAnnotsMap,
+                                                Map<SimpleTerm, Set<SimpleTerm>> maxoAnnotsMap,
                                                 boolean buildIcData) throws IOException, ClassNotFoundException {
 
-        Map<MySimpleTerm, Set<MySimpleTerm>> maxoToHpoMap = new HashMap<>();
-        for (Map.Entry<MySimpleTerm, Set<MySimpleTerm>> e : maxoAnnotsMap.entrySet()) {
-            MySimpleTerm hpoTerm = e.getKey();
-            MySimpleTerm hpoIdTerm = new MySimpleTerm(hpoTerm.tid(), hpoTerm.label());
-            Set<MySimpleTerm> maxoTerms = e.getValue();
-            for (MySimpleTerm maxoTerm : maxoTerms) {
-                MySimpleTerm maxoIdTerm = new MySimpleTerm(maxoTerm.tid(), maxoTerm.label());
+        Map<SimpleTerm, Set<SimpleTerm>> maxoToHpoMap = new HashMap<>();
+        for (Map.Entry<SimpleTerm, Set<SimpleTerm>> e : maxoAnnotsMap.entrySet()) {
+            SimpleTerm hpoTerm = e.getKey();
+            SimpleTerm hpoIdTerm = new SimpleTerm(hpoTerm.tid(), hpoTerm.label());
+            Set<SimpleTerm> maxoTerms = e.getValue();
+            for (SimpleTerm maxoTerm : maxoTerms) {
+                SimpleTerm maxoIdTerm = new SimpleTerm(maxoTerm.tid(), maxoTerm.label());
                 if (!maxoToHpoMap.containsKey(maxoIdTerm)) {
                     maxoToHpoMap.put(maxoIdTerm, new HashSet<>(Collections.singleton(hpoIdTerm)));
                 } else {
-                    Set<MySimpleTerm> hpoIdTerms = maxoToHpoMap.get(maxoIdTerm);
+                    Set<SimpleTerm> hpoIdTerms = maxoToHpoMap.get(maxoIdTerm);
                     hpoIdTerms.add(hpoIdTerm);
                     maxoToHpoMap.replace(maxoIdTerm, hpoIdTerms);
                 }

@@ -7,7 +7,7 @@
     <parent>
         <groupId>org.p2gx.maxodiff</groupId>
         <artifactId>maxodiff</artifactId>
-        <version>0.4.4</version>
+        <version>0.4.11</version>
     </parent>
 
     <artifactId>maxodiff-core</artifactId>
@@ -15,12 +15,12 @@
     <dependencies>
         <dependency>
             <groupId>org.monarchinitiative.phenol</groupId>
-            <artifactId>phenol-core</artifactId>
+            <artifactId>phenol-cli</artifactId>
+            <version>2.1.1</version>
         </dependency>
         <dependency>
             <groupId>org.monarchinitiative.phenol</groupId>
-            <artifactId>phenol-cli</artifactId>
-            <version>2.1.1</version>
+            <artifactId>phenol-core</artifactId>
         </dependency>
         <dependency>
             <groupId>org.monarchinitiative.phenol</groupId>

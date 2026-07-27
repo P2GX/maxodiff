@@ -41,7 +41,7 @@ public class ProgessBar {
         if (!doPrint)
             return;
         int percent = (int) Math.ceil(100.0 * (pos - this.min) / (this.max - this.min));
-        StringBuilder bar = new StringBuilder("[");
+        StringBuilder bar = new StringBuilder("Running maxodiff calculation: [");
 
         for (int i = 0; i < 50; i++) {
             if (i < (percent / 2)) {
@@ -54,9 +54,9 @@ public class ProgessBar {
         }
 
         bar.append("]   ").append(percent).append("%     ");
-        System.err.print("\r" + bar);
+        System.out.print("\r" + bar);
         if (pos == max)
-            System.err.println();
+            System.out.println();
     }
 
 }

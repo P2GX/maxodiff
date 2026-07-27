@@ -64,27 +64,30 @@ public class RankMaxo {
      */
     public List<RankedMaxoResult> rankMaxoTerms(PhenopacketData ppkt,
                                                 Set<TermId> diseaseIds,
-                                                MdContext context) throws Exception {
+                                                MdContext context,
+                                                int nThreads,
+                                                ExecutorService sharedExecutorService) throws Exception {
 
         int nRepetitions = context.params().nRepetitions();
         BiometadataService biometadataService = context.biometadataService();
         List<TermId> ppktMaxoIds = ppkt.maxoProcedureIds();
-        Set<TermId> sampleHpoIds = ppkt.allHpoTermIds();
-        AscertainablePhenotypes ascertainablePhenotypes = new AscertainablePhenotypes(maxoHpoTermProbabilities.getHpoDiseases());
+        AssessablePhenotypes ascertainablePhenotypes = new AssessablePhenotypes(maxoHpoTermProbabilities.getHpoDiseases());
         Map<TermId, Set<TermId>> fullMaxoToHpoTermIdMap = maxoHpoTermProbabilities.getMaxoToHpoTermIdMap();
 //        Map<TermId, Set<TermId>> fullMaxoToHpoTermIdMap = MaxoHpoTermIdMaps.getMaxoToHpoTermIdMap(context.resources().maxoAnnotsMap());
 
-        int numThreads = Runtime.getRuntime().availableProcessors() - 1;
-        ExecutorService executor = Executors.newFixedThreadPool(numThreads);
+        LOGGER.info("Making ExecutorService using " + nThreads + " threads.");
+//        ExecutorService executor = Executors.newFixedThreadPool(nThreads);
         AtomicInteger completedTasks = new AtomicInteger(0);
         List<Callable<RankedMaxoResult>> tasks = new ArrayList<>();
         int maxoIdx = 0;
         ProgessBar pb = new ProgessBar(maxoIdx, maxoToHpoTermIdMap.size());
         for (TermId maxoId : maxoToHpoTermIdMap.keySet()) {
+            LOGGER.debug("MAxO Id = " + maxoId);
             if (ppktMaxoIds.contains(maxoId)) {
                 LOGGER.debug("Sample {}  already contains {}.", ppkt.sampleId(), maxoId);
                 continue;
             }
+            LOGGER.debug("Making MaxoHpoDiseaseRank Object");
             MaxoHpoDiseaseRank maxoHpoDiseaseRank = MaxoHpoDiseaseRank.Builder.builder()
                     .initialDiagnoses(allInitialDiagnoses)
                     .ascertainablePhenotypes(ascertainablePhenotypes)
@@ -94,6 +97,7 @@ public class RankMaxo {
                     .nDiagnoses(500)
                     .maxoLabel(biometadataService.maxoLabel(maxoId.getValue()).get())
                     .build();
+            LOGGER.debug("Making RankMaxoProgressObject");
             rankMaxoProgress = new RankMaxoProgress(maxoToHpoTermIdMap.size());
             int finalMaxoIdx = maxoIdx;
             tasks.add(() -> {
@@ -110,7 +114,7 @@ public class RankMaxo {
             maxoIdx++;
         }
 
-        List<Future<RankedMaxoResult>> futures = executor.invokeAll(tasks);
+        List<Future<RankedMaxoResult>> futures = sharedExecutorService.invokeAll(tasks);
 
         List<RankedMaxoResult> results = new ArrayList<>();
         for (Future<RankedMaxoResult> future : futures) {
@@ -120,7 +124,7 @@ public class RankMaxo {
                 LOGGER.error(e.getMessage());
             }
         }
-        executor.shutdown();
+        sharedExecutorService.shutdown();
 
         return results.stream()
                 .sorted(Comparator.comparing(RankedMaxoResult :: maxoScore).reversed())
@@ -128,17 +132,17 @@ public class RankMaxo {
     }
 
     public List<RankedMaxoResultSingleDisease> getDiseaseBestMaxoTerms(PhenopacketData ppkt,
-                                                                      TermId targetDiseaseId,
-                                                                      Set<TermId> diseaseIds,
-                                                                      MdContext context) throws InterruptedException {
+                                                                       TermId targetDiseaseId,
+                                                                       Set<TermId> diseaseIds,
+                                                                       MdContext context,
+                                                                       ExecutorService sharedExecutorService) throws InterruptedException {
 
         int nRepetitions = context.params().nRepetitions();
         BiometadataService biometadataService = context.biometadataService();
         List<TermId> ppktMaxoIds = ppkt.maxoProcedureIds();
         Map<TermId, Set<TermId>> fullMaxoToHpoTermIdMap = maxoHpoTermProbabilities.getMaxoToHpoTermIdMap();
 
-        int numThreads = Runtime.getRuntime().availableProcessors() - 1;
-        ExecutorService executor = Executors.newFixedThreadPool(numThreads);
+//        ExecutorService executor = Executors.newFixedThreadPool(nThreads);
         AtomicInteger completedTasks = new AtomicInteger(0);
         List<Callable<RankedMaxoResultSingleDisease>> tasks = new ArrayList<>();
         int maxoIdx = 0;
@@ -149,8 +153,8 @@ public class RankMaxo {
                 continue;
             }
 
-            AscertainablePhenotypes ascertainablePhenotypes =
-                    new AscertainablePhenotypes(maxoHpoTermProbabilities.getHpoDiseases());
+            AssessablePhenotypes ascertainablePhenotypes =
+                    new AssessablePhenotypes(maxoHpoTermProbabilities.getHpoDiseases());
             MaxoHpoDiseaseRank maxoHpoDiseaseRank = MaxoHpoDiseaseRank.Builder.builder()
                     .initialDiagnoses(allInitialDiagnoses)
                     .ascertainablePhenotypes(ascertainablePhenotypes)
@@ -176,7 +180,7 @@ public class RankMaxo {
             maxoIdx++;
         }
 
-        List<Future<RankedMaxoResultSingleDisease>> futures = executor.invokeAll(tasks);
+        List<Future<RankedMaxoResultSingleDisease>> futures = sharedExecutorService.invokeAll(tasks);
 
         List<RankedMaxoResultSingleDisease> results = new ArrayList<>();
         for (Future<RankedMaxoResultSingleDisease> future : futures) {
@@ -186,7 +190,7 @@ public class RankMaxo {
                 LOGGER.error(e.getMessage());
             }
         }
-        executor.shutdown();
+        sharedExecutorService.shutdown();
 
 
         return results.stream()

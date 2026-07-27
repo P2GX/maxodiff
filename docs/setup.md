@@ -23,7 +23,7 @@ and clone or download the project, then build the executable JAR files from sour
 ```
 
 We use the [Maven Wrapper](https://maven.apache.org/wrapper/) for building the sources, so installation
-of Maven prior to build is *not* required.
+of Maven prior to build is *not* required (but it is also possible to build as `mvn clean package` if desired).
 
 ### Download resources
 
@@ -37,13 +37,14 @@ java -jar maxodiff-cli/target/maxodiff-cli.jar download
 The command will download the data files into `data` folder that will be created in the current working directory.
 See the command's documentation for more options.
 
-This command will automatically create the MICA dictionary with the latest downloaded files.
+!!! info "Download frequency"
+    The download command needs to be run everytime the user wants to update the HPO and MAxO files (which are updated roughly 5 times a year).
+
+This command will automatically create the MICA dictionary with the latest downloaded files (see below).
 
 ### MICA dictionary
-To run maxodiff with Phenomizer, we must first generate a file that contains the
-most informative common ancestors for pairs of HPO terms. See the class ``IcMicaDictLoader``.
-
-maxodiff uses the Phenomizer algorithm to calculate the differential diagnosis; see
+To run `maxodiff` with Phenomizer, we must first generate a file that contains the
+most informative common ancestors for pairs of HPO terms. `maxodiff` uses the Phenomizer algorithm to calculate the differential diagnosis; see
 the original publication for details:
 [Clinical diagnostics in human genetics with semantic similarity searches in ontologies](https://pubmed.ncbi.nlm.nih.gov/19800049/)
 
@@ -59,15 +60,18 @@ The file will have been generated automatically by the download command. If you 
 ```shell
 java -jar maxodiff-cli/target/maxodiff-cli.jar precompute-resnik
 ```
+The optional ```--assume-annoated``` flag assumes that each term annotates at least one disease.
+This prevents IC=Infinity for the absent terms.
+
 On a modern commodity laptop, this command will require a few minutes to complete.
-By default, the output file will be created here. Currently, it occupies 117 Mb.
+By default, the serialized output file will be created here. Currently, it occupies 100 Mb.
 
 ```shell
-data/term-pair-similarity.csv.gz
+data/term-pair-similarity.ser
 ```
 
 
-### Start Maxodiff web app
+# Start Maxodiff web app
 
 The web app can be started as:
 
@@ -84,7 +88,7 @@ java -Xmx8g -jar maxodiff-html/target/maxodiff-html.jar
 
 By default, the app will serve requests at `http://localhost:8080/maxodiff`.
 
-## Troubleshooting
+# Troubleshooting
 
 ### Connection refused
 The error Connection refused might be a sign that you need to set proxy settings.

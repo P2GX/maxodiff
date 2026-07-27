@@ -12,7 +12,7 @@ import java.util.List;
  * @param frequencies List of HPO Term Frequencies
  */
 public record RankedMaxoResult(
-        MySimpleTerm maxoTerm,
+        SimpleTerm maxoTerm,
         double maxoScore,
         List<RankedOmimTerm> rankedOmimTermList,
         List<CountedHpoTerm> hpoTermIds,

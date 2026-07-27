@@ -19,7 +19,7 @@ import java.util.zip.GZIPOutputStream;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
 import org.monarchinitiative.phenol.ontology.data.MinimalOntology;
 import org.monarchinitiative.phenol.ontology.data.TermId;
-import org.monarchinitiative.phenol.ontology.similarity.TermPair;
+import org.p2gx.maxodiff.core.model.TermPair;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -34,7 +34,7 @@ public class ResnikComputation {
         String hpoVersion = hpo.version().orElse("N/A");
         String hpoaVersion = diseases.version().orElse("N/A");
         LOGGER.trace("Calculated Resnik scores for HPO version {}, HPOA version {} on {}",
-                hpoVersion, hpoaVersion, date);
+            hpoVersion, hpoaVersion, date);
         return termPairResnikSimilarityMap;
     }
 
@@ -59,8 +59,8 @@ public class ResnikComputation {
 
         ProgressBar progress = new ProgressBar("Serializing", effectiveSize);
         for (Map.Entry<TermPair, Double> e : map.entrySet()) {
-            termsA[i] = e.getKey().getTidA().getValue();
-            termsB[i] = e.getKey().getTidB().getValue();
+            termsA[i] = e.getKey().tidA().getValue();
+            termsB[i] = e.getKey().tidB().getValue();
             icMicas[i] = e.getValue();
 
             if (i % progressStep == 0 || i == size - 1) {
@@ -73,19 +73,19 @@ public class ResnikComputation {
 
         // Write the entire structural block in one shot
         try (OutputStream fos = Files.newOutputStream(output);
-             OutputStream gzos = new GZIPOutputStream(fos); // Keeps file small on disk
-             ObjectOutputStream oos = new ObjectOutputStream(new BufferedOutputStream(gzos))) {
+                OutputStream gzos = new GZIPOutputStream(fos); // Keeps file small on disk
+                ObjectOutputStream oos = new ObjectOutputStream(new BufferedOutputStream(gzos))) {
             oos.writeObject(flatData);
         }
     }
 
     private static Map<TermId, Double> calculateTermToIc(MinimalOntology hpo, HpoDiseases diseases,
-                                                         boolean assumeAnnotated) {
+            boolean assumeAnnotated) {
         MicaCalculator micaCalculator = new MicaCalculator(hpo, assumeAnnotated);
         return micaCalculator.calculateMica(diseases).termToIc();
     }
 
-    private static Map<TermPair, Double> assignMicaToTermPairs(MinimalOntology hpo, Map<TermId, Double> termToIc) {
+    public static Map<TermPair, Double> assignMicaToTermPairs(MinimalOntology hpo, Map<TermId, Double> termToIc) {
         return HpoResnikSimilarityPrecomputer.precomputeSimilaritiesForTermPairs(hpo, termToIc);
     }
 
@@ -96,7 +96,7 @@ public class ResnikComputation {
         System.err.println("Loading serialized binary block from disk...");
         long startTime = System.currentTimeMillis();
         try (InputStream fis = Files.newInputStream(input);
-             ObjectInputStream ois = new ObjectInputStream(new BufferedInputStream(new GZIPInputStream(fis)))) {
+                ObjectInputStream ois = new ObjectInputStream(new BufferedInputStream(new GZIPInputStream(fis)))) {
             flatData = (ResnikFlatData) ois.readObject();
         }
 
@@ -121,7 +121,7 @@ public class ResnikComputation {
             TermId tidB = TermId.of(termsB[i]);
             TermPair tp = TermPair.symmetric(tidA, tidB);
             resnikMap.put(tp, micas[i]);
-            if (i % progressStep == 0 || i == size - 1) {
+              if (i % progressStep == 0 || i == size - 1) {
                 progress.step();
             }
             i++;
