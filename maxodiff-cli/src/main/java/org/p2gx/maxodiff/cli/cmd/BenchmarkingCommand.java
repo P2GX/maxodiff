@@ -83,9 +83,10 @@ public class BenchmarkingCommand extends DDxCommand {
             File[] files = folder.listFiles();
             assert files != null;
             for (File file : files) {
-                BasicFileAttributes basicFileAttributes = Files.readAttributes(file.toPath(), BasicFileAttributes.class);
+                Path filePath = file.toPath();
+                BasicFileAttributes basicFileAttributes = Files.readAttributes(filePath, BasicFileAttributes.class);
                 if (basicFileAttributes.isRegularFile() && !basicFileAttributes.isDirectory() && !file.getName().startsWith(".")) {
-                    phenopacketPaths.add(file.toPath());
+                    phenopacketPaths.add(filePath);
                 }
             }
 
@@ -128,7 +129,7 @@ public class BenchmarkingCommand extends DDxCommand {
     private List<BenchmarkResult> runShuffleOnePPkt(Path ppktPath, Map<TermId, Double> termToIcMap) {
         List<BenchmarkResult> resultList = new ArrayList<>();
         try {
-            PhenopacketData ppktData = PhenopacketData.readPhenopacketData(phenopacketPath);
+            PhenopacketData ppktData = PhenopacketData.readPhenopacketData(ppktPath);
             this.executorService = Executors.newFixedThreadPool(nThreads);
             BaseBenchmarker benchmarker = new BaseBenchmarker(ppktData,
                     context,
@@ -139,13 +140,15 @@ public class BenchmarkingCommand extends DDxCommand {
             TermId topMaxo = initialResults.getFirst().maxoTerm().tid();
             List<Double> topMaxoScoresRandom = Collections.synchronizedList(new ArrayList<>());
             List<Double> icSumsRandom = Collections.synchronizedList(new ArrayList<>());
-            int parallelism = 8;
-            try (ForkJoinPool customThreadPool = new ForkJoinPool(parallelism)) {
+            int randomUL = 50;
+            int randomNThreads = randomUL + 2;
+            ExecutorService randomExecutorService = Executors.newFixedThreadPool(randomNThreads);
+            try (ForkJoinPool customThreadPool = new ForkJoinPool(randomNThreads)) {
                 customThreadPool.submit(() ->
-                        IntStream.range(0, 50).parallel().forEach(i -> {
+                        IntStream.range(0, randomUL).parallel().forEach(i -> {
                             try {
                                 long seed = 1000L; //10L; //i * 10L;
-                                List<RankedMaxoResult> randomizedResults = benchmarker.shuffledRandomizer(parallelism, executorService, seed);
+                                List<RankedMaxoResult> randomizedResults = benchmarker.shuffledRandomizer(seed, randomNThreads, randomExecutorService);
 
                                 List<RankedMaxoResult> topResultRandomList = randomizedResults.stream()
                                         .filter(mr -> mr.maxoTerm().tid().equals(topMaxo))

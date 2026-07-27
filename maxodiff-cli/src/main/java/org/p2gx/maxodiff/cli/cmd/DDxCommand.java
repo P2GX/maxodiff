@@ -1,12 +1,9 @@
 package org.p2gx.maxodiff.cli.cmd;
 
-import org.apache.commons.csv.CSVFormat;
-import org.apache.commons.csv.CSVPrinter;
 import org.p2gx.maxodiff.core.analysis.*;
 import org.p2gx.maxodiff.core.io.MdContext;
 import org.p2gx.maxodiff.core.io.impl.MdContextBuilder;
 import org.p2gx.maxodiff.cli.util.IoUtil;
-import org.p2gx.maxodiff.core.MaxoDiffAnalysisResultRow;
 import org.p2gx.maxodiff.core.MaxodiffAnalysisRunner;
 import org.p2gx.maxodiff.core.analysis.refinement.DiffDiagRefiner;
 import org.p2gx.maxodiff.core.diffdg.DDxEngine;
@@ -19,7 +16,6 @@ import org.slf4j.LoggerFactory;
 import picocli.CommandLine;
 
 import java.io.BufferedWriter;
-import java.io.File;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.nio.file.Files;
