@@ -37,14 +37,20 @@ java -jar maxodiff-app.jar
 To create the docker container
 
 - Start Docker
-- You many need to increase memory in the settings (in the Docker contained). Choose 8gb to start if you have issues
+- You many need to increase memory in the settings (in the Docker container). Choose 8gb to start if you have issues
 - Run the following command from the root project directory
 
 ```shell
 docker build --no-cache -f maxodiff-html/Dockerfile -t maxodiff-html:latest .
 ```
 
-Assuming this runs without error, we can now start the Docker process.
+- To build using a proxy server, run the following command:
+
+```shell
+docker build --no-cache -f maxodiff-html/Dockerfile -t maxodiff-html:latest --build-arg http_proxy=<proxy-server-address>:<proxy-port-number> --build-arg https_proxy=<proxy-server-address>:<proxy-port-number> --build-arg MAVEN_OPTS="-Dhttp.proxyHost=<proxy-server-address> -Dhttp.proxyPort=<proxy-port-number> -Dhttps.proxyHost=<proxy-server-address> -Dhttps.proxyPort=<proxy-port-number>" .
+```
+
+Assuming the build runs without error, we can now start the Docker process.
 
 - Because your JVM heap alone requires 8GB, the total memory consumed by the container will be higher
 - Make sure the global Docker virtual machine has enough resources allocated to it. Go to Settings > Resources > Virtual manual / Advanced and ensure the memory slider is set to at least 12GB.
@@ -92,7 +98,9 @@ docker run -it -p 8080:8080 --name maxodiff-html-app maxodiff-html:latest
 
 ### WIPE and Rebuild Docker
 
-Make changes, rebuild the app, Remove the old container and image trace, and rebuld the new docker image, finally restart
+- Make changes and rebuild the app
+- Remove the old container and image trace, and rebuild the new docker image
+- Finally, restart
 ```bash
 mvn clean package
 docker rm maxodiff-html-app
