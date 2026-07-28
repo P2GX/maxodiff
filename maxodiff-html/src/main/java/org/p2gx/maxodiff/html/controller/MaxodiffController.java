@@ -6,9 +6,7 @@ import org.p2gx.maxodiff.core.analysis.refinement.DiffDiagRefinerImpl;
 import org.p2gx.maxodiff.core.analysis.refinement.DiffDiagRefiner;
 import org.p2gx.maxodiff.core.analysis.refinement.RefinementOptions;
 import org.p2gx.maxodiff.core.diffdg.DDxEngine;
-import org.p2gx.maxodiff.core.io.JsonWriter;
 import org.p2gx.maxodiff.core.io.MdContext;
-import org.p2gx.maxodiff.core.io.impl.MdContextBuilder;
 import org.p2gx.maxodiff.core.model.DifferentialDiagnosis;
 import org.p2gx.maxodiff.core.model.PhenopacketData;
 import org.p2gx.maxodiff.core.model.RankMaxo;
@@ -21,7 +19,6 @@ import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDisease;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 import org.p2gx.maxodiff.html.session.UserSessionData;
 import org.phenopackets.schema.v2.Phenopacket;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
@@ -31,10 +28,8 @@ import org.springframework.web.multipart.MultipartFile;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
-import java.nio.file.Paths;
 import java.util.*;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.*;
 import java.util.stream.Collectors;
 
 @Controller("/maxodiff")
@@ -48,19 +43,16 @@ public class MaxodiffController {
 
     private final static int MAX_THREADS_PER_SESSION = 4;
     private final int nThreads;
-    private final ExecutorService sharedExecutorService;
 
     public MaxodiffController(
             UserSessionData sessionData,
             MdContext context,
-            DiffDiagRefiner diffDiagRefiner,
-            ExecutorService sharedExecutorService) {
+            DiffDiagRefiner diffDiagRefiner) {
         this.sessionData = sessionData;
         this.mdContext = context;
         this.diffDiagRefiner = diffDiagRefiner;
         int available = Math.max(1, Runtime.getRuntime().availableProcessors() - 1);
         this.nThreads = Math.min(MAX_THREADS_PER_SESSION, available);
-        this.sharedExecutorService = sharedExecutorService;
     }
 
     @RequestMapping("/maxodiff")
@@ -141,19 +133,19 @@ public class MaxodiffController {
                 model.addAttribute("showMDresults", false);
                 return "maxodiff";
             }
-            RankMaxo rankMaxo = diffDiagRefiner.getRankMaxo(
-                    differentialDiagnoses,
-                    orderedDiagnoses,
-                    phenomizer,
-                    maxoToHpoTermIdMap,
-                    hpoTermCounts);
-            this.sessionData.setRankMaxo(rankMaxo);
-            List<RankedMaxoResult> resultsList = diffDiagRefiner.run(sample,
-                    initialDiagnosesIds,
-                    rankMaxo,
+
+            // Maxodiff Refiner Engine (Using updated parameters from RequestParams)
+            DiffDiagRefiner customRefiner = new DiffDiagRefinerImpl(mdContextNewParams);
+
+            DDxEngine engine = new PhenomizerDDxEngine(mdContext);
+            MaxodiffAnalysisRunner runner = new MaxodiffAnalysisRunner(
+                    mdContext,
                     nThreads,
-                    sharedExecutorService
-            );
+                    engine,
+                    customRefiner,
+                    hpoTermCounts);
+            List<RankedMaxoResult> resultsList = runner.analyzeSample(sample);
+
             int zeroIdx = resultsList.stream()
                     .filter(result -> result.maxoScore() == 0.)
                     .findFirst().map(resultsList::indexOf).orElse(resultsList.size());
@@ -299,12 +291,11 @@ public class MaxodiffController {
         int nDiseases = 20;
         int nRepetitions = 80;
 
-        // 1. Initial Differential Diagnosis Engine (Phenomizer)
         Map<TermPair, Double> icMicaDict = this.mdContext.resources().icMicaData().icMicaDict();
         if (icMicaDict.isEmpty()) {
             throw new IllegalStateException("Phenomizer resource MICA information content is empty.");
         }
-        
+
         DDxEngine phenomizer = new PhenomizerDDxEngine(mdContext.resources().hpoDiseases(), icMicaDict);
         List<DifferentialDiagnosis> differentialDiagnoses = phenomizer.run(ppktData);
 
@@ -316,23 +307,15 @@ public class MaxodiffController {
         List<DifferentialDiagnosis> orderedDiagnoses = customRefiner.getOrderedDiagnoses(differentialDiagnoses);
         List<HpoDisease> diseases = customRefiner.getDiseases(orderedDiagnoses);
         List<HpoFrequency> hpoTermCounts = customRefiner.getHpoFrequenciesNDiseases(diseases, mdContext.createHpoFrequencies());
-        Map<TermId, Set<TermId>> maxoToHpoTermIdMap = customRefiner.getMaxoToHpoTermIdMap(hpoTermCounts);
 
-        int limit = Math.min(orderedDiagnoses.size(), nDiseases);
-        List<DifferentialDiagnosis> initialDiagnoses = orderedDiagnoses.subList(0, limit);
-        Set<TermId> initialDiagnosesIds = initialDiagnoses.stream()
-                .map(DifferentialDiagnosis::diseaseId)
-                .collect(Collectors.toCollection(LinkedHashSet::new));
-
-        RankMaxo rankMaxo = customRefiner.getRankMaxo(
-                differentialDiagnoses,
-                orderedDiagnoses,
-                phenomizer,
-                maxoToHpoTermIdMap,
+        DDxEngine engine = new PhenomizerDDxEngine(mdContext);
+        MaxodiffAnalysisRunner runner = new MaxodiffAnalysisRunner(
+                mdContext,
+                nThreads,
+                engine,
+                customRefiner,
                 hpoTermCounts);
-
-        List<RankedMaxoResult> resultsList = customRefiner.run(ppktData, initialDiagnosesIds, rankMaxo, nThreads, sharedExecutorService);
-
+        List<RankedMaxoResult> resultsList = runner.analyzeSample(ppktData);
         // 4. Wrap up the core computation metadata object and return it as JSON
         MdMetadata mdMetadata = new MdMetadata(
                 ppktData.sampleId(),
