@@ -21,8 +21,10 @@ COPY maxodiff-html-results/src maxodiff-html-results/src
 COPY maxodiff-core/src maxodiff-core/src
 COPY maxodiff-phenomizer/src maxodiff-phenomizer/src
 
-
-RUN ./mvnw package -pl maxodiff-html -am -DskipTests -B
+FROM maven
+ARG MAVEN_OPTS
+RUN ["mvn", "package", "-pl", "maxodiff-html", "-am", "-DskipTests", "-B", "$MAVEN_OPTS"]
+#RUN ./mvnw package -pl maxodiff-html -am -DskipTests -B
 
 # Stage 2: Server runtime
 FROM eclipse-temurin:21-jre-alpine

@@ -15,7 +15,9 @@ import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 public class MaxodiffAnalysisRunner {
@@ -25,7 +27,7 @@ public class MaxodiffAnalysisRunner {
     private final DDxEngine engine;
     private final DiffDiagRefiner maxoDiffRefiner;
     private final List<HpoFrequency> hpoFrequencies;
-    private final ExecutorService sharedExecutorService;
+    private final ExecutorService sharedExecutor;
 
     public MaxodiffAnalysisRunner(
             MdContext mdContext,
@@ -39,7 +41,13 @@ public class MaxodiffAnalysisRunner {
         this.engine = engine;
         this.maxoDiffRefiner = maxoDiffRefiner;
         this.hpoFrequencies = hpoFrequencies;
-        this.sharedExecutorService = Executors.newFixedThreadPool(nThreads);
+        this.sharedExecutor = new ThreadPoolExecutor(
+                nThreads,                      // Core pool size: minimum active threads
+                10,                      // Maximum pool size: capped maximum threads
+                0L, TimeUnit.MILLISECONDS, // Keep-alive time for idle threads
+                new LinkedBlockingQueue<>(500), // Cap the waiting queue capacity at 500 tasks
+                new ThreadPoolExecutor.CallerRunsPolicy() // Handles overloads without crashing
+        );
     }
 
 
@@ -114,7 +122,7 @@ public class MaxodiffAnalysisRunner {
                 initialNDiagnosesIds,
                 rankMaxo,
                 nThreads,
-                sharedExecutorService);
+                sharedExecutor);
     }
 
     private List<RankedMaxoResultSingleDisease> getRefinementResultsSingleDisease(
@@ -138,7 +146,7 @@ public class MaxodiffAnalysisRunner {
                 targetDiseaseId,
                 initialNDiagnosesIds,
                 rankMaxo,
-                sharedExecutorService);
+                sharedExecutor);
     }
 
 

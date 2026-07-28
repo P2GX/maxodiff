@@ -153,9 +153,10 @@ public class BaseBenchmarker {
      * @return
      * @throws Exception
      */
-    public List<RankedMaxoResult> shuffledRandomizer(int nThreads, ExecutorService executorService) throws Exception {
+    public List<RankedMaxoResult> shuffledRandomizer(long seed, int nThreads, ExecutorService executorService) throws Exception {
         List<DifferentialDiagnosis> shuffledDiagnoses = new ArrayList<>(getCompleteInitialDiffDiagList());
-        Collections.shuffle(shuffledDiagnoses);
+        Random randomSeed = new Random(seed);
+        Collections.shuffle(shuffledDiagnoses, randomSeed);
         List<DifferentialDiagnosis> initialDiagnosesNDiseasesRandom = shuffledDiagnoses.subList(0, nDiseases);
         Set<TermId> topNInitialDiagnosesIdsRandom = initialDiagnosesNDiseasesRandom.stream()
                 .map(DifferentialDiagnosis::diseaseId)
