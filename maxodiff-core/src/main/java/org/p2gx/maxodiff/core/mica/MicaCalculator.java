@@ -43,7 +43,7 @@ public class MicaCalculator {
     Instant start = Instant.now();
     Map<TermId, Integer> phenotypeIdToDiseaseIds = new HashMap<>();
     Map<TermId, Collection<TermId>> diseaseIdToTermIds = new HashMap<>();
-    
+
     Set<TermId> termsAndAncestorsBuilder = new HashSet<>();
     ProgressBar progress = new ProgressBar("Calculating IC", diseases.size());
     for (HpoDisease item: diseases) {

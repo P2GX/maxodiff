@@ -17,6 +17,9 @@ public record BenchmarkResult(
         double maxoFinalScoreRandom,
         int nMaxoTerms,
         int nMaxoTermsRandom,
+        List<Integer> nDiscoverablePhenotypes,
+        double maxoIcSum,
+        double maxoIcSumRandom,
         int randomDiseaseIdx
         ) {
 
@@ -38,6 +41,9 @@ public record BenchmarkResult(
                 "maxoFinalScoreRandom",
                 "nMaxoTerms",
                 "nMaxoTermsRandom",
+                "nDiscoverablePhenotypes",
+                "maxoIcSum",
+                "maxoIcSumRandom",
                 "randomDiseaseIndex"
                );
     }
@@ -47,7 +53,7 @@ public record BenchmarkResult(
     }
 
     public String getRow() {
-        List<String> row = List.of(phenopacketId(), String.valueOf(nDisease()), String.valueOf(nRepetitions()), maxoId(), String.valueOf(maxoFinalScore()), procedure().name(), String.valueOf(topMaxoRandomIdx()), String.valueOf(maxoFinalScoreRandom()), String.valueOf(nMaxoTerms()), String.valueOf(nMaxoTermsRandom()), String.valueOf(randomDiseaseIdx()+1));
+        List<String> row = List.of(phenopacketId(), String.valueOf(nDisease()), String.valueOf(nRepetitions()), maxoId(), String.valueOf(maxoFinalScore()), procedure().name(), String.valueOf(topMaxoRandomIdx()), String.valueOf(maxoFinalScoreRandom()), String.valueOf(nMaxoTerms()), String.valueOf(nMaxoTermsRandom()), String.valueOf(nDiscoverablePhenotypes()), String.valueOf(maxoIcSum()), String.valueOf(maxoIcSumRandom()), String.valueOf(randomDiseaseIdx()+1));
         return String.join("\t", row);
     }
 

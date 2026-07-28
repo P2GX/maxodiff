@@ -33,7 +33,7 @@ public class ResnikComputation {
         LocalDate date = LocalDate.now();
         String hpoVersion = hpo.version().orElse("N/A");
         String hpoaVersion = diseases.version().orElse("N/A");
-        LOGGER.trace("Calculated Resnik scores for HPO version {}, HPOA version {} on {}", 
+        LOGGER.trace("Calculated Resnik scores for HPO version {}, HPOA version {} on {}",
             hpoVersion, hpoaVersion, date);
         return termPairResnikSimilarityMap;
     }
@@ -56,7 +56,7 @@ public class ResnikComputation {
         int i = 0;
         int progressStep = Math.max(1, map.size() / 100);
         int effectiveSize = map.size() / 100;
-      
+
         ProgressBar progress = new ProgressBar("Serializing", effectiveSize);
         for (Map.Entry<TermPair, Double> e : map.entrySet()) {
             termsA[i] = e.getKey().tidA().getValue();
@@ -125,7 +125,7 @@ public class ResnikComputation {
                 progress.step();
             }
             i++;
-           
+
         }
         System.err.println();
 
