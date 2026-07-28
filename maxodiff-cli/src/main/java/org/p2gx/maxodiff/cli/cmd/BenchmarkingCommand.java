@@ -147,7 +147,7 @@ public class BenchmarkingCommand extends DDxCommand {
                 customThreadPool.submit(() ->
                         IntStream.range(0, randomUL).parallel().forEach(i -> {
                             try {
-                                long seed = 1000L; //10L; //i * 10L;
+                                long seed = i * 10L; //1000L; //10L; //i * 10L;
                                 List<RankedMaxoResult> randomizedResults = benchmarker.shuffledRandomizer(seed, randomNThreads, randomExecutorService);
 
                                 List<RankedMaxoResult> topResultRandomList = randomizedResults.stream()
