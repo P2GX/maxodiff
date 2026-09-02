@@ -56,7 +56,7 @@ public class DDxCommand extends BaseCommand {
 
     @CommandLine.Option(names = { "-nr",
             "--nRepetitions" }, description = "Number of repetitions for running differential diagnosis.")
-    protected Integer nRepetitions = 100;
+    protected Integer nRepetitions = 80;
 
     @CommandLine.Option(names = { "-sd", "--singleDisease" }, description = "Single Disease Id for analysis.")
     protected String singleDisease = null;
