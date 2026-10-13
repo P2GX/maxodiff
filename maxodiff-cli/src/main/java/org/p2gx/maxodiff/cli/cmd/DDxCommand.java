@@ -62,7 +62,7 @@ public class DDxCommand extends BaseCommand {
     protected String singleDisease = null;
 
     @CommandLine.Option(names = { "-t", "--nThreads" }, description = "Number of threads to use for analysis.")
-    protected int nThreads = Runtime.getRuntime().availableProcessors() - 1;
+    protected int nThreads = 4; //Runtime.getRuntime().availableProcessors() - 1;
 
     @Override
     public Integer execute() throws Exception {
