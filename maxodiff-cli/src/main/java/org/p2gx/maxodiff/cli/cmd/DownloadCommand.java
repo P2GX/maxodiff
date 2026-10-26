@@ -65,7 +65,7 @@ public class DownloadCommand implements Callable<Integer>{
                 .hpoJson()
                 .hpDiseaseAnnotations()
                 .maxoJson()
-                .custom("maxo_diagnostic_annotations.tsv", createUrlOrExplode("https://raw.githubusercontent.com/monarch-initiative/maxo-annotations/master/annotations/maxo_diagnostic_annotations.tsv"))
+                .custom("maxo_diagnostic_annotations.tsv", createUrlOrExplode("https://raw.githubusercontent.com/monarch-initiative/maxo-annotations/refs/heads/main/data/poet/maxo_diagnostic_annotations.tsv"))
                 .build();
         downloader.download();
     }
@@ -74,7 +74,6 @@ public class DownloadCommand implements Callable<Integer>{
         System.out.println("makePhenomizerTermPairSimilarity");
         String hpFile = String.join(File.separator, destinationFolder.toString(), "hp.json");
         String hpoaFile = String.join(File.separator, destinationFolder.toString(), "phenotype.hpoa");
-        String outputFile = String.join(File.separator, destinationFolder.toString(), "term-pair-similarity.csv.gz");
 
         String maxodiffDir = System.getProperty("user.dir");
         String maxodiffCliJar = String.join(File.separator, maxodiffDir, "maxodiff-cli", "target", "maxodiff-cli.jar");
@@ -85,8 +84,7 @@ public class DownloadCommand implements Callable<Integer>{
                 maxodiffCliJar,
                 "precompute-resnik",
                 "--hpo=" + hpFile,
-                "--hpoa=" + hpoaFile,
-                "--output=" + outputFile
+                "--hpoa=" + hpoaFile
         };
 
         try {
