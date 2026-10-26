@@ -14,6 +14,7 @@ import org.p2gx.maxodiff.core.phenomizer.PhenomizerDDxEngine;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import picocli.CommandLine;
+import static java.lang.Math.min;
 
 import java.io.BufferedWriter;
 import java.io.IOException;
@@ -62,7 +63,7 @@ public class DDxCommand extends BaseCommand {
     protected String singleDisease = null;
 
     @CommandLine.Option(names = { "-t", "--nThreads" }, description = "Number of threads to use for analysis.")
-    protected int nThreads = 4; //Runtime.getRuntime().availableProcessors() - 1;
+    protected int nThreads = min(4, Runtime.getRuntime().availableProcessors() - 1);
 
     @Override
     public Integer execute() throws Exception {
