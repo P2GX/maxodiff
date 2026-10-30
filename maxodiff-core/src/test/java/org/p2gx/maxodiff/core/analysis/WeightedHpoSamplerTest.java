@@ -62,7 +62,7 @@ class WeightedHpoSamplerTest {
         int draws = 10_000;
         int aCount = 0;
         for (int i = 0; i < draws; i++) {
-            if (s.sample(1, random).get(0).equals(A)) {
+            if (s.sample(1, random).getFirst().equals(A)) {
                 aCount++;
             }
         }

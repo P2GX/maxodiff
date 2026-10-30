@@ -79,6 +79,11 @@ public class MaxoTermEvaluator implements Callable<RankedMaxoResult> {
                 simulatedHpoCountSet, hpoFrequenciesNDiseases);
     }
 
+    public static List<SimpleTerm> selectedKterms(List<TermId> hpoIds, List<Double> probabilities, int k, BiometadataService biometadataService) {
+
+        return List.of();
+    }
+
     /**
      * Randomly selects {@code k} unique HPO term IDs from a weighted probability distribution.
      * <p>

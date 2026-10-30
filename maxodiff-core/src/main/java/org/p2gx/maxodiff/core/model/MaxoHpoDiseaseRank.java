@@ -2,6 +2,7 @@ package org.p2gx.maxodiff.core.model;
 
 
 import org.monarchinitiative.phenol.ontology.data.TermId;
+import org.p2gx.maxodiff.core.analysis.HpoWeight;
 import org.p2gx.maxodiff.core.analysis.SimpleTerm;
 import java.util.*;
 import java.util.stream.IntStream;
@@ -40,9 +41,8 @@ public class MaxoHpoDiseaseRank {
 
     /** One entry per top disease, in differential-diagnosis order. */
     private final List<DiseaseYield> yields;
-    /** HPO term → the sum of the weights of the top diseases that have the term
-     * or {@link #EPSILON} if no top disease has it.*/
-    private final Map<TermId, Double> hpoToProbabilityMap;
+    /** Every term the test can reveal that is not yet in the sample, with its weight, highest first. */
+    private final List<HpoWeight> hpoWeights;
     /** Small prior weight for terms the test can reveal but no top disease has.
      * The value of EPSILON is a modelling choice;  with 30–200 detectable terms 1e-3 gives roughly 1–3% of draws from
      * outside the top diseases’ terms. */
@@ -78,7 +78,7 @@ public class MaxoHpoDiseaseRank {
                                     allMaxoAscertainedHpoIds);
                         })
                         .toList();
-        this.hpoToProbabilityMap = buildProbabilityMap(sample);
+        this.hpoWeights = buildHpoWeights(sample);
     }
 
     /** Sum, per HPO term, the weights of the top diseases that the test could reveal it in. */
@@ -92,25 +92,24 @@ public class MaxoHpoDiseaseRank {
         return weights;
     }
 
-    /** Weights for every term the test can reveal that is not already in the sample, highest first. */
-    private Map<TermId, Double> buildProbabilityMap(PhenopacketData sample) {
+    private List<HpoWeight> buildHpoWeights(PhenopacketData sample) {
         Set<TermId> sampleTerms = sample.observed().stream().map(SimpleTerm::tid).collect(Collectors.toSet());
         sample.excluded().forEach(t -> sampleTerms.add(t.tid()));
         Map<TermId, Double> weights = sumWeights();
 
         return allMaxoAscertainedHpoIds.stream()
                 .filter(id -> !sampleTerms.contains(id))
-                .sorted(Comparator.comparingDouble((TermId id) -> weights.getOrDefault(id, EPSILON)).reversed().thenComparing(TermId::getValue))
-                .collect(Collectors.toMap(id -> id, id -> weights.getOrDefault(id, EPSILON),
-                        (a, b) -> b, LinkedHashMap::new));
+                .map(id -> new HpoWeight(id, weights.getOrDefault(id, EPSILON)))
+                .sorted(Comparator.comparingDouble(HpoWeight::weight).reversed()
+                        .thenComparing(w -> w.hpoId().getValue()))   // deterministic tie-break
+                .toList();
     }
 
+    public List<HpoWeight> getHpoWeights() {
+        return hpoWeights;
+    }
     public List<Integer> getAscertainedHpoCountList() {
         return yields.stream().map(DiseaseYield::count).toList();
-    }
-
-    public Map<TermId, Double> getHpoToProbabilityMap() {
-        return hpoToProbabilityMap;
     }
 
     public TermId getMaxoId() {
