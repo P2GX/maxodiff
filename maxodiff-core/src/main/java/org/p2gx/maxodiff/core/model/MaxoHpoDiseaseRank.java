@@ -40,11 +40,13 @@ public class MaxoHpoDiseaseRank {
 
     /** One entry per top disease, in differential-diagnosis order. */
     private final List<DiseaseYield> yields;
-    /** HPO term → the sum of tho weights of the top diseases that have the term
-     * or 1e-6 if no top disease has it.*/
-    private Map<TermId, Double> hpoToProbabilityMap = new HashMap<>();
-    /** Small prior weight for terms the test can reveal but no top disease has. */
-    private static final double EPSILON = 1e-6;
+    /** HPO term → the sum of the weights of the top diseases that have the term
+     * or {@link #EPSILON} if no top disease has it.*/
+    private final Map<TermId, Double> hpoToProbabilityMap;
+    /** Small prior weight for terms the test can reveal but no top disease has.
+     * The value of EPSILON is a modelling choice;  with 30–200 detectable terms 1e-3 gives roughly 1–3% of draws from
+     * outside the top diseases’ terms. */
+    private static final double EPSILON = 1e-3;
 
     /**
      * Construct a {@code MaxoHpoDiseaseRank} instance.
@@ -98,7 +100,7 @@ public class MaxoHpoDiseaseRank {
 
         return allMaxoAscertainedHpoIds.stream()
                 .filter(id -> !sampleTerms.contains(id))
-                .sorted(Comparator.comparingDouble((TermId id) -> weights.getOrDefault(id, EPSILON)).reversed())
+                .sorted(Comparator.comparingDouble((TermId id) -> weights.getOrDefault(id, EPSILON)).reversed().thenComparing(TermId::getValue))
                 .collect(Collectors.toMap(id -> id, id -> weights.getOrDefault(id, EPSILON),
                         (a, b) -> b, LinkedHashMap::new));
     }
