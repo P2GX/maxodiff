@@ -64,10 +64,19 @@ public class MaxoHpoDiseaseRank {
                               PhenopacketData sample,
                               int nDiagnoses,
                               String maxoLabel) {
+        Set<TermId> maxoHpoIds = maxoToHpoTermIdMap.get(maxoId);
+        if (maxoHpoIds == null) {
+            throw new IllegalArgumentException(
+                    String.format("Unknown MAxO id %s: no detectable HPO terms are mapped to it", maxoId));
+        }
+        if (nDiagnoses < 0 || nDiagnoses > initialDiagnoses.size()) {
+            throw new IllegalArgumentException(
+                    String.format("nDiagnoses must be between 0 and %d but was %d", initialDiagnoses.size(), nDiagnoses));
+        }
+        this.allMaxoAscertainedHpoIds = maxoHpoIds;
         this.initialDiagnoses = initialDiagnoses;
         this.maxoId = maxoId;
         this.maxoLabel = maxoLabel;
-        this.allMaxoAscertainedHpoIds = maxoToHpoTermIdMap.get(maxoId);
         this.yields = IntStream.range(0, nDiagnoses)
                         .mapToObj(i -> {
                             DifferentialDiagnosis dx = initialDiagnoses.get(i);

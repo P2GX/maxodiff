@@ -10,6 +10,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.concurrent.Callable;
+import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 public class MaxoTermEvaluatorSingleDisease implements Callable<RankedMaxoResultSingleDisease> {
@@ -50,14 +51,9 @@ public class MaxoTermEvaluatorSingleDisease implements Callable<RankedMaxoResult
     }
 
     public RankedMaxoResultSingleDisease call() {
-
-        //Map<TermId, Double> hpoToProbabilityMap = maxoHpoDiseaseRank.getHpoToProbabilityMap();
         List<Integer> nHposToSample = maxoHpoDiseaseRank.getSampledHpoCounts(nRepetitions);
         DiscoverablePhenotypes discoverablePhenotypes = maxoHpoTermProbabilities.getDiscoverablePhenotypes();
 
-        // Separate HPO IDs and their probabilities
-      //  List<TermId> hpoIds = new ArrayList<>(hpoToProbabilityMap.keySet());
-       // List<Double> probabilities = new ArrayList<>(hpoToProbabilityMap.values());
 
         WeightedHpoSampler sampler = new WeightedHpoSampler(maxoHpoDiseaseRank.getHpoWeights());
         Random random = new Random();
@@ -65,16 +61,14 @@ public class MaxoTermEvaluatorSingleDisease implements Callable<RankedMaxoResult
         // Run simulations and calculate final scores
         List<List<DifferentialDiagnosis>> newMaxoDiagnosesList = new ArrayList<>();
         List<Double> scores = new ArrayList<>();
-        Set<SimpleTerm> simulatedHpoIdSet = new HashSet<>();
+
         Map<TermId, Integer> simulatedHpoCountSet = new HashMap<>();
         for (int i = 0; i < nRepetitions; i++) {
             int nHpos = Math.min( nHposToSample.get(i),sampler.size());
-            sampler.sample(nHpos, random).stream()
+            Set<SimpleTerm> simulated = sampler.sample(nHpos, random).stream()
                             .map(id -> new SimpleTerm(id, biometadataService.hpoLabel(id).orElse("unknown")))
-                                    .forEach(simulatedHpoIdSet::add);
-            simulatedHpoIdSet.forEach(hpoTerm -> simulatedHpoCountSet.merge(hpoTerm.tid(), 1, Integer::sum));
-
-            PhenopacketData newSample = getNewSample(ppkt, simulatedHpoIdSet);
+                                    .collect(Collectors.toSet());
+            PhenopacketData newSample = getNewSample(ppkt, simulated);
             List<DifferentialDiagnosis> newMaxoDiagnoses = engine.run(newSample, diseaseIds);
             newMaxoDiagnosesList.add(newMaxoDiagnoses);
 

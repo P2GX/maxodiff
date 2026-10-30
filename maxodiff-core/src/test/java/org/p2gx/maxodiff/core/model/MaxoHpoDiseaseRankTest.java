@@ -248,7 +248,7 @@ class MaxoHpoDiseaseRankTest {
 
     @Test
     void moreDiagnosesRequestedThanAvailableIsRejected() {
-        assertThrows(ArrayIndexOutOfBoundsException.class, () -> build(4));
+        assertThrows(IllegalArgumentException.class, () -> build(4));
     }
 
     @Test
