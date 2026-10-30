@@ -46,7 +46,7 @@ public class MaxoHpoDiseaseRank {
     /** Small prior weight for terms the test can reveal but no top disease has.
      * The value of EPSILON is a modelling choice;  with 30–200 detectable terms 1e-3 gives roughly 1–3% of draws from
      * outside the top diseases’ terms. */
-    private static final double EPSILON = 1e-3;
+    static final double EPSILON = 1e-3;
 
     /**
      * Construct a {@code MaxoHpoDiseaseRank} instance.
