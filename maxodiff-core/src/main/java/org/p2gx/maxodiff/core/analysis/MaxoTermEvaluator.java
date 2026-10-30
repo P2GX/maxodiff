@@ -47,7 +47,7 @@ public class MaxoTermEvaluator implements Callable<RankedMaxoResult> {
     @Override
     public RankedMaxoResult call() {
 
-        Map<TermId, Double> hpoToProbabilityMap = maxoHpoDiseaseRank.getHpoToProbabiltyMap();
+        Map<TermId, Double> hpoToProbabilityMap = maxoHpoDiseaseRank.getHpoToProbabilityMap();
         List<Integer> nHposToSample = maxoHpoDiseaseRank.getSampledHpoCounts(nRepetitions);
 
         // Separate HPO IDs and their probabilities

@@ -51,7 +51,7 @@ public class MaxoTermEvaluatorSingleDisease implements Callable<RankedMaxoResult
 
     public RankedMaxoResultSingleDisease call() {
 
-        Map<TermId, Double> hpoToProbabilityMap = maxoHpoDiseaseRank.getHpoToProbabiltyMap();
+        Map<TermId, Double> hpoToProbabilityMap = maxoHpoDiseaseRank.getHpoToProbabilityMap();
         List<Integer> nHposToSample = maxoHpoDiseaseRank.getSampledHpoCounts(nRepetitions);
         DiscoverablePhenotypes discoverablePhenotypes = maxoHpoTermProbabilities.getDiscoverablePhenotypes();
 
