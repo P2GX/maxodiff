@@ -47,12 +47,15 @@ public class MaxoTermEvaluator implements Callable<RankedMaxoResult> {
     @Override
     public RankedMaxoResult call() {
 
-        Map<TermId, Double> hpoToProbabilityMap = maxoHpoDiseaseRank.getHpoToProbabilityMap();
-        List<Integer> nHposToSample = maxoHpoDiseaseRank.getSampledHpoCounts(nRepetitions);
+       // Map<TermId, Double> hpoToProbabilityMap = maxoHpoDiseaseRank.getHpoToProbabilityMap();
+
 
         // Separate HPO IDs and their probabilities
-        List<TermId> hpoIds = new ArrayList<>(hpoToProbabilityMap.keySet());
-        List<Double> probabilities = new ArrayList<>(hpoToProbabilityMap.values());
+       // List<TermId> hpoIds = new ArrayList<>(hpoToProbabilityMap.keySet());
+       // List<Double> probabilities = new ArrayList<>(hpoToProbabilityMap.values());
+        WeightedHpoSampler sampler = new WeightedHpoSampler(maxoHpoDiseaseRank.getHpoWeights());
+        Random random = new Random();
+        List<Integer> nHposToSample = maxoHpoDiseaseRank.getSampledHpoCounts(nRepetitions);
 
         // Run simulations and calculate final scores
         List<List<DifferentialDiagnosis>> newMaxoDiagnosesList = new ArrayList<>();
@@ -62,9 +65,10 @@ public class MaxoTermEvaluator implements Callable<RankedMaxoResult> {
         for (int i = 0; i < nRepetitions; i++) {
             LOGGER.debug("Running repetition " + i + " of " + nRepetitions);
             // Sample and count simulated HPO terms
-            int nHpos = nHposToSample.get(i);
-            simulatedHpoIdSet.addAll(selectKWeightedHpoTerms(hpoIds, probabilities, nHpos, biometadataService));
-//            simulatedHpoIdSet = new HashSet<>(selectKWeightedHpoTerms(hpoIds, probabilities, nHpos));
+            int nHpos = Math.min(nHposToSample.get(i), sampler.size());
+            sampler.sample(nHpos, random).stream()
+                            .map(id -> new SimpleTerm(id, biometadataService.hpoLabel(id).orElse("unknown")))
+                                    .forEach(simulatedHpoIdSet::add);
             simulatedHpoIdSet.forEach(hpoTerm -> simulatedHpoCountSet.merge(hpoTerm.tid(), 1, Integer::sum));
 
             PhenopacketData newSample = getNewSample(ppkt, simulatedHpoIdSet);
@@ -79,52 +83,6 @@ public class MaxoTermEvaluator implements Callable<RankedMaxoResult> {
                 simulatedHpoCountSet, hpoFrequenciesNDiseases);
     }
 
-    public static List<SimpleTerm> selectedKterms(List<TermId> hpoIds, List<Double> probabilities, int k, BiometadataService biometadataService) {
-
-        return List.of();
-    }
-
-    /**
-     * Randomly selects {@code k} unique HPO term IDs from a weighted probability distribution.
-     * <p>
-     * Each HPO term in {@code hpoIds} is associated with a probability in {@code probabilities},
-     * defining how likely it is to be selected. Sampling is performed <b>without replacement</b>,
-     * meaning each term can only be selected once.
-     * </p>
-     *
-     * @param hpoIds        list of HPO term identifiers
-     * @param probabilities list of normalized probabilities corresponding to each HPO term
-     * @param k              number of unique HPO terms to sample
-     * @return a list of {@code k} sampled HPO term IDs
-     */
-    public static List<SimpleTerm> selectKWeightedHpoTerms(List<TermId> hpoIds, List<Double> probabilities, int k, BiometadataService biometadataService) {
-        // Create cumulative probabilities
-        List<Double> cumulative = new ArrayList<>(probabilities.size());
-        double cumSum = 0.0;
-        for (double p : probabilities) {
-            cumSum += p;
-            cumulative.add(cumSum);
-        }
-
-        // Perform weighted sampling without replacement
-        List<SimpleTerm> selected = new ArrayList<>();
-        Set<Integer> usedIndices = new HashSet<>();
-        Random random = new Random();
-
-        while (selected.size() < k) {
-            double r = random.nextDouble();
-            for (int i = 0; i < cumulative.size(); i++) {
-                if (r <= cumulative.get(i) && !usedIndices.contains(i)) {
-                    TermId hpoId = hpoIds.get(i);
-                    selected.add(new SimpleTerm(hpoId, biometadataService.hpoLabel(hpoId).orElse("unknown")));
-                    usedIndices.add(i);
-                    break;
-                }
-            }
-        }
-
-        return selected;
-    }
 
     /** Create a new sample by adding the simulated observed terms (from the MAxO diagnostic test) to
      * the existing phenopacket and keeping the original excluded terms
