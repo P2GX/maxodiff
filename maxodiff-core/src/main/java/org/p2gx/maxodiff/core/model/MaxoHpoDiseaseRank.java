@@ -18,8 +18,10 @@ import java.util.stream.Collectors;
  *   <li>Provides a probability distribution over HPO terms inferred from observed disease rankings.</li>
  * </ul>
  * <p>
- * This information can be used to identify the most probable HPO features
- * relevant to a specific intervention or to prioritize diseases in differential diagnosis.
+ * The question being modeled is:
+ * if we perform diagnostic test M, what new phenotypes might we observe in this patient?
+ * To answer it we look at the top n candidate diseases. Disease #1 is the most likely, so it gets weight 1.
+ * Disease #2 gets 1/2, and so on.
  *
  * @author Martha Beckwith
  * @since 1.0
@@ -37,13 +39,17 @@ public class MaxoHpoDiseaseRank {
     /** The MAXO label of the diagnostic test */
     private final String maxoLabel;
 
-    /** List of counts of ascertainable HPO terms per disease. */
+    /** List of counts of ascertainable HPO terms per disease. One number per top disease:
+     * how many of that disease’s phenotypes, not yet in the patient, the test can reveal.*/
     private final List<Integer> ascertainedHpoCountList = new ArrayList<>();
-    /** Mapping of HPO term IDs to lists of initial differential diagnosis disease rankings. */
-    private final Map<TermId, List<Double>> hpoToRankMap = new HashMap<>();
-    /** Mapping of HPO term IDs to normalized probabilities. */
+    /** Mapping of HPO term IDs to the sum of weights of the differential diagnosis disease rankings. */
+    private final Map<TermId, Double> hpoToWeight = new HashMap<>();
+    /** Mapping of HPO term IDs to normalized probabilities.
+     * HPO term → the sum of tho weights of the top diseases that have the term
+     * or 1e-6 if no top disease has it.*/
     private Map<TermId, Double> hpoToProbabiltyMap = new HashMap<>();
-
+    /** Small prior weight for terms the test can reveal but no top disease has. */
+    private static final double EPSILON = 1e-6;
 
     /**
      * Construct a {@code MaxoHpoDiseaseRank} instance.
@@ -90,20 +96,16 @@ public class MaxoHpoDiseaseRank {
      * @param nDiagnoses    the number of top diagnoses to consider
      */
     public void makeAscertainedHpoCountListAndRankMap(PhenopacketData sample, int nDiagnoses) {
-
-        for (DifferentialDiagnosis diagnosis : initialDiagnoses.subList(0, nDiagnoses)) {
-            double diseaseRankFactor = 1.0 / (initialDiagnoses.indexOf(diagnosis) + 1);
-            Set<TermId> diseaseAnnotatedHpoIds = ascertainablePhenotypes.getAssessablePhenotypeIds(sample, diagnosis.diseaseId());
-            // HpoToRankMap
-            for (TermId hpoId : diseaseAnnotatedHpoIds) {
-                hpoToRankMap.putIfAbsent(hpoId, new ArrayList<>());
-                hpoToRankMap.get(hpoId).add(diseaseRankFactor);
+        for (int i = 0; i < nDiagnoses; i++) {
+            DifferentialDiagnosis dx = initialDiagnoses.get(i);
+            DiseaseYield y = DiseaseYield.of(dx, i + 1,
+                    ascertainablePhenotypes.getAssessablePhenotypeIds(sample, dx.diseaseId()),
+                    allMaxoAscertainedHpoIds);
+            ascertainedHpoCountList.add(y.count());
+            for (TermId hpoId : y.revealedByMaxo()) {
+                // sum the weights of each differential diagnosis/HPO combination
+                hpoToWeight.merge(hpoId, y.weight(), Double::sum);
             }
-            // Maximum number of HPO terms for this disease that can be ascertained by this MAxO (not including
-            // terms that are already observed/excluded in the Phenopacket).
-            diseaseAnnotatedHpoIds.retainAll(allMaxoAscertainedHpoIds);
-            ascertainedHpoCountList.add(diseaseAnnotatedHpoIds.size());
-
         }
     }
 
@@ -125,22 +127,12 @@ public class MaxoHpoDiseaseRank {
 
         Map<TermId, Double> hpoToProbabilityMapOriginal = new HashMap<>();
         for (TermId hpoId : maxoAscertainedHpoIdsExclSample) {
-            Double EPSILON = 0.000001; // small probability
             hpoToProbabilityMapOriginal.put(hpoId, EPSILON);
         }
-        for (Map.Entry<TermId, List<Double>> hpoRankMapEntry : hpoToRankMap.entrySet()) {
-            TermId hpo = hpoRankMapEntry.getKey();
-            List<Double> ranks = hpoRankMapEntry.getValue();
-            double rankSum = ranks.stream()
-                    .mapToDouble(Double::doubleValue)
-                    .sum();
-            hpoToProbabilityMapOriginal.replace(hpo, rankSum);
+        Map<TermId, Double> hpoRankMapOriginal = new HashMap<>();
+        for (TermId hpoId: maxoAscertainedHpoIdsExclSample) {
+            hpoToProbabilityMapOriginal.put(hpoId, hpoToWeight.getOrDefault(hpoId, EPSILON));
         }
-
-        //Normalize probability values and order by decreasing probability
-//        Double probabilitySum = hpoToProbabilityMapOriginal.values().stream().mapToDouble(Double::doubleValue).sum();
-//        hpoToProbabilityMapOriginal.forEach( (id, prob) -> hpoToProbabilityMapOriginal.replace(id, prob/probabilitySum));
-
         hpoToProbabiltyMap = hpoToProbabilityMapOriginal.entrySet().stream()
                 .sorted(Map.Entry.comparingByValue(Comparator.reverseOrder()))
                 .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (a, b)->b, LinkedHashMap::new));
