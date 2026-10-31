@@ -54,7 +54,7 @@ public final class MaxoSimulation {
         for (int nHpos : nHposPerRepetition) {
             Set<SimpleTerm> simulated = sampler.sample(Math.min(nHpos, sampler.size()), random).stream()
                     .map(id -> new SimpleTerm(id, hpoLabel.apply(id)))
-                    .collect(Collectors.toSet());
+                    .collect(Collectors.toCollection(LinkedHashSet::new));
             simulated.forEach(t -> selectionCounts.merge(t, 1, Integer::sum));
 
             PhenopacketData newSample = ppkt.withAdditionalObserved(simulated);

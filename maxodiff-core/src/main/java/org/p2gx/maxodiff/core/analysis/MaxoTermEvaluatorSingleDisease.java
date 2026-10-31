@@ -52,12 +52,13 @@ public class MaxoTermEvaluatorSingleDisease implements Callable<RankedMaxoResult
 
     public RankedMaxoResultSingleDisease call() {
         DiscoverablePhenotypes discoverablePhenotypes = maxoHpoTermProbabilities.getDiscoverablePhenotypes();
+        Random random = new Random();
         MaxoSimulation simulation = new MaxoSimulation(
                 new WeightedHpoSampler(maxoHpoDiseaseRank.getHpoWeights()),
                 ppkt, engine, diseaseIds, initialDiagnoses,
                 id -> biometadataService.hpoLabel(id).orElse("unknown"));
         SimulationOutcome outcome =
-                simulation.run(maxoHpoDiseaseRank.getSampledHpoCounts(nRepetitions), new Random());
+                simulation.run(maxoHpoDiseaseRank.getSampledHpoCounts(nRepetitions, random), random);
         return makeRankedMaxoResultSingleDisease(targetDiseaseId, outcome.meanScore(),
                 initialDiagnoses, outcome.newDiagnoses(), discoverablePhenotypes, context);
     }

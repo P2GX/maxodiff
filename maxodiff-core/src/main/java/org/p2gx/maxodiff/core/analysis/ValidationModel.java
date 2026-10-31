@@ -3,7 +3,6 @@ package org.p2gx.maxodiff.core.analysis;
 
 import org.p2gx.maxodiff.core.analysis.impl.ValidationWeightedRankDiffImpl;
 import org.p2gx.maxodiff.core.model.DifferentialDiagnosis;
-import org.p2gx.maxodiff.core.analysis.impl.ValidationRankDiffImpl;
 
 
 import java.util.List;
@@ -12,10 +11,6 @@ public interface ValidationModel {
 
     double validationScore();
 
-    static ValidationModel rankDiff(List<DifferentialDiagnosis> initialDifferentialDiagnoses,
-                                    List<DifferentialDiagnosis> maxoDifferentialDiagnoses) {
-        return new ValidationRankDiffImpl(initialDifferentialDiagnoses, maxoDifferentialDiagnoses);
-    }
 
     static ValidationModel weightedRankDiff(List<DifferentialDiagnosis> initialDifferentialDiagnoses,
                                             List<DifferentialDiagnosis> maxoDifferentialDiagnoses) {

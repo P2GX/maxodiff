@@ -15,16 +15,6 @@ public class ValidationModelTest {
     private final static List<DifferentialDiagnosis> initialDiagnoses = TestResources.getExampleDiagnoses().stream().toList();
     private final static List<DifferentialDiagnosis> maxoDiagnoses = TestResources.getExampleMaxoDiagnoses().stream().toList();
 
-
-    /**
-     * This tests validating the maxodiff analysis using the sum of differences in disease ranks.
-     */
-    @Test
-    public void testRankDiffValidationModel() {
-        double validationScore = ValidationModel.rankDiff(initialDiagnoses, maxoDiagnoses).validationScore();
-        assertEquals(13.0, validationScore, 1e-3);
-    }
-
     /**
      * This tests validating the maxodiff analysis using the weighted sum of differences in disease ranks.
      */

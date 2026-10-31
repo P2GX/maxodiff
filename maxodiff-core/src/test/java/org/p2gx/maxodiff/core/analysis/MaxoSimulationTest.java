@@ -108,4 +108,30 @@ class MaxoSimulationTest {
         assertEquals(3, observedIds(engine.samples.getFirst()).size()); // original + both available terms
         assertEquals(2, outcome.selectionCounts().size());
     }
+
+    @Test
+    void sameSeedGivesTheSameSimulation() {
+        List<Integer> counts = List.of(1, 2, 3, 2);
+
+        SimulationOutcome first = simulation(sampler(A, B, C, E)).run(counts, new Random(42));
+        List<List<TermId>> firstSamples = engine.samples.stream().map(MaxoSimulationTest::observedIds).toList();
+
+        engine = new StubEngine(engine.answer);
+        SimulationOutcome second = simulation(sampler(A, B, C, E)).run(counts, new Random(42));
+        List<List<TermId>> secondSamples = engine.samples.stream().map(MaxoSimulationTest::observedIds).toList();
+
+        assertEquals(first.selectionCounts(), second.selectionCounts());
+        assertEquals(firstSamples, secondSamples);
+    }
+
+    @Test
+    void termsReachTheEngineInTheOrderTheyWereDrawn() {
+        WeightedHpoSampler sampler = sampler(A, B, C, E);
+        List<TermId> drawn = sampler.sample(3, new Random(7));
+
+        simulation(sampler).run(List.of(3), new Random(7));
+
+        List<TermId> seen = observedIds(engine.samples.getFirst());
+        assertEquals(drawn, seen.subList(1, 4)); // position 0 is the patient's original term
+    }
 }

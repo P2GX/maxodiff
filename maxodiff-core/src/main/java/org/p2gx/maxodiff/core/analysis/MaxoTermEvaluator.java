@@ -55,7 +55,7 @@ public class MaxoTermEvaluator implements Callable<RankedMaxoResult> {
                 diseaseIds,
                 initialDiagnoses,
                 id -> biometadataService.hpoLabel(id).orElse("unknown"));
-        SimulationOutcome outcome = simulation.run(maxoHpoDiseaseRank.getSampledHpoCounts(nRepetitions), random);
+        SimulationOutcome outcome = simulation.run(maxoHpoDiseaseRank.getSampledHpoCounts(nRepetitions, random), random);
         return makeRankedMaxoResult(outcome.selectionCounts(), outcome.meanScore(), initialDiagnoses,
                 outcome.newDiagnoses(), hpoFrequenciesNDiseases);
     }
