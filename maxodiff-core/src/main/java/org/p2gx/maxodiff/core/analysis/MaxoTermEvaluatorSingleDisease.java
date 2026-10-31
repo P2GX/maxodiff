@@ -63,29 +63,6 @@ public class MaxoTermEvaluatorSingleDisease implements Callable<RankedMaxoResult
                 initialDiagnoses, outcome.newDiagnoses(), discoverablePhenotypes, context);
     }
 
-    /**
-     * Returns the 1-based rank (position) of a disease within a list of differential diagnoses.
-     * <p>
-     * The method iterates through the provided list of {@link DifferentialDiagnosis} objects
-     * (representing the ordered initial ranks assigned by Phenomizer)
-     * and compares each diagnosis's disease ID to the given {@link TermId}. If a match is found,
-     * the method returns the index position (starting from 1). If the disease is not present
-     * in the list, the method returns {@code 0}.
-     * </p>
-     *
-     * @param diagnoses the ordered list of {@link DifferentialDiagnosis} instances to search
-     * @param diseaseId the {@link TermId} of the disease whose rank should be determined
-     * @return the 1-based rank of the disease in the list, or {@code 0} if not found
-     */
-    private int findRank(List<DifferentialDiagnosis> diagnoses, TermId diseaseId) {
-        for (int i = 0; i < diagnoses.size(); i++) {
-            if (diagnoses.get(i).diseaseId().equals(diseaseId)) {
-                return i + 1; // 1-based rank
-            }
-        }
-        return 0;
-    }
-
     /** Compute average changes in disease ranks between the initial disease rankings and the MAxO disease rankings.
      *
      * @param initialDiagnoses List of diseases from the original differential diagnosis.
@@ -103,19 +80,7 @@ public class MaxoTermEvaluatorSingleDisease implements Callable<RankedMaxoResult
 
         String diseaseLabel = biometadataService.diseaseLabel(targetDiseaseId).orElse("unknown");
         SimpleTerm diseaseTerm = new SimpleTerm(targetDiseaseId, diseaseLabel);
-        int initialRank = findRank(initialDiagnoses, targetDiseaseId);
-
-        List<Integer> newRanks = new ArrayList<>();
-        for (List<DifferentialDiagnosis> newList : newMaxoDiagnosesList) {
-            int newRank = findRank(newList, targetDiseaseId);
-            if (newRank > 0) {
-                newRanks.add(newRank);
-            }
-        }
-
-        int avg = (int) newRanks.stream().mapToDouble(Double::valueOf).average().orElse(0);
-
-        return new RankedOmimTerm(diseaseTerm, initialRank, avg);
+       return DiseaseRankSummary.summarize(diseaseTerm, initialDiagnoses, newMaxoDiagnosesList);
     }
 
 
