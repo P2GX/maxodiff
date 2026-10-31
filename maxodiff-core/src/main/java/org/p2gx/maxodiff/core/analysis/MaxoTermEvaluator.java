@@ -30,10 +30,12 @@ public class MaxoTermEvaluator implements Callable<RankedMaxoResult> {
             int nRepetitions,
             PhenopacketData ppkt,
             DDxEngine engine,
-            MaxoHpoTermProbabilities maxoHpoTermProbabilities,
             List<DifferentialDiagnosis> initialDiagnoses,
             Set<TermId> diseaseIds, BiometadataService biometadataService,
             List<HpoFrequency> hpoFrequenciesNDiseases) {
+        if (nRepetitions < 1) {
+            throw new IllegalArgumentException("nRepetitions must be at least 1 but was " + nRepetitions);
+        }
         this.maxoHpoDiseaseRank = maxoHpoDiseaseRank;
         this.nRepetitions = nRepetitions;
         this.ppkt = ppkt;

@@ -102,7 +102,7 @@ public class RankMaxo {
             int finalMaxoIdx = maxoIdx;
             tasks.add(() -> {
                 MaxoTermEvaluator evaluateMaxoTerm = new MaxoTermEvaluator(maxoHpoDiseaseRank, nRepetitions, ppkt,
-                        engine, maxoHpoTermProbabilities,
+                        engine,
                         initialDiagnoses, diseaseIds, biometadataService, hpoFrequenciesNDiseases);
                 double done = completedTasks.incrementAndGet();
                 rankMaxoProgress.updateProgress(maxoId.getValue(), done);

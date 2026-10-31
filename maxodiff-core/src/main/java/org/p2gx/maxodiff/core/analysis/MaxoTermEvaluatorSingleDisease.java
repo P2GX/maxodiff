@@ -38,6 +38,9 @@ public class MaxoTermEvaluatorSingleDisease implements Callable<RankedMaxoResult
             Set<TermId> diseaseIds, BiometadataService biometadataService,
             MdContext context,
             TermId targetDiseaseId) {
+        if (nRepetitions < 1) {
+            throw new IllegalArgumentException("nRepetitions must be at least 1 but was " + nRepetitions);
+        }
         this.maxoHpoDiseaseRank = maxoHpoDiseaseRank;
         this.nRepetitions = nRepetitions;
         this.ppkt = ppkt;
@@ -103,9 +106,10 @@ public class MaxoTermEvaluatorSingleDisease implements Callable<RankedMaxoResult
         RankedOmimTerm rankedOmimTerm = getRankedOmimTerm(initialDiagnoses, newMaxoDiagnosesList, targetDiseaseId);
 
         // Step 2: Get all MAxO ascertained HPO Ids for single disease of interest
-        Set<TermId> allMaxoAscertainedHpoIds = maxoHpoDiseaseRank.getAllMaxoAscertainedHpoIds();
+        Set<TermId> allMaxoAscertainedHpoIds = new HashSet<>(maxoHpoDiseaseRank.getAllMaxoAscertainedHpoIds());
         Set<TermId> diseasePhenotypeIds = discoverablePhenotypes.getDiscoverablePhenotypeIds(ppkt, diseaseId);
         allMaxoAscertainedHpoIds.retainAll(diseasePhenotypeIds);
+
 
         // Step 3: Compute nDiscoverablePhenotypes and Total IC
         int nMaxoDiseaseHpoTerms = allMaxoAscertainedHpoIds.size();
