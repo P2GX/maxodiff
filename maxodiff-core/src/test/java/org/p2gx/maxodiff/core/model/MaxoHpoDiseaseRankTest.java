@@ -106,6 +106,35 @@ class MaxoHpoDiseaseRankTest {
         return weights.stream().collect(Collectors.toMap(HpoWeight::hpoId, HpoWeight::weight));
     }
 
+    private MaxoHpoDiseaseRank buildWith(Set<TermId> detectable) {
+        return MaxoHpoDiseaseRank.Builder.builder()
+                .initialDiagnoses(diagnoses)
+                .ascertainablePhenotypes(assessable)
+                .maxoToHpoTermIdMap(Map.of(MAXO, detectable))
+                .maxoId(MAXO)
+                .maxoLabel(MAXO_LABEL)
+                .sample(sample)
+                .nDiagnoses(3)
+                .build();
+    }
+
+    @Test
+    void laterChangesToTheSuppliedSetDoNotAffectTheObject() {
+        Set<TermId> supplied = new HashSet<>(Set.of(A, B, C, E, S, X));
+        MaxoHpoDiseaseRank rank = buildWith(supplied);
+
+        supplied.retainAll(Set.of(A)); // somebody else changes the shared set afterwards
+
+        assertEquals(Set.of(A, B, C, E, S, X), rank.getAllMaxoAscertainedHpoIds());
+    }
+
+    @Test
+    void theDetectableTermsCannotBeModifiedThroughTheGetter() {
+        MaxoHpoDiseaseRank rank = buildWith(new HashSet<>(Set.of(A, B, C, E, S, X)));
+
+        assertThrows(UnsupportedOperationException.class, () -> rank.getAllMaxoAscertainedHpoIds().clear());
+    }
+
     // ---- weights ----------------------------------------------------------------
 
     @Test

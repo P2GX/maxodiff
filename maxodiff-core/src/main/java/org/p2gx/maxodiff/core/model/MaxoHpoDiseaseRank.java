@@ -73,7 +73,7 @@ public class MaxoHpoDiseaseRank {
             throw new IllegalArgumentException(
                     String.format("nDiagnoses must be between 0 and %d but was %d", initialDiagnoses.size(), nDiagnoses));
         }
-        this.allMaxoAscertainedHpoIds = maxoHpoIds;
+        this.allMaxoAscertainedHpoIds = Set.copyOf(maxoHpoIds);
         this.initialDiagnoses = initialDiagnoses;
         this.maxoId = maxoId;
         this.maxoLabel = maxoLabel;
