@@ -51,33 +51,15 @@ public class MaxoTermEvaluatorSingleDisease implements Callable<RankedMaxoResult
     }
 
     public RankedMaxoResultSingleDisease call() {
-        List<Integer> nHposToSample = maxoHpoDiseaseRank.getSampledHpoCounts(nRepetitions);
         DiscoverablePhenotypes discoverablePhenotypes = maxoHpoTermProbabilities.getDiscoverablePhenotypes();
-
-
-        WeightedHpoSampler sampler = new WeightedHpoSampler(maxoHpoDiseaseRank.getHpoWeights());
-        Random random = new Random();
-
-        // Run simulations and calculate final scores
-        List<List<DifferentialDiagnosis>> newMaxoDiagnosesList = new ArrayList<>();
-        List<Double> scores = new ArrayList<>();
-
-        Map<TermId, Integer> simulatedHpoCountSet = new HashMap<>();
-        for (int i = 0; i < nRepetitions; i++) {
-            int nHpos = Math.min( nHposToSample.get(i),sampler.size());
-            Set<SimpleTerm> simulated = sampler.sample(nHpos, random).stream()
-                            .map(id -> new SimpleTerm(id, biometadataService.hpoLabel(id).orElse("unknown")))
-                                    .collect(Collectors.toSet());
-            PhenopacketData newSample = ppkt.withAdditionalObserved(simulated);
-            List<DifferentialDiagnosis> newMaxoDiagnoses = engine.run(newSample, diseaseIds);
-            newMaxoDiagnosesList.add(newMaxoDiagnoses);
-
-            double finalScore = ValidationModel.weightedRankDiff(initialDiagnoses, newMaxoDiagnoses).validationScore();
-            scores.add(finalScore);
-        }
-        double meanScore = scores.stream().mapToDouble(Double::doubleValue).average().orElse(0.0);
-        return makeRankedMaxoResultSingleDisease(targetDiseaseId, meanScore,
-                initialDiagnoses, newMaxoDiagnosesList, discoverablePhenotypes, context);
+        MaxoSimulation simulation = new MaxoSimulation(
+                new WeightedHpoSampler(maxoHpoDiseaseRank.getHpoWeights()),
+                ppkt, engine, diseaseIds, initialDiagnoses,
+                id -> biometadataService.hpoLabel(id).orElse("unknown"));
+        SimulationOutcome outcome =
+                simulation.run(maxoHpoDiseaseRank.getSampledHpoCounts(nRepetitions), new Random());
+        return makeRankedMaxoResultSingleDisease(targetDiseaseId, outcome.meanScore(),
+                initialDiagnoses, outcome.newDiagnoses(), discoverablePhenotypes, context);
     }
 
     /**

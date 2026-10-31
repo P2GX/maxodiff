@@ -48,28 +48,16 @@ public class MaxoTermEvaluator implements Callable<RankedMaxoResult> {
     public RankedMaxoResult call() {
         WeightedHpoSampler sampler = new WeightedHpoSampler(maxoHpoDiseaseRank.getHpoWeights());
         Random random = new Random();
-        List<Integer> nHposToSample = maxoHpoDiseaseRank.getSampledHpoCounts(nRepetitions);
-
-        // Run simulations and calculate final scores
-        List<List<DifferentialDiagnosis>> newMaxoDiagnosesList = new ArrayList<>();
-        List<Double> scores = new ArrayList<>();
-        Map<SimpleTerm, Integer> selectionCounts = new LinkedHashMap<>();
-        for (int i = 0; i < nRepetitions; i++) {
-            // Sample and count simulated HPO terms
-            int nHpos = Math.min(nHposToSample.get(i), sampler.size());
-            Set<SimpleTerm> simulated = sampler.sample(nHpos, random).stream()
-                            .map(id -> new SimpleTerm(id, biometadataService.hpoLabel(id).orElse("unknown")))
-                                    .collect(Collectors.toSet());
-            simulated.forEach(t -> selectionCounts.merge(t, 1, Integer::sum));
-            PhenopacketData newSample = ppkt.withAdditionalObserved(simulated);
-            List<DifferentialDiagnosis> newMaxoDiagnoses = engine.run(newSample, diseaseIds);
-            newMaxoDiagnosesList.add(newMaxoDiagnoses);
-
-            double finalScore = ValidationModel.weightedRankDiff(initialDiagnoses, newMaxoDiagnoses).validationScore();
-            scores.add(finalScore);
-        }
-        double meanScore = scores.stream().mapToDouble(Double::doubleValue).average().orElse(0.0);
-        return makeRankedMaxoResult(selectionCounts, meanScore, initialDiagnoses, newMaxoDiagnosesList, hpoFrequenciesNDiseases);
+        MaxoSimulation simulation = new MaxoSimulation(
+                sampler,
+                ppkt,
+                engine,
+                diseaseIds,
+                initialDiagnoses,
+                id -> biometadataService.hpoLabel(id).orElse("unknown"));
+        SimulationOutcome outcome = simulation.run(maxoHpoDiseaseRank.getSampledHpoCounts(nRepetitions), random);
+        return makeRankedMaxoResult(outcome.selectionCounts(), outcome.meanScore(), initialDiagnoses,
+                outcome.newDiagnoses(), hpoFrequenciesNDiseases);
     }
 
 
