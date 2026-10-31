@@ -5,6 +5,8 @@ import java.io.File;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import org.monarchinitiative.phenol.base.PhenolException;
 import org.monarchinitiative.phenol.ontology.data.TermId;
@@ -95,8 +97,9 @@ public class BestDxModalityCommand extends BaseCommand {
         }
 
         List<RankedMaxoResultSingleDisease> resultsList;
-        try (MaxodiffAnalysisRunner runner = new MaxodiffAnalysisRunner(
-                context, nThreads, engine, maxoDiffRefiner, allHpoFrequencies)) {
+        try (ExecutorService executor = Executors.newFixedThreadPool(nThreads)) {
+            MaxodiffAnalysisRunner runner = new MaxodiffAnalysisRunner(
+                    context, executor, engine, maxoDiffRefiner, allHpoFrequencies);
             resultsList = runner.analyzeSampleSingleDisease(phenopacketData, targetTermId);
         }
         if(this.outputJson) {

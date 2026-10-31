@@ -41,18 +41,17 @@ public class MaxodiffController {
 
     private DiffDiagRefiner diffDiagRefiner;
 
-    private final static int MAX_THREADS_PER_SESSION = 4;
-    private final int nThreads;
+    private final ExecutorService executor;
 
     public MaxodiffController(
             UserSessionData sessionData,
             MdContext context,
-            DiffDiagRefiner diffDiagRefiner) {
+            DiffDiagRefiner diffDiagRefiner,
+            ExecutorService executor) {
         this.sessionData = sessionData;
         this.mdContext = context;
         this.diffDiagRefiner = diffDiagRefiner;
-        int available = Math.max(1, Runtime.getRuntime().availableProcessors() - 1);
-        this.nThreads = Math.min(MAX_THREADS_PER_SESSION, available);
+        this.executor = executor;
     }
 
     @RequestMapping("/maxodiff")
@@ -138,15 +137,13 @@ public class MaxodiffController {
             DiffDiagRefiner customRefiner = new DiffDiagRefinerImpl(mdContextNewParams);
 
             DDxEngine engine = new PhenomizerDDxEngine(mdContext);
-            List<RankedMaxoResult> resultsList;
-            try (MaxodiffAnalysisRunner runner = new MaxodiffAnalysisRunner(
+            MaxodiffAnalysisRunner runner = new MaxodiffAnalysisRunner(
                     mdContext,
-                    nThreads,
+                    executor,
                     engine,
                     customRefiner,
-                    hpoTermCounts)) {
-                resultsList = runner.analyzeSample(sample);
-            }
+                    hpoTermCounts);
+            List<RankedMaxoResult> resultsList = runner.analyzeSample(sample);
 
             int zeroIdx = resultsList.stream()
                     .filter(result -> result.maxoScore() == 0.)
@@ -312,14 +309,14 @@ public class MaxodiffController {
 
         DDxEngine engine = new PhenomizerDDxEngine(mdContext);
         List<RankedMaxoResult> resultsList;
-        try (MaxodiffAnalysisRunner runner = new MaxodiffAnalysisRunner(
+        MaxodiffAnalysisRunner runner = new MaxodiffAnalysisRunner(
                 mdContext,
-                nThreads,
+                executor,
                 engine,
                 customRefiner,
-                hpoTermCounts)) {
-            resultsList = runner.analyzeSample(ppktData);
-        }
+                hpoTermCounts);
+        resultsList = runner.analyzeSample(ppktData);
+
         // 4. Wrap up the core computation metadata object and return it as JSON
         MdMetadata mdMetadata = new MdMetadata(
                 ppktData.sampleId(),
@@ -369,15 +366,14 @@ public class MaxodiffController {
 
         DDxEngine engine = new PhenomizerDDxEngine(mdContext);
         List<RankedMaxoResultSingleDisease> resultsList;
-        try (MaxodiffAnalysisRunner runner = new MaxodiffAnalysisRunner(
+        MaxodiffAnalysisRunner runner = new MaxodiffAnalysisRunner(
                 mdContext,
-                nThreads,
+                executor,
                 engine,
                 customRefiner,
-                hpoTermCounts)) {
-            resultsList = runner.analyzeSampleSingleDisease(ppktData, targetId);
-        }
-        
+                hpoTermCounts);
+        resultsList = runner.analyzeSampleSingleDisease(ppktData, targetId);
+
         // Make a Record that has enough data to show HTML page on SAMS, e.g., also show name of phenopacket, and some other things (check with DS)
         return ResponseEntity.ok(resultsList.stream()
                 .sorted(Comparator.comparingDouble(RankedMaxoResultSingleDisease::maxoScore).reversed())

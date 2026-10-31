@@ -22,6 +22,8 @@ import java.io.OutputStreamWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 import java.util.zip.GZIPOutputStream;
 
 /**
@@ -92,12 +94,13 @@ public class DDxCommand extends BaseCommand {
             DDxEngine engine = new PhenomizerDDxEngine(context);
             PhenopacketData phenopacketData = PhenopacketData.readPhenopacketData(phenopacketPath);
             List<RankedMaxoResult> resultsList;
-            try (MaxodiffAnalysisRunner runner = new MaxodiffAnalysisRunner(
-                    context,
-                    nThreads,
-                    engine,
-                    maxoDiffRefiner,
-                    allHpoFrequencies)) {
+            try (ExecutorService executor = Executors.newFixedThreadPool(nThreads)) {
+                MaxodiffAnalysisRunner runner = new MaxodiffAnalysisRunner(
+                        context,
+                        executor,
+                        engine,
+                        maxoDiffRefiner,
+                        allHpoFrequencies);
                 resultsList = runner.analyzeSample(phenopacketData);
             }
             if (resultsList.isEmpty()) {

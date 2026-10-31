@@ -20,34 +20,26 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-public class MaxodiffAnalysisRunner implements AutoCloseable{
+public class MaxodiffAnalysisRunner {
     private final static Logger LOGGER = LoggerFactory.getLogger(MaxodiffAnalysisRunner.class);
     private final MdContext mdContext;
-    private final int nThreads;
     private final DDxEngine engine;
     private final DiffDiagRefiner maxoDiffRefiner;
     private final List<HpoFrequency> hpoFrequencies;
-    private final ExecutorService sharedExecutor;
+    private final ExecutorService exectuor;
 
     public MaxodiffAnalysisRunner(
             MdContext mdContext,
-            int nThreads,
+            ExecutorService executor,
             DDxEngine engine,
             DiffDiagRefiner maxoDiffRefiner,
             List<HpoFrequency> hpoFrequencies
     ) {
         this.mdContext = mdContext;
-        this.nThreads = nThreads;
         this.engine = engine;
         this.maxoDiffRefiner = maxoDiffRefiner;
         this.hpoFrequencies = hpoFrequencies;
-        this.sharedExecutor = new ThreadPoolExecutor(
-                nThreads,                      // Core pool size: minimum active threads
-                10,                      // Maximum pool size: capped maximum threads
-                0L, TimeUnit.MILLISECONDS, // Keep-alive time for idle threads
-                new LinkedBlockingQueue<>(500), // Cap the waiting queue capacity at 500 tasks
-                new ThreadPoolExecutor.CallerRunsPolicy() // Handles overloads without crashing
-        );
+        this.exectuor = executor;
     }
 
 
@@ -121,7 +113,7 @@ public class MaxodiffAnalysisRunner implements AutoCloseable{
         return maxoDiffRefiner.run(sample,
                 initialNDiagnosesIds,
                 rankMaxo,
-                sharedExecutor);
+                exectuor);
     }
 
     private List<RankedMaxoResultSingleDisease> getRefinementResultsSingleDisease(
@@ -145,14 +137,9 @@ public class MaxodiffAnalysisRunner implements AutoCloseable{
                 targetDiseaseId,
                 initialNDiagnosesIds,
                 rankMaxo,
-                sharedExecutor);
+                exectuor);
     }
 
-    /** Shuts down the thread pool this runner created; safe to call more than once. */
-    @Override
-    public void close() {
-        sharedExecutor.shutdown();
-    }
 
 
 }
