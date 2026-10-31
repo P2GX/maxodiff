@@ -39,18 +39,15 @@ public class MaxodiffController {
 
     private final MdContext mdContext;
 
-    private DiffDiagRefiner diffDiagRefiner;
-
     private final ExecutorService executor;
 
     public MaxodiffController(
             UserSessionData sessionData,
             MdContext context,
-            DiffDiagRefiner diffDiagRefiner,
             ExecutorService executor) {
         this.sessionData = sessionData;
         this.mdContext = context;
-        this.diffDiagRefiner = diffDiagRefiner;
+        //this.diffDiagRefiner = diffDiagRefiner;
         this.executor = executor;
     }
 
@@ -84,7 +81,7 @@ public class MaxodiffController {
 
         // Maxodiff refiner
         MdContext mdContextNewParams = mdContext.updateContext(nRepetitions, nDiseases);
-        diffDiagRefiner = new DiffDiagRefinerImpl(mdContextNewParams);
+        DiffDiagRefiner refinar = new DiffDiagRefinerImpl(mdContextNewParams);
 
         // maxodiff analysis parameters: n diseases to use and n simulations to run
         model.addAttribute("nDiseases", nDiseases);
@@ -95,22 +92,22 @@ public class MaxodiffController {
 
             // n diseases subset of initial differential diagnoses in order of decreasing probability
             if (sessionData.getOrderedDiagnoses() == null || !nDiseases.equals(sessionData.getDiagnosesCount())) {
-                List<DifferentialDiagnosis> orderedDiagnoses = diffDiagRefiner.getOrderedDiagnoses(differentialDiagnoses);
+                List<DifferentialDiagnosis> orderedDiagnoses = refinar.getOrderedDiagnoses(differentialDiagnoses);
                 sessionData.setOrderedDiagnoses(orderedDiagnoses);
             }
             List<DifferentialDiagnosis> orderedDiagnoses = this.sessionData.getOrderedDiagnoses();
 
             // List of HpoFrequency objects for the subset n diseases.
             if (sessionData.getHpoTermCounts() == null || !nDiseases.equals(sessionData.getDiagnosesCount())) {
-                List<HpoDisease> diseases = diffDiagRefiner.getDiseases(orderedDiagnoses);
-                List<HpoFrequency> hpoTermCounts = diffDiagRefiner.getHpoFrequenciesNDiseases(diseases, mdContext.createHpoFrequencies());
+                List<HpoDisease> diseases = refinar.getDiseases(orderedDiagnoses);
+                List<HpoFrequency> hpoTermCounts = refinar.getHpoFrequenciesNDiseases(diseases, mdContext.createHpoFrequencies());
                 sessionData.setHpoTermCounts(hpoTermCounts);
             }
             List<HpoFrequency> hpoTermCounts = sessionData.getHpoTermCounts();
 
             // Map of MAxO term id : List of associated HPO term ids for the subset n diseases. HPO ancestors are removed
             if (sessionData.getMaxoToHpoTermIdMap() == null || !nDiseases.equals(sessionData.getDiagnosesCount())) {
-                Map<TermId, Set<TermId>> maxoToHpoTermIdMap = diffDiagRefiner.getMaxoToHpoTermIdMap(hpoTermCounts);
+                Map<TermId, Set<TermId>> maxoToHpoTermIdMap = refinar.getMaxoToHpoTermIdMap(hpoTermCounts);
                 sessionData.setMaxoToHpoTermIdMap(maxoToHpoTermIdMap);
             }
             Map<TermId, Set<TermId>> maxoToHpoTermIdMap = sessionData.getMaxoToHpoTermIdMap();

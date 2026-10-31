@@ -145,7 +145,7 @@ public class DDxCommand extends BaseCommand {
             String headerHtml = TleafResults.writeHTMLResults(mdMetadata, resultsList, htmlFrequencyMap);
             Path htmlPath = IoUtil.defaultPath(phenopacketData.sampleId(), nDiseases, nRepetitions, "html");
             if (!outputFilenameArg.isEmpty()) {
-                htmlPath = IoUtil.resolveOutputFile(outputFilenameArg, outputDir, "json");
+                htmlPath = IoUtil.resolveOutputFile(outputFilenameArg, outputDir, "html");
             }
             Files.writeString(htmlPath, headerHtml);
             LOGGER.info("Wrote HTML file to {}", htmlPath);
@@ -155,12 +155,6 @@ public class DDxCommand extends BaseCommand {
             return 1;
         }
         return 0;
-    }
-
-    protected static BufferedWriter openOutputFileWriter(Path outputPath) throws IOException {
-        return outputPath.toFile().getName().endsWith(".gz")
-                ? new BufferedWriter(new OutputStreamWriter(new GZIPOutputStream(Files.newOutputStream(outputPath))))
-                : Files.newBufferedWriter(outputPath);
     }
 
 }
