@@ -58,7 +58,7 @@ public class MaxoTermEvaluator implements Callable<RankedMaxoResult> {
                 initialDiagnoses,
                 id -> biometadataService.hpoLabel(id).orElse("unknown"));
         SimulationOutcome outcome = simulation.run(maxoHpoDiseaseRank.getSampledHpoCounts(nRepetitions, random), random);
-        return makeRankedMaxoResult(outcome.selectionCounts(), outcome.meanScore(), initialDiagnoses,
+        return makeRankedMaxoResult(outcome.selectionCounts(), outcome.meanScore(),
                 outcome.newDiagnoses(), hpoFrequenciesNDiseases);
     }
 
@@ -91,7 +91,6 @@ public class MaxoTermEvaluator implements Callable<RankedMaxoResult> {
     private RankedMaxoResult makeRankedMaxoResult(
             Map<SimpleTerm, Integer> selectionCounts,
             double meanScore,
-            List<DifferentialDiagnosis> initialDiagnoses,
             List<List<DifferentialDiagnosis>> newMaxoDiagnosesList,
             List<HpoFrequency> hpoFrequenciesNDiseases) {
 

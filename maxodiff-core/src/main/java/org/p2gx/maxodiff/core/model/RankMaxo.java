@@ -29,6 +29,16 @@ public class RankMaxo {
     private final List<HpoFrequency> hpoFrequenciesNDiseases;
 
     /**
+     * Number of top-ranked diseases from the initial differential diagnosis whose phenotypes feed the simulation.
+     * This is a hyperparameter. The first {@code nDiseases} of them (20 by default) are the ones that are scored;
+     * the rest widen the pool from which phenotypes are sampled. A disease at rank r contributes weight 1/r, so
+     * the tail from rank 21 to 500 has roughly as much total weight as the top 20, although each tail disease
+     * counts for little. A larger pool therefore adds randomness to the sampling, and a smaller one makes it
+     * concentrate on the leading diseases.
+     */
+    static final int N_SAMPLING_DIAGNOSES = 500;
+
+    /**
      * The {@code RankMaxo} ranks MAxO terms and returns results in descending order by score.
      *
      * @param maxoToHpoTermIdMap Map of MAxO term ids : Set of corresponding HPO term ids.
@@ -94,7 +104,7 @@ public class RankMaxo {
                     .maxoToHpoTermIdMap(fullMaxoToHpoTermIdMap)
                     .maxoId(maxoId)
                     .sample(ppkt)
-                    .nDiagnoses(500)
+                    .nDiagnoses(samplingPoolSize(allInitialDiagnoses.size()))
                     .maxoLabel(biometadataService.maxoLabel(maxoId.getValue()).get())
                     .build();
             LOGGER.debug("Making RankMaxoProgressObject");
@@ -161,7 +171,7 @@ public class RankMaxo {
                     .maxoToHpoTermIdMap(fullMaxoToHpoTermIdMap)
                     .maxoId(maxoId)
                     .sample(ppkt)
-                    .nDiagnoses(500)
+                    .nDiagnoses(samplingPoolSize(allInitialDiagnoses.size()))
                     .maxoLabel(biometadataService.maxoLabel(maxoId.getValue()).get())
                     .build();
             rankMaxoProgress = new RankMaxoProgress(maxoToHpoTermIdMap.size());
@@ -209,6 +219,11 @@ public class RankMaxo {
 
     public RankMaxoProgress getRankMaxoProgress() {
         return rankMaxoProgress;
+    }
+
+    /** @return the pool size to use, which can't be larger than the number of diagnoses available */
+    static int samplingPoolSize(int nAvailable) {
+        return Math.min(N_SAMPLING_DIAGNOSES, nAvailable);
     }
 
 }
