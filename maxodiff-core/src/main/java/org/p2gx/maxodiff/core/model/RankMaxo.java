@@ -76,7 +76,6 @@ public class RankMaxo {
     public List<RankedMaxoResult> rankMaxoTerms(PhenopacketData ppkt,
                                                 Set<TermId> diseaseIds,
                                                 MdContext context,
-                                                int nThreads,
                                                 ExecutorService sharedExecutorService) throws Exception {
 
         int nRepetitions = context.params().nRepetitions();
@@ -84,10 +83,6 @@ public class RankMaxo {
         List<TermId> ppktMaxoIds = ppkt.maxoProcedureIds();
         AssessablePhenotypes ascertainablePhenotypes = new AssessablePhenotypes(maxoHpoTermProbabilities.getHpoDiseases());
         Map<TermId, Set<TermId>> fullMaxoToHpoTermIdMap = maxoHpoTermProbabilities.getMaxoToHpoTermIdMap();
-//        Map<TermId, Set<TermId>> fullMaxoToHpoTermIdMap = MaxoHpoTermIdMaps.getMaxoToHpoTermIdMap(context.resources().maxoAnnotsMap());
-
-        LOGGER.info("Making ExecutorService using " + nThreads + " threads.");
-//        ExecutorService executor = Executors.newFixedThreadPool(nThreads);
         AtomicInteger completedTasks = new AtomicInteger(0);
         List<Callable<RankedMaxoResult>> tasks = new ArrayList<>();
         int maxoIdx = 0;

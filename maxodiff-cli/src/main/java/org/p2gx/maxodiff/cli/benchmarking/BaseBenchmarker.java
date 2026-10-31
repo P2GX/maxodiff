@@ -91,7 +91,7 @@ public class BaseBenchmarker {
                 getTopNInitialDiffDiagList());
     }
 
-    public List<RankedMaxoResult> standardRun(int nThreads, ExecutorService executorService) throws Exception {
+    public List<RankedMaxoResult> standardRun(ExecutorService executorService) throws Exception {
         LOGGER.info("sample = {}, n Diseases = {}, n Repetitions = {}", this.sample.sampleId(), nDiseases, nRepetitions);
         List<DifferentialDiagnosis> topNinitialDiffDiagList = getTopNInitialDiffDiagList();
         Set<TermId> topNInitialDiagnosesIds = topNinitialDiffDiagList.stream()
@@ -108,7 +108,6 @@ public class BaseBenchmarker {
         return refiner.run(sample,
                 topNInitialDiagnosesIds,
                 rankMaxo,
-                nThreads,
                 executorService);
     }
 
@@ -120,7 +119,7 @@ public class BaseBenchmarker {
      * @return
      * @throws Exception
      */
-    public List<RankedMaxoResult> spikedRandomizer(int diseaseIndex, int nThreads, ExecutorService executorService) throws Exception {
+    public List<RankedMaxoResult> spikedRandomizer(int diseaseIndex, ExecutorService executorService) throws Exception {
         List<DifferentialDiagnosis> diseaseTopNList = getTopNInitialDiffDiagList();
         List<DifferentialDiagnosis> shuffledDiagnoses = new ArrayList<>(getCompleteInitialDiffDiagList());
         Collections.shuffle(shuffledDiagnoses);
@@ -143,7 +142,6 @@ public class BaseBenchmarker {
         return refiner.run(sample,
                 topNInitialDiagnosesIdsRandom,
                 rankMaxo,
-                nThreads,
                 executorService);
     }
 
@@ -153,7 +151,7 @@ public class BaseBenchmarker {
      * @return
      * @throws Exception
      */
-    public List<RankedMaxoResult> shuffledRandomizer(long seed, int nThreads, ExecutorService executorService) throws Exception {
+    public List<RankedMaxoResult> shuffledRandomizer(long seed, ExecutorService executorService) throws Exception {
         List<DifferentialDiagnosis> shuffledDiagnoses = new ArrayList<>(getCompleteInitialDiffDiagList());
         Random randomSeed = new Random(seed);
         Collections.shuffle(shuffledDiagnoses, randomSeed);
@@ -173,7 +171,6 @@ public class BaseBenchmarker {
         return refiner.run(sample,
                 topNInitialDiagnosesIdsRandom,
                 rankMaxo,
-                nThreads,
                 executorService);
     }
 

@@ -121,7 +121,6 @@ public class MaxodiffAnalysisRunner implements AutoCloseable{
         return maxoDiffRefiner.run(sample,
                 initialNDiagnosesIds,
                 rankMaxo,
-                nThreads,
                 sharedExecutor);
     }
 

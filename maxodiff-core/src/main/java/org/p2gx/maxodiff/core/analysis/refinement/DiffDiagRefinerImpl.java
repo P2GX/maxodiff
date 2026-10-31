@@ -51,9 +51,8 @@ public class DiffDiagRefinerImpl implements DiffDiagRefiner {
     public List<RankedMaxoResult> run(PhenopacketData sample,
                                       Set<TermId> initialDiagnosesIds,
                                       RankMaxo rankMaxo,
-                                      int nThreads,
                                       ExecutorService sharedExecutorService) throws Exception {
-        return rankMaxo.rankMaxoTerms(sample, initialDiagnosesIds, context, nThreads, sharedExecutorService);
+        return rankMaxo.rankMaxoTerms(sample, initialDiagnosesIds, context, sharedExecutorService);
     }
 
     public List<RankedMaxoResultSingleDisease> runSingleDisease(PhenopacketData sample,

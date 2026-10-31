@@ -135,7 +135,7 @@ public class BenchmarkingCommand extends DDxCommand {
                     this.phenomizer,
                     hpoFrequencies);
             try (ExecutorService executor = Executors.newFixedThreadPool(nThreads)) {
-                initialResults = benchmarker.standardRun(nThreads, executor);
+                initialResults = benchmarker.standardRun(executor);
             }
 
             String ppktId = benchmarker.getSample().sampleId();
@@ -150,7 +150,7 @@ public class BenchmarkingCommand extends DDxCommand {
                         IntStream.range(0, randomUL).parallel().forEach(i -> {
                             try {
                                 long seed = i * 10L; //1000L; //10L; //i * 10L;
-                                List<RankedMaxoResult> randomizedResults = benchmarker.shuffledRandomizer(seed, randomNThreads, randomExecutorService);
+                                List<RankedMaxoResult> randomizedResults = benchmarker.shuffledRandomizer(seed, randomExecutorService);
 
                                 List<RankedMaxoResult> topResultRandomList = randomizedResults.stream()
                                         .filter(mr -> mr.maxoTerm().tid().equals(topMaxo))

@@ -24,7 +24,6 @@ public interface DiffDiagRefiner {
     List<RankedMaxoResult> run(PhenopacketData sample,
                                Set<TermId> initialDiagnosesIds,
                                RankMaxo rankMaxo,
-                               int nThreads,
                                ExecutorService sharedExecutorService) throws Exception;
 
     List<RankedMaxoResultSingleDisease> runSingleDisease(PhenopacketData sample,
