@@ -2,6 +2,7 @@ package org.p2gx.maxodiff.core.analysis.refinement;
 
 
 import org.monarchinitiative.phenol.ontology.data.MinimalOntology;
+import org.p2gx.maxodiff.core.MaxodiffRuntimeException;
 import org.p2gx.maxodiff.core.analysis.SimpleTerm;
 import org.p2gx.maxodiff.core.analysis.RankedMaxoResult;
 import org.p2gx.maxodiff.core.analysis.RankedMaxoResultSingleDisease;
@@ -36,12 +37,12 @@ public class DiffDiagRefinerImpl implements DiffDiagRefiner {
         this.maxoToHpoTermMap = context.resources().maxoToHpoMap();
         this.hpoToMaxoTermMap = context.resources().maxoAnnotsMap();
         if (this.maxoToHpoTermMap.isEmpty()) {
-            System.err.println("maxoToHpoTermMap (mdContext) is empty");
-            System.exit(1);
+            throw new MaxodiffRuntimeException(
+                    "The MAxO-to-HPO map is empty. Check the MAxO annotation file in the data directory.");
         }
         if (this.hpoToMaxoTermMap.isEmpty()) {
-            System.err.println("hpoToMaxoTermMap is empty");
-            System.exit(1);
+            throw new MaxodiffRuntimeException(
+                    "The MAxO-to-HPO map is empty. Check the MAxO annotation file in the data directory.");
         }
     }
 
