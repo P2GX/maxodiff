@@ -86,34 +86,6 @@ public class MaxoTermEvaluator implements Callable<RankedMaxoResult> {
                 .collect(Collectors.toCollection(LinkedHashSet::new));
     }
 
-    /**
-     *
-     * @param omimIds disease Ids.
-     * @param hpoIds hpo Ids.
-     * @param hpoTermFrequencies Map of HPO Term Id and List of HpoFrequency objects.
-     * @return List of Frequencies records
-     */
-    private List<HpoFrequency> getFrequencyRecords(Set<TermId> omimIds, Set<SimpleTerm> hpoIds,
-                                                  List<HpoFrequency> hpoTermFrequencies) {
-
-        List<HpoFrequency> frequencyRecords = new ArrayList<>();
-        //Set<TermId> omimIds = maxoTermScoreRecord.omimTermIds();
-        for (SimpleTerm hpoTerm : hpoIds) { //maxoTermScoreRecord.hpoTermIds()
-            TermId hpoId = hpoTerm.tid();
-            List<HpoFrequency> frequencies = hpoTermFrequencies.stream().filter(f->f.hpoId().equals(hpoId)).toList();
-//            if (frequencies != null) {
-                for (HpoFrequency hpoFrequency : frequencies) {
-                    for (TermId omimId : omimIds) {
-                        if (hpoFrequency.diseaseId().equals(omimId)) {
-                            frequencyRecords.add(hpoFrequency);
-                        }
-                    }
-                }
-//            }
-        }
-        return frequencyRecords;
-    }
-
     private RankedMaxoResult makeRankedMaxoResult(
             Map<SimpleTerm, Integer> selectionCounts,
             double meanScore,
@@ -137,7 +109,8 @@ public class MaxoTermEvaluator implements Callable<RankedMaxoResult> {
                 .toList();
 
         // Step 4: get collection of HPO Term Frequencies (List<Frequencies>)
-        List<HpoFrequency> frequencies = getFrequencyRecords(maxoIds, selectionCounts.keySet(), hpoFrequenciesNDiseases);
+        List<HpoFrequency> frequencies = HpoFrequencyFilter
+                .select(diseaseIds,selectionCounts.keySet(),hpoFrequenciesNDiseases);
 
         // Step 5: construct final result
         return new RankedMaxoResult(
