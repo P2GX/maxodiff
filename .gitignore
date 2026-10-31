@@ -25,7 +25,7 @@ replay_pid*
 
 .idea
 .vscode
-data_old/
+data/
 target/
 venv/
 
@@ -34,3 +34,9 @@ venv/
 .DS_Store
 maxodiff_results.csv
 term-pair-similarity.csv.gz
+
+*.html
+*.jfr
+postman/
+.postman/
+

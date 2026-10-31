@@ -4,7 +4,9 @@ import org.monarchinitiative.phenol.ontology.data.TermId;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 /** Selects the HPO frequency records that are relevant to one MAxO result. */
 final class HpoFrequencyFilter {
@@ -20,15 +22,15 @@ final class HpoFrequencyFilter {
      *         in the order they have in {@code frequencies}
      */
     static List<HpoFrequency> select(Set<TermId> diseaseIds, Set<SimpleTerm> hpoTerms, List<HpoFrequency> frequencies) {
+        // One pass over the (long) list, instead of one pass per selected term
+        Map<TermId, List<HpoFrequency>> byHpoTerm = frequencies.stream()
+                .collect(Collectors.groupingBy(HpoFrequency::hpoId));
+
         List<HpoFrequency> frequencyRecords = new ArrayList<>();
         for (SimpleTerm hpoTerm : hpoTerms) {
-            TermId hpoId = hpoTerm.tid();
-            List<HpoFrequency> matching = frequencies.stream().filter(f -> f.hpoId().equals(hpoId)).toList();
-            for (HpoFrequency hpoFrequency : matching) {
-                for (TermId omimId : diseaseIds) {
-                    if (hpoFrequency.diseaseId().equals(omimId)) {
-                        frequencyRecords.add(hpoFrequency);
-                    }
+            for (HpoFrequency hpoFrequency : byHpoTerm.getOrDefault(hpoTerm.tid(), List.of())) {
+                if (diseaseIds.contains(hpoFrequency.diseaseId())) {
+                    frequencyRecords.add(hpoFrequency);
                 }
             }
         }
