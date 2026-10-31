@@ -130,9 +130,5 @@ public class MaxodiffAutoConfiguration {
         return new ProtobufHttpMessageConverter();
     }
 
-    @Bean
-    public ExecutorService sharedExecutorService(@Value("${server.nThreads}") int nThreads) {
-        return Executors.newFixedThreadPool(nThreads);
-    }
 
 }

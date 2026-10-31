@@ -130,20 +130,23 @@ public class BenchmarkingCommand extends DDxCommand {
         List<BenchmarkResult> resultList = new ArrayList<>();
         try {
             PhenopacketData ppktData = PhenopacketData.readPhenopacketData(ppktPath);
-            this.executorService = Executors.newFixedThreadPool(nThreads);
+            List<RankedMaxoResult> initialResults;
             BaseBenchmarker benchmarker = new BaseBenchmarker(ppktData,
                     context,
                     this.phenomizer,
                     hpoFrequencies);
+            try (ExecutorService executor = Executors.newFixedThreadPool(nThreads)) {
+                initialResults = benchmarker.standardRun(nThreads, executor);
+            }
+
             String ppktId = benchmarker.getSample().sampleId();
-            List<RankedMaxoResult> initialResults = benchmarker.standardRun(nThreads, executorService);
             TermId topMaxo = initialResults.getFirst().maxoTerm().tid();
             List<Double> topMaxoScoresRandom = Collections.synchronizedList(new ArrayList<>());
             List<Double> icSumsRandom = Collections.synchronizedList(new ArrayList<>());
             int randomUL = 50;
             int randomNThreads = randomUL + 2;
-            ExecutorService randomExecutorService = Executors.newFixedThreadPool(randomNThreads);
-            try (ForkJoinPool customThreadPool = new ForkJoinPool(randomNThreads)) {
+            try (ExecutorService randomExecutorService = Executors.newFixedThreadPool(randomNThreads);
+                 ForkJoinPool customThreadPool = new ForkJoinPool(randomNThreads)) {
                 customThreadPool.submit(() ->
                         IntStream.range(0, randomUL).parallel().forEach(i -> {
                             try {

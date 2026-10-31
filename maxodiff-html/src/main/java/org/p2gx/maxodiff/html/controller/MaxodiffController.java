@@ -138,13 +138,15 @@ public class MaxodiffController {
             DiffDiagRefiner customRefiner = new DiffDiagRefinerImpl(mdContextNewParams);
 
             DDxEngine engine = new PhenomizerDDxEngine(mdContext);
-            MaxodiffAnalysisRunner runner = new MaxodiffAnalysisRunner(
+            List<RankedMaxoResult> resultsList;
+            try (MaxodiffAnalysisRunner runner = new MaxodiffAnalysisRunner(
                     mdContext,
                     nThreads,
                     engine,
                     customRefiner,
-                    hpoTermCounts);
-            List<RankedMaxoResult> resultsList = runner.analyzeSample(sample);
+                    hpoTermCounts)) {
+                resultsList = runner.analyzeSample(sample);
+            }
 
             int zeroIdx = resultsList.stream()
                     .filter(result -> result.maxoScore() == 0.)
@@ -309,13 +311,15 @@ public class MaxodiffController {
         List<HpoFrequency> hpoTermCounts = customRefiner.getHpoFrequenciesNDiseases(diseases, mdContext.createHpoFrequencies());
 
         DDxEngine engine = new PhenomizerDDxEngine(mdContext);
-        MaxodiffAnalysisRunner runner = new MaxodiffAnalysisRunner(
+        List<RankedMaxoResult> resultsList;
+        try (MaxodiffAnalysisRunner runner = new MaxodiffAnalysisRunner(
                 mdContext,
                 nThreads,
                 engine,
                 customRefiner,
-                hpoTermCounts);
-        List<RankedMaxoResult> resultsList = runner.analyzeSample(ppktData);
+                hpoTermCounts)) {
+            resultsList = runner.analyzeSample(ppktData);
+        }
         // 4. Wrap up the core computation metadata object and return it as JSON
         MdMetadata mdMetadata = new MdMetadata(
                 ppktData.sampleId(),
@@ -364,14 +368,15 @@ public class MaxodiffController {
         List<HpoFrequency> hpoTermCounts = customRefiner.getHpoFrequenciesNDiseases(diseases, mdContext.createHpoFrequencies());
 
         DDxEngine engine = new PhenomizerDDxEngine(mdContext);
-        MaxodiffAnalysisRunner runner = new MaxodiffAnalysisRunner(
-                    mdContext,
-                    nThreads,
-                    engine,
-                    customRefiner,
-                    hpoTermCounts);
-        List<RankedMaxoResultSingleDisease> resultsList = runner.analyzeSampleSingleDisease(ppktData,
-                                                                                            targetId);
+        List<RankedMaxoResultSingleDisease> resultsList;
+        try (MaxodiffAnalysisRunner runner = new MaxodiffAnalysisRunner(
+                mdContext,
+                nThreads,
+                engine,
+                customRefiner,
+                hpoTermCounts)) {
+            resultsList = runner.analyzeSampleSingleDisease(ppktData, targetId);
+        }
         
         // Make a Record that has enough data to show HTML page on SAMS, e.g., also show name of phenopacket, and some other things (check with DS)
         return ResponseEntity.ok(resultsList.stream()

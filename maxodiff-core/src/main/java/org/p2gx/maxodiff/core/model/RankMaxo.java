@@ -133,8 +133,6 @@ public class RankMaxo {
             results.add(resultOf(future));
         }
 
-       sharedExecutorService.shutdown();
-
         return results.stream()
                 .sorted(Comparator.comparing(RankedMaxoResult :: maxoScore).reversed())
                 .toList();
@@ -190,17 +188,10 @@ public class RankMaxo {
         }
 
         List<Future<RankedMaxoResultSingleDisease>> futures = sharedExecutorService.invokeAll(tasks);
-
-        List<RankedMaxoResultSingleDisease> results = new ArrayList<>();
+        List<RankedMaxoResultSingleDisease> results = new ArrayList<>(futures.size());
         for (Future<RankedMaxoResultSingleDisease> future : futures) {
-            try {
-                results.add(future.get()); // blocks until the result is available
-            } catch (InterruptedException | ExecutionException e) {
-                LOGGER.error(e.getMessage());
-            }
+            results.add(resultOf(future));
         }
-        sharedExecutorService.shutdown();
-
 
         return results.stream()
                 .sorted(Comparator.comparing(RankedMaxoResultSingleDisease :: totalIC).reversed())
