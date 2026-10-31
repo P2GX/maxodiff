@@ -68,7 +68,7 @@ public class MaxoTermEvaluatorSingleDisease implements Callable<RankedMaxoResult
             Set<SimpleTerm> simulated = sampler.sample(nHpos, random).stream()
                             .map(id -> new SimpleTerm(id, biometadataService.hpoLabel(id).orElse("unknown")))
                                     .collect(Collectors.toSet());
-            PhenopacketData newSample = getNewSample(ppkt, simulated);
+            PhenopacketData newSample = ppkt.withAdditionalObserved(simulated);
             List<DifferentialDiagnosis> newMaxoDiagnoses = engine.run(newSample, diseaseIds);
             newMaxoDiagnosesList.add(newMaxoDiagnoses);
 
@@ -78,22 +78,6 @@ public class MaxoTermEvaluatorSingleDisease implements Callable<RankedMaxoResult
         double meanScore = scores.stream().mapToDouble(Double::doubleValue).average().orElse(0.0);
         return makeRankedMaxoResultSingleDisease(targetDiseaseId, meanScore,
                 initialDiagnoses, newMaxoDiagnosesList, discoverablePhenotypes, context);
-    }
-
-    /** Create a new sample by adding the simulated observed terms (from the MAxO diagnostic test) to
-     * the existing phenopacket and keeping the original excluded terms
-     * @param ppkt A Sample object representing the original phenopacket
-     * @param observed A Set of simulated new observed HPO terms
-     * @return The modified (simulated) phenopacket Sample.
-     */
-    private PhenopacketData getNewSample(PhenopacketData ppkt, Set<SimpleTerm> observed) {
-        List<SimpleTerm> newObservedHpos = Stream.concat(
-                        ppkt.observed().stream(),
-                        observed.stream().map(st -> new SimpleTerm(st.tid(), st.label()))
-                )
-                .distinct() // Ensures uniqueness
-                .toList();
-        return new PhenopacketData(ppkt.sampleId(), newObservedHpos, ppkt.excluded(), ppkt.diseaseIds(), ppkt.maxoProcedureIds(),false);
     }
 
     /**

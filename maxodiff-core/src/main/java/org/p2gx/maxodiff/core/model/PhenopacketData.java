@@ -122,6 +122,19 @@ public class PhenopacketData {
         return new PhenopacketData(sampleId, observedTerms, excludedTerms, diseaseIds, maxoIds, true);
     }
 
+    /**
+     * @param additionalObserved HPO terms to treat as observed, in addition to those already observed
+     * @return a new {@code PhenopacketData} with the same id, excluded terms, diseases and procedures, and with the
+     *         additional terms appended to the observed ones (a term that is already observed is not repeated).
+     *         This object is not changed.
+     */
+    public PhenopacketData withAdditionalObserved(Collection<SimpleTerm> additionalObserved) {
+        List<SimpleTerm> newObserved = Stream.concat(observed().stream(), additionalObserved.stream())
+                .distinct()
+                .toList();
+        return new PhenopacketData(sampleId(), newObserved, excluded(), diseaseIds(), maxoProcedureIds(), false);
+    }
+
 
     public List<SimpleTerm> observed() {
         return  observedHpoTerms;
