@@ -2,8 +2,10 @@ package org.p2gx.maxodiff.core.model;
 
 
 import org.monarchinitiative.phenol.ontology.data.TermId;
+import org.p2gx.maxodiff.core.analysis.HpoWeight;
 import org.p2gx.maxodiff.core.analysis.SimpleTerm;
 import java.util.*;
+import java.util.stream.IntStream;
 import java.util.stream.Collectors;
 
 /**
@@ -18,8 +20,10 @@ import java.util.stream.Collectors;
  *   <li>Provides a probability distribution over HPO terms inferred from observed disease rankings.</li>
  * </ul>
  * <p>
- * This information can be used to identify the most probable HPO features
- * relevant to a specific intervention or to prioritize diseases in differential diagnosis.
+ * The question being modeled is:
+ * if we perform diagnostic test M, what new phenotypes might we observe in this patient?
+ * To answer it we look at the top n candidate diseases. Disease #1 is the most likely, so it gets weight 1.
+ * Disease #2 gets 1/2, and so on.
  *
  * @author Martha Beckwith
  * @since 1.0
@@ -28,8 +32,6 @@ public class MaxoHpoDiseaseRank {
 
     /** The ranked list of initial differential diagnoses produced by Phenomizer */
     private final List<DifferentialDiagnosis> initialDiagnoses;
-    /** Object used to determine which phenotypes are ascertainable from a given sample. */
-    private final AssessablePhenotypes ascertainablePhenotypes;
     /** The set of all HPO term IDs that can be ascertained for this MAXO term. */
     private final Set<TermId> allMaxoAscertainedHpoIds;
     /** The MAXO term ID representing the diagnostic test being analyzed. */
@@ -37,13 +39,14 @@ public class MaxoHpoDiseaseRank {
     /** The MAXO label of the diagnostic test */
     private final String maxoLabel;
 
-    /** List of counts of ascertainable HPO terms per disease. */
-    private final List<Integer> ascertainedHpoCountList = new ArrayList<>();
-    /** Mapping of HPO term IDs to lists of initial differential diagnosis disease rankings. */
-    private final Map<TermId, List<Double>> hpoToRankMap = new HashMap<>();
-    /** Mapping of HPO term IDs to normalized probabilities. */
-    private Map<TermId, Double> hpoToProbabiltyMap = new HashMap<>();
-
+    /** One entry per top disease, in differential-diagnosis order. */
+    private final List<DiseaseYield> yields;
+    /** Every term the test can reveal that is not yet in the sample, with its weight, highest first. */
+    private final List<HpoWeight> hpoWeights;
+    /** Small prior weight for terms the test can reveal but no top disease has.
+     * The value of EPSILON is a modelling choice;  with 30–200 detectable terms 1e-3 gives roughly 1–3% of draws from
+     * outside the top diseases’ terms. */
+    static final double EPSILON = 1e-3;
 
     /**
      * Construct a {@code MaxoHpoDiseaseRank} instance.
@@ -61,98 +64,61 @@ public class MaxoHpoDiseaseRank {
                               PhenopacketData sample,
                               int nDiagnoses,
                               String maxoLabel) {
+        Set<TermId> maxoHpoIds = maxoToHpoTermIdMap.get(maxoId);
+        if (maxoHpoIds == null) {
+            throw new IllegalArgumentException(
+                    String.format("Unknown MAxO id %s: no detectable HPO terms are mapped to it", maxoId));
+        }
+        if (nDiagnoses < 0 || nDiagnoses > initialDiagnoses.size()) {
+            throw new IllegalArgumentException(
+                    String.format("nDiagnoses must be between 0 and %d but was %d", initialDiagnoses.size(), nDiagnoses));
+        }
+        this.allMaxoAscertainedHpoIds = maxoHpoIds;
         this.initialDiagnoses = initialDiagnoses;
-        this.ascertainablePhenotypes = ascertainablePhenotypes;
         this.maxoId = maxoId;
         this.maxoLabel = maxoLabel;
-        this.allMaxoAscertainedHpoIds = maxoToHpoTermIdMap.get(maxoId);
-        makeAscertainedHpoCountListAndRankMap(sample, nDiagnoses);
-        makeHpoToProbabilityMap(sample);
+        this.yields = IntStream.range(0, nDiagnoses)
+                        .mapToObj(i -> {
+                            DifferentialDiagnosis dx = initialDiagnoses.get(i);
+                            return DiseaseYield.of(
+                                    dx,
+                                    i+1,
+                                    ascertainablePhenotypes.getAssessablePhenotypeIds(sample, dx.diseaseId()),
+                                    allMaxoAscertainedHpoIds);
+                        })
+                        .toList();
+        this.hpoWeights = buildHpoWeights(sample);
     }
 
-    /**
-     * Builds the list of ascertainable HPO counts per disease and populates
-     * a mapping from HPO terms to disease ranks.
-     * <p>
-     * Each disease is assigned a rank inversely proportional to its position
-     * in {@code initialDiagnoses}. HPO terms annotated to that disease are
-     * then associated with this rank. {@code hpoToRankMap} will contain key: HPO TermId, value: List
-     * of disease rank factors: 1, 1/2, 1/3, ..., 1/n that represent the ranks of the disease
-     * that featured the HPO term. This means that each HPO term that is ascertainable by
-     * at least one disease will have a List of factors such as [1/4, 1/17,...]. The sum
-     * of these factors represents the overall probability that we will observe this
-     * HPO if we perform the diagnostic modality represented by the MAxO term. We normalize
-     * this to get a probability map for all such HPO terms. {@code ascertainedHpoCountList} will contain
-     * a list of the counts of HPO terms per disease that we can ascertain with the
-     * current MAxO term.  We sample from this list to get the number of simulated HPOs per iteration.
-     *
-     * @param sample        the sample (patient) whose ascertainable phenotypes are being analyzed
-     * @param nDiagnoses    the number of top diagnoses to consider
-     */
-    public void makeAscertainedHpoCountListAndRankMap(PhenopacketData sample, int nDiagnoses) {
-
-        for (DifferentialDiagnosis diagnosis : initialDiagnoses.subList(0, nDiagnoses)) {
-            double diseaseRankFactor = 1.0 / (initialDiagnoses.indexOf(diagnosis) + 1);
-            Set<TermId> diseaseAnnotatedHpoIds = ascertainablePhenotypes.getAssessablePhenotypeIds(sample, diagnosis.diseaseId());
-            // HpoToRankMap
-            for (TermId hpoId : diseaseAnnotatedHpoIds) {
-                hpoToRankMap.putIfAbsent(hpoId, new ArrayList<>());
-                hpoToRankMap.get(hpoId).add(diseaseRankFactor);
+    /** Sum, per HPO term, the weights of the top diseases that the test could reveal it in. */
+    private Map<TermId, Double> sumWeights() {
+        Map<TermId, Double> weights = new HashMap<>();
+        for (DiseaseYield y : yields) {
+            for (TermId hpoId : y.revealedByMaxo()) {
+                weights.merge(hpoId, y.weight(), Double::sum);
             }
-            // Maximum number of HPO terms for this disease that can be ascertained by this MAxO (not including
-            // terms that are already observed/excluded in the Phenopacket).
-            diseaseAnnotatedHpoIds.retainAll(allMaxoAscertainedHpoIds);
-            ascertainedHpoCountList.add(diseaseAnnotatedHpoIds.size());
-
         }
+        return weights;
     }
 
-    /**
-     * Constructs a normalized probability distribution over HPO terms based on
-     * their cumulative disease ranks and presence in the MAXO ascertainable set.
-     * <p>
-     * HPO terms already observed or excluded in the {@code sample} are removed from
-     * consideration. Terms with no associated rank receive a small prior probability.
-     *
-     * @param sample  the sample providing observed and excluded HPO terms
-     */
-    public void makeHpoToProbabilityMap(PhenopacketData sample) {
-
+    private List<HpoWeight> buildHpoWeights(PhenopacketData sample) {
         Set<TermId> sampleTerms = sample.observed().stream().map(SimpleTerm::tid).collect(Collectors.toSet());
-        sampleTerms.addAll(sample.excluded().stream().map(SimpleTerm::tid).collect(Collectors.toSet()));
-        List<TermId> maxoAscertainedHpoIdsExclSample = new ArrayList<>(allMaxoAscertainedHpoIds);
-        maxoAscertainedHpoIdsExclSample.removeAll(sampleTerms); // ascertainable terms  not in phenopacket
+        sample.excluded().forEach(t -> sampleTerms.add(t.tid()));
+        Map<TermId, Double> weights = sumWeights();
 
-        Map<TermId, Double> hpoToProbabilityMapOriginal = new HashMap<>();
-        for (TermId hpoId : maxoAscertainedHpoIdsExclSample) {
-            Double EPSILON = 0.000001; // small probability
-            hpoToProbabilityMapOriginal.put(hpoId, EPSILON);
-        }
-        for (Map.Entry<TermId, List<Double>> hpoRankMapEntry : hpoToRankMap.entrySet()) {
-            TermId hpo = hpoRankMapEntry.getKey();
-            List<Double> ranks = hpoRankMapEntry.getValue();
-            double rankSum = ranks.stream()
-                    .mapToDouble(Double::doubleValue)
-                    .sum();
-            hpoToProbabilityMapOriginal.replace(hpo, rankSum);
-        }
-
-        //Normalize probability values and order by decreasing probability
-//        Double probabilitySum = hpoToProbabilityMapOriginal.values().stream().mapToDouble(Double::doubleValue).sum();
-//        hpoToProbabilityMapOriginal.forEach( (id, prob) -> hpoToProbabilityMapOriginal.replace(id, prob/probabilitySum));
-
-        hpoToProbabiltyMap = hpoToProbabilityMapOriginal.entrySet().stream()
-                .sorted(Map.Entry.comparingByValue(Comparator.reverseOrder()))
-                .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue, (a, b)->b, LinkedHashMap::new));
-
+        return allMaxoAscertainedHpoIds.stream()
+                .filter(id -> !sampleTerms.contains(id))
+                .map(id -> new HpoWeight(id, weights.getOrDefault(id, EPSILON)))
+                .sorted(Comparator.comparingDouble(HpoWeight::weight).reversed()
+                        .thenComparing(w -> w.hpoId().getValue()))   // deterministic tie-break
+                .toList();
     }
 
+    public List<HpoWeight> getHpoWeights() {
+        return hpoWeights;
+    }
     public List<Integer> getAscertainedHpoCountList() {
-        return ascertainedHpoCountList;
-    }
-
-    public Map<TermId, Double> getHpoToProbabiltyMap() {
-        return hpoToProbabiltyMap;
+        return yields.stream().map(DiseaseYield::count).toList();
     }
 
     public TermId getMaxoId() {
@@ -169,38 +135,17 @@ public class MaxoHpoDiseaseRank {
 
     public Set<TermId> getAllMaxoAscertainedHpoIds() {return allMaxoAscertainedHpoIds;}
 
+
     public List<Integer> getSampledHpoCounts(int total) {
+        return getSampledHpoCounts(total, new Random());
+    }
 
-        List<Integer> result = new ArrayList<>();
-        Map<Integer, Integer> freqMap = new HashMap<>();
-
-        // Count how often each HPO count occurs
-        for (Integer item : this.ascertainedHpoCountList) {
-            freqMap.merge(item, 1, Integer::sum);
+    public List<Integer> getSampledHpoCounts(int total, Random random) {
+        List<Integer> counts = getAscertainedHpoCountList();
+        if (counts.isEmpty()) {
+            throw new IllegalStateException("No diagnoses to sample from");
         }
-
-        // Compute cumulative frequency list for sampling
-        List<Map.Entry<Integer, Integer>> entries = new ArrayList<>(freqMap.entrySet());
-        List<Integer> cumulative = new ArrayList<>();
-        int cumSum = 0;
-        for (Map.Entry<Integer, Integer> e : entries) {
-            cumSum += e.getValue();
-            cumulative.add(cumSum);
-        }
-
-
-        // Draw "total" samples, weighted by frequency
-        Random random = new Random();
-        for (int i = 0; i < total; i++) {
-            int r = random.nextInt(total); // random integer in [0, total)
-            // Find which bin r falls into
-            for (int j = 0; j < cumulative.size(); j++) {
-                if (r < cumulative.get(j)) {
-                    result.add(entries.get(j).getKey());
-                }
-            }
-        }
-        return result;
+        return random.ints(total, 0, counts.size()).mapToObj(counts::get).toList();
     }
 
     /**
