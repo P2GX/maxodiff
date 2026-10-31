@@ -2,6 +2,7 @@ package org.p2gx.maxodiff.core.model;
 
 import org.monarchinitiative.phenol.ontology.data.MinimalOntology;
 import org.p2gx.maxodiff.core.JpsChecker;
+import org.p2gx.maxodiff.core.MaxodiffRuntimeException;
 import org.p2gx.maxodiff.core.ProgessBar;
 
 import org.p2gx.maxodiff.core.analysis.*;
@@ -126,15 +127,13 @@ public class RankMaxo {
 
         List<Future<RankedMaxoResult>> futures = sharedExecutorService.invokeAll(tasks);
 
-        List<RankedMaxoResult> results = new ArrayList<>();
+//        List<RankedMaxoResult> results = new ArrayList<>();
+        List<RankedMaxoResult> results = new ArrayList<>(futures.size());   // RankedMaxoResultSingleDisease in the other method
         for (Future<RankedMaxoResult> future : futures) {
-            try {
-                results.add(future.get()); // blocks until the result is available
-            } catch (InterruptedException | ExecutionException e) {
-                LOGGER.error(e.getMessage());
-            }
+            results.add(resultOf(future));
         }
-        sharedExecutorService.shutdown();
+
+       sharedExecutorService.shutdown();
 
         return results.stream()
                 .sorted(Comparator.comparing(RankedMaxoResult :: maxoScore).reversed())
@@ -224,6 +223,20 @@ public class RankMaxo {
     /** @return the pool size to use, which can't be larger than the number of diagnoses available */
     static int samplingPoolSize(int nAvailable) {
         return Math.min(N_SAMPLING_DIAGNOSES, nAvailable);
+    }
+
+    /**
+     * {@code invokeAll} has already waited for every task, so this returns at once; a task that failed throws here.
+     */
+    static <T> T resultOf(Future<T> future) {
+        try {
+            return future.get();
+        } catch (ExecutionException e) {
+            throw new MaxodiffRuntimeException("Evaluation of a MAxO term failed: " + e.getCause(), e.getCause());
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt(); // restore the flag for whoever owns this thread
+            throw new MaxodiffRuntimeException("Interrupted while collecting MAxO results", e);
+        }
     }
 
 }
