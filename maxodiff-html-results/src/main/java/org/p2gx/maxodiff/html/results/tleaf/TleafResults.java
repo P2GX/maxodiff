@@ -41,7 +41,7 @@ public class TleafResults {
                 .filter(result -> result.maxoScore() == 0.)
                 .findFirst().map(resultList::indexOf).orElse(resultList.size());
         int nDisplayed = Math.min(resultList.size(), zeroIdx);
-        LOGGER.debug("Get Top " + nDisplayed + " results.");
+        LOGGER.debug("Get Top {} results.",  nDisplayed);
         List<RankedMaxoResult> results = resultList.subList(0, nDisplayed);
 
         // Disease : MAxO term result box
@@ -57,7 +57,7 @@ public class TleafResults {
         double maxMica = htmlFrequencyMap.maxMica();
         for (RankedMaxoResult result : results) {
             int idx = resultList.indexOf(result) + 1;
-            LOGGER.debug("Make Disease:MAxO term result box " + results.indexOf(result) + " of " + results.size());
+            LOGGER.debug("Make Disease:MAxO term result box {} of {}", results.indexOf(result), results.size());
             MdHtmlResult maxoData = new MdHtmlResult(
                     result,
                     idx,

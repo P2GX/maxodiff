@@ -31,7 +31,7 @@ import picocli.CommandLine;
         mixinStandardHelpOptions = true,
         description = "find best diagnostic modality")
 public class BestDxModalityCommand extends BaseCommand {
-     private static final Logger LOGGER = LoggerFactory.getLogger(DDxCommand.class);
+     private static final Logger LOGGER = LoggerFactory.getLogger(BestDxModalityCommand.class);
 
 
      private int nRepetitions = 80;

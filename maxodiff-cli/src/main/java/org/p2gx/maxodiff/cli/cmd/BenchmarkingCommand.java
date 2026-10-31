@@ -11,7 +11,6 @@ import org.p2gx.maxodiff.core.model.PhenopacketData;
 import org.p2gx.maxodiff.core.phenomizer.PhenomizerDDxEngine;
 
 import org.monarchinitiative.phenol.ontology.data.TermId;
-import org.p2gx.maxodiff.core.service.BiometadataService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import picocli.CommandLine;
@@ -229,8 +228,8 @@ public class BenchmarkingCommand extends DDxCommand {
 //        double topMaxoIcSum = discHpoIds.isEmpty() ? 0.0 :
 //                discHpoIds.stream().mapToDouble(termToIcMap::get).sum();
         LOGGER.info("standard run results:");
-        LOGGER.info("initial " + initialResults.getFirst().maxoTerm());
-        LOGGER.info("initial " + initialResults.getFirst().rankedOmimTermList());
+        LOGGER.info("initial {}", initialResults.getFirst().maxoTerm());
+        LOGGER.info("initial {}", initialResults.getFirst().rankedOmimTermList());
         LOGGER.info("{} IC Sum = {}.", topDiscHpoIds, topMaxoIcSum);
         BenchmarkProcedure procedure = BenchmarkProcedure.ShuffledRandomization;
         int nMaxo = initialResults.size();

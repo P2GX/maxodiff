@@ -12,7 +12,7 @@ import java.util.List;
  */
 public final class DiseaseRankedProbabilityImpl implements DiseaseModelProbability {
 
-    protected final List<DifferentialDiagnosis> differentialDiagnoses;
+    private final List<DifferentialDiagnosis> differentialDiagnoses;
     private final double ddScoreSum;
 
     public DiseaseRankedProbabilityImpl(List<DifferentialDiagnosis> differentialDiagnoses) {
@@ -22,7 +22,7 @@ public final class DiseaseRankedProbabilityImpl implements DiseaseModelProbabili
                 .sum();
     }
 
-    protected DifferentialDiagnosis getTargetDiseaseDiagnosis(TermId targetDiseaseId) {
+    private DifferentialDiagnosis getTargetDiseaseDiagnosis(TermId targetDiseaseId) {
         List<DifferentialDiagnosis> targetDiagnosisList = differentialDiagnoses.stream()
                 .filter(dd -> dd.diseaseId().equals(targetDiseaseId))
                 .toList();

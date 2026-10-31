@@ -88,7 +88,7 @@ public class RankMaxo {
         int maxoIdx = 0;
         ProgessBar pb = new ProgessBar(maxoIdx, maxoToHpoTermIdMap.size());
         for (TermId maxoId : maxoToHpoTermIdMap.keySet()) {
-            LOGGER.debug("MAxO Id = " + maxoId);
+            LOGGER.debug("MAxO id: '{}'", maxoId);
             if (ppktMaxoIds.contains(maxoId)) {
                 LOGGER.debug("Sample {}  already contains {}.", ppkt.sampleId(), maxoId);
                 continue;

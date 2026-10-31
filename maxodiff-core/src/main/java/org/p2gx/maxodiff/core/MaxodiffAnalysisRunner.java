@@ -15,9 +15,6 @@ import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.concurrent.ExecutorService;
-import java.util.concurrent.LinkedBlockingQueue;
-import java.util.concurrent.ThreadPoolExecutor;
-import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
 public class MaxodiffAnalysisRunner {
@@ -44,7 +41,7 @@ public class MaxodiffAnalysisRunner {
 
 
     public List<RankedMaxoResult> analyzeSample(PhenopacketData ppktData) throws Exception {
-        LOGGER.info("Analyzing " + ppktData.sampleId());
+        LOGGER.info("Analyzing {}", ppktData.sampleId());
         List<TermId> ppktMaxoIds = ppktData.maxoProcedureIds();
         List<DifferentialDiagnosis> differentialDiagnoses = engine.run(ppktData);
         // Get List of Refinement results: maxo term scores and frequencies

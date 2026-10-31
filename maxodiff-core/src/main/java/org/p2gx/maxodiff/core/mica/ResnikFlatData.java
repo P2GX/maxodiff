@@ -1,5 +1,6 @@
 package org.p2gx.maxodiff.core.mica;
 
+import java.io.Serial;
 import java.io.Serializable;
 
 /**
@@ -11,6 +12,7 @@ public record ResnikFlatData(
     String[] termsB,
     double[] icMicas
 ) implements Serializable {
+    @Serial
     private static final long serialVersionUID = 1L;
 }
 

@@ -1,8 +1,6 @@
 package org.p2gx.maxodiff.core.mica;
 
 import org.monarchinitiative.phenol.annotations.constants.hpo.HpoSubOntologyRootTermIds;
-import org.monarchinitiative.phenol.annotations.formats.hpo.AnnotatedItem;
-import org.monarchinitiative.phenol.annotations.formats.hpo.AnnotatedItemContainer;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDisease;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
 import org.monarchinitiative.phenol.ontology.data.Identified;
