@@ -86,12 +86,6 @@ public class BestDxModalityCommand extends BaseCommand {
         DiffDiagRefiner maxoDiffRefiner = context.createRefiner();
         DDxEngine engine = new PhenomizerDDxEngine(context);
         PhenopacketData phenopacketData = PhenopacketData.readPhenopacketData(phenopacketPath);
-        MaxodiffAnalysisRunner runner = new MaxodiffAnalysisRunner(
-                context,
-                nThreads,
-                engine,
-                maxoDiffRefiner,
-                allHpoFrequencies);
         TermId targetTermId = TermId.of(targetDiseaseId);
         String prefix = targetTermId.getPrefix();
         if (!(prefix.equals("OMIM")
@@ -100,9 +94,11 @@ public class BestDxModalityCommand extends BaseCommand {
             throw new PhenolException("TermId Prefix " + prefix + " is not valid.");
         }
 
-        List<RankedMaxoResultSingleDisease> resultsList = runner.analyzeSampleSingleDisease(phenopacketData,
-                                                                                            targetTermId);
-       
+        List<RankedMaxoResultSingleDisease> resultsList;
+        try (MaxodiffAnalysisRunner runner = new MaxodiffAnalysisRunner(
+                context, nThreads, engine, maxoDiffRefiner, allHpoFrequencies)) {
+            resultsList = runner.analyzeSampleSingleDisease(phenopacketData, targetTermId);
+        }
         if(this.outputJson) {
             String jsonFilename = String.join("_", phenopacketData.sampleId(), "maxodiff_modalities.json");
             Path jsonPath = Path.of(String.join(File.separator, outputDir.toString(), jsonFilename));

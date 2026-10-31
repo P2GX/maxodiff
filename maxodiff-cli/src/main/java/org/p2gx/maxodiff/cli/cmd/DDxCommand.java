@@ -91,13 +91,15 @@ public class DDxCommand extends BaseCommand {
             DiffDiagRefiner maxoDiffRefiner = context.createRefiner();
             DDxEngine engine = new PhenomizerDDxEngine(context);
             PhenopacketData phenopacketData = PhenopacketData.readPhenopacketData(phenopacketPath);
-            MaxodiffAnalysisRunner runner = new MaxodiffAnalysisRunner(
+            List<RankedMaxoResult> resultsList;
+            try (MaxodiffAnalysisRunner runner = new MaxodiffAnalysisRunner(
                     context,
                     nThreads,
                     engine,
                     maxoDiffRefiner,
-                    allHpoFrequencies);
-            List<RankedMaxoResult> resultsList = runner.analyzeSample(phenopacketData);
+                    allHpoFrequencies)) {
+                resultsList = runner.analyzeSample(phenopacketData);
+            }
             if (resultsList.isEmpty()) {
                 // should never happen...
                 System.err.println("No results found for phenopacket: " + phenopacketPath);

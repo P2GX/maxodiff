@@ -20,7 +20,7 @@ import java.util.concurrent.ThreadPoolExecutor;
 import java.util.concurrent.TimeUnit;
 import java.util.stream.Collectors;
 
-public class MaxodiffAnalysisRunner {
+public class MaxodiffAnalysisRunner implements AutoCloseable{
     private final static Logger LOGGER = LoggerFactory.getLogger(MaxodiffAnalysisRunner.class);
     private final MdContext mdContext;
     private final int nThreads;
@@ -147,6 +147,12 @@ public class MaxodiffAnalysisRunner {
                 initialNDiagnosesIds,
                 rankMaxo,
                 sharedExecutor);
+    }
+
+    /** Shuts down the thread pool this runner created; safe to call more than once. */
+    @Override
+    public void close() {
+        sharedExecutor.shutdown();
     }
 
 
