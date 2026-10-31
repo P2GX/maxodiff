@@ -58,7 +58,6 @@ public class BenchmarkingCommand extends DDxCommand {
     private DDxEngine phenomizer;
     private MdContext context;
     private List<HpoFrequency> hpoFrequencies;
-    private ExecutorService executorService;
 
     @Override
     public Integer execute() throws Exception {
