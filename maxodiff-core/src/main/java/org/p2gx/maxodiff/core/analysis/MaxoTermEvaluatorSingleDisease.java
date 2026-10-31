@@ -11,7 +11,7 @@ import org.slf4j.LoggerFactory;
 import java.util.*;
 import java.util.concurrent.Callable;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
+
 
 public class MaxoTermEvaluatorSingleDisease implements Callable<RankedMaxoResultSingleDisease> {
 
