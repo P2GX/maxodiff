@@ -15,6 +15,7 @@ import org.p2gx.maxodiff.html.service.DifferentialDiagnosisEngineService;
 import org.p2gx.maxodiff.html.service.DifferentialDiagnosisEngineServiceImpl;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.context.properties.EnableConfigurationProperties;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
@@ -26,10 +27,17 @@ import org.springframework.web.filter.UrlHandlerFilter;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Map;
 import java.util.Set;
+import java.util.concurrent.ArrayBlockingQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.ThreadPoolExecutor;
+import java.util.concurrent.TimeUnit;
+
+import static org.p2gx.maxodiff.html.config.ComputeConfig.*;
 
 @Configuration
 @EnableConfigurationProperties({MaxodiffProperties.class})
@@ -126,6 +134,7 @@ public class MaxodiffAutoConfiguration {
     public ProtobufHttpMessageConverter protobufHttpMessageConverter() {
         return new ProtobufHttpMessageConverter();
     }
+
 
 
 }

@@ -65,10 +65,13 @@ public class DDxCommand extends BaseCommand {
     protected String singleDisease = null;
 
     @CommandLine.Option(names = { "-t", "--nThreads" }, description = "Number of threads to use for analysis.")
-    protected int nThreads = min(4, Runtime.getRuntime().availableProcessors() - 1);
+    protected int nThreads = defaultThreads();
 
     @Override
     public Integer execute() throws Exception {
+        if (!isValidThreadCount(nThreads)) {
+            return 1;
+        }
         if (!Files.exists(phenopacketPath)) {
             System.err.println("Could not find phenopacket file: " + phenopacketPath);
             return 1;

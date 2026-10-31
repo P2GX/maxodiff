@@ -34,8 +34,8 @@ public class BestDxModalityCommand extends BaseCommand {
      private static final Logger LOGGER = LoggerFactory.getLogger(BestDxModalityCommand.class);
 
 
-     private int nRepetitions = 80;
-     private int nDiseases = 20;
+     private final int nRepetitions = 80;
+     private final int nDiseases = 20;
 
     @CommandLine.Option(
         names = {"-p", "--phenopacket"},
@@ -45,7 +45,7 @@ public class BestDxModalityCommand extends BaseCommand {
 
     @CommandLine.Option(names = {"-t", "--nThreads"},
         description = "Number of threads to use for analysis.")
-    protected int nThreads = Runtime.getRuntime().availableProcessors() - 1;
+    protected int nThreads = defaultThreads();
 
     @CommandLine.Option(names = {"--targetDisease"},required=true,
         description="OMIM Identifier of the target disease"
@@ -62,6 +62,9 @@ public class BestDxModalityCommand extends BaseCommand {
 
     @Override
     protected Integer execute() throws Exception {
+        if (!isValidThreadCount(nThreads)) {
+            return 1;
+        }
         if (!Files.exists(phenopacketPath)) {
             System.err.println("Could not find phenopacket file: " + phenopacketPath);
             return 1;

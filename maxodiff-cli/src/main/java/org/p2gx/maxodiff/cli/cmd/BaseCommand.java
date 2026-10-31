@@ -20,6 +20,20 @@ abstract class BaseCommand implements Callable<Integer> {
 
     protected static final String BANNER = readBanner();
 
+    /** Default number of analysis threads: at most 4, and never more than the available processors. */
+    protected static int defaultThreads() {
+        return Math.min(4, Runtime.getRuntime().availableProcessors());
+    }
+
+    /** @return {@code true} if the thread count is usable; otherwise a message is printed and it is {@code false} */
+    protected static boolean isValidThreadCount(int nThreads) {
+        if (nThreads < 1) {
+            System.err.println("--nThreads must be at least 1 but was " + nThreads);
+            return false;
+        }
+        return true;
+    }
+
     static String readBanner() {
         try (BufferedReader reader = new BufferedReader(new InputStreamReader(Objects.requireNonNull(BaseCommand.class.getResourceAsStream("/banner.txt")), StandardCharsets.UTF_8))) {
             return reader.lines()

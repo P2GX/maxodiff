@@ -1,35 +1,40 @@
 # Setting up the maxodiff server
 
+## Threads and concurrent requests
 
-## Threads
+The analysis is CPU-intensive. The server therefore uses **one pool of analysis threads for the whole
+application**, however many users are connected:
 
-The `application.properties` file at `maxodiff/maxodiff-html/src/main/resources/application.properties` contains the line
+- **Pool size:** `max(2, round(0.10 × available processors))`. Inside a Docker container or Kubernetes pod the
+  CPU limit counts as the number of processors.
+- **Concurrent analyses:** at most `maxodiff.max-concurrent-analyses` analyses run at the same time.
+  Further requests wait up to `maxodiff.admission-wait-seconds`. If no slot becomes free in that time, the server
+  answers with **HTTP 503** ("The server is busy…"), and the client should try again later.
+
+| Property | Default | Meaning |
+|---|---|---|
+| `maxodiff.max-concurrent-analyses` | `2` | Analyses allowed to run at once. The queue for waiting tasks is sized from this value. |
+| `maxodiff.admission-wait-seconds` | `60` | How long a request waits for a free slot before getting a 503. |
+
+To override a value on the command line:
 
 ```bash
-maxodiff.threads=#{T(java.lang.Runtime).getRuntime().availableProcessors() - 1}
-```
-This defaults to the number of available processors minus 1, but can be overridden. It is picked up the Spring autowiring system in the class `MaxodiffController` as follows:
-
-```java
-public MaxodiffController(
-        UserSessionData sessionData,
-        MdContext context,
-        DiffDiagRefiner diffDiagRefiner,
-        @Value("${maxodiff.threads:4}") int nthreads) {
-                    // ...
-        }
+java -jar maxodiff-app.jar --maxodiff.max-concurrent-analyses=3 --maxodiff.admission-wait-seconds=120
 ```
 
-To override this via the command line, enter
+In a Docker container or a systemd service it is easier to set environment variables. Spring Boot translates
+uppercase, underscore-separated names into the dotted property names:
+
 ```bash
-java -jar maxodiff-app.jar --maxodiff.threads=8
-```
-
-To deploy the Spring Boot application inside a Docker container or via a systemd service, it is better to set an environment variable. Spring Boot automatically translates uppercase, underscore-separated environment variables into dot-notation properties.
-```bash
-export MAXODIFF_THREADS=12
+export MAXODIFF_MAX_CONCURRENT_ANALYSES=3
+export MAXODIFF_ADMISSION_WAIT_SECONDS=120
 java -jar maxodiff-app.jar
 ```
+
+The pool size itself is not a property. It follows the 10% rule above.
+
+The command-line tool is separate: it creates its own pool of `min(4, available processors)` threads, which you
+can change with `-t` / `--nThreads`.
 
 
 ## Docker
