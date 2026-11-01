@@ -138,4 +138,19 @@ class TleafResultsTest {
         assertThat(marfan.attr("style")).isEqualTo("left:50%;width:50.0%");          // +2.0 of at most 2
         assertThat(loeysDietz4.attr("style")).isEqualTo("right:50%;width:25.0%");    // -1.0 of at most 2
     }
+
+    @Test
+    void theTornadoTableHasAScaleAndNoChangeColumn() {
+        // fixture: 3 diseases, so the ticks are -2, -1, 0, +1, +2 in each of the 2 boxes
+        assertThat(page.select("table.tornado thead .tornado-tick")).hasSize(10);
+        assertThat(page.select("table.tornado thead").text()).doesNotContain("Change");
+        page.select("table.tornado tbody tr").forEach(row -> assertThat(row.select("td")).hasSize(1));
+        assertThat(page.select("table.tornado thead").text()).contains("\u22122", "+2");
+    }
+
+    @Test
+    void theExactChangeIsStillAvailableAsHoverTextAndForScreenReaders() {
+        assertThat(page.select("table.tornado td.tornado-track[title='Decline by 2.0']")).isNotEmpty();
+        assertThat(page.select("table.tornado .visually-hidden").text()).contains("Improve by 1.0");
+    }
 }
