@@ -49,10 +49,10 @@ public class MdHtmlResult {
     }
     /** The expected change in rank score if the indicated MAxO investigation is applied */
     public String deltaScore() {
-        return String.format("%.1f",this.rankedMaxoResult.maxoScore());
+        return String.format(Locale.ROOT, "%.1f",this.rankedMaxoResult.maxoScore());
     }
 
-    public double nDiseases() {
+    public int nDiseases() {
         return this.rankedMaxoResult.rankedOmimTermList().size();
     }
 

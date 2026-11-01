@@ -13,6 +13,7 @@ import org.thymeleaf.spring6.SpringTemplateEngine;
 import org.thymeleaf.templateresolver.ClassLoaderTemplateResolver;
 
 import java.util.List;
+import java.util.Locale;
 
 public class TleafResults {
     private static final Logger LOGGER = LoggerFactory.getLogger(TleafResults.class);
@@ -24,9 +25,8 @@ public class TleafResults {
 
         LOGGER.debug("Making Spring Template Engine.");
         SpringTemplateEngine templateEngine = templateEngine();
+        Context context = new Context(Locale.ENGLISH);
 
-        Context context = new Context();
-        System.out.println("OBSE" + mdMetadata.observedHpoTerms());
         // Header
         context.setVariable("ppktId", mdMetadata.ppktId());
         context.setVariable("observedHpoTerms", mdMetadata.observedHpoTerms());
