@@ -12,7 +12,22 @@ import java.util.Map;
  * @param icMicaDict map with IC<sub>MICA</sub> of a term pair.
  * @param metadata metadata with the source
  */
-public record IcMicaData(Map<TermPair, Double> icMicaDict, IcMicaDictMetadata metadata) {
+public record IcMicaData(Map<TermPair, Double> icMicaDict, IcMicaDictMetadata metadata, double maxIc) {
+
+    /** Used as the maximum when the dictionary contains no finite value. */
+    static final double DEFAULT_MAX_IC = 8.343077871169383;
+
+    /** Computes {@code maxIc} once, from the dictionary. */
+    public IcMicaData(Map<TermPair, Double> icMicaDict, IcMicaDictMetadata metadata) {
+        this(icMicaDict, metadata, largestFiniteIc(icMicaDict));
+    }
+
+    private static double largestFiniteIc(Map<TermPair, Double> icMicaDict) {
+        return icMicaDict.values().stream()
+                .filter(ic -> !ic.isInfinite())
+                .max(Double::compare)
+                .orElse(DEFAULT_MAX_IC);
+    }
 
     /**
      * Get the maximum MICA of a particular HPO term with a list of terms (e.g., all terms from a disease)
