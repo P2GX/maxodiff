@@ -49,6 +49,9 @@ public class MdResultRow {
             rows.add(new MdResultRow(diseaseId.getValue(), diseaseLabel, initialRank, averageRank, nDiseases, cells));
 
         }
+        rows.sort(Comparator
+                .comparingDouble((MdResultRow r) -> Math.abs(r.getRankChange())).reversed()
+                .thenComparingInt(MdResultRow::getInitialRank));   // deterministic order for equal changes
         return rows;
     }
 
@@ -79,5 +82,37 @@ public class MdResultRow {
 
     public List<HpoTableCell> getCells() {
         return cells;
+    }
+
+    /** Positive: the disease moves down the list (decline).
+     * Negative: it moves up (improvement). */
+    public float getRankChange() {
+        return averageRank - initialRank;
+    }
+
+    /** The change in words, with one decimal, for tooltips. */
+    public String getRankChangeText() {
+        float change = getRankChange();
+        if (change == 0f) {
+            return "No change";
+        }
+        return String.format(Locale.ROOT, "%s by %.1f", change > 0 ? "Decline" : "Improve", Math.abs(change));
+    }
+
+    /** CSS classes of this row's bar: red for decline, blue for improvement, grey for no change. */
+    public String getBarCssClass() {
+        float change = getRankChange();
+        return "tornado-bar " + (change > 0 ? "decline" : (change < 0 ? "improve" : "none"));
+    }
+
+    /**
+     * Position and length of the bar inside its track. The middle of the track means "no change", and
+     * each half of the track stands for the largest possible change (nDiseases - 1 rank positions).
+     */
+    public String getBarStyle() {
+        float largest = Math.max(1, nDiseases - 1);
+        float width = Math.min(50f, 50f * Math.abs(getRankChange()) / largest);
+        String side = getRankChange() < 0 ? "right:50%" : "left:50%";
+        return String.format(Locale.ROOT, "%s;width:%.1f%%", side, width);
     }
 }

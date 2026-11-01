@@ -15,17 +15,12 @@ import org.p2gx.maxodiff.core.phenomizer.PhenomizerDDxEngine;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import picocli.CommandLine;
-import static java.lang.Math.min;
 
-import java.io.BufferedWriter;
-import java.io.IOException;
-import java.io.OutputStreamWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.List;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
-import java.util.zip.GZIPOutputStream;
 
 /**
  * This command performs the maxodiff algorithm for a single phenopacket.

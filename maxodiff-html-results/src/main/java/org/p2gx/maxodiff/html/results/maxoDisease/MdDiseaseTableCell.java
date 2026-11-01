@@ -1,6 +1,7 @@
 package org.p2gx.maxodiff.html.results.maxoDisease;
 
 import java.util.List;
+import java.util.Locale;
 
 public class MdDiseaseTableCell {
     private final double score;
@@ -17,7 +18,7 @@ public class MdDiseaseTableCell {
 
     public String getScore() {
         if (score == 0) {return ""; }
-        return String.format("%.2f", score);
+        return String.format(Locale.ROOT, "%.2f", score);
     }
 
     public double getOpacity() {

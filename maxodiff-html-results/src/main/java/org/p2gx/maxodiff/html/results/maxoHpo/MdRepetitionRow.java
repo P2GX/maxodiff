@@ -8,6 +8,7 @@ import org.p2gx.maxodiff.core.analysis.RankedOmimTerm;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 /** Compute data for the N Repetitions row */
 public class MdRepetitionRow {
@@ -38,7 +39,7 @@ public class MdRepetitionRow {
 
         for (HpoFrequency freq : freqs) {
             float frequency = freq.frequency();
-            String percentage = String.format("%.1f%%", frequency * 100);
+            String percentage = String.format(Locale.ROOT, "%.1f%%", frequency * 100);
             String omimLabel = omimTerms.stream()
                     .filter(ro -> ro.omimTerm().tid().equals(freq.diseaseId()))
                     .findFirst().get().omimTerm().label();

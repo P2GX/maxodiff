@@ -66,7 +66,7 @@ public class RefinementResultsJsonDumpTest {
                     "mica" : 10.6
                   } ]
                 } ]""";
-        assertThat(writer.toString().replaceAll("\r", ""), equalTo(expected));
+        assertThat(writer.toString().replace("\r", ""), equalTo(expected));
     }
 
     private static List<RankedMaxoResult> createResults() {

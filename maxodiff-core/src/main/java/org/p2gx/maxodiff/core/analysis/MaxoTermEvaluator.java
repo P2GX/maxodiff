@@ -76,10 +76,10 @@ public class MaxoTermEvaluator implements Callable<RankedMaxoResult> {
             List<DifferentialDiagnosis> initialDiagnoses,
             List<List<DifferentialDiagnosis>> newMaxoDiagnosesList,
             Set<TermId> diseaseIds) {
-        return diseaseIds.stream()
+        return DiseaseRankSummary.inInitialRankOrder(diseaseIds.stream()
                 .map(id -> new SimpleTerm(id, biometadataService.diseaseLabel(id).orElse("unknown")))
                 .map(disease -> DiseaseRankSummary.summarize(disease, initialDiagnoses, newMaxoDiagnosesList))
-                .toList();
+                .toList());
     }
 
     private Set<TermId> extractDiseaseIds(List<DifferentialDiagnosis> diagnoses) {

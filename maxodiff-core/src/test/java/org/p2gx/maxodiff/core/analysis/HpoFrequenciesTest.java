@@ -1,7 +1,6 @@
 package org.p2gx.maxodiff.core.analysis;
 
 import org.junit.jupiter.api.Test;
-import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDisease;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDiseases;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 import org.p2gx.maxodiff.core.TestResources;

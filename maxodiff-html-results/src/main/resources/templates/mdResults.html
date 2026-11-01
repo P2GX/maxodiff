@@ -540,6 +540,39 @@
             border-color: #dc3545;
         }
 
+        table.tornado { border-collapse: collapse; margin: 1em auto; }
+        table.tornado caption { font-weight: bold; margin-bottom: 0.5em; }
+        table.tornado th, table.tornado td { padding: 2px 8px; text-align: left; }
+        table.tornado tbody th { font-weight: normal; white-space: nowrap; }
+        table.tornado td.tornado-track { position: relative; width: 420px; height: 1.4em; }
+        table.tornado td.tornado-track::after { content: ""; position: absolute; left: 50%; top: 0; bottom: 0; border-left: 1px solid #666; }
+        .tornado-bar { position: absolute; top: 15%; height: 70%; }
+        .tornado-bar.decline { background: #FF4560; }
+        .tornado-bar.improve { background: #008FFB; }
+        .tornado-bar.none { background: #9E9E9E; }
+        table.tornado th.tornado-axis-cell { width: 420px; padding: 0 8px; font-weight: normal; }
+        table.tornado .tornado-axis { position: relative; height: 1.4em; }
+        table.tornado .tornado-tick { position: absolute; transform: translateX(-50%); font-size: 0.8em; color: #555; }
+        table.tornado .tornado-axis-caption { display: flex; justify-content: space-between; font-size: 0.75em; color: #555; }
+        table.tornado .tornado-rank { display: inline-block; min-width: 1.8em; margin-right: 0.4em; text-align: right; color: #777; }
+        .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+        /* Heatmap table: one continuous block of cells with a thin white separator */
+        table.countsTable { border-collapse: collapse; border-spacing: 0; }
+        table.countsTable td.parentCell, table.countsTable td.repetitionCell { padding: 0; height: auto; border: 1px solid #fff; }
+        table.countsTable .hpoCell, table.countsTable .repetitionColorBox {
+            display: flex; width: 100%; min-width: 44px; height: 40px; padding: 0; box-sizing: border-box;
+            align-items: center; justify-content: center; }
+        table.countsTable tbody tr { height: 40px; }
+        table.countsTable td:first-child { padding: 0 14px 0 0; text-align: left; white-space: nowrap; }
+        /* long disease names are shortened with an ellipsis; the full name stays in the page */
+        .disease-name {
+            display: inline-block; max-width: 25ch; overflow: hidden; text-overflow: ellipsis;
+            white-space: nowrap; vertical-align: bottom; }
+        table.summaryTable { border-collapse: collapse; margin-top: 0.5em; }
+        table.summaryTable th, table.summaryTable td { padding: 4px 12px; text-align: left; border-bottom: 1px solid #eee; }
+        table.summaryTable td { width: auto; font-weight: normal; }
+        table.summaryTable .num { text-align: right; }
+        table.summaryTable .maxo-id { color: #777; font-size: 0.8em; margin-left: 0.5em; }
         /* Responsive design */
         @media (max-width: 768px) {
             .resultsTable {
@@ -600,8 +633,14 @@
 <h1 th:text="${ppktId}"></h1>
 
 <div th:utext="${mdHeader}"></div>
+
+<p th:if="${nTotal == 0}">None of the tests is expected to change the ranking of the candidate diagnoses.</p>
+<p th:if="${nTotal > nDetailed}">Full details are shown for the <b th:text="${nDetailed}">10</b>
+    highest-scoring tests out of <b th:text="${nTotal}">131</b>. The others are summarised in the table at the end.</p>
+
 <div th:utext="${mdDiseaseBox}"></div>
 <div th:utext="${maxoResults}"></div>
+<div th:utext="${mdOtherTerms}"></div>
 
 </body>
 </html>

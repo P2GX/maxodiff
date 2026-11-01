@@ -16,7 +16,7 @@ public class MdHtmlResult {
     private final RankedMaxoResult rankedMaxoResult;
     private final MdRepetitionRow repetitionRow;
     private final List<MdResultRow> resultRows;
-
+    private final List<ScaleTick> rankScale;
 
 
     public MdHtmlResult(
@@ -30,7 +30,7 @@ public class MdHtmlResult {
         this.maxoId = result.maxoTerm().tid().getValue();
         this.maxoLabel = result.maxoTerm().label();
         this.rankedMaxoResult = result;
-
+        this.rankScale = RankScale.ticks(nDiseases);
         repetitionRow = MdRepetitionRow.buildRepetitionRow(nRepetitions, result);
 
         this.resultRows = MdResultRow.createMaxoResultRows(result, nDiseases, htmlFrequencyMap, maxMica);
@@ -47,12 +47,16 @@ public class MdHtmlResult {
     public String maxoLabel() {
         return maxoLabel;
     }
+
+    public List<ScaleTick> getRankScale() {
+        return rankScale;
+    }
     /** The expected change in rank score if the indicated MAxO investigation is applied */
     public String deltaScore() {
-        return String.format("%.1f",this.rankedMaxoResult.maxoScore());
+        return String.format(Locale.ROOT, "%.1f",this.rankedMaxoResult.maxoScore());
     }
 
-    public double nDiseases() {
+    public int nDiseases() {
         return this.rankedMaxoResult.rankedOmimTermList().size();
     }
 

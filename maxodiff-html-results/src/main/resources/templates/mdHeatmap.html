@@ -18,49 +18,37 @@
             </div>
         </div>
 
-        <table>
-            <tbody>
+        <table class="tornado">
+            <caption>Average Rank Change per Disease</caption>
+            <thead>
             <tr>
-                <td>
-                    <div style="text-align:center; margin: 40px 0;">
-                        <!-- Title above the chart -->
-                        <h2>Average Rank Change per Disease</h2>
-                        <div th:id="'TornadoBarChartContainer_' + ${maxoData.index()}" style="height:500px; width:1000px; border: 1px solid black; display:block;margin:0 auto;">
-                        </div>
+                <th scope="col">Disease (initial rank)</th>
+                <th scope="col" class="tornado-axis-cell">
+                    <div class="tornado-axis">
+            <span class="tornado-tick" th:each="tick : ${maxoData.rankScale}"
+                  th:style="${tick.style()}" th:text="${tick.label()}">0</span>
                     </div>
+                    <div class="tornado-axis-caption">
+                        <span>&larr; moves up the list</span><span>moves down the list &rarr;</span>
+                    </div>
+                </th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="row : ${maxoData.resultRows}">
+                <th scope="row" th:title="${row.omimLabel}">
+                    <span class="tornado-rank" th:text="${row.initialRank}">1</span>
+                    <span class="disease-name" th:text="${row.omimLabel}">Disease</span>
+                </th>
+                <td class="tornado-track" th:title="${row.rankChangeText}">
+                    <span th:class="${row.barCssClass}" th:style="${row.barStyle}"></span>
+                    <span class="visually-hidden" th:text="${row.rankChangeText}">Decline by 2.0</span>
                 </td>
             </tr>
             </tbody>
         </table>
-        <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
-        <script th:inline="javascript">
-            var resultRows = [[${maxoData.resultRows}]];
-            var nDiseases = [[${maxoData.nDiseases}]];
-            var chartIdx = [[${maxoData.index()}]]
-            var tornadoBarChart = document.querySelector("#TornadoBarChartContainer_" + chartIdx);
-        </script>
-        <script th:inline="javascript">
-            var diseaseLabels = resultRows.map(rt => rt.omimLabel);
-            var rankChanges = resultRows.map(rt => rt.initialRank - rt.averageRank);
-
-            var options = {
-                series: [{ name: 'Average Rank Change', data: rankChanges }],
-                chart: { type: 'bar', height: 500 },
-                colors: rankChanges.map(rc => rc >= 0 ? '#FF4560' : '#008FFB'),
-                plotOptions: { bar: { horizontal: true, distributed: true, borderRadius: 4 } },
-                dataLabels: { enabled: false },
-                legend: { show: false },
-                xaxis: { categories: diseaseLabels, min: -(nDiseases-1), max: nDiseases-1 },
-                yaxis: { labels: { maxWidth: 1000 } },
-                tooltip: {
-                    y: { formatter: value => (value >=0 ? 'Decline' : 'Improve') + ' by ' + Math.abs(value) }
-                }
-            };
-
-            var chart = new ApexCharts(tornadoBarChart, options);
-            chart.render();
-        </script>
-
+        <p class="chart-legend">Bars to the right: the disease moves down the list on average (decline).
+            Bars to the left: it moves up (improvement). One unit is one rank position.</p>
         <table class="countsTable">
             <thead>
             <tr>
@@ -97,13 +85,15 @@
                         <div th:unless="${not #lists.isEmpty(cell.toolTipItems)}" class="tooltip-empty">
                             <p>No direct HPO annotations.</p>
                         </div>
+                    </div>
                 </td>
             </tr>
             <!-- Now add one row for each of the diseases -->
             <tr th:each="row : ${maxoData.resultRows}">
                 <!-- 1st column: OMIM label with link -->
                 <td>
-                    <a th:href="|https://www.omim.org/entry/${row.omimIdDigits}|"
+                    <a class="disease-name"
+                       th:href="|https://www.omim.org/entry/${row.omimIdDigits}|"
                        th:text="${row.omimLabel}"></a>
                 </td>
 

@@ -1,0 +1,156 @@
+package org.p2gx.maxodiff.html.results.tleaf;
+
+import org.jsoup.Jsoup;
+import org.jsoup.nodes.Document;
+import org.jsoup.nodes.Element;
+import org.junit.jupiter.api.BeforeAll;
+import org.junit.jupiter.api.Test;
+import org.monarchinitiative.phenol.ontology.data.TermId;
+import org.p2gx.maxodiff.core.analysis.*;
+import org.p2gx.maxodiff.core.model.TermPair;
+import org.p2gx.maxodiff.core.phenomizer.IcMicaData;
+
+import java.util.List;
+import java.util.Map;
+
+import static org.assertj.core.api.Assertions.assertThat;
+
+/**
+ * Renders the real templates from a small fixture and checks what the page says, not how it is laid out,
+ * so that the markup can be restructured without breaking these tests.
+ */
+class TleafResultsTest {
+
+    private static final SimpleTerm MARFAN = new SimpleTerm(TermId.of("OMIM:154700"), "Marfan syndrome");
+    private static final SimpleTerm LDS4 = new SimpleTerm(TermId.of("OMIM:616914"), "Loeys-Dietz syndrome 4");
+    private static final SimpleTerm LDS3 = new SimpleTerm(TermId.of("OMIM:609008"), "Loeys-Dietz syndrome 3");
+
+    private static final SimpleTerm ARACHNODACTYLY = new SimpleTerm(TermId.of("HP:0001166"), "Arachnodactyly");
+    private static final SimpleTerm PECTUS = new SimpleTerm(TermId.of("HP:0000767"), "Pectus excavatum");
+
+    private static final SimpleTerm TALL_STATURE = new SimpleTerm(TermId.of("HP:0000098"), "Tall stature");
+    private static final SimpleTerm SEIZURE = new SimpleTerm(TermId.of("HP:0001250"), "Seizure");
+
+    private static Document page;
+
+    @BeforeAll
+    static void renderPage() {
+        List<RankedMaxoResult> results = List.of(
+                result("MAXO:0000101", "Chest MRI", 8.46),
+                result("MAXO:0000102", "Echocardiography", 4.21),
+                result("MAXO:0000103", "Never shown", 0.0));   // a score of 0 ends the list
+
+        MdMetadata metadata = new MdMetadata("sample-B15", 3, 100,
+                List.of(TALL_STATURE), List.of(SEIZURE), results);
+
+        // maxMica is stored in IcMicaData; the frequency map needs no diseases because the fixture
+        // provides a frequency record for every disease/term pair
+        IcMicaData icData = new IcMicaData(Map.of(TermPair.symmetric(ARACHNODACTYLY.tid(), PECTUS.tid()), 9.0), null);
+        HTMLFrequencyMap frequencyMap = new HTMLFrequencyMap(null, icData);
+
+        page = Jsoup.parse(TleafResults.writeHTMLResults(metadata, results, frequencyMap));
+    }
+
+    private static RankedMaxoResult result(String maxoId, String maxoLabel, double score) {
+        List<RankedOmimTerm> diseases = List.of(
+                new RankedOmimTerm(MARFAN, 1, 3.0f),
+                new RankedOmimTerm(LDS4, 2, 1.0f),
+                new RankedOmimTerm(LDS3, 3, 2.0f));
+        List<CountedHpoTerm> terms = List.of(
+                new CountedHpoTerm(ARACHNODACTYLY, 60),
+                new CountedHpoTerm(PECTUS, 25));
+        List<HpoFrequency> frequencies = List.of(
+                new HpoFrequency(MARFAN.tid(), ARACHNODACTYLY.tid(), 0.5f, 3.0f),
+                new HpoFrequency(MARFAN.tid(), PECTUS.tid(), 0.6f, 4.0f),
+                new HpoFrequency(LDS4.tid(), ARACHNODACTYLY.tid(), 0.4f, 2.0f),
+                new HpoFrequency(LDS4.tid(), PECTUS.tid(), 0.3f, 5.0f),
+                new HpoFrequency(LDS3.tid(), ARACHNODACTYLY.tid(), 0.2f, 1.0f),
+                new HpoFrequency(LDS3.tid(), PECTUS.tid(), 0.1f, 6.0f));
+        return new RankedMaxoResult(new SimpleTerm(TermId.of(maxoId), maxoLabel), score, diseases, terms, frequencies);
+    }
+
+    @Test
+    void theSampleIdAndTheObservedAndExcludedTermsAreShown() {
+        assertThat(page.selectFirst("h1").text()).isEqualTo("sample-B15");
+        assertThat(page.text()).contains("Tall stature", "Seizure");
+    }
+
+    @Test
+    void everyMaxoTermDiseaseAndHpoTermIsShown() {
+        assertThat(page.text()).contains("Chest MRI", "Echocardiography");
+        assertThat(page.text()).contains("Marfan syndrome", "Loeys-Dietz syndrome 4", "Loeys-Dietz syndrome 3");
+        assertThat(page.text()).contains("Arachnodactyly", "Pectus excavatum");
+    }
+
+    @Test
+    void theDeltaScoreIsShownWithOneDecimal() {
+        assertThat(page.text()).contains("8.5", "4.2");
+    }
+
+    @Test
+    void resultsFromTheFirstZeroScoreOnwardAreNotShown() {
+        assertThat(page.text()).doesNotContain("Never shown");
+    }
+
+    @Test
+    void noTemplateExpressionIsLeftUnresolved() {
+        assertThat(page.text()).doesNotContain("${").doesNotContain("[[").doesNotContain("th:");
+    }
+
+    @Test
+    void diseasesLinkToOmim() {
+        assertThat(page.select("a[href^=https://www.omim.org/entry/]")).isNotEmpty();
+        assertThat(page.select("a[href=https://www.omim.org/entry/154700]")).isNotEmpty();
+    }
+
+    @Test
+    void aCountOfDiseasesIsShownAsAWholeNumber() {
+        assertThat(page.text()).contains("N Diseases 3 ").doesNotContain("N Diseases 3.0");
+    }
+
+    @Test
+    void numbersUseADotAsTheDecimalSeparator() {
+        // the MICA values of the fixture are 3.0 and 4.0 for Marfan syndrome, shown with two decimals
+        assertThat(page.text()).contains("3.00").contains("4.00").doesNotContain("3,00");
+    }
+
+
+    @Test
+    void theRankChangesAreDrawnAsBarsWithTheRightDirection() {
+        // fixture: Marfan 1 -> 3.0 (decline), Loeys-Dietz 4 2 -> 1.0 and Loeys-Dietz 3 3 -> 2.0 (improvements)
+        assertThat(page.select("table.tornado tbody tr")).hasSize(6);   // 3 diseases in each of the 2 boxes shown
+        assertThat(page.select("table.tornado tr:has(th:contains(Marfan syndrome)) span.tornado-bar.decline"))
+                .hasSize(2);
+        assertThat(page.select("table.tornado tr:has(th:contains(Loeys-Dietz syndrome 4)) span.tornado-bar.improve"))
+                .hasSize(2);
+        assertThat(page.text()).contains("Decline by 2.0", "Improve by 1.0");
+    }
+
+    @Test
+    void theBarsHaveTheLengthAndSideThatBelongToTheirRankChange() {
+        // 3 diseases: the largest possible change is 2 rank positions, which fills half of the track
+        Element marfan = page.selectFirst("table.tornado tr:has(th:contains(Marfan syndrome)) span.tornado-bar");
+        Element loeysDietz4 = page.selectFirst(
+                "table.tornado tr:has(th:contains(Loeys-Dietz syndrome 4)) span.tornado-bar");
+
+        assertThat(marfan).as("bar of Marfan syndrome").isNotNull();
+        assertThat(loeysDietz4).as("bar of Loeys-Dietz syndrome 4").isNotNull();
+        assertThat(marfan.attr("style")).isEqualTo("left:50%;width:50.0%");          // +2.0 of at most 2
+        assertThat(loeysDietz4.attr("style")).isEqualTo("right:50%;width:25.0%");    // -1.0 of at most 2
+    }
+
+    @Test
+    void theTornadoTableHasAScaleAndNoChangeColumn() {
+        // fixture: 3 diseases, so the ticks are -2, -1, 0, +1, +2 in each of the 2 boxes
+        assertThat(page.select("table.tornado thead .tornado-tick")).hasSize(10);
+        assertThat(page.select("table.tornado thead").text()).doesNotContain("Change");
+        page.select("table.tornado tbody tr").forEach(row -> assertThat(row.select("td")).hasSize(1));
+        assertThat(page.select("table.tornado thead").text()).contains("\u22122", "+2");
+    }
+
+    @Test
+    void theExactChangeIsStillAvailableAsHoverTextAndForScreenReaders() {
+        assertThat(page.select("table.tornado td.tornado-track[title='Decline by 2.0']")).isNotEmpty();
+        assertThat(page.select("table.tornado .visually-hidden").text()).contains("Improve by 1.0");
+    }
+}

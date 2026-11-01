@@ -6,6 +6,7 @@ import org.p2gx.maxodiff.core.analysis.RankedOmimTerm;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 
 public class MdDiseaseRow {
     private final String omimId;
@@ -40,7 +41,7 @@ public class MdDiseaseRow {
                     if (firstMaxoDiseaseId.equals(diseaseId)) {
                         String maxoLabel = result.maxoTerm().label();
                         score = result.maxoScore();
-                        tooltipItems.add(new MaxoDiseaseCellTooltipItem(maxoLabel, String.format("%.2f", score)));
+                        tooltipItems.add(new MaxoDiseaseCellTooltipItem(maxoLabel, String.format(Locale.ROOT,"%.2f", score)));
                     } else {
                         score = 0.;
                     }
