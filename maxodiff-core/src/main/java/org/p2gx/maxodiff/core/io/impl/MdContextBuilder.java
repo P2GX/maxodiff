@@ -8,6 +8,8 @@ import org.monarchinitiative.phenol.cli.demo.MicaCalculator;
 import org.monarchinitiative.phenol.ontology.data.MinimalOntology;
 import org.monarchinitiative.phenol.io.MinimalOntologyLoader;
 import org.monarchinitiative.phenol.ontology.data.TermId;
+import org.p2gx.maxodiff.core.analysis.HpoFrequencies;
+import org.p2gx.maxodiff.core.analysis.HpoFrequency;
 import org.p2gx.maxodiff.core.analysis.SimpleTerm;
 import org.p2gx.maxodiff.core.io.MdContext;
 import org.p2gx.maxodiff.core.io.MdParams;
@@ -109,6 +111,7 @@ public class MdContextBuilder {
 
         IcMicaData icData = null;
         Map<TermId, Double> termToIcMap = null;
+        List<HpoFrequency> hpoFrequencies = null;
         if (buildIcData) {
             Path termPairSimFile = Objects.requireNonNull(maxoDataPath.resolve("term-pair-similarity.ser"),
                     "Did not find term-pair-similarity.ser in data directory");
@@ -116,9 +119,10 @@ public class MdContextBuilder {
             boolean assumeAnnotated = true;
             MicaCalculator micaCalculator = new MicaCalculator(hpo, assumeAnnotated);
             termToIcMap = micaCalculator.calculateMica(hpoDiseases).termToIc();
+            hpoFrequencies = HpoFrequencies.compute(hpoDiseases, icData);
         }
 
-        return new MdResources(hpo, hpoDiseases, maxoAnnotsMap, maxoToHpoMap, icData, termToIcMap);
+        return new MdResources(hpo, hpoDiseases, maxoAnnotsMap, maxoToHpoMap, icData, termToIcMap, hpoFrequencies);
 
     }
 

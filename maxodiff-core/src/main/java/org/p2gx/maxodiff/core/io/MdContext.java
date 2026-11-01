@@ -29,15 +29,10 @@ public record MdContext(MdResources resources,
     }
 
     public List<HpoFrequency> createHpoFrequencies() {
-        List<HpoFrequency> hpoFrequencies = new ArrayList<>();
-        for (HpoDisease disease : resources.hpoDiseases()) {
-            TermId diseaseId = disease.id();
-            for (TermId hpoId : disease.annotationTermIdList()) {
-                float freq = disease.getFrequencyOfTermInDisease(hpoId).map(Ratio::frequency).orElse(1f);
-                HTMLFrequencyMap htmlFrequencyMap = new HTMLFrequencyMap(resources.hpoDiseases(), resources.icMicaData());
-                float mica = htmlFrequencyMap.micaForDisease(hpoId, diseaseId);
-                hpoFrequencies.add(new HpoFrequency(diseaseId, hpoId, freq, mica));
-            }
+        List<HpoFrequency> hpoFrequencies = resources.hpoFrequencies();
+        if (hpoFrequencies == null) {
+            throw new IllegalStateException(
+                    "HPO frequencies are only available for a context built with IC data (buildICData = true)");
         }
         return hpoFrequencies;
     }
