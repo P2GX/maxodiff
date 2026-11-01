@@ -1,8 +1,6 @@
 package org.p2gx.maxodiff.html.results.maxoHpo;
 
 import org.junit.jupiter.api.Test;
-import org.p2gx.maxodiff.html.results.maxoHpo.RankScale;
-import org.p2gx.maxodiff.html.results.maxoHpo.ScaleTick;
 
 import java.util.List;
 
@@ -16,17 +14,17 @@ class RankScaleTest {
 
     @Test
     void twentyDiseasesGiveTicksEveryFivePositions() {
-        assertEquals(List.of("\u221215", "\u221210", "\u22125", "0", "+5", "+10", "+15"), labels(20));
+        assertEquals(List.of("−15", "−10", "−5", "0", "+5", "+10", "+15"), labels(20));
     }
 
     @Test
     void fortyDiseasesGiveTicksEveryTenPositions() {
-        assertEquals(List.of("\u221230", "\u221220", "\u221210", "0", "+10", "+20", "+30"), labels(40));
+        assertEquals(List.of("−30", "−20", "−10", "0", "+10", "+20", "+30"), labels(40));
     }
 
     @Test
     void aSmallListGetsATickForEveryPosition() {
-        assertEquals(List.of("\u22122", "\u22121", "0", "+1", "+2"), labels(3));
+        assertEquals(List.of("−2", "−1", "0", "+1", "+2"), labels(3));
     }
 
     @Test
@@ -39,6 +37,6 @@ class RankScaleTest {
 
     @Test
     void aSingleDiseaseDoesNotFail() {
-        assertEquals(List.of("\u22121", "0", "+1"), labels(1));
+        assertEquals(List.of("−1", "0", "+1"), labels(1));
     }
 }

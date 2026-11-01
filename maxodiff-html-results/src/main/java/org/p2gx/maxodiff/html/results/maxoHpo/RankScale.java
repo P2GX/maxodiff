@@ -35,6 +35,6 @@ public final class RankScale {
     }
 
     private static String label(int value) {
-        return value == 0 ? "0" : (value > 0 ? "+" : "\u2212") + Math.abs(value);   // U+2212 is a real minus sign
+        return value == 0 ? "0" : (value > 0 ? "+" : "−") + Math.abs(value);   // U+2212 is a real minus sign
     }
 }
