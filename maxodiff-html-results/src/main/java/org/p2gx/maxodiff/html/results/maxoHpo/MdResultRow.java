@@ -49,6 +49,9 @@ public class MdResultRow {
             rows.add(new MdResultRow(diseaseId.getValue(), diseaseLabel, initialRank, averageRank, nDiseases, cells));
 
         }
+        rows.sort(Comparator
+                .comparingDouble((MdResultRow r) -> Math.abs(r.getRankChange())).reversed()
+                .thenComparingInt(MdResultRow::getInitialRank));   // deterministic order for equal changes
         return rows;
     }
 
