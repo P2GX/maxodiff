@@ -161,10 +161,6 @@ docker run -it -p 8080:8080 \
         "nMaxoPhenotypes": 1,
         "totalIC": 9.061724347647399,
         "maxoScore": 8.499235179380303,
-        "rankedOmimTerm": {
-            "tid": "OMIM:157700",
-            "averageRank": 0.0
-        }
     },
     {
         "targetDisease": {
@@ -176,10 +172,6 @@ docker run -it -p 8080:8080 \
         "nMaxoPhenotypes": 2,
         "totalIC": 7.263296516746243,
         "maxoScore": 16.172687354838573,
-        "rankedOmimTerm": {
-            "tid": "OMIM:157700",
-            "averageRank": 0.0
-        }
     },
 (,,,)
 ]
