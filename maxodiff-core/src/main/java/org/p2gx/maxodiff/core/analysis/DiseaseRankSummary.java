@@ -4,6 +4,7 @@ import org.monarchinitiative.phenol.ontology.data.TermId;
 import org.p2gx.maxodiff.core.model.DifferentialDiagnosis;
 
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 /** Summarises how the rank of one disease changed between the initial differential diagnosis and the simulations. */
@@ -47,5 +48,11 @@ final class DiseaseRankSummary {
         // were never ranked, this average would be 0, which would look like a rank better than first place.
         float averageRank = (float) newRanks.stream().mapToInt(Integer::intValue).average().orElse(0);
         return new RankedOmimTerm(disease, initialRank, averageRank);
+    }
+
+    static List<RankedOmimTerm> inInitialRankOrder(List<RankedOmimTerm> terms) {
+        return terms.stream()
+                .sorted(Comparator.comparingInt(t -> t.initialRank() > 0 ? t.initialRank() : Integer.MAX_VALUE))
+                .toList();   // a rank of 0 means "not in the initial list" and goes last
     }
 }

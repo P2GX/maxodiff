@@ -549,6 +549,12 @@
         .tornado-bar.decline { background: #FF4560; }
         .tornado-bar.improve { background: #008FFB; }
         .tornado-bar.none { background: #9E9E9E; }
+        table.tornado th.tornado-axis-cell { width: 420px; padding: 0 8px; font-weight: normal; }
+        table.tornado .tornado-axis { position: relative; height: 1.4em; }
+        table.tornado .tornado-tick { position: absolute; transform: translateX(-50%); font-size: 0.8em; color: #555; }
+        table.tornado .tornado-axis-caption { display: flex; justify-content: space-between; font-size: 0.75em; color: #555; }
+        table.tornado .tornado-rank { display: inline-block; min-width: 1.8em; margin-right: 0.4em; text-align: right; color: #777; }
+        .visually-hidden { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
 
         /* Responsive design */
         @media (max-width: 768px) {

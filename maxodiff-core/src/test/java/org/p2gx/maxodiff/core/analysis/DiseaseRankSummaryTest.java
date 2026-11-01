@@ -116,4 +116,30 @@ class DiseaseRankSummaryTest {
         RankedOmimTerm t = DiseaseRankSummary.summarize(DISEASE_1, ranking(D2, D3, D1), List.of(ranking(D1, D2, D3)));
         assertEquals(-2.0f, t.signedRankChange(), DELTA);
     }
+
+    @Test
+    void diseasesAreOrderedByTheirInitialRankNoMatterHowTheyArrive() {
+        List<RankedOmimTerm> shuffled = List.of(
+                new RankedOmimTerm(new SimpleTerm(D3, "c"), 3, 1.0f),
+                new RankedOmimTerm(new SimpleTerm(D1, "a"), 1, 2.0f),
+                new RankedOmimTerm(new SimpleTerm(D2, "b"), 2, 3.0f));
+
+        List<Integer> ranks = DiseaseRankSummary.inInitialRankOrder(shuffled).stream()
+                .map(RankedOmimTerm::initialRank).toList();
+
+        assertEquals(List.of(1, 2, 3), ranks);
+    }
+
+    @Test
+    void aDiseaseMissingFromTheInitialRankingComesLast() {
+        List<RankedOmimTerm> terms = List.of(
+                new RankedOmimTerm(new SimpleTerm(D3, "c"), 0, 1.0f),   // 0 = not in the initial list
+                new RankedOmimTerm(new SimpleTerm(D1, "a"), 2, 2.0f),
+                new RankedOmimTerm(new SimpleTerm(D2, "b"), 1, 3.0f));
+
+        List<Integer> ranks = DiseaseRankSummary.inInitialRankOrder(terms).stream()
+                .map(RankedOmimTerm::initialRank).toList();
+
+        assertEquals(List.of(1, 2, 0), ranks);
+    }
 }

@@ -22,18 +22,28 @@
             <caption>Average Rank Change per Disease</caption>
             <thead>
             <tr>
-                <th scope="col">Disease</th>
-                <th scope="col">Improvement &larr; &rarr; Decline</th>
-                <th scope="col">Change</th>
+                <th scope="col">Disease (initial rank)</th>
+                <th scope="col" class="tornado-axis-cell">
+                    <div class="tornado-axis">
+            <span class="tornado-tick" th:each="tick : ${maxoData.rankScale}"
+                  th:style="${tick.style()}" th:text="${tick.label()}">0</span>
+                    </div>
+                    <div class="tornado-axis-caption">
+                        <span>&larr; moves up the list</span><span>moves down the list &rarr;</span>
+                    </div>
+                </th>
             </tr>
             </thead>
             <tbody>
             <tr th:each="row : ${maxoData.resultRows}">
-                <th scope="row" th:text="${row.omimLabel}">Disease</th>
-                <td class="tornado-track">
+                <th scope="row">
+                    <span class="tornado-rank" th:text="${row.initialRank}">1</span>
+                    <span th:text="${row.omimLabel}">Disease</span>
+                </th>
+                <td class="tornado-track" th:title="${row.rankChangeText}">
                     <span th:class="${row.barCssClass}" th:style="${row.barStyle}"></span>
+                    <span class="visually-hidden" th:text="${row.rankChangeText}">Decline by 2.0</span>
                 </td>
-                <td th:text="${row.rankChangeText}">Decline by 2.0</td>
             </tr>
             </tbody>
         </table>
