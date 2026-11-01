@@ -80,4 +80,19 @@ public class MdResultRow {
     public List<HpoTableCell> getCells() {
         return cells;
     }
+
+    /** Positive: the disease moves down the list (decline).
+     * Negative: it moves up (improvement). */
+    public float getRankChange() {
+        return averageRank - initialRank;
+    }
+
+    /** The change in words, with one decimal, for tooltips. */
+    public String getRankChangeText() {
+        float change = getRankChange();
+        if (change == 0f) {
+            return "No change";
+        }
+        return String.format(Locale.ROOT, "%s by %.1f", change > 0 ? "Decline" : "Improve", Math.abs(change));
+    }
 }

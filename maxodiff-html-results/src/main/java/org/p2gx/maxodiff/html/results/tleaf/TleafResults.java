@@ -80,15 +80,21 @@ public class TleafResults {
     /**
      * @return Spring thymeleaf template engine
      */
-    static private SpringTemplateEngine templateEngine() {
+    private static SpringTemplateEngine templateEngine() {
+        return TEMPLATE_ENGINE;
+    }
+
+    private static final SpringTemplateEngine TEMPLATE_ENGINE = createTemplateEngine();
+
+    private static SpringTemplateEngine createTemplateEngine() {
         ClassLoaderTemplateResolver templateResolver = new ClassLoaderTemplateResolver();
         templateResolver.setPrefix("templates/");
         templateResolver.setSuffix(".html");
         templateResolver.setTemplateMode("HTML");
         templateResolver.setCharacterEncoding("UTF-8");
-        templateResolver.setCacheable(false);
-        SpringTemplateEngine templateEngine = new SpringTemplateEngine();
-        templateEngine.setTemplateResolver(templateResolver);
-        return templateEngine;
+        templateResolver.setCacheable(true);
+        SpringTemplateEngine engine = new SpringTemplateEngine();
+        engine.setTemplateResolver(templateResolver);
+        return engine;
     }
 }

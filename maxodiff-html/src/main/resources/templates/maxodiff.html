@@ -162,11 +162,11 @@
     </div>
 </div>
 
-<div th:if="${showMDresults != null and showMDresults and !hasError}">
+<div th:if="${showMDresults != null and showMDresults}">
     <div th:utext="${htmlTemplateString}"></div>
 </div>
 
-<div th:unless="${showMDresults != null and showMDresults and !hasError}">
+<div th:unless="${showMDresults != null and showMDresults}">
     <div th:replace="~{maxodiffNavBar :: header}">...</div>
 
     <h1>Maxodiff Differential Diagnosis</h1>
