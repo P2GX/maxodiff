@@ -19,12 +19,14 @@ import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDisease;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 import org.p2gx.maxodiff.html.session.UserSessionData;
 import org.phenopackets.schema.v2.Phenopacket;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
+import org.springframework.web.servlet.ModelAndView;
 
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -47,23 +49,36 @@ public class MaxodiffController {
             ExecutorService executor) {
         this.sessionData = sessionData;
         this.mdContext = context;
-        //this.diffDiagRefiner = diffDiagRefiner;
         this.executor = executor;
     }
+
+    private ModelAndView problemPage(Model model, HttpStatus status, List<UserFacingProblem> problems) {
+        model.addAttribute("problems", problems);
+        model.addAttribute("showMDresults", false);
+        PhenopacketData sample = sessionData.getPpkt();
+        if (sample != null) {
+            model.addAttribute("sample", sample);   // keeps the Run button enabled
+        }
+        return new ModelAndView("maxodiff", model.asMap(), status);   // same page, form still visible
+    }
+
 
     @RequestMapping("/maxodiff")
     public Object showResults(@RequestParam(value = "nDiseases", defaultValue = "20") Integer nDiseases,
                               @RequestParam(value = "nRepetitions", defaultValue = "100") Integer nRepetitions,
                               @RequestParam(value = "outputJson", required = false) boolean outputJson,
                               Model model) throws Exception {
+        List<UserFacingProblem> problems = AnalysisLimits.check(nDiseases, nRepetitions);
+        if (!problems.isEmpty()) {
+            return problemPage(model, HttpStatus.BAD_REQUEST, problems);
+        }
         // reset in case user starts second analysis
         sessionData.setRankMaxo(null);
-        model.addAttribute("errorMessage", null);
-        model.addAttribute("hasError", false);
         PhenopacketData sample = sessionData.getPpkt();
         if (sample == null || sample.sampleId() == null) {
+            // Expected on the first visit to the app: no phenopacket has been uploaded yet, so we just show the
+            // empty form (the Run button stays disabled until a file is uploaded).
             model.addAttribute("showMDresults", false);
-            // we will use the hasError=true to show the error on the webpage
             return "maxodiff";
         }
         model.addAttribute("sample", sample);
@@ -112,10 +127,10 @@ public class MaxodiffController {
             }
             Map<TermId, Set<TermId>> maxoToHpoTermIdMap = sessionData.getMaxoToHpoTermIdMap();
             if (orderedDiagnoses == null || orderedDiagnoses.isEmpty()) {
-                model.addAttribute("errorMessage", "No diagnoses retrieved. Please report to developers.");
-                model.addAttribute("hasError", true);
-                model.addAttribute("showMDresults", false);
-                return "maxodiff";
+                return problemPage(model, HttpStatus.INTERNAL_SERVER_ERROR, List.of(new UserFacingProblem(
+                        "No candidate diagnoses could be computed",
+                        "The service could not derive any candidate diagnoses from this patient file.",
+                        "Please check that the file lists observed phenotypes (HPO terms). If it does, please contact the developer team.")));
             }
             int limit = Math.min(orderedDiagnoses.size(), options.nDiseases());
             List<DifferentialDiagnosis> initialDiagnoses = orderedDiagnoses.stream().toList()
@@ -124,10 +139,10 @@ public class MaxodiffController {
                     .map(DifferentialDiagnosis::diseaseId)
                     .collect(Collectors.toCollection(LinkedHashSet::new));
             if (maxoToHpoTermIdMap == null || maxoToHpoTermIdMap.isEmpty()) {
-                model.addAttribute("errorMessage", "No Maxo/HPO map retrieved. Please report to developers.");
-                model.addAttribute("hasError", true);
-                model.addAttribute("showMDresults", false);
-                return "maxodiff";
+                return problemPage(model, HttpStatus.INTERNAL_SERVER_ERROR, List.of(new UserFacingProblem(
+                        "Reference data is not available",
+                        "The data that links medical tests to phenotypes could not be loaded on this server.",
+                        "This cannot be fixed from your side. Please contact the developer team.")));
             }
 
             // Maxodiff Refiner Engine (Using updated parameters from RequestParams)

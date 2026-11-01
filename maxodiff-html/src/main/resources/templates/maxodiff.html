@@ -139,12 +139,27 @@
           color: #000080;
           margin-bottom: 0.5em;
         }
+        .problem-box {
+            border: 1px solid #d9534f;
+            border-left: 6px solid #d9534f;
+            border-radius: 8px;
+            background: #fdf3f2;
+            padding: 1em 1.5em;
+            margin: 1em 0;
+            max-width: 600px;
+        }
+        .problem-box h2 { font-size: 1.2em; color: #a94442; margin-top: 0; }
+        .problem-title { font-weight: bold; margin-bottom: 0.2em; }
     </style>
 </head>
 <body>
-<div th:if="${hasError}" class="alert alert-danger">
-    <p th:text="${errorMessage}">Default error text</p>
-    <a href="/upload-page" class="btn btn-primary">Go to Upload</a>
+<div th:if="${problems != null and !problems.isEmpty()}" class="problem-box" role="alert">
+    <h2>The analysis could not be run</h2>
+    <div th:each="p : ${problems}" class="problem">
+        <p class="problem-title" th:text="${p.title()}">Title</p>
+        <p th:text="${p.explanation()}">Explanation</p>
+        <p><strong>What you can do:</strong> <span th:text="${p.action()}">Action</span></p>
+    </div>
 </div>
 
 <div th:if="${showMDresults != null and showMDresults and !hasError}">
@@ -169,11 +184,27 @@
                 <tbody>
                 <tr>
                     <td>Observed HPO Terms:</td>
-                    <td><ul id="observedHpoTermsList"></ul></td>
+                    <td>
+                        <ul id="observedHpoTermsList">
+                            <li th:each="term : ${sample?.observed()}">
+                                <a th:href="|https://hpo.jax.org/browse/term/${term.tid()}|"
+                                   th:text="|${term.label()} (${term.tid()})|"
+                                   target="_blank" rel="noopener noreferrer">term</a>
+                            </li>
+                        </ul>
+                    </td>
                 </tr>
                 <tr>
                     <td>Excluded HPO Terms:</td>
-                    <td><ul id="excludedHpoTermsList"></ul></td>
+                    <td>
+                        <ul id="excludedHpoTermsList">
+                            <li th:each="term : ${sample?.excluded()}">
+                                <a th:href="|https://hpo.jax.org/browse/term/${term.tid()}|"
+                                   th:text="|${term.label()} (${term.tid()})|"
+                                   target="_blank" rel="noopener noreferrer">term</a>
+                            </li>
+                        </ul>
+                    </td>
                 </tr>
                 </tbody>
             </table>
