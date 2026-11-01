@@ -36,9 +36,9 @@
             </thead>
             <tbody>
             <tr th:each="row : ${maxoData.resultRows}">
-                <th scope="row">
+                <th scope="row" th:title="${row.omimLabel}">
                     <span class="tornado-rank" th:text="${row.initialRank}">1</span>
-                    <span th:text="${row.omimLabel}">Disease</span>
+                    <span class="disease-name" th:text="${row.omimLabel}">Disease</span>
                 </th>
                 <td class="tornado-track" th:title="${row.rankChangeText}">
                     <span th:class="${row.barCssClass}" th:style="${row.barStyle}"></span>
@@ -92,7 +92,8 @@
             <tr th:each="row : ${maxoData.resultRows}">
                 <!-- 1st column: OMIM label with link -->
                 <td>
-                    <a th:href="|https://www.omim.org/entry/${row.omimIdDigits}|"
+                    <a class="disease-name"
+                       th:href="|https://www.omim.org/entry/${row.omimIdDigits}|"
                        th:text="${row.omimLabel}"></a>
                 </td>
 
