@@ -568,7 +568,11 @@
         .disease-name {
             display: inline-block; max-width: 25ch; overflow: hidden; text-overflow: ellipsis;
             white-space: nowrap; vertical-align: bottom; }
-
+        table.summaryTable { border-collapse: collapse; margin-top: 0.5em; }
+        table.summaryTable th, table.summaryTable td { padding: 4px 12px; text-align: left; border-bottom: 1px solid #eee; }
+        table.summaryTable td { width: auto; font-weight: normal; }
+        table.summaryTable .num { text-align: right; }
+        table.summaryTable .maxo-id { color: #777; font-size: 0.8em; margin-left: 0.5em; }
         /* Responsive design */
         @media (max-width: 768px) {
             .resultsTable {
@@ -629,8 +633,14 @@
 <h1 th:text="${ppktId}"></h1>
 
 <div th:utext="${mdHeader}"></div>
+
+<p th:if="${nTotal == 0}">None of the tests is expected to change the ranking of the candidate diagnoses.</p>
+<p th:if="${nTotal > nDetailed}">Full details are shown for the <b th:text="${nDetailed}">10</b>
+    highest-scoring tests out of <b th:text="${nTotal}">131</b>. The others are summarised in the table at the end.</p>
+
 <div th:utext="${mdDiseaseBox}"></div>
 <div th:utext="${maxoResults}"></div>
+<div th:utext="${mdOtherTerms}"></div>
 
 </body>
 </html>
