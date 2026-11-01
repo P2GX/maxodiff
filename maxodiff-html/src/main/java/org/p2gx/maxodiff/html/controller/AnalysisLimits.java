@@ -6,7 +6,7 @@ import java.util.List;
 final class AnalysisLimits {
 
     static final int MIN_N_DISEASES = 20;
-    static final int MAX_N_DISEASES = 400;
+    static final int MAX_N_DISEASES = 40;
     static final int MAX_N_REPETITIONS = 100;
 
     private AnalysisLimits() {
