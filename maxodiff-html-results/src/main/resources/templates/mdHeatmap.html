@@ -25,6 +25,8 @@
                     <div style="text-align:center; margin: 40px 0;">
                         <!-- Title above the chart -->
                         <h2>Average Rank Change per Disease</h2>
+                        <p class="chart-legend">Bars to the right: the disease moves down the list on average (decline).
+                            Bars to the left: it moves up (improvement). One unit is one rank position.</p>
                         <div th:id="'TornadoBarChartContainer_' + ${maxoData.index()}" style="height:500px; width:1000px; border: 1px solid black; display:block;margin:0 auto;">
                         </div>
                     </div>
@@ -41,19 +43,20 @@
         </script>
         <script th:inline="javascript">
             var diseaseLabels = resultRows.map(rt => rt.omimLabel);
-            var rankChanges = resultRows.map(rt => rt.initialRank - rt.averageRank);
+            // positive = decline (the disease moves down the list), negative = improvement
+            var rankChanges = resultRows.map(rt => rt.rankChange);
 
             var options = {
                 series: [{ name: 'Average Rank Change', data: rankChanges }],
                 chart: { type: 'bar', height: 500 },
-                colors: rankChanges.map(rc => rc >= 0 ? '#FF4560' : '#008FFB'),
+                colors: rankChanges.map(rc => rc > 0 ? '#FF4560' : (rc < 0 ? '#008FFB' : '#9E9E9E')),
                 plotOptions: { bar: { horizontal: true, distributed: true, borderRadius: 4 } },
                 dataLabels: { enabled: false },
                 legend: { show: false },
                 xaxis: { categories: diseaseLabels, min: -(nDiseases-1), max: nDiseases-1 },
                 yaxis: { labels: { maxWidth: 1000 } },
                 tooltip: {
-                    y: { formatter: value => (value >=0 ? 'Decline' : 'Improve') + ' by ' + Math.abs(value) }
+                    y: { formatter: (value, { dataPointIndex }) => resultRows[dataPointIndex].rankChangeText }
                 }
             };
 

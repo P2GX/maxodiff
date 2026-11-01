@@ -22,8 +22,6 @@ public class TleafResults {
             MdMetadata mdMetadata,
             List<RankedMaxoResult> resultList,
             HTMLFrequencyMap  htmlFrequencyMap)  {
-
-        LOGGER.debug("Making Spring Template Engine.");
         SpringTemplateEngine templateEngine = templateEngine();
         Context context = new Context(Locale.ENGLISH);
 

@@ -112,4 +112,11 @@ class TleafResultsTest {
         // the MICA values of the fixture are 3.0 and 4.0 for Marfan syndrome, shown with two decimals
         assertThat(page.text()).contains("3.00").contains("4.00").doesNotContain("3,00");
     }
+
+    @Test
+    void rankChangesAreSentToTheChartWithTheRightSign() {
+        String scripts = page.select("script").html();
+        assertThat(scripts).contains("\"rankChange\":2.0").contains("\"rankChange\":-1.0");
+        assertThat(scripts).contains("Decline by 2.0").contains("Improve by 1.0");
+    }
 }
