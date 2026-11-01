@@ -10,6 +10,7 @@ import org.p2gx.maxodiff.core.analysis.refinement.DiffDiagRefiner;
 import org.p2gx.maxodiff.core.model.DifferentialDiagnosis;
 import org.p2gx.maxodiff.core.model.PhenopacketData;
 import org.p2gx.maxodiff.core.model.RankMaxo;
+import org.p2gx.maxodiff.core.service.ProgressListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -23,7 +24,8 @@ public class MaxodiffAnalysisRunner {
     private final DDxEngine engine;
     private final DiffDiagRefiner maxoDiffRefiner;
     private final List<HpoFrequency> hpoFrequencies;
-    private final ExecutorService exectuor;
+    private final ExecutorService exectutor;
+    private final ProgressListener progressListener;
 
     public MaxodiffAnalysisRunner(
             MdContext mdContext,
@@ -32,12 +34,25 @@ public class MaxodiffAnalysisRunner {
             DiffDiagRefiner maxoDiffRefiner,
             List<HpoFrequency> hpoFrequencies
     ) {
+        this(mdContext, executor, engine, maxoDiffRefiner, hpoFrequencies, ProgressListener.NONE);
+    }
+
+    public MaxodiffAnalysisRunner(
+            MdContext mdContext,
+            ExecutorService executor,
+            DDxEngine engine,
+            DiffDiagRefiner maxoDiffRefiner,
+            List<HpoFrequency> hpoFrequencies,
+            ProgressListener progressListener
+    ) {
         this.mdContext = mdContext;
         this.engine = engine;
         this.maxoDiffRefiner = maxoDiffRefiner;
         this.hpoFrequencies = hpoFrequencies;
-        this.exectuor = executor;
+        this.exectutor = executor;
+        this.progressListener = progressListener;
     }
+
 
 
     public List<RankedMaxoResult> analyzeSample(PhenopacketData ppktData) throws Exception {
@@ -49,7 +64,7 @@ public class MaxodiffAnalysisRunner {
         List<DifferentialDiagnosis> orderedDiagnoses = maxoDiffRefiner.getOrderedDiagnoses(differentialDiagnoses);
         List<HpoDisease> diseases = maxoDiffRefiner.getDiseases(orderedDiagnoses);
         List<HpoFrequency> hpoFrequenciesNDiseases = maxoDiffRefiner.getHpoFrequenciesNDiseases(diseases, hpoFrequencies);
-        return getRefinementResults(differentialDiagnoses, orderedDiagnoses, hpoFrequenciesNDiseases, ppktData, ppktMaxoIds);
+        return getRefinementResults(differentialDiagnoses, orderedDiagnoses, hpoFrequenciesNDiseases, ppktData, ppktMaxoIds, progressListener);
     }
 
     public List<RankedMaxoResultSingleDisease> analyzeSampleSingleDisease(PhenopacketData ppktData, TermId targetDiseaseId) throws Exception {
@@ -60,7 +75,7 @@ public class MaxodiffAnalysisRunner {
         List<DifferentialDiagnosis> orderedDiagnoses = maxoDiffRefiner.getOrderedDiagnoses(differentialDiagnoses);
         List<HpoDisease> diseases = maxoDiffRefiner.getDiseases(orderedDiagnoses);
         List<HpoFrequency> hpoFrequenciesNDiseases = maxoDiffRefiner.getHpoFrequenciesNDiseases(diseases, hpoFrequencies);
-        return getRefinementResultsSingleDisease(differentialDiagnoses, orderedDiagnoses, hpoFrequenciesNDiseases, ppktData, targetDiseaseId);
+        return getRefinementResultsSingleDisease(differentialDiagnoses, orderedDiagnoses, hpoFrequenciesNDiseases, ppktData, targetDiseaseId, progressListener);
     }
 
     public MaxoDiffAnalysisResultRow batchAnalysis(PhenopacketData ppktData) throws Exception {
@@ -93,7 +108,8 @@ public class MaxodiffAnalysisRunner {
             List<DifferentialDiagnosis> orderedDiagnoses,
             List<HpoFrequency> hpoFrequenciesNDiseases,
             PhenopacketData sample,
-            List<TermId> ppktMaxoIds) throws Exception {
+            List<TermId> ppktMaxoIds,
+            ProgressListener progressListener) throws Exception {
         List<DifferentialDiagnosis> allOrderedDiagnoses = differentialDiagnoses.stream()
                 .sorted(Comparator.comparingDouble(DifferentialDiagnosis::score).reversed())
                 .toList();
@@ -105,12 +121,12 @@ public class MaxodiffAnalysisRunner {
         Map<TermId, Set<TermId>> maxoToHpoTermIdMap = MaxoHpoTermIdMaps.getMaxoToHpoTermIdMap(this.mdContext.resources().maxoAnnotsMap());//maxoDiffRefiner.getMaxoToHpoTermIdMap(hpoFrequenciesNDiseases);
         LOGGER.debug("Making RankMaxo object");
         RankMaxo rankMaxo = maxoDiffRefiner.getRankMaxo(allOrderedDiagnoses, initialNDiagnoses, engine,
-                maxoToHpoTermIdMap, hpoFrequenciesNDiseases);
+                maxoToHpoTermIdMap, hpoFrequenciesNDiseases, progressListener);
 
         return maxoDiffRefiner.run(sample,
                 initialNDiagnosesIds,
                 rankMaxo,
-                exectuor);
+                exectutor);
     }
 
     private List<RankedMaxoResultSingleDisease> getRefinementResultsSingleDisease(
@@ -118,7 +134,8 @@ public class MaxodiffAnalysisRunner {
             List<DifferentialDiagnosis> orderedDiagnoses,
             List<HpoFrequency> hpoFrequenciesNDiseases,
             PhenopacketData sample,
-            TermId targetDiseaseId) throws Exception {
+            TermId targetDiseaseId,
+            ProgressListener progressListener) throws Exception {
         List<DifferentialDiagnosis> allOrderedDiagnoses = differentialDiagnoses.stream()
                 .sorted(Comparator.comparingDouble(DifferentialDiagnosis::score).reversed())
                 .toList();
@@ -128,13 +145,13 @@ public class MaxodiffAnalysisRunner {
                 .collect(Collectors.toCollection(LinkedHashSet::new));
         Map<TermId, Set<TermId>> maxoToHpoTermIdMap = MaxoHpoTermIdMaps.getMaxoToHpoTermIdMap(this.mdContext.resources().maxoAnnotsMap());//maxoDiffRefiner.getMaxoToHpoTermIdMap(hpoFrequenciesNDiseases);
         RankMaxo rankMaxo = maxoDiffRefiner.getRankMaxo(allOrderedDiagnoses, initialNDiagnoses, engine,
-                maxoToHpoTermIdMap, hpoFrequenciesNDiseases);
+                maxoToHpoTermIdMap, hpoFrequenciesNDiseases, progressListener);
 
         return maxoDiffRefiner.runSingleDisease(sample,
                 targetDiseaseId,
                 initialNDiagnosesIds,
                 rankMaxo,
-                exectuor);
+                exectutor);
     }
 
 

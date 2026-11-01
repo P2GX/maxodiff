@@ -10,6 +10,7 @@ import java.util.concurrent.Executors;
 
 import org.monarchinitiative.phenol.base.PhenolException;
 import org.monarchinitiative.phenol.ontology.data.TermId;
+import org.p2gx.maxodiff.cli.util.ConsoleProgressBar;
 import org.p2gx.maxodiff.core.MaxodiffAnalysisRunner;
 import org.p2gx.maxodiff.core.analysis.HpoFrequency;
 import org.p2gx.maxodiff.core.analysis.RankedMaxoResultSingleDisease;
@@ -102,7 +103,7 @@ public class BestDxModalityCommand extends BaseCommand {
         List<RankedMaxoResultSingleDisease> resultsList;
         try (ExecutorService executor = Executors.newFixedThreadPool(nThreads)) {
             MaxodiffAnalysisRunner runner = new MaxodiffAnalysisRunner(
-                    context, executor, engine, maxoDiffRefiner, allHpoFrequencies);
+                    context, executor, engine, maxoDiffRefiner, allHpoFrequencies, new ConsoleProgressBar());
             resultsList = runner.analyzeSampleSingleDisease(phenopacketData, targetTermId);
         }
         if(this.outputJson) {

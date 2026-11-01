@@ -15,6 +15,7 @@ import org.monarchinitiative.phenol.ontology.data.TermId;
 
 import org.p2gx.maxodiff.core.analysis.HpoFrequency;
 import org.p2gx.maxodiff.core.model.*;
+import org.p2gx.maxodiff.core.service.ProgressListener;
 
 
 import java.util.*;
@@ -67,7 +68,8 @@ public class DiffDiagRefinerImpl implements DiffDiagRefiner {
                                 List<DifferentialDiagnosis> initialDiagnoses,
                                 DDxEngine engine,
                                 Map<TermId, Set<TermId>> maxoToHpoTermIdMap,
-                                List<HpoFrequency> hpoFrequenciesNDiseases) {
+                                List<HpoFrequency> hpoFrequenciesNDiseases,
+                                ProgressListener progressListener) {
 
 
         MaxoHpoTermProbabilities maxoHpoTermProbabilities = new MaxoHpoTermProbabilities(hpoDiseases,
@@ -76,7 +78,7 @@ public class DiffDiagRefinerImpl implements DiffDiagRefiner {
 
 
         return new RankMaxo(maxoToHpoTermIdMap, maxoHpoTermProbabilities, engine,
-                hpo, allInitialDiagnoses, initialDiagnoses, hpoFrequenciesNDiseases);
+                hpo, allInitialDiagnoses, initialDiagnoses, hpoFrequenciesNDiseases, progressListener);
     }
 
 

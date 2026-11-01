@@ -1,9 +1,8 @@
 package org.p2gx.maxodiff.core.model;
 
 import org.monarchinitiative.phenol.ontology.data.MinimalOntology;
-import org.p2gx.maxodiff.core.JpsChecker;
 import org.p2gx.maxodiff.core.MaxodiffRuntimeException;
-import org.p2gx.maxodiff.core.ProgessBar;
+
 
 import org.p2gx.maxodiff.core.analysis.*;
 import org.p2gx.maxodiff.core.diffdg.DDxEngine;
@@ -11,6 +10,7 @@ import org.p2gx.maxodiff.core.io.MdContext;
 import org.p2gx.maxodiff.core.service.BiometadataService;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 
+import org.p2gx.maxodiff.core.service.ProgressListener;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -28,6 +28,7 @@ public class RankMaxo {
     private final List<DifferentialDiagnosis> allInitialDiagnoses;
     private final List<DifferentialDiagnosis> initialDiagnoses;
     private final List<HpoFrequency> hpoFrequenciesNDiseases;
+    private final ProgressListener progressListener;
 
     /**
      * Number of top-ranked diseases from the initial differential diagnosis whose phenotypes feed the simulation.
@@ -59,12 +60,26 @@ public class RankMaxo {
                     List<DifferentialDiagnosis> allInitialDiagnoses,
                     List<DifferentialDiagnosis> initialDiagnoses,
                     List<HpoFrequency> hpoFrequenciesNDiseases) {
+        this(maxoToHpoTermIdMap, maxoHpoTermProbabilities, engine, hpo, allInitialDiagnoses,
+                initialDiagnoses, hpoFrequenciesNDiseases, ProgressListener.NONE);
+    }
+
+    /** @param progressListener told each time the evaluation of one MAxO term has finished */
+    public RankMaxo(Map<TermId, Set<TermId>> maxoToHpoTermIdMap,
+                    MaxoHpoTermProbabilities maxoHpoTermProbabilities,
+                    DDxEngine engine,
+                    MinimalOntology hpo,
+                    List<DifferentialDiagnosis> allInitialDiagnoses,
+                    List<DifferentialDiagnosis> initialDiagnoses,
+                    List<HpoFrequency> hpoFrequenciesNDiseases,
+                    ProgressListener progressListener) {
         this.maxoToHpoTermIdMap = maxoToHpoTermIdMap;
         this.maxoHpoTermProbabilities = maxoHpoTermProbabilities;
         this.engine = engine;
         this.allInitialDiagnoses = allInitialDiagnoses;
         this.initialDiagnoses = initialDiagnoses;
         this.hpoFrequenciesNDiseases = hpoFrequenciesNDiseases;
+        this.progressListener = Objects.requireNonNull(progressListener, "progressListener must not be null");
     }
 
     /**
@@ -85,9 +100,10 @@ public class RankMaxo {
         Map<TermId, Set<TermId>> fullMaxoToHpoTermIdMap = maxoHpoTermProbabilities.getMaxoToHpoTermIdMap();
         AtomicInteger completedTasks = new AtomicInteger(0);
         List<Callable<RankedMaxoResult>> tasks = new ArrayList<>();
-        int maxoIdx = 0;
-        ProgessBar pb = new ProgessBar(maxoIdx, maxoToHpoTermIdMap.size());
-        for (TermId maxoId : maxoToHpoTermIdMap.keySet()) {
+        int nTasks = countTasks(maxoToHpoTermIdMap.keySet(), ppktMaxoIds);          // how many terms will really be evaluated
+        RankMaxoProgress progressTracker = new RankMaxoProgress(nTasks);            // for the web progress page
+        this.rankMaxoProgress = progressTracker;
+           for (TermId maxoId : maxoToHpoTermIdMap.keySet()) {
             LOGGER.debug("MAxO id: '{}'", maxoId);
             if (ppktMaxoIds.contains(maxoId)) {
                 LOGGER.debug("Sample {}  already contains {}.", ppkt.sampleId(), maxoId);
@@ -103,26 +119,14 @@ public class RankMaxo {
                     .nDiagnoses(samplingPoolSize(allInitialDiagnoses.size()))
                     .maxoLabel(biometadataService.maxoLabel(maxoId.getValue()).get())
                     .build();
-            LOGGER.debug("Making RankMaxoProgressObject");
-            rankMaxoProgress = new RankMaxoProgress(maxoToHpoTermIdMap.size());
-            int finalMaxoIdx = maxoIdx;
-            tasks.add(() -> {
-                MaxoTermEvaluator evaluateMaxoTerm = new MaxoTermEvaluator(maxoHpoDiseaseRank, nRepetitions, ppkt,
-                        engine,
-                        initialDiagnoses, diseaseIds, biometadataService, hpoFrequenciesNDiseases);
-                double done = completedTasks.incrementAndGet();
-                rankMaxoProgress.updateProgress(maxoId.getValue(), done);
-                if (JpsChecker.isMainClassRunning("org.p2gx.maxodiff.cli.Main")) {
-                    pb.print(finalMaxoIdx);
-                }
-                return evaluateMaxoTerm.call();
-            });
-            maxoIdx++;
+
+               tasks.add(withProgress(
+                       () -> new MaxoTermEvaluator(maxoHpoDiseaseRank, nRepetitions, ppkt, engine,
+                               initialDiagnoses, diseaseIds, biometadataService, hpoFrequenciesNDiseases).call(),
+                       completedTasks, nTasks, progressListener, progressTracker, maxoId.getValue()));
         }
 
         List<Future<RankedMaxoResult>> futures = sharedExecutorService.invokeAll(tasks);
-
-//        List<RankedMaxoResult> results = new ArrayList<>();
         List<RankedMaxoResult> results = new ArrayList<>(futures.size());   // RankedMaxoResultSingleDisease in the other method
         for (Future<RankedMaxoResult> future : futures) {
             results.add(resultOf(future));
@@ -144,11 +148,12 @@ public class RankMaxo {
         List<TermId> ppktMaxoIds = ppkt.maxoProcedureIds();
         Map<TermId, Set<TermId>> fullMaxoToHpoTermIdMap = maxoHpoTermProbabilities.getMaxoToHpoTermIdMap();
 
-//        ExecutorService executor = Executors.newFixedThreadPool(nThreads);
         AtomicInteger completedTasks = new AtomicInteger(0);
         List<Callable<RankedMaxoResultSingleDisease>> tasks = new ArrayList<>();
-        int maxoIdx = 0;
-        ProgessBar pb = new ProgessBar(maxoIdx, maxoToHpoTermIdMap.size());
+        int nTasks = countTasks(maxoToHpoTermIdMap.keySet(), ppktMaxoIds);
+        RankMaxoProgress progressTracker = new RankMaxoProgress(nTasks);
+        this.rankMaxoProgress = progressTracker;
+
         for (TermId maxoId : maxoToHpoTermIdMap.keySet()) {
             if (ppktMaxoIds.contains(maxoId)) {
                 LOGGER.debug("Sample {}  already contains {}.", ppkt.sampleId(), maxoId);
@@ -166,20 +171,12 @@ public class RankMaxo {
                     .nDiagnoses(samplingPoolSize(allInitialDiagnoses.size()))
                     .maxoLabel(biometadataService.maxoLabel(maxoId.getValue()).get())
                     .build();
-            rankMaxoProgress = new RankMaxoProgress(maxoToHpoTermIdMap.size());
-            int finalMaxoIdx = maxoIdx;
-            tasks.add(() -> {
-                MaxoTermEvaluatorSingleDisease evaluateMaxoTerm = new MaxoTermEvaluatorSingleDisease(maxoHpoDiseaseRank, nRepetitions, ppkt,
-                        engine, maxoHpoTermProbabilities,
-                        initialDiagnoses, diseaseIds, biometadataService, context, targetDiseaseId);
-                double done = completedTasks.incrementAndGet();
-                rankMaxoProgress.updateProgress(maxoId.getValue(), done);
-                if (JpsChecker.isMainClassRunning("org.p2gx.maxodiff.cli.Main")) {
-                    pb.print(finalMaxoIdx);
-                }
-                return evaluateMaxoTerm.call();
-            });
-            maxoIdx++;
+
+            tasks.add(withProgress(
+                    () -> new MaxoTermEvaluatorSingleDisease(maxoHpoDiseaseRank, nRepetitions, ppkt, engine,
+                            maxoHpoTermProbabilities, initialDiagnoses, diseaseIds, biometadataService,
+                            context, targetDiseaseId).call(),
+                    completedTasks, nTasks, progressListener, progressTracker, maxoId.getValue()));
         }
 
         List<Future<RankedMaxoResultSingleDisease>> futures = sharedExecutorService.invokeAll(tasks);
@@ -191,7 +188,6 @@ public class RankMaxo {
         return results.stream()
                 .sorted(Comparator.comparing(RankedMaxoResultSingleDisease :: totalIC).reversed())
                 .toList();
-
     }
 
     private double updateProgress(double p, int nMaxoTermIds) {
@@ -223,6 +219,23 @@ public class RankMaxo {
             Thread.currentThread().interrupt(); // restore the flag for whoever owns this thread
             throw new MaxodiffRuntimeException("Interrupted while collecting MAxO results", e);
         }
+    }
+
+    /** @return the number of MAxO terms that will be evaluated: those the patient doesn't already have */
+    static int countTasks(Collection<TermId> maxoIds, List<TermId> alreadyInPatient) {
+        return (int) maxoIds.stream().filter(id -> !alreadyInPatient.contains(id)).count();
+    }
+
+    /** Wraps a task so that progress is recorded and reported only after the task has finished successfully. */
+    static <T> Callable<T> withProgress(Callable<T> task, AtomicInteger completedTasks, int nTasks,
+                                        ProgressListener listener, RankMaxoProgress tracker, String maxoId) {
+        return () -> {
+            T result = task.call();
+            int done = completedTasks.incrementAndGet();
+            tracker.updateProgress(maxoId, done);
+            listener.onTaskCompleted(done, nTasks);
+            return result;
+        };
     }
 
 }

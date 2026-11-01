@@ -1,5 +1,6 @@
 package org.p2gx.maxodiff.cli.cmd;
 
+import org.p2gx.maxodiff.cli.util.ConsoleProgressBar;
 import org.p2gx.maxodiff.core.analysis.*;
 import org.p2gx.maxodiff.core.io.MdContext;
 import org.p2gx.maxodiff.core.io.impl.MdContextBuilder;
@@ -103,7 +104,8 @@ public class DDxCommand extends BaseCommand {
                         executor,
                         engine,
                         maxoDiffRefiner,
-                        allHpoFrequencies);
+                        allHpoFrequencies,
+                        new ConsoleProgressBar());
                 resultsList = runner.analyzeSample(phenopacketData);
             }
             if (resultsList.isEmpty()) {

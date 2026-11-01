@@ -9,6 +9,7 @@ import org.p2gx.maxodiff.core.model.PhenopacketData;
 import org.p2gx.maxodiff.core.model.RankMaxo;
 import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDisease;
 import org.monarchinitiative.phenol.ontology.data.TermId;
+import org.p2gx.maxodiff.core.service.ProgressListener;
 
 import java.util.*;
 import java.util.concurrent.ExecutorService;
@@ -44,7 +45,8 @@ public interface DiffDiagRefiner {
                          List<DifferentialDiagnosis> initialDiagnoses,
                          DDxEngine engine,
                          Map<TermId, Set<TermId>> maxoToHpoTermIdMap,
-                         List<HpoFrequency> hpoFrequenciesNDiseases);
+                         List<HpoFrequency> hpoFrequenciesNDiseases,
+                         ProgressListener progressListener);
 
 
 
