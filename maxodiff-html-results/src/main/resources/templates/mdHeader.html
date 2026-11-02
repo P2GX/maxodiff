@@ -1,31 +1,22 @@
-
-<table class="resultsTable">
-    <tbody>
-        <tr class="spaced-row">
-            <td class="narrow-column">Observed HPO Terms:</td>
-            <td class="wide-column">
-                <a th:each="term : ${observedHpoTerms}"
+<section class="patient-card" aria-label="Patient summary">
+    <dl>
+        <div class="term-row">
+            <dt>Observed HPO terms</dt>
+            <dd>
+                <a class="term observed" th:each="term : ${observedHpoTerms}"
                    th:href="|https://hpo.jax.org/browse/term/${term.tid}|" target="_blank"
-                   th:text="${term.label}">
-                </a>
-            </td>
-        </tr>
-        <tr class="spaced-row">
-            <td class="narrow-column">Excluded HPO Terms:</td>
-            <td class="wide-column">
-                <a th:each="term : ${excludedHpoTerms}"
+                   th:title="${term.tid}" th:text="${term.label}">term</a>
+                <span class="none" th:if="${#lists.isEmpty(observedHpoTerms)}">none</span>
+            </dd>
+        </div>
+        <div class="term-row">
+            <dt>Excluded HPO terms</dt>
+            <dd>
+                <a class="term excluded" th:each="term : ${excludedHpoTerms}"
                    th:href="|https://hpo.jax.org/browse/term/${term.tid}|" target="_blank"
-                   th:text="${term.label}">
-                </a>
-            </td>
-        </tr>
-        <tr class="spaced-row">
-            <td class="narrow-column">Diseases:</td><td class="wide-column" th:text="${nDiseases}">n Diseases</td>
-        </tr>
-        <tr>
-            <td class="narrow-column">Simulations:</td><td class="wide-column" th:text="${nRepetitions}">n Simulations</td>
-        </tr>
-    </tbody>
-</table>
-
-
+                   th:title="${term.tid}" th:text="${term.label}">term</a>
+                <span class="none" th:if="${#lists.isEmpty(excludedHpoTerms)}">none</span>
+            </dd>
+        </div>
+    </dl>
+</section>

@@ -51,7 +51,8 @@ class TleafResultsSummaryTest {
 
         assertThat(page.select("table.countsTable")).hasSize(10);
         assertThat(page.select("table.tornado")).hasSize(10);
-        assertThat(page.select("table.dBoxTable thead th")).hasSize(1 + 10);   // the corner cell plus 10 terms
+        assertThat(page.select("table.matrix thead th.m-col")).hasSize(2);    // the two diseases
+        assertThat(page.select("table.matrix tbody tr")).hasSize(13);          // all 13 tests (the limit is 25)
         assertThat(page.select("h2").text()).contains("10) MAXO:0000010: Test 10")
                 .doesNotContain("MAXO:0000011");
     }
@@ -96,5 +97,51 @@ class TleafResultsSummaryTest {
 
         assertThat(page.select("table.countsTable")).hasSize(3);
         assertThat(page.select("table.summaryTable tbody tr")).hasSize(10);
+    }
+
+    private static Document render(MdMetadata metadata, List<RankedMaxoResult> results) {
+        IcMicaData icData = new IcMicaData(Map.of(TermPair.symmetric(ARACHNODACTYLY.tid(), MARFAN.tid()), 9.0), null);
+        return Jsoup.parse(TleafResults.writeHTMLResults(metadata, results, new HTMLFrequencyMap(null, icData)));
+    }
+
+    private static final SimpleTerm SEIZURE = new SimpleTerm(TermId.of("HP:0001250"), "Seizure");
+
+    @Test
+    void theHeaderListsObservedAndExcludedTermsAsLinks() {
+        MdMetadata metadata = new MdMetadata("PMID_1_Patient_5", 20, 80,
+                List.of(ARACHNODACTYLY), List.of(SEIZURE), thirteenResults());
+
+        Document page = render(metadata, thirteenResults());
+
+        assertThat(page.select("h1").text()).isEqualTo("PMID_1_Patient_5");
+        assertThat(page.select(".patient-card a.term.observed").eachText()).containsExactly("Arachnodactyly");
+        assertThat(page.select(".patient-card a.term.excluded").eachText()).containsExactly("Seizure");
+        assertThat(page.select(".patient-card a.term.observed").attr("href"))
+                .isEqualTo("https://hpo.jax.org/browse/term/HP:0001166");
+    }
+
+    @Test
+    void theNumberOfDiseasesAndSimulationsAreInTheNoteAndNotInTheHeader() {
+        MdMetadata metadata = new MdMetadata("p", 20, 80, List.of(ARACHNODACTYLY), List.of(), thirteenResults());
+
+        Document page = render(metadata, thirteenResults());
+
+        assertThat(page.select(".patient-card").text()).doesNotContain("Diseases", "Simulations");
+        assertThat(page.select("p.run-note").text())
+                .contains("The 20 most likely diseases were compared, with 80 simulations per test.");
+    }
+
+    @Test
+    void emptyTermListsSayNone() {
+        MdMetadata metadata = new MdMetadata("p", 20, 80, List.of(), List.of(), thirteenResults());
+
+        assertThat(render(metadata, thirteenResults()).select(".patient-card .none")).hasSize(2);
+    }
+
+    @Test
+    void theMatrixShowsTheRankChangeOfEachDiseaseForEachTest() {
+        Element firstRow = render(thirteenResults()).select("table.matrix tbody tr").first();
+        assertThat(firstRow.select("th.m-row .m-label").text()).isEqualTo("Test 1");
+        assertThat(firstRow.select("td.m-cell").eachText()).containsExactly("+2.0", "−1.0");
     }
 }
