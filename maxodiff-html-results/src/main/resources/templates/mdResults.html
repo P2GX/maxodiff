@@ -156,6 +156,7 @@
             border: 1px solid #ccc;
             border-left: 6px solid #007acc;
             border-radius: 8px;
+            box-sizing: border-box;
             padding: 1em;
             background: #fefefe;
             box-shadow: 0 2px 4px rgba(0,0,0,0.05);
@@ -573,6 +574,29 @@
         table.summaryTable td { width: auto; font-weight: normal; }
         table.summaryTable .num { text-align: right; }
         table.summaryTable .maxo-id { color: #777; font-size: 0.8em; margin-left: 0.5em; }
+        /* Patient summary at the top of the page */
+        .patient-card {
+            max-width: 760px; margin: 1em 0; padding: 0.6em 1.4em;
+            border: 1px solid #ccc; border-left: 6px solid #007acc; border-radius: 8px;
+            background: #fefefe; box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .patient-card dl { margin: 0; }
+        .patient-card .term-row { display: grid; grid-template-columns: 9em 1fr; gap: 0 1em; padding: 0.7em 0; }
+        .patient-card .term-row + .term-row { border-top: 1px solid #e8ecf0; }
+        .patient-card dt { font-weight: 600; color: #2c3e50; font-size: 0.9em; padding-top: 0.3em; }
+        .patient-card dd { margin: 0; }
+        .patient-card .term {
+            display: inline-block; margin: 0 0.3em 0.35em 0; padding: 0.1em 0.65em; border: 1px solid;
+            border-radius: 1em; font-size: 0.88em; line-height: 1.5; text-decoration: none; }
+        .patient-card .term:hover, .patient-card .term:focus { text-decoration: underline; }
+        .patient-card .term.observed { background: rgba(40,167,69,0.07); border-color: rgba(40,167,69,0.35); color: #155724; }
+        .patient-card .term.excluded { background: rgba(220,53,69,0.06); border-color: rgba(220,53,69,0.3); color: #721c24; }
+        .patient-card .none { color: #777; font-style: italic; }
+        /* The header uses the same column as the boxes below: .container (80%), then 90% of that, centred */
+        .page-head { width: 90%; margin: 0 auto; }
+        .container.page-top { padding-bottom: 0; }
+        .run-note { max-width: 760px; margin: 0 0 1em; color: #444; line-height: 1.5; }
+        @media (max-width: 560px) { .patient-card .term-row { grid-template-columns: 1fr; } }
         /* Responsive design */
         @media (max-width: 768px) {
             .resultsTable {
@@ -630,17 +654,22 @@
 </head>
 
 <body style="font-family: Arial, Helvetica, sans-serif;">
-<h1 th:text="${ppktId}"></h1>
+<div class="container page-top">
+    <div class="page-head">
+        <h1 th:text="${ppktId}"></h1>
 
-<div th:utext="${mdHeader}"></div>
+        <div th:utext="${mdHeader}"></div>
 
-<p th:if="${nTotal == 0}">None of the tests is expected to change the ranking of the candidate diagnoses.</p>
-<p th:if="${nTotal > nDetailed}">Full details are shown for the <b th:text="${nDetailed}">10</b>
-    highest-scoring tests out of <b th:text="${nTotal}">131</b>. The others are summarised in the table at the end.</p>
+        <p th:if="${nTotal == 0}">None of the tests is expected to change the ranking of the candidate diagnoses.</p>
+        <p class="run-note">The <b th:text="${nDiseases}">20</b> most likely diseases were compared, with
+            <b th:text="${nRepetitions}">80</b> simulations per test.
+            <th:block th:if="${nTotal > nDetailed}">Full details are shown for the <b th:text="${nDetailed}">10</b>
+                highest-scoring tests out of <b th:text="${nTotal}">131</b>. The others are summarised in the table at the end.</th:block></p>
+    </div>
+</div>
 
 <div th:utext="${mdDiseaseBox}"></div>
 <div th:utext="${maxoResults}"></div>
 <div th:utext="${mdOtherTerms}"></div>
-
 </body>
 </html>
