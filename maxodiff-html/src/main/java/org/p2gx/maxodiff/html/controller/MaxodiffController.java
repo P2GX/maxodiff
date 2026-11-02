@@ -12,6 +12,8 @@ import org.p2gx.maxodiff.core.model.PhenopacketData;
 import org.p2gx.maxodiff.core.model.RankMaxo;
 import org.p2gx.maxodiff.core.model.TermPair;
 import org.p2gx.maxodiff.core.service.BiometadataService;
+import org.p2gx.maxodiff.html.config.AnalysisGate;
+import org.p2gx.maxodiff.html.config.ServerBusyException;
 import org.p2gx.maxodiff.html.results.tleaf.TleafResults;
 import org.p2gx.maxodiff.core.phenomizer.PhenomizerDDxEngine;
 import org.p2gx.maxodiff.core.phenomizer.ScoringMode;
@@ -19,6 +21,7 @@ import org.monarchinitiative.phenol.annotations.formats.hpo.HpoDisease;
 import org.monarchinitiative.phenol.ontology.data.TermId;
 import org.p2gx.maxodiff.html.session.UserSessionData;
 import org.phenopackets.schema.v2.Phenopacket;
+import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
@@ -43,13 +46,17 @@ public class MaxodiffController {
 
     private final ExecutorService executor;
 
+    private final AnalysisGate analysisGate;
+
     public MaxodiffController(
             UserSessionData sessionData,
             MdContext context,
-            ExecutorService executor) {
+            ExecutorService executor,
+            AnalysisGate analysisGate) {
         this.sessionData = sessionData;
         this.mdContext = context;
         this.executor = executor;
+        this.analysisGate = analysisGate;
     }
 
     private ModelAndView problemPage(Model model, HttpStatus status, List<UserFacingProblem> problems) {
@@ -155,7 +162,15 @@ public class MaxodiffController {
                     engine,
                     customRefiner,
                     hpoTermCounts);
-            List<RankedMaxoResult> resultsList = runner.analyzeSample(sample);
+            List<RankedMaxoResult> resultsList;
+            try (AnalysisGate.Ticket ignored = analysisGate.enter()) {
+                resultsList = runner.analyzeSample(sample);
+            } catch (ServerBusyException busy) {
+                return problemPage(model, HttpStatus.SERVICE_UNAVAILABLE, List.of(new UserFacingProblem(
+                        "The server is busy",
+                        "Other analyses are using all of the available capacity, and none became free in time.",
+                        "Please wait a few minutes and run the analysis again.")));
+            }
 
             int zeroIdx = resultsList.stream()
                     .filter(result -> result.maxoScore() == 0.)
@@ -287,20 +302,44 @@ public class MaxodiffController {
     }
 
     @PostMapping(
-        value = "/api/analyze", 
-        consumes = MediaType.APPLICATION_JSON_VALUE, 
+        value = "/api/analyze",
+        consumes = MediaType.APPLICATION_JSON_VALUE,
         produces = MediaType.APPLICATION_JSON_VALUE
     )
-    public ResponseEntity<MdMetadata> analyzeJson(@RequestBody Phenopacket payload) throws Exception {
-
-        if (payload == null || payload.getId() == null) {
-            return ResponseEntity.badRequest().build();
+    public ResponseEntity<?> analyzeJson(
+            @RequestBody Phenopacket payload,
+            @RequestParam(value = "nDiseases", defaultValue = "20") Integer nDiseases,
+            @RequestParam(value = "nRepetitions", defaultValue = "80") Integer nRepetitions) throws Exception {
+        List<UserFacingProblem> problems = new ArrayList<>(AnalysisLimits.checkPhenopacket(payload));
+        problems.addAll(AnalysisLimits.check(nDiseases, nRepetitions));
+        if (!problems.isEmpty()) {
+            return badRequest(problems);
         }
+        try (AnalysisGate.Ticket ignored = analysisGate.enter()) {
+            return ResponseEntity.ok(analyze(payload, nDiseases, nRepetitions));
+        }
+    }
 
+    private static ResponseEntity<ApiProblems> badRequest(List<UserFacingProblem> problems) {
+        return ResponseEntity.badRequest()
+                .contentType(MediaType.APPLICATION_JSON)
+                .body(new ApiProblems(problems));
+    }
+
+    @ExceptionHandler(ServerBusyException.class)
+    public ResponseEntity<ApiProblems> serverBusy() {
+        return ResponseEntity.status(HttpStatus.SERVICE_UNAVAILABLE)
+                .contentType(MediaType.APPLICATION_JSON)
+                .header(HttpHeaders.RETRY_AFTER, "60")
+                .body(new ApiProblems(List.of(new UserFacingProblem(
+                        "The server is busy",
+                        "Other analyses are using all of the available capacity, and none became free in time.",
+                        "Please wait a few minutes and send the request again."))));
+    }
+
+    private MdMetadata analyze(Phenopacket payload, int nDiseases, int nRepetitions) throws Exception {
         PhenopacketData ppktData = PhenopacketData.fromPpkt(payload);
 
-        int nDiseases = 20;
-        int nRepetitions = 80;
 
         Map<TermPair, Double> icMicaDict = this.mdContext.resources().icMicaData().icMicaDict();
         if (icMicaDict.isEmpty()) {
@@ -313,7 +352,7 @@ public class MaxodiffController {
         // 2. Maxodiff Refiner Engine (Using updated parameters from RequestParams)
         MdContext mdContextNewParams = mdContext.updateContext(nRepetitions, nDiseases);
         DiffDiagRefiner customRefiner = new DiffDiagRefinerImpl(mdContextNewParams);
-       
+
         // 3. Process RankMaxo and Refinement Math Pipelines
         List<DifferentialDiagnosis> orderedDiagnoses = customRefiner.getOrderedDiagnoses(differentialDiagnoses);
         List<HpoDisease> diseases = customRefiner.getDiseases(orderedDiagnoses);
@@ -329,16 +368,13 @@ public class MaxodiffController {
                 hpoTermCounts);
         resultsList = runner.analyzeSample(ppktData);
 
-        // 4. Wrap up the core computation metadata object and return it as JSON
-        MdMetadata mdMetadata = new MdMetadata(
+        return new MdMetadata(
                 ppktData.sampleId(),
                 nDiseases,
                 nRepetitions,
                 ppktData.observed(),
                 ppktData.excluded(),
                 resultsList);
-
-        return ResponseEntity.ok(mdMetadata);
     }
 
     @PostMapping(
@@ -346,16 +382,31 @@ public class MaxodiffController {
         consumes = MediaType.APPLICATION_JSON_VALUE, 
         produces = MediaType.APPLICATION_JSON_VALUE
     )
-    public ResponseEntity<List<RankedMaxoResultSingleDisease>> analyzeBestModalityJson(@RequestBody Phenopacket payload,  @RequestParam(value = "targetDiseaseId", required = true) String targetDiseaseId) throws Exception {
-
-        if (payload == null || payload.getId() == null) {
-            return ResponseEntity.badRequest().build();
+    public ResponseEntity<?> analyzeBestModalityJson(
+            @RequestBody Phenopacket payload,
+            @RequestParam(value = "targetDiseaseId", required = true) String targetDiseaseId,
+            @RequestParam(value = "nDiseases", defaultValue = "20") Integer nDiseases,
+            @RequestParam(value = "nRepetitions", defaultValue = "80") Integer nRepetitions) throws Exception {
+        List<UserFacingProblem> problems = new ArrayList<>(AnalysisLimits.checkPhenopacket(payload));
+        problems.addAll(AnalysisLimits.checkTargetDisease(targetDiseaseId));
+        problems.addAll(AnalysisLimits.check(nDiseases, nRepetitions));
+        if (!problems.isEmpty()) {
+            return badRequest(problems);
         }
+        try (AnalysisGate.Ticket ignored = analysisGate.enter()) {
+            return ResponseEntity.ok(analyzeBestModality(payload, targetDiseaseId, nDiseases, nRepetitions));
+        }
+    }
 
+    private List<RankedMaxoResultSingleDisease> analyzeBestModality(
+            Phenopacket payload,
+            String targetDiseaseId,
+            int nDiseases,
+        int nRepetitions)
+            throws Exception {
         PhenopacketData ppktData = PhenopacketData.fromPpkt(payload);
 
-        int nDiseases = 20;
-        int nRepetitions = 80;
+
 
         // 1. Initial Differential Diagnosis Engine (Phenomizer)
         Map<TermPair, Double> icMicaDict = this.mdContext.resources().icMicaData().icMicaDict();
@@ -387,9 +438,9 @@ public class MaxodiffController {
         resultsList = runner.analyzeSampleSingleDisease(ppktData, targetId);
 
         // Make a Record that has enough data to show HTML page on SAMS, e.g., also show name of phenopacket, and some other things (check with DS)
-        return ResponseEntity.ok(resultsList.stream()
+        return resultsList.stream()
                 .sorted(Comparator.comparingDouble(RankedMaxoResultSingleDisease::maxoScore).reversed())
-                .toList());
+                .toList();
     }
 
 }
