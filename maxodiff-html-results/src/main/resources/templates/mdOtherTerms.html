@@ -1,0 +1,31 @@
+<div class="container">
+    <div class="section-box">
+        <h2>Other tests</h2>
+        <p>These tests ranked below the <span th:text="${nDetailed}">10</span> shown above. They are listed
+            with their score only; the full details of all tests are available in the JSON output.</p>
+        <table class="summaryTable">
+            <caption class="visually-hidden">Summary of the tests that are not shown in detail</caption>
+            <thead>
+            <tr>
+                <th scope="col" class="num">#</th>
+                <th scope="col">MAxO term</th>
+                <th scope="col" class="num">&Delta;Score</th>
+                <th scope="col" class="num">HPO terms</th>
+                <th scope="col" class="num">Diseases moving up</th>
+                <th scope="col" class="num">Diseases moving down</th>
+            </tr>
+            </thead>
+            <tbody>
+            <tr th:each="row : ${otherTerms}">
+                <td class="num" th:text="${row.position()}">11</td>
+                <td><span th:text="${row.maxoLabel()}">MAxO term</span>
+                    <span class="maxo-id" th:text="${row.maxoId()}">MAXO:0000000</span></td>
+                <td class="num" th:text="${row.deltaScore()}">1.2</td>
+                <td class="num" th:text="${row.nHpoTerms()}">3</td>
+                <td class="num" th:text="${row.nImproved()}">4</td>
+                <td class="num" th:text="${row.nDeclined()}">2</td>
+            </tr>
+            </tbody>
+        </table>
+    </div>
+</div>

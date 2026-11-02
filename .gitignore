@@ -36,6 +36,7 @@ maxodiff_results.csv
 term-pair-similarity.csv.gz
 
 *.html
+!**/src/main/resources/templates/*.html
 *.jfr
 postman/
 .postman/
