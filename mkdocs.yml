@@ -35,8 +35,10 @@ nav:
 - Home: 'index.md'
 - Background: 'background.md'
 - Setup: 'setup.md'
+- Understanding maxodiff: 'understanding.md'
+- SAMS: 'sams.md'
 - Server setup: 'setup-server.md'
-- Web server: 'json.md'
+- Web server: 'api.md'
 - Command line: 'app.md'
 
 
@@ -52,8 +54,6 @@ extra:
   social:
     - icon: fontawesome/brands/github-alt
       link: https://github.com/pnrobinson
-    - icon: fontawesome/brands/twitter
-      link: https://twitter.com/pnrobins
     - icon: fontawesome/brands/linkedin
       link: https://www.linkedin.com/in/peter-n-robinson-b7833811/
 
@@ -67,6 +67,7 @@ markdown_extensions:
   - pymdownx.arithmatex:
       generic: true
   - footnotes
+  - def_list
   - pymdownx.details
   - pymdownx.superfences
   - pymdownx.mark

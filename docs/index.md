@@ -31,7 +31,7 @@ run as an HTML server, or can be accessed from
 |---|---|---|
 | Best for | Trying it out on a single patient; integration in other tools such as [SAMS](https://www.genecascade.org/sams-cgi/index.cgi) | Batch analyses, scripting, offline use |
 | Output | Interactive page, or JSON | Self-contained HTML file |
-| Documentation | [Server setup](setup-server.md), [Web server output](json.md) | [Setup](setup.md), [Command line app](app.md) |
+| Documentation | [Server setup](setup-server.md), [Web server output](api.md) | [Setup](setup.md), [Command line app](app.md) |
 
 ## Where to go next
 
