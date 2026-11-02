@@ -5,6 +5,7 @@ import org.p2gx.maxodiff.core.analysis.MdMetadata;
 import org.p2gx.maxodiff.core.analysis.RankedMaxoResult;
 
 import org.p2gx.maxodiff.html.results.maxoDisease.MdDiseaseHTML;
+import org.p2gx.maxodiff.html.results.maxoDisease.MdMatrix;
 import org.p2gx.maxodiff.html.results.maxoHpo.MdHtmlResult;
 import org.p2gx.maxodiff.html.results.summary.MdSummaryRow;
 import org.slf4j.Logger;
@@ -22,6 +23,9 @@ public class TleafResults {
 
     /** Number of MAxO terms that are shown in full detail; the others are listed in a summary table. */
     public static final int DEFAULT_N_DETAILED = 10;
+
+    /** How many of the best tests the overview matrix lists. */
+    static final int N_MATRIX_ROWS = 25;
 
     public static String writeHTMLResults(MdMetadata mdMetadata,
                                           List<RankedMaxoResult> resultList,
@@ -63,8 +67,9 @@ public class TleafResults {
         // Disease : MAxO term result box
         LOGGER.debug("Make Disease:MAxO term result box.");
         String mdDiseaseBox = "";
-        if (!detailed.isEmpty()) {
-            context.setVariable("maxoDiseaseData", new MdDiseaseHTML(detailed));
+        List<RankedMaxoResult> matrixTests = results.subList(0, Math.min(N_MATRIX_ROWS, results.size()));
+        if (!matrixTests.isEmpty()) {
+            context.setVariable("matrix", MdMatrix.of(matrixTests));
             mdDiseaseBox = templateEngine.process("mdDiseaseBox", context);
         }
         context.setVariable("mdDiseaseBox", mdDiseaseBox);

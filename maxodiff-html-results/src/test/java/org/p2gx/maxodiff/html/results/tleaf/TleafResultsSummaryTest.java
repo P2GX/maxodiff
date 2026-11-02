@@ -51,7 +51,8 @@ class TleafResultsSummaryTest {
 
         assertThat(page.select("table.countsTable")).hasSize(10);
         assertThat(page.select("table.tornado")).hasSize(10);
-        assertThat(page.select("table.dBoxTable thead th")).hasSize(1 + 10);   // the corner cell plus 10 terms
+        assertThat(page.select("table.matrix thead th.m-col")).hasSize(2);    // the two diseases
+        assertThat(page.select("table.matrix tbody tr")).hasSize(13);          // all 13 tests (the limit is 25)
         assertThat(page.select("h2").text()).contains("10) MAXO:0000010: Test 10")
                 .doesNotContain("MAXO:0000011");
     }
@@ -135,5 +136,12 @@ class TleafResultsSummaryTest {
         MdMetadata metadata = new MdMetadata("p", 20, 80, List.of(), List.of(), thirteenResults());
 
         assertThat(render(metadata, thirteenResults()).select(".patient-card .none")).hasSize(2);
+    }
+
+    @Test
+    void theMatrixShowsTheRankChangeOfEachDiseaseForEachTest() {
+        Element firstRow = render(thirteenResults()).select("table.matrix tbody tr").first();
+        assertThat(firstRow.select("th.m-row .m-label").text()).isEqualTo("Test 1");
+        assertThat(firstRow.select("td.m-cell").eachText()).containsExactly("+2.0", "−1.0");
     }
 }
