@@ -1,18 +1,9 @@
-
-<div class="navbar navbar-inverse navbar-fixed-top" th:fragment="header">
-    <div class="container">
-        <div class="navbar-collapse collapse">
-            <ul class="nav">
-                <li class="nav-link">
-                    <a class="nav-item" href="#" th:href="@{https://p2gx.github.io/maxodiff/}">Maxodiff Documentation</a>
-                </li>
-                <li class="nav-link">
-                    <a class="nav-item" href="#" th:href="@{https://hpo.jax.org}">HPO Website</a>
-                </li>
-                <li class="nav-link">
-                    <a class="nav-item" href="#">Help</a>
-                </li>
-            </ul>
-        </div>
+<header class="site-header" th:fragment="header">
+    <div class="site-header-inner">
+        <a class="brand" href="#" th:href="@{/maxodiff}">maxodiff</a>
+        <nav class="site-nav" aria-label="Main">
+            <a href="#" th:href="@{https://p2gx.github.io/maxodiff/}" target="_blank" rel="noopener noreferrer">Documentation</a>
+            <a href="#" th:href="@{https://hpo.jax.org}" target="_blank" rel="noopener noreferrer">HPO</a>
+        </nav>
     </div>
-</div>
+</header>

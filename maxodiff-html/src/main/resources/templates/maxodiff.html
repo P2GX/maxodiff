@@ -1,327 +1,298 @@
-<!DOCTYPE html SYSTEM "http://www.thymeleaf.org/dtd/xhtml1-strict-thymeleaf-spring4-4.dtd">
-<html lang="en" xmlns="http://www.w3.org/1999/xhtml" xmlns:th="http://www.thymeleaf.org">
+<!DOCTYPE html>
+<html lang="en" xmlns:th="http://www.thymeleaf.org">
 <head>
     <meta charset="UTF-8">
-    <title>maxodiff analysis</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>maxodiff</title>
 
     <style>
-        * {
-          font-family: Arial, Helvetica, sans-serif;
+        /* Everything is scoped to .landing: this page also embeds the results page, which has its own CSS. */
+        .landing {
+            --ink: #1f2933;
+            --muted: #52606d;
+            --line: #d9e2ec;
+            --card: #ffffff;
+            --page: #f5f7fa;
+            --accent: #1d5fa8;
+            --accent-dark: #174a85;
+            --accent-soft: #e8f1fb;
+            --danger: #b42318;
+            --danger-soft: #fdf3f2;
+            font-family: Arial, Helvetica, sans-serif;
+            color: var(--ink);
+            background: var(--page);
+            min-height: 100vh;
+            margin: 0;
+            line-height: 1.5;
+        }
+        .landing * { box-sizing: border-box; }
+        .landing a { color: var(--accent); }
+
+        .landing .site-header { background: var(--accent-dark); }
+        .landing .site-header-inner {
+            max-width: 760px; margin: 0 auto; padding: 0 16px;
+            display: flex; align-items: center; justify-content: space-between; gap: 16px;
+        }
+        .landing .brand { color: #fff; font-weight: bold; font-size: 1.1em; padding: 14px 0; text-decoration: none; }
+        .landing .site-nav { display: flex; gap: 4px; }
+        .landing .site-nav a { color: #dbe8f7; padding: 14px 10px; text-decoration: none; font-size: 0.95em; }
+        .landing .site-nav a:hover, .landing .site-nav a:focus-visible { color: #fff; text-decoration: underline; }
+
+        .landing main { max-width: 760px; margin: 0 auto; padding: 32px 16px 48px; }
+        .landing h1 { font-size: 1.9em; margin: 0 0 8px; }
+        .landing .lead { font-size: 1.05em; color: var(--muted); margin: 0 0 6px; }
+        .landing .notice { font-size: 0.85em; color: var(--muted); margin: 0 0 24px; }
+
+        .landing .card {
+            background: var(--card); border: 1px solid var(--line); border-radius: 8px;
+            padding: 20px 24px; margin: 0 0 16px;
+        }
+        .landing .card h2 { display: flex; align-items: center; gap: 10px; font-size: 1.1em; margin: 0 0 14px; }
+        .landing .step {
+            display: inline-flex; align-items: center; justify-content: center;
+            width: 26px; height: 26px; border-radius: 50%;
+            background: var(--accent); color: #fff; font-size: 0.85em; flex: none;
         }
 
-        .apexcharts-tooltip {
-            font-family: Arial, Helvetica, sans-serif !important;
-            white-space: pre-wrap !important;
+        .landing label, .landing legend { display: block; font-weight: bold; margin: 0 0 4px; padding: 0; }
+        .landing .hint { font-size: 0.85em; color: var(--muted); margin: 4px 0 0; }
+        .landing input[type="file"] { width: 100%; padding: 8px; border: 1px dashed #9fb3c8; border-radius: 6px; background: var(--page); }
+        .landing select {
+            width: 100%; padding: 8px 10px; font-size: 1em; font-family: inherit;
+            border: 1px solid #9fb3c8; border-radius: 6px; background: #fff; color: var(--ink);
         }
+        .landing :is(input, select, button, summary):focus-visible { outline: 3px solid #7fb0e6; outline-offset: 2px; }
 
-        .diffDiagInputTable, .fileInputTable {
-          border: 1px solid black;
-          background-color: lemonchiffon;
-          table-layout: fixed;
+        .landing .terms { margin: 16px 0 0; padding-top: 14px; border-top: 1px solid var(--line); }
+        .landing .terms-empty { color: var(--muted); margin: 0; }
+        .landing .terms ul { margin: 6px 0 12px; padding-left: 20px; }
+        .landing .terms li { margin: 2px 0; }
+        .landing details summary { cursor: pointer; font-weight: bold; }
+        .landing .count { color: var(--muted); font-weight: normal; }
+
+        .landing .grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px 24px; }
+        .landing fieldset { border: 0; padding: 0; margin: 16px 0 0; min-width: 0; }
+        .landing .radio { display: flex; align-items: flex-start; gap: 8px; margin: 6px 0; font-weight: normal; }
+        .landing .radio input { margin-top: 4px; }
+
+        .landing .run { display: flex; align-items: center; gap: 16px; flex-wrap: wrap; }
+        .landing button {
+            font-family: inherit; font-size: 1em; font-weight: bold; color: #fff;
+            background: var(--accent); border: 0; border-radius: 6px; padding: 10px 22px; cursor: pointer;
         }
+        .landing button:hover:not(:disabled) { background: var(--accent-dark); }
+        .landing button:disabled { background: #b8c4d0; cursor: not-allowed; }
+        .landing .status { margin: 0; color: var(--muted); }
+        .landing .status.error { color: var(--danger); }
 
-        .diffDiagInputTable {
-          width: 400px;
+        .landing .problem-box {
+            border: 1px solid var(--danger); border-left: 6px solid var(--danger); border-radius: 8px;
+            background: var(--danger-soft); padding: 16px 20px; margin: 0 0 16px;
         }
+        .landing .problem-box h2 { font-size: 1.1em; color: var(--danger); margin: 0 0 8px; }
+        .landing .problem-box p { margin: 0 0 6px; }
+        .landing .problem-title { font-weight: bold; }
+        .landing .problem + .problem { border-top: 1px solid #f1c8c4; margin-top: 10px; padding-top: 10px; }
 
-        .diffDiagInputTable tr td:first-child {
-          font-weight: bold;
-          width: 30px;
+        .landing footer { max-width: 760px; margin: 0 auto; padding: 0 16px 32px; color: var(--muted); font-size: 0.85em; }
+
+        @media (max-width: 560px) {
+            .landing .grid { grid-template-columns: 1fr; }
+            .landing .card { padding: 16px; }
+            .landing .site-nav a { padding: 14px 6px; }
         }
-
-        .diffDiagInputTable tr td:last-child {
-          width: 10px;
-        }
-
-        .nav, .navbar-header {
-           list-style-type: none;
-           margin: 0;
-           padding: 0;
-           overflow: hidden;
-           background-color: darkblue;
-           position: sticky;
-        }
-
-        .navbar-brand {
-           display: block;
-           color: lightblue;
-           text-align: center;
-           padding: 14px 16px;
-           text-decoration: none;
-           font-weight: bold;
-        }
-
-        .nav-link {
-           float: left;
-        }
-
-        .nav-item {
-           display: block;
-           color: white;
-           text-align: center;
-           padding: 14px 16px;
-           text-decoration: none;
-        }
-
-        .nav-item:hover:not(.active) {
-           background-color: cornflowerblue;
-        }
-
-        #progressBarContainer1 {
-            width: 80%;
-            background-color: #f3f3f3;
-            border: 1px solid #ccc;
-            height: 30px;
-            margin: 20px 0;
-        }
-
-        #progressBar1 {
-            height: 100%;
-            width: 0%;
-            background-color: #4caf50;
-            text-align: center;
-            line-height: 30px;
-            color: white;
-        }
-
-
-
-        .section-box-view {
-          border: 1px solid #ccc;
-          border-left: 6px solid #000000;
-          border-radius: 8px;
-          padding: 1em;
-          margin: 2em 0;
-          background: #F5F5F5;
-          box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-          width: 600px;
-          grid-area: view;
-        }
-
-        .section-box-view h1 {
-          font-size: 1.4em;
-          color: #000000;
-          margin-bottom: 0.5em;
-        }
-
-        .section-box-sample {
-          border: 1px solid #ccc;
-          border-left: 6px solid #663399;
-          border-radius: 8px;
-          padding: 1em;
-          margin: 2em 0;
-          background: #E6E6FA;
-          box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-          width: 600px;
-          grid-area: sample;
-        }
-
-        .section-box-sample h1 {
-          font-size: 1.4em;
-          color: #4B0082;
-          margin-bottom: 0.5em;
-        }
-
-        .section-box-maxodiff {
-          border: 1px solid #ccc;
-          border-left: 6px solid #0000CD;
-          border-radius: 8px;
-          padding: 1em;
-          margin: 2em 0;
-          background: #F0F8FF;
-          box-shadow: 0 2px 4px rgba(0,0,0,0.05);
-          width: 600px;
-          grid-area: maxodiff;
-        }
-
-        .section-box-maxodiff h1 {
-          font-size: 1.4em;
-          color: #000080;
-          margin-bottom: 0.5em;
-        }
-        .problem-box {
-            border: 1px solid #d9534f;
-            border-left: 6px solid #d9534f;
-            border-radius: 8px;
-            background: #fdf3f2;
-            padding: 1em 1.5em;
-            margin: 1em 0;
-            max-width: 600px;
-        }
-        .problem-box h2 { font-size: 1.2em; color: #a94442; margin-top: 0; }
-        .problem-title { font-weight: bold; margin-bottom: 0.2em; }
     </style>
 </head>
-<body>
-<div th:if="${problems != null and !problems.isEmpty()}" class="problem-box" role="alert">
-    <h2>The analysis could not be run</h2>
-    <div th:each="p : ${problems}" class="problem">
-        <p class="problem-title" th:text="${p.title()}">Title</p>
-        <p th:text="${p.explanation()}">Explanation</p>
-        <p><strong>What you can do:</strong> <span th:text="${p.action()}">Action</span></p>
-    </div>
-</div>
+<body style="margin:0">
 
 <div th:if="${showMDresults != null and showMDresults}">
     <div th:utext="${htmlTemplateString}"></div>
 </div>
 
-<div th:unless="${showMDresults != null and showMDresults}">
+<div class="landing" th:unless="${showMDresults != null and showMDresults}">
     <div th:replace="~{maxodiffNavBar :: header}">...</div>
 
-    <h1>Maxodiff Differential Diagnosis</h1>
+    <main>
+        <h1>maxodiff</h1>
+        <p class="lead">Find out which diagnostic test is most likely to help narrow down a differential diagnosis.
+            Upload a patient's phenopacket, choose the settings, and run the analysis.</p>
+        <p class="notice">A research tool to support, not replace, clinical judgement.</p>
 
-    <form th:action="@{/maxodiff}">
-        <div th:fragment="sample" class="section-box-sample" enctype="multipart/form-data">
-            <h1>Sample Input</h1>
-
-            <label for="file">Upload Phenopacket File: </label>
-            <input type="file" id="fileInput" name="file" onchange="uploadFile()"/>
-            <p></p>
-
-            <h2>Sample parameters:</h2>
-            <table>
-                <tbody>
-                <tr>
-                    <td>Observed HPO Terms:</td>
-                    <td>
-                        <ul id="observedHpoTermsList">
-                            <li th:each="term : ${sample?.observed()}">
-                                <a th:href="|https://hpo.jax.org/browse/term/${term.tid()}|"
-                                   th:text="|${term.label()} (${term.tid()})|"
-                                   target="_blank" rel="noopener noreferrer">term</a>
-                            </li>
-                        </ul>
-                    </td>
-                </tr>
-                <tr>
-                    <td>Excluded HPO Terms:</td>
-                    <td>
-                        <ul id="excludedHpoTermsList">
-                            <li th:each="term : ${sample?.excluded()}">
-                                <a th:href="|https://hpo.jax.org/browse/term/${term.tid()}|"
-                                   th:text="|${term.label()} (${term.tid()})|"
-                                   target="_blank" rel="noopener noreferrer">term</a>
-                            </li>
-                        </ul>
-                    </td>
-                </tr>
-                </tbody>
-            </table>
-        </div>
-
-        <script>
-            function addHpoTermToList(listContainer, termMap) {
-                [...listContainer.children].forEach(child => child.remove());
-                for (const item of termMap) {
-                    const newItem = document.createElement('li');
-                    const newLink = document.createElement('a');
-                    const hpoId = item[0];
-                    const hpoLabel = item[1];
-                    newLink.href = 'https://hpo.jax.org/browse/term/' + hpoId;
-                    newLink.textContent = hpoLabel + ' (' + hpoId + ')';
-                    newLink.target = "_blank";
-                    newLink.rel = "noopener noreferrer";
-                    const existingLink = listContainer.querySelector(`a[href="${newLink.href}"]`);
-                    if (!existingLink) {
-                        newItem.appendChild(newLink);
-                        listContainer.appendChild(newItem);
-                    }
-                }
-            }
-
-            function uploadFile() {
-                const fileInput = document.getElementById('fileInput');
-                const file = fileInput.files[0];
-                const formData = new FormData();
-                formData.append("file", file);
-
-                fetch('/upload', {
-                    method: 'POST',
-                    body: formData
-                })
-                .then(response => response.json())
-                .then(data => {
-                    var observedHpoTermsListContainer = document.getElementById('observedHpoTermsList');
-                    var observedHpoTermsMap = new Map(Object.entries(data.observedHpoTerms));
-                    addHpoTermToList(observedHpoTermsListContainer, observedHpoTermsMap);
-                    var excludedHpoTermsListContainer = document.getElementById('excludedHpoTermsList');
-                    var excludedHpoTermsMap = new Map(Object.entries(data.excludedHpoTerms));
-                    addHpoTermToList(excludedHpoTermsListContainer, excludedHpoTermsMap);
-                })
-                .catch(error => console.error("Upload error:", error));
-
-                startTask();
-
-                const submitButton = document.getElementById('submitButton');
-                submitButton.disabled = false;
-            }
-        </script>
-
-    <!--    TODO: move N Diseases and N Simulations to Sample box-->
-        <div class="section-box-maxodiff">
-            <h1>Maxodiff Calculation:</h1>
-            <table class="diffDiagInputTable">
-                <tbody>
-                <tr>
-                    <td>N Diseases:</td>
-                    <td><select th:value="${nDiseases}" name="nDiseases" id="nDiseases">
-                        <option th:selected="${nDiseases} == 20 ? selected" value="20">20</option>
-                        <option th:selected="${nDiseases} == 40 ? selected" value="40">40</option></select></td>
-                </tr>
-                <tr>
-                    <td>N Repetitions:</td>
-                    <td><select th:value="${nRepetitions}" name="nRepetitions" id="nRepetitions">
-                        <option th:selected="${nRepetitions} == 20 ? selected" value="20">20</option>
-                        <option th:selected="${nRepetitions} == 40 ? selected" value="40">40</option>
-                        <option th:selected="${nRepetitions} == 60 ? selected" value="60">60</option>
-                        <option th:selected="${nRepetitions} == 80 ? selected" value="80">80</option>
-                        <option th:selected="${nRepetitions} == 100 ? selected" value="100">100</option></select></td>
-                </tr>
-                </tbody>
-            </table>
-
-            <p><input type="submit" value="Run maxodiff" id="submitButton"
-                      th:disabled="${sample == null}"
-                      onclick="startTask()"/>
-                <td>Output:</td>
-                <td><select th:value="${outputJson}" name="outputJson" id="outputJson">
-                    <option th:selected="${outputJson} == true ? selected" value="true">JSON</option>
-                    <option th:selected="${outputJson} == false ? selected" value="false">HTML</option></select>
-                </td></p>
-
-            <div id="progressBarContainer1">
-                <div id="progressBar1">0%</div>
+        <div th:if="${problems != null and !problems.isEmpty()}" class="problem-box" role="alert">
+            <h2>The analysis could not be run</h2>
+            <div th:each="p : ${problems}" class="problem">
+                <p class="problem-title" th:text="${p.title()}">Title</p>
+                <p th:text="${p.explanation()}">Explanation</p>
+                <p><strong>What you can do:</strong> <span th:text="${p.action()}">Action</span></p>
             </div>
         </div>
 
-        <div id="resultHtmlContainer" style="display:none;" th:utext="${htmlTemplateString}"></div>
+        <form th:action="@{/maxodiff}" id="analysisForm">
 
-        <script>
-            function startTask() {
-                updateProgress();
+            <section class="card" aria-labelledby="step1">
+                <h2 id="step1"><span class="step">1</span> Patient</h2>
+                <label for="fileInput">Phenopacket file (JSON)</label>
+                <input type="file" id="fileInput" accept=".json,application/json" onchange="uploadFile()"/>
+                <p class="hint">The observed and excluded HPO terms of the file are used for the analysis.</p>
+                <p id="uploadError" class="status error" role="alert" hidden></p>
+
+                <div class="terms">
+                    <p id="termsEmpty" class="terms-empty" th:hidden="${sample != null}">No file selected yet.</p>
+                    <div id="termsBlock" th:hidden="${sample == null}">
+                        <details open>
+                            <summary>Observed HPO terms <span class="count">(<span id="observedCount"
+                                                                                   th:text="${sample != null ? sample.observed().size() : 0}">0</span>)</span></summary>
+                            <ul id="observedHpoTermsList">
+                                <li th:each="term : ${sample?.observed()}">
+                                    <a th:href="|https://hpo.jax.org/browse/term/${term.tid()}|"
+                                       th:text="|${term.label()} (${term.tid()})|"
+                                       target="_blank" rel="noopener noreferrer">term</a>
+                                </li>
+                            </ul>
+                        </details>
+                        <details>
+                            <summary>Excluded HPO terms <span class="count">(<span id="excludedCount"
+                                                                                   th:text="${sample != null ? sample.excluded().size() : 0}">0</span>)</span></summary>
+                            <ul id="excludedHpoTermsList">
+                                <li th:each="term : ${sample?.excluded()}">
+                                    <a th:href="|https://hpo.jax.org/browse/term/${term.tid()}|"
+                                       th:text="|${term.label()} (${term.tid()})|"
+                                       target="_blank" rel="noopener noreferrer">term</a>
+                                </li>
+                            </ul>
+                        </details>
+                    </div>
+                </div>
+            </section>
+
+            <section class="card" aria-labelledby="step2">
+                <h2 id="step2"><span class="step">2</span> Settings</h2>
+                <div class="grid">
+                    <div>
+                        <label for="nDiseases">Diseases to compare</label>
+                        <select name="nDiseases" id="nDiseases">
+                            <option value="20" th:selected="${(nDiseases ?: 20) == 20}">20</option>
+                            <option value="40" th:selected="${(nDiseases ?: 20) == 40}">40</option>
+                        </select>
+                        <p class="hint">How many of the most likely diagnoses are followed. 20 is usually enough.</p>
+                    </div>
+                    <div>
+                        <label for="nRepetitions">Simulations</label>
+                        <select name="nRepetitions" id="nRepetitions">
+                            <option value="20" th:selected="${(nRepetitions ?: 80) == 20}">20</option>
+                            <option value="40" th:selected="${(nRepetitions ?: 80) == 40}">40</option>
+                            <option value="60" th:selected="${(nRepetitions ?: 80) == 60}">60</option>
+                            <option value="80" th:selected="${(nRepetitions ?: 80) == 80}">80</option>
+                            <option value="100" th:selected="${(nRepetitions ?: 80) == 100}">100</option>
+                        </select>
+                        <p class="hint">More simulations give more stable results and take longer.</p>
+                    </div>
+                </div>
+                <fieldset>
+                    <legend>Result format</legend>
+                    <label class="radio"><input type="radio" name="outputJson" value="false"
+                                                th:checked="${outputJson != true}"/>
+                        <span>Results page (HTML)</span></label>
+                    <label class="radio"><input type="radio" name="outputJson" value="true"
+                                                th:checked="${outputJson == true}"/>
+                        <span>Raw data (JSON), for other programs</span></label>
+                </fieldset>
+            </section>
+
+            <section class="card" aria-labelledby="step3">
+                <h2 id="step3"><span class="step">3</span> Run</h2>
+                <div class="run">
+                    <button type="submit" id="submitButton" th:disabled="${sample == null}">Run maxodiff</button>
+                    <p id="runStatus" class="status" role="status" hidden>
+                        Analysis running. This usually takes about a minute. Please keep this page open.</p>
+                </div>
+            </section>
+        </form>
+    </main>
+
+    <footer>
+        <a href="https://p2gx.github.io/maxodiff/" target="_blank" rel="noopener noreferrer">Documentation</a>
+        &middot;
+        <a href="https://github.com/P2GX/maxodiff/issues" target="_blank" rel="noopener noreferrer">Feedback and bug reports</a>
+    </footer>
+
+    <script>
+        const form = document.getElementById('analysisForm');
+        const submitButton = document.getElementById('submitButton');
+        const runStatus = document.getElementById('runStatus');
+        const uploadError = document.getElementById('uploadError');
+
+        function addHpoTermToList(listContainer, termMap) {
+            [...listContainer.children].forEach(child => child.remove());
+            for (const [hpoId, hpoLabel] of termMap) {
+                const newLink = document.createElement('a');
+                newLink.href = 'https://hpo.jax.org/browse/term/' + hpoId;
+                newLink.textContent = hpoLabel + ' (' + hpoId + ')';
+                newLink.target = '_blank';
+                newLink.rel = 'noopener noreferrer';
+                const newItem = document.createElement('li');
+                newItem.appendChild(newLink);
+                listContainer.appendChild(newItem);
             }
+            return termMap.size;
+        }
 
-            function updateProgress() {
-                const interval = setInterval(() => {
-                    fetch('/progress1')
-                        .then(response => response.json())
-                        .then(data => {
-                            let progress = data * 100;
-                            let roundedProgress = Math.round(progress * 100) / 100;
-                            const bar = document.getElementById('progressBar1');
-                            bar.style.width = progress + '%';
-                            bar.innerText = roundedProgress + '%';
+        function showUploadError(message) {
+            uploadError.textContent = message;
+            uploadError.hidden = false;
+        }
 
-                            if (progress >= 100) {
-                                clearInterval(interval);
-                            }
-                        });
-                }, 1000);
+        function uploadFile() {
+            const file = document.getElementById('fileInput').files[0];
+            if (!file) {
+                return;
             }
-        </script>
-    </form>
+            uploadError.hidden = true;
+            submitButton.disabled = true;
+            const formData = new FormData();
+            formData.append('file', file);
+
+            fetch('/upload', {method: 'POST', body: formData})
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error('HTTP ' + response.status);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    const observed = new Map(Object.entries(data.observedHpoTerms));
+                    const excluded = new Map(Object.entries(data.excludedHpoTerms));
+                    document.getElementById('observedCount').textContent =
+                        addHpoTermToList(document.getElementById('observedHpoTermsList'), observed);
+                    document.getElementById('excludedCount').textContent =
+                        addHpoTermToList(document.getElementById('excludedHpoTermsList'), excluded);
+                    document.getElementById('termsEmpty').hidden = true;
+                    document.getElementById('termsBlock').hidden = false;
+                    submitButton.disabled = false;
+                })
+                .catch(error => {
+                    console.error('Upload error:', error);
+                    document.getElementById('termsEmpty').hidden = false;
+                    document.getElementById('termsBlock').hidden = true;
+                    showUploadError('This file could not be read as a phenopacket. Please check that it is a '
+                        + 'phenopacket in JSON format and try again.');
+                });
+        }
+
+        // The analysis takes a while and the page waits for it: tell the user, and prevent a second click.
+        form.addEventListener('submit', () => {
+            submitButton.disabled = true;
+            runStatus.hidden = false;
+        });
+
+        // When the user comes back with the browser's back button, the page is restored as it was left.
+        window.addEventListener('pageshow', event => {
+            if (event.persisted) {
+                submitButton.disabled = false;
+                runStatus.hidden = true;
+            }
+        });
+    </script>
 </div>
 </body>
 </html>
-
