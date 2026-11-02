@@ -116,10 +116,10 @@ public class DDxCommand extends BaseCommand {
             System.out.println("Max Score: " + maxScoreMaxoTerm + " = " + maxScoreValue);
 
             if (outputJson) {
-                Path jsonPath = IoUtil.defaultPath(phenopacketData.sampleId(), nDiseases, nRepetitions, "json");
-                if (!outputFilenameArg.isEmpty()) {
-                    jsonPath = IoUtil.resolveOutputFile(outputFilenameArg, outputDir, "json");
-                }
+                Path jsonPath = outputFilenameArg.isEmpty()
+                        ? IoUtil.defaultPath(outputDir, phenopacketData.sampleId(), nDiseases, nRepetitions, "json")
+                        : IoUtil.resolveOutputFile(outputFilenameArg, outputDir, "json");
+                IoUtil.createParentDirectories(jsonPath);
                 LOGGER.debug("Creating JSON file: {}.", jsonPath);
                 int zeroIdx = resultsList.stream()
                         .filter(result -> result.maxoScore() == 0.)
@@ -140,10 +140,10 @@ public class DDxCommand extends BaseCommand {
 
             HTMLFrequencyMap htmlFrequencyMap = new HTMLFrequencyMap(context);
             String headerHtml = TleafResults.writeHTMLResults(mdMetadata, resultsList, htmlFrequencyMap);
-            Path htmlPath = IoUtil.defaultPath(phenopacketData.sampleId(), nDiseases, nRepetitions, "html");
-            if (!outputFilenameArg.isEmpty()) {
-                htmlPath = IoUtil.resolveOutputFile(outputFilenameArg, outputDir, "html");
-            }
+            Path htmlPath = outputFilenameArg.isEmpty()
+                    ? IoUtil.defaultPath(outputDir, phenopacketData.sampleId(), nDiseases, nRepetitions, "html")
+                    : IoUtil.resolveOutputFile(outputFilenameArg, outputDir, "html");
+            IoUtil.createParentDirectories(htmlPath);
             Files.writeString(htmlPath, headerHtml);
             LOGGER.info("Wrote HTML file to {}", htmlPath);
 

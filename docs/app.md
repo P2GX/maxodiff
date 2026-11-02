@@ -69,7 +69,7 @@ current folder. A progress bar shows how far the analysis is.
 | `-j`, `--json` | off | Write JSON instead of HTML |
 | `-m`, `--maxoData` | `data` | Folder with the downloaded data files |
 | `-f`, `--outFilename` | | Name of the output file (the suffix `.html` or `.json` is added if missing) |
-| `-O`, `--outputDirectory` | current folder | Folder for the output file (only used together with `-f`) |
+| `-O`, `--outputDirectory` | current folder | Folder for the output file |
 | `-v` | | More log output; repeat for more detail (`-vv`) |
 
 ### Examples
