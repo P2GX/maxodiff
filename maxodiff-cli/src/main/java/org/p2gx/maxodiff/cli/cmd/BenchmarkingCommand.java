@@ -143,7 +143,7 @@ public class BenchmarkingCommand extends DDxCommand {
             List<Double> icSumsRandom = Collections.synchronizedList(new ArrayList<>());
             int randomUL = 50;
             int randomNThreads = randomUL + 2;
-            try (ExecutorService randomExecutorService = Executors.newFixedThreadPool(randomNThreads);
+            try (ExecutorService randomExecutorService = Executors.newFixedThreadPool(nThreads);
                  ForkJoinPool customThreadPool = new ForkJoinPool(randomNThreads)) {
                 customThreadPool.submit(() ->
                         IntStream.range(0, randomUL).parallel().forEach(i -> {
@@ -219,14 +219,13 @@ public class BenchmarkingCommand extends DDxCommand {
             nDiscoverablePhenotypes.add(discHpoIds.size());
             if (i == 0 ) {
                 topDiscHpoIds = discHpoIds;
-                topMaxoIcSum = discHpoIds.isEmpty() ? 0.0 :
-                        discHpoIds.stream().mapToDouble(termToIcMap::get).sum();
+                topMaxoIcSum = discHpoIds.stream()
+                        .mapToDouble(id -> termToIcMap.getOrDefault(id, 0.0))
+                        .sum();
+                LOGGER.info("topMaxoIcSum = " + topMaxoIcSum);
             }
         }
 
-//
-//        double topMaxoIcSum = discHpoIds.isEmpty() ? 0.0 :
-//                discHpoIds.stream().mapToDouble(termToIcMap::get).sum();
         LOGGER.info("standard run results:");
         LOGGER.info("initial {}", initialResults.getFirst().maxoTerm());
         LOGGER.info("initial {}", initialResults.getFirst().rankedOmimTermList());
